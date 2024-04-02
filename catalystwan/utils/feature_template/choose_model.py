@@ -1,3 +1,5 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+
 from typing import Any
 
 from catalystwan.api.templates.models.supported import available_models

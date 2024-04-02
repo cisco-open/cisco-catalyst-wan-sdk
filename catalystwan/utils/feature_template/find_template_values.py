@@ -1,3 +1,5 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+
 from typing import Any, Dict, List, Optional, Union
 
 from catalystwan.api.templates.device_variable import DeviceVariable
