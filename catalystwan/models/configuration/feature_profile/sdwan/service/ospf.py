@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
 from catalystwan.models.common import MetricType
 
 NetworkType = Literal[
@@ -121,16 +121,16 @@ class OspfParcel(_ParcelBase):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     router_id: Optional[Union[Global[str], Global[IPv4Address], Variable, Default[None]]] = Field(
-        validation_alias=AliasPath("data", "routerId"), default=None
+        validation_alias=AliasPath("data", "routerId"), default=Default[None](value=None)
     )
     reference_bandwidth: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        validation_alias=AliasPath("data", "referenceBandwidth"), default=None
+        validation_alias=AliasPath("data", "referenceBandwidth"), default=as_default(100)
     )
     rfc1583: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(
-        validation_alias=AliasPath("data", "rfc1583"), default=None
+        validation_alias=AliasPath("data", "rfc1583"), default=as_default(False)
     )
     originate: Optional[Union[Global[bool], Default[bool]]] = Field(
-        validation_alias=AliasPath("data", "originate"), default=None
+        validation_alias=AliasPath("data", "originate"), default=as_default(False)
     )
     always: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(
         validation_alias=AliasPath("data", "always"), default=None
@@ -141,21 +141,23 @@ class OspfParcel(_ParcelBase):
     metric_type: Optional[Union[Global[MetricType], Variable, Default[None]]] = Field(
         validation_alias=AliasPath("data", "metricType"), default=None
     )
-    external: Optional[Union[Global[int], Variable, Default[int]]] = None
+    external: Optional[Union[Global[int], Variable, Default[int]]] = Field(
+        default=as_default(110), validation_alias=AliasPath("data", "external")
+    )
     inter_area: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        validation_alias=AliasPath("data", "interArea"), default=None
+        validation_alias=AliasPath("data", "interArea"), default=as_default(110)
     )
     intra_area: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        validation_alias=AliasPath("data", "intraArea"), default=None
+        validation_alias=AliasPath("data", "intraArea"), default=as_default(110)
     )
     delay: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        validation_alias=AliasPath("data", "delay"), default=None
+        validation_alias=AliasPath("data", "delay"), default=as_default(200)
     )
     initial_hold: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        validation_alias=AliasPath("data", "initialHold"), default=None
+        validation_alias=AliasPath("data", "initialHold"), default=as_default(1000)
     )
     max_hold: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        validation_alias=AliasPath("data", "maxHold"), default=None
+        validation_alias=AliasPath("data", "maxHold"), default=as_default(10000)
     )
     redistribute: Optional[List[RedistributedRoute]] = Field(
         validation_alias=AliasPath("data", "redistribute"), default=None

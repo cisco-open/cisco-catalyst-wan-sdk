@@ -58,6 +58,7 @@ SUPPORTED_TEMPLATE_TYPES = [
     "cisco_vpn_interface",
     "cisco_vpn_interface_ipsec",
     "vpn-interface-svi",
+    "cisco_ospf",
 ]
 
 FEATURE_PROFILE_SYSTEM = [
@@ -103,6 +104,7 @@ FEATURE_PROFILE_SERVICE = [
     "cisco_vpn_interface",
     "cisco_vpn_interface_ipsec",
     "vpn-interface-svi",
+    "cisco_ospf",
 ]
 
 
@@ -164,7 +166,7 @@ def transform(ux1: UX1Config) -> UX2Config:
             header=TransformHeader(
                 type="config_group",
                 origin=UUID(dt.template_id),
-                subelements=set([fp_system_uuid, fp_other_uuid]),
+                subelements=set([fp_system_uuid, fp_other_uuid, fp_service_uuid]),
             ),
             config_group=ConfigGroupCreationPayload(
                 name=dt.template_name,
@@ -182,10 +184,6 @@ def transform(ux1: UX1Config) -> UX2Config:
     for ft in ux1.templates.feature_templates:
         if ft.template_type in SUPPORTED_TEMPLATE_TYPES:
             parcel = create_parcel_from_template(ft)
-            # if isinstance(parcel, tuple):
-            #     for p in parcel:
-            # .....
-            # find uuid in
             transformed_parcel = TransformedParcel(
                 header=TransformHeader(
                     type=parcel._get_parcel_type(),

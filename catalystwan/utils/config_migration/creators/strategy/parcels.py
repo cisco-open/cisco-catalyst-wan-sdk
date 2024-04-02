@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from uuid import UUID
 
 from catalystwan.models.configuration.config_migration import TransformedParcel
@@ -45,25 +45,22 @@ class ServiceParcelPusher(ParcelPusher):
     def push(self, feature_profile: FeatureProfileCreationPayload, parcels: List[TransformedParcel]) -> UUID:
         # Service feature profiles have references to other parcels, so we need to create them in order
         self._move_vpn_parcel_to_first_position(parcels)
-        vpn_uuid_tag = None
         for transformed_parcel in parcels:
-            vpn_uuid_tag = self._resolve_and_add_parcel(transformed_parcel, vpn_uuid_tag)
+            self._resolve_and_add_parcel(transformed_parcel)
         self.builder.add_profile_name_and_description(feature_profile)
         return self.builder.build()
 
-    def _resolve_and_add_parcel(
-        self, transformed_parcel: TransformedParcel, vpn_uuid_tag: Optional[UUID]
-    ) -> Optional[UUID]:
+    def _resolve_and_add_parcel(self, transformed_parcel: TransformedParcel) -> None:
         parcel = transformed_parcel.parcel
         if isinstance(parcel, LanVpnParcel):
-            return self.builder.add_parcel_vpn(parcel)
-        elif (
-            isinstance(parcel, (InterfaceEthernetParcel, InterfaceGreParcel, InterfaceIpsecParcel, InterfaceSviParcel))
-            and vpn_uuid_tag is not None
-        ):
-            return self.builder.add_parcel_vpn_interface(vpn_uuid_tag, parcel)  # type: ignore
+            self.builder.add_parcel_vpn(parcel)
+        if isinstance(parcel, (InterfaceEthernetParcel, InterfaceGreParcel, InterfaceIpsecParcel, InterfaceSviParcel)):
+            # TODO: Assiging logic
+            # Every Service VPN parcel can have interface childs and
+            # there can be multiple service VPNs in one feature profile
+            pass
         else:
-            return self.builder.add_parcel(parcel)  # type: ignore
+            self.builder.add_parcel(parcel)  # type: ignore
 
     def _move_vpn_parcel_to_first_position(self, parcels: List[TransformedParcel]) -> None:
         """Move the VPN parcel to the first position in the list.

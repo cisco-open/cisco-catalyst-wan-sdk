@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from typing import TYPE_CHECKING, Dict, List, Union
 from uuid import UUID, uuid4
@@ -22,6 +23,8 @@ from catalystwan.models.configuration.feature_profile.sdwan.service import (
 
 if TYPE_CHECKING:
     from catalystwan.session import ManagerSession
+
+logger = logging.getLogger(__name__)
 
 IndependedParcels = Annotated[Union[AppqoeParcel, LanVpnDhcpServerParcel], Field(discriminator="type_")]
 DependedInterfaceParcels = Annotated[
@@ -86,6 +89,7 @@ class ServiceFeatureProfileBuilder:
             UUID: The UUID tag of the added VPN parcel.
         """
         vpn_tag = uuid4()
+        logger.debug(f"Adding VPN parcel {parcel.parcel_name} with tag {vpn_tag}")
         self._independent_items_vpns[vpn_tag] = parcel
         return vpn_tag
 
@@ -100,6 +104,7 @@ class ServiceFeatureProfileBuilder:
         Returns:
             None
         """
+        logger.debug(f"Adding interface parcel {parcel.parcel_name} to VPN {vpn_tag}")
         self._depended_items_on_vpns[vpn_tag].append(parcel)
 
     def build(self) -> UUID:
@@ -119,6 +124,7 @@ class ServiceFeatureProfileBuilder:
             vpn_uuid = self._api.create_parcel(profile_uuid, vpn_parcel).id
 
             for interface_parcel in self._depended_items_on_vpns[vpn_tag]:
+                logger.debug(f"Creating interface parcel {interface_parcel.parcel_name} to VPN {vpn_tag}")
                 self._api.create_parcel(profile_uuid, interface_parcel, vpn_uuid)
 
         return profile_uuid
