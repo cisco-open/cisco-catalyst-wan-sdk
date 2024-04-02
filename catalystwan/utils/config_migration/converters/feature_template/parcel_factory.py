@@ -17,6 +17,7 @@ from .base import FeatureTemplateConverter
 from .basic import SystemToBasicTemplateConverter
 from .bfd import BFDTemplateConverter
 from .bgp import BGPTemplateConverter
+from .eigrp import EigrpTemplateConverter
 from .global_ import GlobalTemplateConverter
 from .gre import InterfaceGRETemplateConverter
 from .ipsec import InterfaceIpsecTemplateConverter
@@ -57,6 +58,7 @@ available_converters = [
     InterfaceIpsecTemplateConverter,
     OspfTemplateConverter,
     Ospfv3TemplateConverter,
+    EigrpTemplateConverter,
 ]
 
 

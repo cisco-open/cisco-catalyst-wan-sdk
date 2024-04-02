@@ -4,6 +4,7 @@ from typing import List, Optional, Union, get_args
 from catalystwan.api.configuration_groups.parcel import Global, as_global
 from catalystwan.models.common import MetricType, TLOCColor
 from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import SubnetMask
+from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import EigrpAuthType
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import (
     IkeCiphersuite,
     IkeMode,
@@ -58,6 +59,7 @@ CastableLiterals = Union[
     AdvertiseType,
     RedistributeProtocolOspf,
     MetricType,
+    EigrpAuthType,
 ]
 
 CastedTypes = Union[
