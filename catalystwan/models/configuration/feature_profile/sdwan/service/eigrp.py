@@ -26,20 +26,22 @@ RedistributeProtocol = Literal[
 
 
 class KeychainDetails(BaseModel):
-    key_id: Union[Global[int], Variable, Default[None]] = Field(serialization_alias="keyId", validation_alias="keyId")
-    keystring: Union[Global[str], Variable, Default[None]]
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
+
+    key_id: Union[Global[int], Variable, Default[None]] = Field(
+        default=Default[None](value=None), serialization_alias="keyId", validation_alias="keyId"
+    )
+    keystring: Union[Global[str], Variable, Default[None]] = Field(default=Default[None](value=None))
 
 
 class EigrpAuthentication(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    auth_type: Union[Global[EigrpAuthType], Variable, Default[None]] = Field(
-        serialization_alias="type", validation_alias="type"
-    )
+    auth_type: Union[Global[EigrpAuthType], Variable, Default[None]] = Default[None](value=None)
     auth_key: Optional[Union[Global[str], Variable, Default[None]]] = Field(
-        serialization_alias="authKey", validation_alias="authKey"
+        serialization_alias="authKey", validation_alias="authKey", default=Default[None](value=None)
     )
-    key: Optional[List[KeychainDetails]] = Field(serialization_alias="key", validation_alias="key")
+    key: Optional[List[KeychainDetails]] = None
 
 
 class TableMap(BaseModel):
@@ -59,9 +61,9 @@ class IPv4StaticRoute(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     name: Union[Global[str], Variable]
-    shutdown: Optional[Union[Global[int], Variable, Default[bool]]] = Default[bool](value=False)
-    summary_address: Optional[List[SummaryAddress]] = Field(
-        serialization_alias="summaryAddress", validation_alias="summaryAddress"
+    shutdown: Optional[Union[Global[bool], Variable, Default[bool]]] = Default[bool](value=False)
+    summary_address: List[SummaryAddress] = Field(
+        serialization_alias="summaryAddress", validation_alias="summaryAddress", default_factory=list
     )
 
 
@@ -76,7 +78,7 @@ class AddressFamily(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     redistribute: Optional[List[RedistributeIntoEigrp]] = None
-    network: List[SummaryAddress]
+    network: List[SummaryAddress] = Field(min_length=1)
 
 
 class EigrpParcel(_ParcelBase):
