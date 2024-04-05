@@ -1,6 +1,6 @@
 **THIS FILE WAS AUTO-GENERATED DO NOT EDIT**
 
-Generated for: catalystwan-0.31.2
+Generated for: catalystwan-0.32.0
 
 All URIs are relative to */dataservice*
 HTTP request | Supported Versions | Method | Payload Type | Return Type | Tenancy Mode
