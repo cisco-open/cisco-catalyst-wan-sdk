@@ -1,1 +1,4 @@
-nvlatko@cisco.com overholt@cisco.com sbasan@cisco.com acichon@cisco.com jakrajew@cisco.com psmialko@cisco.com
+# See https://help.github.com/articles/about-codeowners/
+# for more info about CODEOWNERS file
+
+@natalisucks @JimOverholt @sbasan @cicharka @jpkrajewski @smialy
