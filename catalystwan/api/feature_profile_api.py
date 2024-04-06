@@ -12,6 +12,7 @@ from catalystwan.endpoints.configuration.feature_profile.sdwan.other import Othe
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.sig_security import SIGSecurity
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
+from catalystwan.endpoints.configuration.feature_profile.sdwan.topology import TopologyFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
 from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority import (
@@ -24,6 +25,9 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object.securi
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import MulticastParcel
 from catalystwan.models.configuration.feature_profile.sdwan.sig_security.sig_security import SIGParcel
+from catalystwan.models.configuration.feature_profile.sdwan.topology import AnyTopologyParcel
+from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
+from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport import AnyTransportParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.bgp import WanRoutingBgpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_controller import (
@@ -115,6 +119,7 @@ class SDWANFeatureProfilesAPI:
         self.system = SystemFeatureProfileAPI(session=session)
         self.other = OtherFeatureProfileAPI(session=session)
         self.service = ServiceFeatureProfileAPI(session=session)
+        self.topology = TopologyFeatureProfileAPI(session=session)
         self.transport = TransportFeatureProfileAPI(session=session)
         self.embedded_security = EmbeddedSecurityFeatureProfileAPI(session=session)
         self.cli = CliFeatureProfileAPI(session=session)
@@ -1519,3 +1524,87 @@ class ApplicationPriorityFeatureProfileAPI:
         Delete Application Priority Parcel for selected profile_id based on payload type
         """
         return self.endpoint.delete(profile_id, parcel_type._get_parcel_type(), parcel_id)
+
+
+class TopologyFeatureProfileAPI:
+    """
+    SDWAN Feature Profile Topology APIs
+    """
+
+    def __init__(self, session: ManagerSession):
+        self.session = session
+        self.endpoint = TopologyFeatureProfile(session)
+
+    def get_profiles(
+        self, limit: Optional[int] = None, offset: Optional[int] = None
+    ) -> DataSequence[FeatureProfileInfo]:
+        """
+        Get all Topology Feature Profiles
+        """
+        payload = GetFeatureProfilesPayload(limit=limit, offset=offset)
+        return self.endpoint.get_topology_feature_profiles(payload)
+
+    def create_profile(self, name: str, description: str) -> FeatureProfileCreationResponse:
+        """
+        Create Topology Feature Profile
+        """
+        payload = FeatureProfileCreationPayload(name=name, description=description)
+        return self.endpoint.create_topology_feature_profile(payload)
+
+    def delete_profile(self, profile_id: UUID) -> None:
+        """
+        Delete Topology Feature Profile
+        """
+        self.endpoint.delete_topology_feature_profile(profile_id)
+
+    def create_parcel(self, profile_id: UUID, parcel: AnyTopologyParcel) -> ParcelCreationResponse:
+        """
+        Create Topology Parcel for selected profile_id based on payload type
+        """
+        return self.endpoint.create_any_parcel(profile_id, parcel._get_parcel_type(), parcel)
+
+    def delete_parcel(self, profile_id: UUID, parcel_type: Type[AnyTopologyParcel], parcel_id: UUID) -> None:
+        """
+        Delete Topology Parcel for selected profile_id based on payload type
+        """
+        return self.endpoint.delete_any_parcel(
+            profile_id=profile_id, parcel_type=parcel_type._get_parcel_type(), parcel_id=parcel_id
+        )
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[HubSpokeParcel],
+        parcel_id: UUID,
+    ) -> Parcel[HubSpokeParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[MeshParcel],
+        parcel_id: UUID,
+    ) -> Parcel[MeshParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[CustomControlParcel],
+        parcel_id: UUID,
+    ) -> Parcel[CustomControlParcel]:
+        ...
+
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[AnyTopologyParcel],
+        parcel_id: UUID,
+    ) -> Parcel:
+        """
+        Get one Topology Parcel given profile id, parcel type and parcel id
+        """
+        return self.endpoint.get_any_parcel_by_id(profile_id, parcel_type._get_parcel_type(), parcel_id)
