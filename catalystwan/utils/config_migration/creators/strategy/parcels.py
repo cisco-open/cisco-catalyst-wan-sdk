@@ -53,7 +53,7 @@ class ServiceParcelPusher(ParcelPusher):
     def _resolve_and_add_parcel(self, transformed_parcel: TransformedParcel) -> None:
         parcel = transformed_parcel.parcel
         if isinstance(parcel, LanVpnParcel):
-            self.builder.add_parcel_vpn(parcel)
+            self.builder.add_parcel_vpn(parcel)  # type: ignore
         if isinstance(parcel, (InterfaceEthernetParcel, InterfaceGreParcel, InterfaceIpsecParcel, InterfaceSviParcel)):
             # TODO: Assiging logic
             # Every Service VPN parcel can have interface childs and

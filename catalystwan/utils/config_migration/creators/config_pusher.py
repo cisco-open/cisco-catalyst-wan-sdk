@@ -79,10 +79,21 @@ class UX2ConfigPusher:
                 logger.debug(f"Skipping policy-object profile: {transformed_feature_profile.feature_profile.name}")
                 continue
             pusher = ParcelPusherFactory.get_pusher(self._session, profile_type)
-            parcels = [
-                self._config_map.parcel_map[element] for element in transformed_feature_profile.header.subelements
-            ]
+            parcels = self._create_parcels_list(transformed_feature_profile)
             created_profile_id = pusher.push(transformed_feature_profile.feature_profile, parcels)
             config_group_profiles.append(ProfileId(id=created_profile_id))
             self._config_rollback.add_feature_profile(created_profile_id, profile_type)
         return config_group_profiles
+
+    def _create_parcels_list(self, transformed_feature_profile: TransformedFeatureProfile) -> List[TransformedParcel]:
+        logger.debug(f"Creating parcels for feature profile: {transformed_feature_profile.feature_profile.name}")
+        parcels = []
+        for element_uuid in transformed_feature_profile.header.subelements:
+            transformed_parcel = self._config_map.parcel_map.get(element_uuid)
+            if not transformed_parcel:
+                # Device templates can have assigned feature templates but when we download the
+                # featrue templates from the enpoint some templates don't exist in the response
+                logger.error(f"Parcel with origin uuid {element_uuid} not found in the config map")
+            else:
+                parcels.append(transformed_parcel)
+        return parcels
