@@ -5,6 +5,7 @@ from typing_extensions import Annotated
 
 from .appqoe import AppqoeParcel
 from .dhcp_server import LanVpnDhcpServerParcel
+from .eigrp import EigrpParcel
 from .lan.ethernet import InterfaceEthernetParcel
 from .lan.gre import InterfaceGreParcel
 from .lan.ipsec import InterfaceIpsecParcel
@@ -21,6 +22,7 @@ AnyTopLevelServiceParcel = Annotated[
         OspfParcel,
         Ospfv3IPv4Parcel,
         Ospfv3IPv6Parcel,
+        EigrpParcel,
         # TrackerGroupData,
         # WirelessLanData,
         # SwitchportData
