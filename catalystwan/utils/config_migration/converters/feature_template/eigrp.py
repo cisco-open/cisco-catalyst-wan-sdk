@@ -26,7 +26,6 @@ class EigrpTemplateConverter:
     lan_eigrp_addr_fami_netw_1_mask = "{{lan_eigrp_addr_fami_netw_1_mask}}"
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> EigrpParcel:
-        print(template_values)
         values = self.prepare_values(template_values)
         self.configure_as_number(values)
         self.configure_address_family_interface(values)
