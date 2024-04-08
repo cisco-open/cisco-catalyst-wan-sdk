@@ -1,8 +1,5 @@
 from typing import Callable, Mapping, Union
 
-from pydantic import Field
-from typing_extensions import Annotated
-
 from catalystwan.api.feature_profile_api import (
     OtherFeatureProfileAPI,
     PolicyObjectFeatureProfileAPI,
@@ -19,9 +16,8 @@ FEATURE_PROFILE_API_MAPPING: Mapping[ProfileType, Callable] = {
     "service": ServiceFeatureProfileAPI,
 }
 
-FeatureProfile = Annotated[
-    Union[SystemFeatureProfileAPI, OtherFeatureProfileAPI, PolicyObjectFeatureProfileAPI, ServiceFeatureProfileAPI],
-    Field(discriminator="type"),
+FeatureProfile = Union[
+    SystemFeatureProfileAPI, OtherFeatureProfileAPI, PolicyObjectFeatureProfileAPI, ServiceFeatureProfileAPI
 ]
 
 
