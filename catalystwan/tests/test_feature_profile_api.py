@@ -22,6 +22,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service import (
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import BasicGre
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import IpsecAddress, IpsecTunnelMode
 from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 import Ospfv3IPv4Parcel, Ospfv3IPv6Parcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system import (
     AAAParcel,
     BannerParcel,
@@ -108,6 +109,7 @@ service_endpoint_mapping = {
     OspfParcel: "routing/ospf",
     Ospfv3IPv4Parcel: "routing/ospfv3/ipv4",
     Ospfv3IPv6Parcel: "routing/ospfv3/ipv6",
+    RoutePolicyParcel: "route-policy",
 }
 
 service_interface_parcels = [

@@ -14,10 +14,11 @@ from catalystwan.models.configuration.feature_profile.sdwan.system import (
 
 
 class TestSystemFeatureProfileModels(TestFeatureProfileModels):
-    def setUp(self) -> None:
-        super().setUp()
-        self.api = self.session.api.sdwan_feature_profiles.system
-        self.profile_id = self.api.create_profile("TestProfile", "Description").id
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.api = cls.session.api.sdwan_feature_profiles.system
+        cls.profile_uuid = cls.api.create_profile("TestProfileService", "Description").id
 
     def test_when_default_values_banner_parcel_expect_successful_post(self):
         # Arrange
@@ -26,7 +27,7 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
             parcel_description="Banner Parcel",
         )
         # Act
-        parcel_id = self.api.create_parcel(self.profile_id, banner_parcel).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, banner_parcel).id
         # Assert
         assert parcel_id
 
@@ -39,7 +40,7 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
         banner_parcel.add_login("Login")
         banner_parcel.add_motd("Hello! Welcome to the network!")
         # Act
-        parcel_id = self.api.create_parcel(self.profile_id, banner_parcel).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, banner_parcel).id
         # Assert
         assert parcel_id
 
@@ -50,7 +51,7 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
             parcel_description="Logging Parcel",
         )
         # Act
-        parcel_id = self.api.create_parcel(self.profile_id, logging_parcel).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, logging_parcel).id
         # Assert
         assert parcel_id
 
@@ -94,7 +95,7 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
             profile_properties="TLSProfile",
         )
         # Act
-        parcel_id = self.api.create_parcel(self.profile_id, logging_parcel).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, logging_parcel).id
         # Assert
         assert parcel_id
 
@@ -105,7 +106,7 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
             parcel_description="BFD Parcel",
         )
         # Act
-        parcel_id = self.api.create_parcel(self.profile_id, bfd_parcel).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, bfd_parcel).id
         # Assert
         assert parcel_id
 
@@ -123,7 +124,7 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
         bfd_parcel.add_color(color="biz-internet")
         bfd_parcel.add_color(color="public-internet")
         # Act
-        parcel_id = self.api.create_parcel(self.profile_id, bfd_parcel).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, bfd_parcel).id
         # Assert
         assert parcel_id
 
@@ -134,7 +135,7 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
             parcel_description="Basic Parcel",
         )
         # Act
-        parcel_id = self.api.create_parcel(self.profile_id, basic_parcel).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, basic_parcel).id
         # Assert
         assert parcel_id
 
@@ -145,7 +146,7 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
             parcel_description="Security Parcel",
         )
         # Act
-        parcel_id = self.api.create_parcel(self.profile_id, security_parcel).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, security_parcel).id
         # Assert
         assert parcel_id
 
@@ -156,7 +157,7 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
             parcel_description="NTP Parcel",
         )
         # Act
-        parcel_id = self.api.create_parcel(self.profile_id, ntp_parcel).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, ntp_parcel).id
         # Assert
         assert parcel_id
 
@@ -167,7 +168,7 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
             parcel_description="Global Parcel",
         )
         # Act
-        parcel_id = self.api.create_parcel(self.profile_id, global_parcel).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, global_parcel).id
         # Assert
         assert parcel_id
 
@@ -178,7 +179,7 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
             parcel_description="MRF Parcel",
         )
         # Act
-        parcel_id = self.api.create_parcel(self.profile_id, mrf_parcel).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, mrf_parcel).id
         # Assert
         assert parcel_id
 
@@ -189,7 +190,7 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
             parcel_description="SNMP Parcel",
         )
         # Act
-        parcel_id = self.api.create_parcel(self.profile_id, snmp_parcel).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, snmp_parcel).id
         # Assert
         assert parcel_id
 
@@ -200,10 +201,11 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
             parcel_description="OMP Parcel",
         )
         # Act
-        parcel_id = self.api.create_parcel(self.profile_id, omp_parcel).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, omp_parcel).id
         # Assert
         assert parcel_id
 
-    def tearDown(self) -> None:
-        self.api.delete_profile(self.profile_id)
-        self.session.close()
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.api.delete_profile(cls.profile_uuid)
+        super().tearDownClass()

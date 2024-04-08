@@ -5,10 +5,11 @@ from catalystwan.models.configuration.feature_profile.sdwan.other.ucse import Ac
 
 
 class TestSystemOtherProfileModels(TestFeatureProfileModels):
-    def setUp(self) -> None:
-        super().setUp()
-        self.api = self.session.api.sdwan_feature_profiles.other
-        self.profile_id = self.api.create_profile("TestProfile", "Description").id
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.api = cls.session.api.sdwan_feature_profiles.other
+        cls.profile_uuid = cls.api.create_profile("TestProfile", "Description").id
 
     def test_when_default_values_thousandeyes_parcel_expect_successful_post(self):
         # Arrange
@@ -17,7 +18,7 @@ class TestSystemOtherProfileModels(TestFeatureProfileModels):
             parcel_description="ThousandEyes Parcel",
         )
         # Act
-        parcel_id = self.api.create_parcel(te_parcel, self.profile_id).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, te_parcel).id
         # Assert
         assert parcel_id
 
@@ -37,10 +38,11 @@ class TestSystemOtherProfileModels(TestFeatureProfileModels):
             ),
         )
         # Act
-        parcel_id = self.api.create_parcel(ucse_parcel, self.profile_id).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, ucse_parcel).id
         # Assert
         assert parcel_id
 
-    def tearDown(self) -> None:
-        self.api.delete_profile(self.profile_id)
-        self.session.close()
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.api.delete_profile(cls.profile_uuid)
+        super().tearDownClass()
