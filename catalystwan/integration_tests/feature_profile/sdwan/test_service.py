@@ -2,10 +2,16 @@ from ipaddress import IPv4Address
 
 from catalystwan.api.configuration_groups.parcel import Global, as_global, as_variable
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
+from catalystwan.models.configuration.feature_profile.common import Prefix
 from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import (
     AddressPool,
     LanVpnDhcpServerParcel,
     SubnetMask,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import (
+    AddressFamily,
+    EigrpParcel,
+    SummaryAddress,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet import InterfaceEthernetParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import BasicGre, InterfaceGreParcel
@@ -101,6 +107,27 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, ospfv3ipv4_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_default_values_eigrp_parcel_expect_successful_post(self):
+        eigrp_parcel = EigrpParcel(
+            parcel_name="TestEigrpParcel",
+            parcel_description="Test Eigrp Parcel",
+            as_number=Global[int](value=1),
+            address_family=AddressFamily(
+                network=[
+                    SummaryAddress(
+                        prefix=Prefix(
+                            address=as_global("10.3.2.1"),
+                            mask=as_global("255.255.255.0"),
+                        )
+                    )
+                ]
+            ),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, eigrp_parcel).id
         # Assert
         assert parcel_id
 
