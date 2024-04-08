@@ -147,7 +147,7 @@ class Accept(BaseModel):
         populate_by_name=True,
     )
     enable_accept_action: Default[bool] = Field(
-        defaulkt=as_default(True),
+        default=as_default(True),
         serialization_alias="enableAcceptAction",
         validation_alias="enableAcceptAction",
         description="Enable Accept Action",
