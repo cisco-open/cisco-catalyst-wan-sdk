@@ -397,11 +397,11 @@ except ManagerHTTPError as error:
 
 ```
 
-## [Supported API endpoints](https://github.com/CiscoDevNet/catalystwan/blob/main/ENDPOINTS.md)
+## [Supported API endpoints](https://github.com/cisco-open/cisco-catalyst-wan-sdk/blob/main/ENDPOINTS.md)
 
 
-## [Contributing, bug reporting and feature requests](https://github.com/CiscoDevNet/catalystwan/blob/main/CONTRIBUTING.md)
+## [Contributing, bug reporting and feature requests](https://github.com/cisco-open/cisco-catalyst-wan-sdk/blob/main/CONTRIBUTING.md)
 
 ## Seeking support
 
-You can contact us by submitting [issues](https://github.com/CiscoDevNet/catalystwan/issues), or directly via mail on vmngclient@cisco.com.
+You can contact us by submitting [issues](https://github.com/cisco-open/cisco-catalyst-wan-sdk/issues), or directly via mail on vmngclient@cisco.com.
