@@ -113,6 +113,27 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
         # Assert
         assert parcel_id
 
+    def test_when_default_values_eigrp_parcel_expect_successful_post(self):
+        eigrp_parcel = EigrpParcel(
+            parcel_name="TestEigrpParcel",
+            parcel_description="Test Eigrp Parcel",
+            as_number=Global[int](value=1),
+            address_family=AddressFamily(
+                network=[
+                    SummaryAddress(
+                        prefix=Prefix(
+                            address=as_global("10.3.2.1"),
+                            mask=as_global("255.255.255.0"),
+                        )
+                    )
+                ]
+            ),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, eigrp_parcel).id
+        # Assert
+        assert parcel_id
+
     def test_when_default_values_route_policy_parcel_expect_successful_post(self):
         # Arrange
         route_policy_parcel = RoutePolicyParcel(
