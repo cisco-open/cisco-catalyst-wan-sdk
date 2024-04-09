@@ -77,6 +77,14 @@ class NextHopWithTrack(FeatureTemplateValidator):
     tracker: str
 
 
+class RouteInterface(FeatureTemplateValidator):
+    interface_name: str = Field(json_schema_extra={"vmanage_key": "interface-name"})
+    interface_next_hop: Optional[List[NextHop]] = Field(
+        default=None, json_schema_extra={"vmanage_key": "interface-next-hop", "priority_order": ["address", "distance"]}
+    )
+    model_config = ConfigDict(populate_by_name=True)
+
+
 class Routev4(FeatureTemplateValidator):
     prefix: Optional[str] = None
     next_hop: Optional[List[NextHop]] = Field(
@@ -84,6 +92,9 @@ class Routev4(FeatureTemplateValidator):
     )
     next_hop_with_track: Optional[List[NextHopWithTrack]] = Field(
         default=None, json_schema_extra={"vmanage_key": "next-hop-with-track"}
+    )
+    route_interface: Optional[RouteInterface] = Field(
+        default=None, json_schema_extra={"vmanage_key": "route-interface"}
     )
     null0: Optional[bool] = None
     distance: Optional[int] = None
