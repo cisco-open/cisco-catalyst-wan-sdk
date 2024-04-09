@@ -3,6 +3,7 @@ from typing import List, Union
 from pydantic import Field
 from typing_extensions import Annotated
 
+from .acl import Ipv4AclParcel, Ipv6AclParcel
 from .appqoe import AppqoeParcel
 from .dhcp_server import LanVpnDhcpServerParcel
 from .eigrp import EigrpParcel
@@ -25,6 +26,8 @@ AnyTopLevelServiceParcel = Annotated[
         Ospfv3IPv6Parcel,
         RoutePolicyParcel,
         EigrpParcel,
+        Ipv6AclParcel,
+        Ipv4AclParcel,
         # TrackerGroupData,
         # WirelessLanData,
         # SwitchportData
@@ -55,6 +58,8 @@ __all__ = [
     "RoutePolicyParcel",
     "Ospfv3IPv4Parcel",
     "Ospfv3IPv6Parcel",
+    "Ipv6AclParcel",
+    "Ipv4AclParcel",
     "InterfaceSviParcel",
     "InterfaceGreParcel",
     "AnyServiceParcel",

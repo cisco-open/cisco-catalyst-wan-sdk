@@ -4,6 +4,7 @@ from uuid import UUID
 from catalystwan.api.configuration_groups.parcel import Global, as_global, as_variable
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
 from catalystwan.models.configuration.feature_profile.common import Prefix
+from catalystwan.models.configuration.feature_profile.sdwan.service.acl import Ipv4AclParcel, Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import (
     AddressPool,
     LanVpnDhcpServerParcel,
@@ -142,6 +143,28 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, route_policy_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_default_values_acl_ipv6_expect_successful_post(self):
+        # Arrange
+        acl_ipv6_parcel = Ipv6AclParcel(
+            parcel_name="TestAclIpv6Parcel",
+            parcel_description="Test Acl Ipv6 Parcel",
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv6_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_default_values_acl_ipv4_expect_successful_post(self):
+        # Arrange
+        acl_ipv4_parcel = Ipv4AclParcel(
+            parcel_name="TestAclIpv4Parcel",
+            parcel_description="Test Acl Ipv4 Parcel",
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv4_parcel).id
         # Assert
         assert parcel_id
 
