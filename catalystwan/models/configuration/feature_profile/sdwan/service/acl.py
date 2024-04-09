@@ -202,7 +202,7 @@ class Ipv4MatchEntry(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    dscp: Optional[Global[list[int]]] = Field(default=None, description="DSCP number")
+    dscp: Optional[Global[List[int]]] = Field(default=None, description="DSCP number")
     packet_length: Optional[Union[Global[int], Global[str]]] = Field(
         default=None, serialization_alias="packetLength", validation_alias="packetLength", description="Packet Length"
     )
