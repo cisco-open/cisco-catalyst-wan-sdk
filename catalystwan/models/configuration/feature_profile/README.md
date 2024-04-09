@@ -6,7 +6,7 @@ This README document provides guidelines on creating configuration groups within
 
 Cellular controller Parcel will be used for example purposes. Please change the parcel according to which one you are implementing.
 
-1. Add new endpoints following the guide: https://github.com/CiscoDevNet/catalystwan/blob/main/CONTRIBUTING.md
+1. Add new endpoints following the guide: https://github.com/cisco-open/cisco-catalyst-wan-sdk/blob/main/CONTRIBUTING.md
 2. Download a schema with new endpoint:
 ```python
     @versions(supported_versions=(">=20.9"), raises=False)
