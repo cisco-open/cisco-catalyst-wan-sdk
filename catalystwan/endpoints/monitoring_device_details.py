@@ -44,7 +44,8 @@ class Tier(BaseModel):
 
 
 class DeviceData(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    # Field "model_sku" has conflict with protected namespace "model_"
+    model_config = ConfigDict(populate_by_name=True, protected_namespaces=())
     board_serial: Optional[str] = Field(
         default=None, serialization_alias="board-serial", validation_alias="board-serial"
     )

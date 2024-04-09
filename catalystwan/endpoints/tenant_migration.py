@@ -2,10 +2,10 @@
 
 # mypy: disable-error-code="empty-body"
 from pathlib import Path
-from typing import List, Union
+from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from catalystwan.endpoints import APIEndpoints, CustomPayloadType, PreparedPayload, get, post, versions, view
 from catalystwan.models.tenant import TenantExport
@@ -13,15 +13,16 @@ from catalystwan.utils.session_type import ProviderView, SingleTenantView
 
 
 class MigrationTokenQueryParams(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-    migration_id: Union[List[str], str] = Field(serialization_alias="migrationId", validation_alias="migrationId")
+    model_config = ConfigDict(populate_by_name=True, extra="allow")
+    migration_id: str = Field(serialization_alias="migrationId", validation_alias="migrationId")
 
-    @field_validator("migration_id")
+    @model_validator(mode="before")
     @classmethod
-    def single_migration_id_required(cls, value: Union[List[str], str]):
-        if isinstance(value, list):
-            return value[0]
-        return value
+    def single_migration_id_required(cls, values: Any):
+        migration_id = values.get("migrationId")
+        if isinstance(migration_id, list) and len(migration_id) == 1:
+            values["migrationId"] = migration_id[0]
+        return values
 
 
 class ExportInfo(BaseModel):
@@ -40,8 +41,7 @@ class ImportInfo(BaseModel):
 
     @property
     def migration_token_query_params(self) -> MigrationTokenQueryParams:
-        query = self.migration_token_query
-        return MigrationTokenQueryParams(**parse_qs(query))
+        return MigrationTokenQueryParams.model_validate(parse_qs(self.migration_token_query))
 
 
 class MigrationInfo(BaseModel):

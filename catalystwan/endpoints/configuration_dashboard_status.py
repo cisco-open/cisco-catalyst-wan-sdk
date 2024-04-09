@@ -72,7 +72,7 @@ class Validation(BaseModel):
     action: Optional[str] = Field(default=None, serialization_alias="action", validation_alias="action")
     start_time: Optional[int] = Field(default=None, serialization_alias="startTime", validation_alias="startTime")
     request_status: Optional[str] = Field(
-        sdefault=None, erialization_alias="requestStatus", validation_alias="requestStatus"
+        default=None, serialization_alias="requestStatus", validation_alias="requestStatus"
     )
     status: OperationStatus = Field(default=None, serialization_alias="status", validation_alias="status")
     order: Optional[int] = Field(default=None, serialization_alias="order", validation_alias="order")

@@ -298,7 +298,7 @@ class StatsCollectionInterval(BaseModel):
         le=180,
         serialization_alias="operationInterval",
         validation_alias="operationInterval",
-        desctiption="collecion interval in minutes",
+        description="collecion interval in minutes",
     )
 
 
