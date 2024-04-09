@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Generic, Iterable, MutableSequence, Type, TypeVar, overload
 
-from pydantic import BaseModel as BaseModelV2
-from pydantic.v1 import BaseModel as BaseModelV1
+from pydantic import BaseModel
 
 from catalystwan.exceptions import InvalidOperationError
 from catalystwan.utils.creation_tools import AttrsInstance, asdict
@@ -152,13 +151,9 @@ class DataSequence(TypedList[T], Generic[T]):
         ...
 
     def __init__(self, _type, _iterable=None, /):
-        if (
-            not isinstance(_type, AttrsInstance)
-            and not issubclass(_type, BaseModelV1)
-            and not issubclass(_type, BaseModelV2)
-        ):
+        if not isinstance(_type, AttrsInstance) and not issubclass(_type, BaseModel):
             raise TypeError(
-                f"Expected {AttrsInstance.__name__} or {BaseModelV1.__name__} item type, got {_type.__name__}."
+                f"Expected {AttrsInstance.__name__} or {BaseModel.__name__} item type, got {_type.__name__}."
             )
 
         super().__init__(_type, _iterable)
@@ -176,7 +171,7 @@ class DataSequence(TypedList[T], Generic[T]):
     def __str__(self) -> str:
         pretty_message = ""
         for element in self:
-            if issubclass(element.__class__, (BaseModelV1, BaseModelV2)):
+            if issubclass(element.__class__, BaseModel):
                 pprint = "\n".join(f"    {attr[0]}: {attr[1]}, " for attr in element.dict().items())  # type: ignore
             else:
                 pprint = "\n".join(f"    {attr[0]}: {attr[1]}, " for attr in asdict(element).items())  # type: ignore

@@ -3,7 +3,7 @@
 # mypy: disable-error-code="empty-body"
 from typing import List, Optional
 
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from catalystwan.endpoints import APIEndpoints, get
 from catalystwan.typed_list import DataSequence
@@ -20,59 +20,84 @@ class Tier(BaseModel):
     Since vManage 20.12 version, object has been renamed to "Resource Profile".
     """
 
-    name: str = Field(alias="tierName")
+    model_config = ConfigDict(populate_by_name=True)
+    name: str = Field(serialization_alias="tierName", validation_alias="tierName")
     vpn: int
-    rid: int = Field(alias="@rid")
-    ipv4_route_limit_type: Optional[str] = Field(alias="ipv4RouteLimitType")
-    ipv4_route_limit_threshold: Optional[int] = Field(alias="ipv4RouteLimitThreshold")
-    ipv4_route_limit: Optional[int] = Field(alias="ipv4RouteLimit")
-    ipv6_route_limit_type: Optional[str] = Field(alias="ipv6RouteLimitType")
-    ipv6_route_limit_threshold: Optional[int] = Field(alias="ipv6RouteLimitThreshold")
-    ipv6_route_limit: Optional[int] = Field(alias="ipv6RouteLimit")
+    rid: int = Field(serialization_alias="@rid", validation_alias="@rid")
+    ipv4_route_limit_type: Optional[str] = Field(
+        serialization_alias="ipv4RouteLimitType", validation_alias="ipv4RouteLimitType"
+    )
+    ipv4_route_limit_threshold: Optional[int] = Field(
+        serialization_alias="ipv4RouteLimitThreshold", validation_alias="ipv4RouteLimitThreshold"
+    )
+    ipv4_route_limit: Optional[int] = Field(serialization_alias="ipv4RouteLimit", validation_alias="ipv4RouteLimit")
+    ipv6_route_limit_type: Optional[str] = Field(
+        serialization_alias="ipv6RouteLimitType", validation_alias="ipv6RouteLimitType"
+    )
+    ipv6_route_limit_threshold: Optional[int] = Field(
+        serialization_alias="ipv6RouteLimitThreshold", validation_alias="ipv6RouteLimitThreshold"
+    )
+    ipv6_route_limit: Optional[int] = Field(serialization_alias="ipv6RouteLimit", validation_alias="ipv6RouteLimit")
     tlocs: List[TLOC] = Field(default=[])
     # New in 20.12 version
-    nat_session_limit: Optional[int] = Field(alias="natSessionLimit")
+    nat_session_limit: Optional[int] = Field(serialization_alias="natSessionLimit", validation_alias="natSessionLimit")
 
 
 class DeviceData(BaseModel):
-    board_serial: Optional[str] = Field(None, alias="board-serial")
-    certificate_validity: Optional[str] = Field(None, alias="certificate-validity")
-    connected_vmanages: Optional[List[str]] = Field(None, alias="connectedVManages")
-    control_connections: Optional[str] = Field(None, alias="controlConnections")
-    device_groups: Optional[List[str]] = Field(None, alias="device-groups")
-    device_model: Optional[str] = Field(None, alias="device-model")
-    device_os: Optional[str] = Field(None, alias="device-os")
-    device_type: Optional[str] = Field(None, alias="device-type")
-    device_id: str = Field(alias="deviceId")
-    domain_id: Optional[str] = Field(None, alias="domain-id")
-    host_name: Optional[str] = Field(None, alias="host-name")
-    is_device_geo_data: Optional[bool] = Field(None, alias="isDeviceGeoData")
+    model_config = ConfigDict(populate_by_name=True)
+    board_serial: Optional[str] = Field(
+        default=None, serialization_alias="board-serial", validation_alias="board-serial"
+    )
+    certificate_validity: Optional[str] = Field(
+        default=None, serialization_alias="certificate-validity", validation_alias="certificate-validity"
+    )
+    connected_vmanages: Optional[List[str]] = Field(
+        default=None, serialization_alias="connectedVManages", validation_alias="connectedVManages"
+    )
+    control_connections: Optional[str] = Field(
+        default=None, serialization_alias="controlConnections", validation_alias="controlConnections"
+    )
+    device_groups: Optional[List[str]] = Field(
+        default=None, serialization_alias="device-groups", validation_alias="device-groups"
+    )
+    device_model: Optional[str] = Field(
+        default=None, serialization_alias="device-model", validation_alias="device-model"
+    )
+    device_os: Optional[str] = Field(default=None, serialization_alias="device-os", validation_alias="device-os")
+    device_type: Optional[str] = Field(default=None, serialization_alias="device-type", validation_alias="device-type")
+    device_id: str = Field(serialization_alias="deviceId", validation_alias="deviceId")
+    domain_id: Optional[str] = Field(default=None, serialization_alias="domain-id", validation_alias="domain-id")
+    host_name: Optional[str] = Field(default=None, serialization_alias="host-name", validation_alias="host-name")
+    is_device_geo_data: Optional[bool] = Field(
+        default=None, serialization_alias="isDeviceGeoData", validation_alias="isDeviceGeoData"
+    )
     lastupdated: Optional[str] = None
     latitude: Optional[str] = None
-    layout_level: Optional[int] = Field(None, alias="layoutLevel")
-    local_system_ip: Optional[str] = Field(None, alias="local-system-ip")
+    layout_level: Optional[int] = Field(default=None, serialization_alias="layoutLevel", validation_alias="layoutLevel")
+    local_system_ip: Optional[str] = Field(
+        default=None, serialization_alias="local-system-ip", validation_alias="local-system-ip"
+    )
     longitude: Optional[str] = None
-    max_controllers: Optional[str] = Field(None, alias="max-controllers")
+    max_controllers: Optional[str] = Field(
+        default=None, serialization_alias="max-controllers", validation_alias="max-controllers"
+    )
     model_sku: Optional[str] = None
     personality: Optional[str] = None
     platform: Optional[str] = None
     reachability: Optional[str] = None
-    site_id: Optional[str] = Field(None, alias="site-id")
+    site_id: Optional[str] = Field(default=None, serialization_alias="site-id", validation_alias="site-id")
     state: Optional[str] = None
     state_description: Optional[str] = None
     status: Optional[str] = None
-    status_order: Optional[str] = Field(None, alias="statusOrder")
-    system_ip: Optional[str] = Field(None, alias="system-ip")
+    status_order: Optional[str] = Field(default=None, serialization_alias="statusOrder", validation_alias="statusOrder")
+    system_ip: Optional[str] = Field(default=None, serialization_alias="system-ip", validation_alias="system-ip")
     testbed_mode: Optional[bool] = None
     timezone: Optional[str] = None
     total_cpu_count: Optional[str] = None
-    uptime_date: Optional[str] = Field(None, alias="uptime-date")
+    uptime_date: Optional[str] = Field(default=None, serialization_alias="uptime-date", validation_alias="uptime-date")
     uuid: Optional[str] = None
     validity: Optional[str] = None
     version: Optional[str] = None
-
-    class Config:
-        allow_population_by_field_name = True
 
 
 class MonitoringDeviceDetails(APIEndpoints):
