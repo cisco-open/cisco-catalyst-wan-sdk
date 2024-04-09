@@ -13,6 +13,7 @@ from .lan.svi import InterfaceSviParcel
 from .lan.vpn import LanVpnParcel
 from .ospf import OspfParcel
 from .ospfv3 import Ospfv3IPv4Parcel, Ospfv3IPv6Parcel
+from .route_policy import RoutePolicyParcel
 
 AnyTopLevelServiceParcel = Annotated[
     Union[
@@ -22,6 +23,7 @@ AnyTopLevelServiceParcel = Annotated[
         OspfParcel,
         Ospfv3IPv4Parcel,
         Ospfv3IPv6Parcel,
+        RoutePolicyParcel,
         EigrpParcel,
         # TrackerGroupData,
         # WirelessLanData,
@@ -50,6 +52,7 @@ __all__ = [
     "AppqoeParcel",
     "LanVpnParcel",
     "OspfParcel",
+    "RoutePolicyParcel",
     "Ospfv3IPv4Parcel",
     "Ospfv3IPv6Parcel",
     "InterfaceSviParcel",

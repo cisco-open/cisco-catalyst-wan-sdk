@@ -1,4 +1,5 @@
 from ipaddress import IPv4Address
+from uuid import UUID
 
 from catalystwan.api.configuration_groups.parcel import Global, as_global, as_variable
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
@@ -30,13 +31,15 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 impor
     Ospfv3IPv6Area,
     Ospfv3IPv6Parcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
 
 
 class TestServiceFeatureProfileModels(TestFeatureProfileModels):
-    def setUp(self) -> None:
-        super().setUp()
-        self.api = self.session.api.sdwan_feature_profiles.service
-        self.profile_uuid = self.api.create_profile("TestProfileService", "Description").id
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.api = cls.session.api.sdwan_feature_profiles.service
+        cls.profile_uuid = cls.api.create_profile("TestProfileService", "Description").id
 
     def test_when_default_values_dhcp_server_parcel_expect_successful_post(self):
         # Arrange
@@ -131,18 +134,33 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
         # Assert
         assert parcel_id
 
-    def tearDown(self) -> None:
-        self.api.delete_profile(self.profile_uuid)
-        self.session.close()
+    def test_when_default_values_route_policy_parcel_expect_successful_post(self):
+        # Arrange
+        route_policy_parcel = RoutePolicyParcel(
+            parcel_name="TestRoutePolicyParcel",
+            parcel_description="Test Route Policy Parcel",
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, route_policy_parcel).id
+        # Assert
+        assert parcel_id
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.api.delete_profile(cls.profile_uuid)
+        super().tearDownClass()
 
 
 class TestServiceFeatureProfileVPNInterfaceModels(TestFeatureProfileModels):
-    def setUp(self) -> None:
-        super().setUp()
-        self.api = self.session.api.sdwan_feature_profiles.service
-        self.profile_uuid = self.api.create_profile("TestProfileService", "Description").id
-        self.vpn_parcel_uuid = self.api.create_parcel(
-            self.profile_uuid,
+    vpn_parcel_uuid: UUID
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.api = cls.session.api.sdwan_feature_profiles.service
+        cls.profile_uuid = cls.api.create_profile("TestProfileService", "Description").id
+        cls.vpn_parcel_uuid = cls.api.create_parcel(
+            cls.profile_uuid,
             LanVpnParcel(
                 parcel_name="TestVpnParcel", parcel_description="Test Vpn Parcel", vpn_id=Global[int](value=2)
             ),
@@ -188,7 +206,6 @@ class TestServiceFeatureProfileVPNInterfaceModels(TestFeatureProfileModels):
 
     def test_when_default_values_ipsec_parcel_expect_successful_post(self):
         # Arrange
-        self.maxDiff = None
         ipsec_parcel = InterfaceIpsecParcel(
             parcel_name="TestIpsecParcel",
             parcel_description="Test Ipsec Parcel",
@@ -212,6 +229,7 @@ class TestServiceFeatureProfileVPNInterfaceModels(TestFeatureProfileModels):
         # Assert
         assert parcel_id
 
-    def tearDown(self) -> None:
-        self.api.delete_profile(self.profile_uuid)
-        self.session.close()
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.api.delete_profile(cls.profile_uuid)
+        super().tearDownClass()
