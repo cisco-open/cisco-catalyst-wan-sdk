@@ -18,6 +18,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service import (
     LanVpnDhcpServerParcel,
     LanVpnParcel,
     OspfParcel,
+    SwitchportParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.acl import Ipv4AclParcel, Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import EigrpParcel
@@ -115,6 +116,7 @@ service_endpoint_mapping = {
     EigrpParcel: "routing/eigrp",
     Ipv6AclParcel: "ipv6-acl",
     Ipv4AclParcel: "ipv4-acl",
+    SwitchportParcel: "switchport",
 }
 
 service_interface_parcels = [
