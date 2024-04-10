@@ -10,8 +10,8 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional
 
-from requests import Response
-from requests.exceptions import HTTPError
+from requests import Response  # type: ignore
+from requests.exceptions import HTTPError  # type: ignore
 
 from catalystwan.dataclasses import AdminTech, DeviceAdminTech
 from catalystwan.exceptions import CatalystwanException
@@ -120,7 +120,8 @@ class AdminTechAPI:
             except HTTPError as http_error:
                 response = http_error.response  # type: ignore
             if response.status_code == 200:
-                return response.json()["fileName"]
+                filename = response.json()["fileName"]
+                return self._wait_for_file_ready(filename)
             if response.status_code == 400 and create_admin_tech_error_msgs in response.json().get("error", {}).get(
                 "details", ""
             ):
@@ -130,6 +131,17 @@ class AdminTechAPI:
             time.sleep(polling_interval)
             polling_timer -= polling_interval
         raise GenerateAdminTechLogError(f"It is not possible to generate admintech log for {device_id}")
+
+    def _wait_for_file_ready(self, filename: str, timeout: int = 3600, interval: int = 30) -> str:
+        # Wait for the file to be ready and obtain the token_id
+        end_time = time.time() + timeout
+        while time.time() < end_time:
+            admin_techs = self.get_all()
+            for admin_tech in admin_techs:
+                if filename == admin_tech.filename and admin_tech.state == "done":
+                    return admin_tech.token_id
+            time.sleep(interval)
+        raise GenerateAdminTechLogError(f"Timeout waiting for admin tech log to be ready for {filename}")
 
     def _get_token_id(self, filename: str) -> str:
         admin_techs = self.get_all()
