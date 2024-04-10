@@ -23,6 +23,13 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.ospf import 
     RedistributeProtocolOspf,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 import NetworkType
+from catalystwan.models.configuration.feature_profile.sdwan.service.switchport import (
+    ControlDirection,
+    Duplex,
+    HostMode,
+    PortControl,
+    SwitchportMode,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.system.logging_parcel import (
     AuthType,
     CypherSuite,
@@ -31,6 +38,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.system.logging_parce
 )
 from catalystwan.models.configuration.feature_profile.sdwan.system.mrf import EnableMrfMigration, Role
 
+"""List of all literals that can be casted."""
 CastableLiterals = Union[
     Priority,
     TlsVersion,
@@ -48,6 +56,7 @@ CastableLiterals = Union[
     TunnelApplication,
     GreTunnelMode,
     VrrpTrackerAction,
+    Duplex,
     DuplexMode,
     MediaType,
     NatType,
@@ -58,6 +67,10 @@ CastableLiterals = Union[
     AdvertiseType,
     RedistributeProtocolOspf,
     MetricType,
+    SwitchportMode,
+    PortControl,
+    HostMode,
+    ControlDirection,
 ]
 
 CastedTypes = Union[

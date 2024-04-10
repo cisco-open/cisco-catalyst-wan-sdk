@@ -59,6 +59,7 @@ SUPPORTED_TEMPLATE_TYPES = [
     "cisco_vpn_interface_ipsec",
     "vpn-interface-svi",
     "cisco_ospf",
+    "switchport",
 ]
 
 FEATURE_PROFILE_SYSTEM = [
@@ -105,6 +106,7 @@ FEATURE_PROFILE_SERVICE = [
     "cisco_vpn_interface_ipsec",
     "vpn-interface-svi",
     "cisco_ospf",
+    "switchport",
 ]
 
 

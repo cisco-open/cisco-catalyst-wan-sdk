@@ -115,9 +115,9 @@ class SwitchportParcel(_ParcelBase):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     interface: List[SwitchportInterface] = Field(default_factory=list, validation_alias=AliasPath("data", "interface"))
-    age_time: Optional[Union[Global[int], Variable, Default[int]]] = Field(
+    age_time: Union[Global[int], Variable, Default[int]] = Field(
         default=Default[int](value=300), validation_alias=AliasPath("data", "ageTime")
     )
-    static_mac_address: Optional[List[StaticMacAddress]] = Field(
+    static_mac_address: List[StaticMacAddress] = Field(
         default_factory=list, validation_alias=AliasPath("data", "staticMacAddress")
     )

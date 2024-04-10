@@ -8,6 +8,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.system import AnySys
 from catalystwan.utils.config_migration.converters.feature_template.dhcp import DhcpTemplateConverter
 from catalystwan.utils.config_migration.converters.feature_template.ethernet import InterfaceEthernetTemplateConverter
 from catalystwan.utils.config_migration.converters.feature_template.snmp import SNMPTemplateConverter
+from catalystwan.utils.config_migration.converters.feature_template.switchport import SwitchportTemplateConverter
 from catalystwan.utils.feature_template.find_template_values import find_template_values
 
 from .aaa import AAATemplateConverter
@@ -57,6 +58,7 @@ available_converters = [
     InterfaceIpsecTemplateConverter,
     OspfTemplateConverter,
     Ospfv3TemplateConverter,
+    SwitchportTemplateConverter,
 ]
 
 
