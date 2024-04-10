@@ -1,65 +1,16 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
+from __future__ import annotations
 
+from ipaddress import IPv4Address, IPv6Address, IPv6Interface
 from typing import List, Literal, Optional, Union
 from uuid import UUID
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, model_validator
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.common import ServiceChainNumber
+from catalystwan.api.configuration_groups.parcel import Default, Global, _ParcelBase, as_default
 
-Action = Literal[
-    "drop",
-    "accept",
-]
-
-IcmpMessage = Literal[
-    "administratively-prohibited",
-    "dod-host-prohibited",
-    "dod-net-prohibited",
-    "echo",
-    "echo-reply",
-    "echo-reply-no-error",
-    "extended-echo",
-    "extended-echo-reply",
-    "general-parameter-problem",
-    "host-isolated",
-    "host-precedence-unreachable",
-    "host-redirect",
-    "host-tos-redirect",
-    "host-tos-unreachable",
-    "host-unknown",
-    "host-unreachable",
-    "interface-error",
-    "malformed-query",
-    "multiple-interface-match",
-    "net-redirect",
-    "net-tos-redirect",
-    "net-tos-unreachable",
-    "net-unreachable",
-    "network-unknown",
-    "no-room-for-option",
-    "option-missing",
-    "packet-too-big",
-    "parameter-problem",
-    "photuris",
-    "port-unreachable",
-    "precedence-unreachable",
-    "protocol-unreachable",
-    "reassembly-timeout",
-    "redirect",
-    "router-advertisement",
-    "router-solicitation",
-    "source-route-failed",
-    "table-entry-error",
-    "time-exceeded",
-    "timestamp-reply",
-    "timestamp-request",
-    "ttl-exceeded",
-    "unreachable",
-]
-
-Icmp6Message = Literal[
+Action = Literal["drop", "accept"]
+Icmp6Msg = Literal[
     "beyond-scope",
     "cp-advertisement",
     "cp-solicitation",
@@ -113,285 +64,379 @@ Icmp6Message = Literal[
     "time-exceeded",
     "unreachable",
 ]
+IcmpMsg = Literal[
+    "administratively-prohibited",
+    "dod-host-prohibited",
+    "dod-net-prohibited",
+    "echo",
+    "echo-reply",
+    "echo-reply-no-error",
+    "extended-echo",
+    "extended-echo-reply",
+    "general-parameter-problem",
+    "host-isolated",
+    "host-precedence-unreachable",
+    "host-redirect",
+    "host-tos-redirect",
+    "host-tos-unreachable",
+    "host-unknown",
+    "host-unreachable",
+    "interface-error",
+    "malformed-query",
+    "multiple-interface-match",
+    "net-redirect",
+    "net-tos-redirect",
+    "net-tos-unreachable",
+    "net-unreachable",
+    "network-unknown",
+    "no-room-for-option",
+    "option-missing",
+    "packet-too-big",
+    "parameter-problem",
+    "photuris",
+    "port-unreachable",
+    "precedence-unreachable",
+    "protocol-unreachable",
+    "reassembly-timeout",
+    "redirect",
+    "router-advertisement",
+    "router-solicitation",
+    "source-route-failed",
+    "table-entry-error",
+    "time-exceeded",
+    "timestamp-reply",
+    "timestamp-request",
+    "ttl-exceeded",
+    "unreachable",
+]
+Tcp = Literal["syn"]
 
 
-class SourceDataIPv4Prefix(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
+class ReferenceId(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    ref_id: Global[UUID] = Field(..., serialization_alias="refId", validation_alias="refId")
 
-    source_ip_prefix: Union[Global[str], Variable] = Field(
-        serialization_alias="sourceIpPrefix", validation_alias="sourceIpPrefix"
+
+class SourceDataPrefixListReference(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    source_data_prefix_list: ReferenceId = Field(
+        ...,
+        serialization_alias="sourceDataPrefixList",
+        validation_alias="sourceDataPrefixList",
+        description="Source Data Prefix Parcel",
     )
 
 
-class SourceDataIPv6Prefix(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    source_ip_prefix: Union[Global[str], Variable] = Field(
-        serialization_alias="sourceIpPrefix", validation_alias="sourceIpPrefix"
+class SourceDataPrefixIp(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
     )
-
-
-class SourceDataIPv4PrefixParcel(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    source_data_prefix_list: Global[UUID] = Field(
-        serialization_alias="sourceDataPrefixList", validation_alias="sourceDataPrefixList"
-    )
-
-
-class SourceDataIPv6PrefixParcel(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    source_data_prefix_list: Global[UUID] = Field(
-        serialization_alias="sourceDataPrefixList", validation_alias="sourceDataPrefixList"
+    source_ip_prefix: Global[str] = Field(
+        ...,
+        serialization_alias="sourceIpPrefix",
+        validation_alias="sourceIpPrefix",
+        description="Source Data IP Prefix",
     )
 
 
 class SourcePort(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    source_port: Global[int] = Field(serialization_alias="sourcePort", validation_alias="sourcePort")
-
-
-class DestinationDataIPv4Prefix(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    destination_ip_prefix: Union[Global[str], Variable] = Field(
-        serialization_alias="destinationIpPrefix", validation_alias="destinationIpPrefix"
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    source_port: Union[Global[int], Global[str]] = Field(
+        ...,
+        serialization_alias="sourcePort",
+        validation_alias="sourcePort",
+        description="source port range or individual port number",
     )
 
 
-class DestinationDataIPv6Prefix(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    destination_ip_prefix: Union[Global[str], Variable] = Field(
-        serialization_alias="destinationIpPrefix", validation_alias="destinationIpPrefix"
+class DestinationDataPrefixListReference(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    destination_data_prefix_list: ReferenceId = Field(
+        ...,
+        serialization_alias="destinationDataPrefixList",
+        validation_alias="destinationDataPrefixList",
+        description="Destination Data Prefix Parcel",
     )
 
 
-class DestinationDataIPv4PrefixParcel(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    destination_data_prefix_list: Global[UUID] = Field(
-        serialization_alias="destinationDataPrefixList", validation_alias="destinationDataPrefixList"
+class DestinationDataPrefixIp(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
     )
-
-
-class DestinationDataIPv6PrefixParcel(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    destination_data_prefix_list: Global[UUID] = Field(
-        serialization_alias="destinationDataPrefixList", validation_alias="destinationDataPrefixList"
+    destination_ip_prefix: Global[IPv6Interface] = Field(
+        ...,
+        serialization_alias="destinationIpPrefix",
+        validation_alias="destinationIpPrefix",
+        description="Destination Data IP Prefix",
     )
 
 
 class DestinationPort(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    destination_port: Global[int] = Field(serialization_alias="destinationPort", validation_alias="destinationPort")
-
-
-TcpState = Literal["syn"]
-
-
-class IPv4Match(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    dscp: Optional[Global[List[int]]] = None
-    packet_length: Optional[Global[int]] = Field(
-        serialization_alias="packetLength", validation_alias="packetLength", default=None
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
     )
-    protocol: Optional[Global[List[int]]] = None
-    icmp_message: Optional[Global[List[IcmpMessage]]] = Field(
-        serialization_alias="icmpMsg", validation_alias="icmpMsg", default=None
+    destination_port: Union[Global[int], Global[str]] = Field(
+        ...,
+        serialization_alias="destinationPort",
+        validation_alias="destinationPort",
+        description="destination port range or individual port number",
     )
-    source_data_prefix: Optional[Union[SourceDataIPv4Prefix, SourceDataIPv4PrefixParcel]] = Field(
-        serialization_alias="sourceDataPrefix", validation_alias="sourceDataPrefix", default=None
+
+
+class Ipv4MatchEntry(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    dscp: Optional[Global[List[int]]] = Field(default=None, description="DSCP number")
+    packet_length: Optional[Union[Global[int], Global[str]]] = Field(
+        default=None, serialization_alias="packetLength", validation_alias="packetLength", description="Packet Length"
+    )
+    protocol: Optional[Global[List[int]]] = Field(
+        default=None, description="protocol number list with at least one item"
+    )
+    icmp_msg: Optional[IcmpMsg] = Field(
+        default=None, serialization_alias="icmpMsg", validation_alias="icmpMsg", description="ICMP Message"
+    )
+    source_data_prefix: Optional[Union[SourceDataPrefixListReference, SourceDataPrefixIp]] = Field(
+        default=None, serialization_alias="sourceDataPrefix", validation_alias="sourceDataPrefix"
     )
     source_ports: Optional[List[SourcePort]] = Field(
-        serialization_alias="sourcePorts", validation_alias="sourcePorts", default=None
+        default=None, serialization_alias="sourcePorts", validation_alias="sourcePorts", description="Source Port List"
     )
-    destination_data_prefix: Optional[Union[DestinationDataIPv4Prefix, DestinationDataIPv4PrefixParcel]] = Field(
-        serialization_alias="destinationDataPrefix", validation_alias="destinationDataPrefix", default=None
+    destination_data_prefix: Optional[Union[DestinationDataPrefixListReference, DestinationDataPrefixIp]] = Field(
+        default=None, serialization_alias="destinationDataPrefix", validation_alias="destinationDataPrefix"
     )
     destination_ports: Optional[List[DestinationPort]] = Field(
-        serialization_alias="destinationPorts", validation_alias="destinationPorts", default=None
+        default=None,
+        serialization_alias="destinationPorts",
+        validation_alias="destinationPorts",
+        description="Destination Port List",
     )
-    tcp: Optional[Global[TcpState]] = None
+    tcp: Optional[Tcp] = Field(default=None, description="TCP States")
 
 
-class IPv6Match(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
+class Ipv6MatchEntry(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
     next_header: Optional[Global[int]] = Field(
-        serialization_alias="nextHeader", validation_alias="nextHeader", default=None
+        default=None, serialization_alias="nextHeader", validation_alias="nextHeader", description="next header number"
     )
-    packet_length: Optional[Global[int]] = Field(
-        serialization_alias="packetLength", validation_alias="packetLength", default=None
+    packet_length: Optional[Union[Global[int], Global[str]]] = Field(
+        default=None, serialization_alias="packetLength", validation_alias="packetLength", description="Packet Length"
     )
-    source_data_prefix: Optional[Union[SourceDataIPv6Prefix, SourceDataIPv6PrefixParcel]] = Field(
-        serialization_alias="sourceDataPrefix", validation_alias="sourceDataPrefix", default=None
+    source_data_prefix: Optional[Union[SourceDataPrefixListReference, SourceDataPrefixIp]] = Field(
+        default=None, serialization_alias="sourceDataPrefix", validation_alias="sourceDataPrefix"
     )
     source_ports: Optional[List[SourcePort]] = Field(
-        serialization_alias="sourcePorts", validation_alias="sourcePorts", default=None
+        default=None, serialization_alias="sourcePorts", validation_alias="sourcePorts", description="Source Port List"
     )
-    destination_data_prefix: Optional[Union[DestinationDataIPv6Prefix, DestinationDataIPv6PrefixParcel]] = Field(
-        serialization_alias="destinationDataPrefix", validation_alias="destinationDataPrefix", default=None
+    destination_data_prefix: Optional[Union[DestinationDataPrefixListReference, DestinationDataPrefixIp]] = Field(
+        default=None, serialization_alias="destinationDataPrefix", validation_alias="destinationDataPrefix"
     )
     destination_ports: Optional[List[DestinationPort]] = Field(
-        serialization_alias="destinationPorts", validation_alias="destinationPorts", default=None
+        default=None,
+        serialization_alias="destinationPorts",
+        validation_alias="destinationPorts",
+        description="Destination Port List",
     )
-    tcp: Optional[Global[TcpState]] = None
-    traffic_class: Optional[Global[int]] = None
-    icmp6_message: Optional[Global[List[Icmp6Message]]] = Field(
-        serialization_alias="icmpMsg", validation_alias="icmpMsg", default=None
+    tcp: Optional[Global[Tcp]] = Field(default=None, description="TCP States")
+    traffic_class: Optional[Global[List[int]]] = Field(
+        default=None,
+        serialization_alias="trafficClass",
+        validation_alias="trafficClass",
+        description="Select Traffic Class",
+    )
+    icmp6_msg: Optional[Global[List[Icmp6Msg]]] = Field(
+        default=None, serialization_alias="icmp6Msg", validation_alias="icmp6Msg", description="ICMP6 Message"
     )
 
 
-class ServiceChain(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
+class Ipv4AcceptAction(BaseModel):
+    """
+    Accept Action
+    """
 
-    service_chain_number: Union[Global[ServiceChainNumber], Variable] = Field(
-        serialization_alias="serviceChainNumber", validation_alias="serviceChainNumber"
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
     )
-    vpn: Optional[Union[Global[int], Variable]] = None
-    fallback: Optional[Union[Global[bool], Variable, Default[bool]]] = None
-
-
-class AcceptActionIPv4(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    set_dscp: Optional[Global[int]] = Field(serialization_alias="setDscp", validation_alias="setDscp", default=None)
+    set_dscp: Optional[Global[int]] = Field(
+        default=None, serialization_alias="setDscp", validation_alias="setDscp", description="DSCP number"
+    )
     counter_name: Optional[Global[str]] = Field(
-        serialization_alias="counterName", validation_alias="counterName", default=None
+        default=None, serialization_alias="counterName", validation_alias="counterName", description="Counter Name"
     )
-    log: Optional[Union[Global[bool], Default[bool]]] = None
-    set_next_hop: Optional[Global[str]] = Field(
-        serialization_alias="setNextHop", validation_alias="setNextHop", default=None
+    log: Union[Global[bool], Default[bool]] = Field(default=as_default(False), description="Enable log")
+    set_next_hop: Optional[Global[IPv4Address]] = Field(
+        default=None,
+        serialization_alias="setNextHop",
+        validation_alias="setNextHop",
+        description="Set Next Hop (IPV4 address)",
     )
-    set_service_chain: Optional[ServiceChain] = Field(
-        serialization_alias="setServiceChain", validation_alias="setServiceChain", default=None
-    )
-    mirror: Optional[Global[UUID]] = None
-    policer: Optional[Global[UUID]] = None
+    mirror: Optional[ReferenceId] = Field(default=None, description="Select a Mirror Parcel UUID")
+    policer: Optional[ReferenceId] = Field(default=None, description="Select a Policer Parcel")
 
 
-class AcceptActionIPv6(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
+class Ipv6AcceptAction(BaseModel):
+    """
+    Accept Action
+    """
 
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
     counter_name: Optional[Global[str]] = Field(
-        serialization_alias="counterName", validation_alias="counterName", default=None
+        default=None, serialization_alias="counterName", validation_alias="counterName", description="Counter Name"
     )
-    log: Optional[Union[Global[bool], Default[bool]]] = None
-    set_next_hop: Optional[Global[str]] = Field(
-        serialization_alias="setNextHop", validation_alias="setNextHop", default=None
-    )
-    set_service_chain: Optional[ServiceChain] = Field(
-        serialization_alias="setServiceChain", validation_alias="setServiceChain", default=None
+    log: Union[Global[bool], Default[bool]] = Field(default=as_default(False), description="Enable log")
+    set_next_hop: Optional[Global[IPv6Address]] = Field(
+        default=None,
+        serialization_alias="setNextHop",
+        validation_alias="setNextHop",
+        description="Set Next Hop (IPV6 address)",
     )
     set_traffic_class: Optional[Global[int]] = Field(
-        serialization_alias="setTrafficClass", validation_alias="setTrafficClass", default=None
+        default=None,
+        serialization_alias="setTrafficClass",
+        validation_alias="setTrafficClass",
+        description="set traffic class number",
     )
-    mirror: Optional[Global[UUID]] = None
-    policer: Optional[Global[UUID]] = None
+    mirror: Optional[ReferenceId] = Field(default=None, description="Select a Mirror Parcel UUID")
+    policer: Optional[ReferenceId] = Field(default=None, description="Select a Policer Parcel")
+
+
+class Ipv4AcceptActions(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    accept: Ipv4AcceptAction = Field(..., description="Accept Action")
+
+
+class Ipv6AcceptActions(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    accept: Ipv6AcceptAction = Field(..., description="Accept Action")
 
 
 class DropAction(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
+    """
+    Drop Action
+    """
 
-    counter_name: Optional[Global[str]] = Field(
-        serialization_alias="counterName", validation_alias="counterName", default=None
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
     )
-    log: Optional[Union[Global[bool], Default[bool]]] = None
-
-
-class AcceptActionsIPv4(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    accept: AcceptActionIPv4
-
-
-class AcceptActionsIPv6(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    accept: AcceptActionIPv6
+    counter_name: Optional[Global[str]] = Field(
+        default=None, serialization_alias="counterName", validation_alias="counterName", description="Counter Name"
+    )
+    log: Union[Global[bool], Default[bool]] = Field(default=as_default(False), description="Enable log")
 
 
 class DropActions(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    drop: DropAction
-
-
-class IPv4SequenceBaseAction(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    sequence_id: Global[int] = Field(serialization_alias="sequenceId", validation_alias="sequenceId")
-    sequence_name: Global[str] = Field(serialization_alias="sequenceName", validation_alias="sequenceName")
-    base_action: Union[Global[Action], Default[Action]] = Field(
-        serialization_alias="baseAction", validation_alias="baseAction", default=Default[Action](value="accept")
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
     )
-    match_entries: Optional[List[IPv4Match]] = Field(
-        serialization_alias="matchEntries", validation_alias="matchEntries", default=None
+    drop: DropAction = Field(..., description="Drop Action")
+
+
+class Sequences(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
     )
-
-
-class IPv6SequenceBaseAction(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    sequence_id: Global[int] = Field(serialization_alias="sequenceId", validation_alias="sequenceId")
-    sequence_name: Global[str] = Field(serialization_alias="sequenceName", validation_alias="sequenceName")
-    base_action: Union[Global[Action], Default[Action]] = Field(
-        serialization_alias="baseAction", validation_alias="baseAction", default=Default[Action](value="accept")
+    sequence_id: Global[int] = Field(
+        ..., serialization_alias="sequenceId", validation_alias="sequenceId", description="Sequence Id"
     )
-    match_entries: Optional[List[IPv6Match]] = Field(
-        serialization_alias="matchEntries", validation_alias="matchEntries", default=None
+    sequence_name: Global[str] = Field(
+        ..., serialization_alias="sequenceName", validation_alias="sequenceName", description="Sequence Name"
     )
-
-
-class IPv4SequenceActions(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    sequence_id: Global[int] = Field(serialization_alias="sequenceId", validation_alias="sequenceId")
-    sequence_name: Global[str] = Field(serialization_alias="sequenceName", validation_alias="sequenceName")
-    actions: List[Union[AcceptActionsIPv4, DropActions]] = Field(
-        serialization_alias="actions", validation_alias="actions"
+    base_action: Optional[Union[Global[Action], Default[Action]]] = Field(
+        default=None, serialization_alias="baseAction", validation_alias="baseAction", description="Base Action"
     )
-    match_entries: Optional[List[IPv4Match]] = Field(
-        serialization_alias="matchEntries", validation_alias="matchEntries", default=None
+    match_entries: Optional[List[Ipv6MatchEntry]] = Field(
+        default=None,
+        serialization_alias="matchEntries",
+        validation_alias="matchEntries",
+        description="Define match conditions",
+        max_length=1,
+        min_length=1,
     )
 
+    @model_validator(mode="after")
+    def check_fields_at_least_one_assigned(self):
+        """There are two Sequence models in schema,
+        one with set base_action and empty actions,
+        and one with set actions and empty base_action,
+        so we combine two models into one model with check if
+        at least one field assigned
+        """
+        if self.base_action is None and self.actions is None:
+            self.base_action = as_default("accept", Action)
 
-class IPv6SequenceActions(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    sequence_id: Global[int] = Field(serialization_alias="sequenceId", validation_alias="sequenceId")
-    sequence_name: Global[str] = Field(serialization_alias="sequenceName", validation_alias="sequenceName")
-    actions: List[Union[AcceptActionsIPv6, DropActions]] = Field(
-        serialization_alias="actions", validation_alias="actions"
-    )
-    match_entries: Optional[List[IPv6Match]] = Field(
-        serialization_alias="matchEntries", validation_alias="matchEntries", default=None
+class Ipv6Sequences(Sequences):
+    actions: Optional[List[Union[Ipv6AcceptActions, DropActions]]] = Field(
+        default=None, description="Define list of actions", max_length=1, min_length=1
     )
 
 
-class IPv4AclParcel(_ParcelBase):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    defautl_action: Union[Global[Action], Default[Action]] = Field(
-        validation_alias=AliasPath("data", "defaultAction"), default=Default[Action](value="drop")
-    )
-    sequences: List[Union[IPv4SequenceBaseAction, IPv4SequenceActions]] = Field(
-        validation_alias=AliasPath("data", "sequences")
+class Ipv4Sequences(Sequences):
+    actions: Optional[List[Union[Ipv4AcceptActions, DropActions]]] = Field(
+        default=None, description="Define list of actions", max_length=1, min_length=1
     )
 
 
-class IPv6AclParcel(_ParcelBase):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    defautl_action: Union[Global[Action], Default[Action]] = Field(
-        validation_alias=AliasPath("data", "defaultAction"), default=Default[Action](value="drop")
+class Ipv4AclParcel(_ParcelBase):
+    type_: Literal["ipv4-acl"] = Field(default="ipv4-acl", exclude=True)
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
     )
-    sequences: List[Union[IPv6SequenceBaseAction, IPv6SequenceActions]] = Field(
-        validation_alias=AliasPath("data", "sequences")
+    default_action: Union[Global[Action], Global[Action]] = Field(
+        as_default("drop", Action),
+        validation_alias=AliasPath("data", "defaultAction"),
+        description="Default Action",
+    )
+    sequences: List[Union[Ipv4Sequences]] = Field(
+        default_factory=list, validation_alias=AliasPath("data", "sequences"), description="Access Control List"
+    )
+
+
+class Ipv6AclParcel(_ParcelBase):
+    type_: Literal["ipv6-acl"] = Field(default="ipv6-acl", exclude=True)
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    default_action: Union[Global[Action], Global[Action]] = Field(
+        as_default("drop", Action),
+        validation_alias=AliasPath("data", "defaultAction"),
+        description="Default Action",
+    )
+    sequences: List[Union[Ipv6Sequences]] = Field(
+        default_factory=list, validation_alias=AliasPath("data", "sequences"), description="Access Control List"
     )

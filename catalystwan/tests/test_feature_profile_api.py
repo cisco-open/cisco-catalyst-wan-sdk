@@ -19,6 +19,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service import (
     LanVpnParcel,
     OspfParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.service.acl import Ipv4AclParcel, Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import EigrpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import BasicGre
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import IpsecAddress, IpsecTunnelMode
@@ -112,6 +113,8 @@ service_endpoint_mapping = {
     Ospfv3IPv6Parcel: "routing/ospfv3/ipv6",
     RoutePolicyParcel: "route-policy",
     EigrpParcel: "routing/eigrp",
+    Ipv6AclParcel: "ipv6-acl",
+    Ipv4AclParcel: "ipv4-acl",
 }
 
 service_interface_parcels = [
