@@ -39,6 +39,7 @@ class FeatureProfile(BaseModel):
 
 
 class ConfigGroup(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     id: UUID
     name: str
     description: Optional[str]
@@ -46,17 +47,19 @@ class ConfigGroup(BaseModel):
     profiles: Optional[List[FeatureProfile]]
     source: Optional[str] = None
     state: Optional[str] = None
-    devices: List = Field(default=[])
-    created_by: Optional[str] = Field(alias="createdBy")
-    last_updated_by: Optional[str] = Field(alias="lastUpdatedBy")
-    created_on: Optional[datetime] = Field(alias="createdOn")
-    last_updated_on: Optional[datetime] = Field(alias="lastUpdatedOn")
+    devices: Optional[List] = Field(default=[])
+    created_by: Optional[str] = Field(serialization_alias="createdBy", validation_alias="createdBy")
+    last_updated_by: Optional[str] = Field(serialization_alias="lastUpdatedBy", validation_alias="lastUpdatedBy")
+    created_on: Optional[datetime] = Field(serialization_alias="createdOn", validation_alias="createdOn")
+    last_updated_on: Optional[datetime] = Field(serialization_alias="lastUpdatedOn", validation_alias="lastUpdatedOn")
     version: int
-    number_of_devices: int = Field(alias="numberOfDevices")
-    number_of_devices_up_to_date: int = Field(alias="numberOfDevicesUpToDate")
-    origin: Optional[str]
+    number_of_devices: int = Field(serialization_alias="numberOfDevices", validation_alias="numberOfDevices")
+    number_of_devices_up_to_date: int = Field(
+        serialization_alias="numberOfDevicesUpToDate", validation_alias="numberOfDevicesUpToDate"
+    )
+    origin: Optional[str] = None
     topology: Optional[str] = None
-    full_config_cli: bool = Field(alias="fullConfigCli")
+    full_config_cli: bool = Field(serialization_alias="fullConfigCli", validation_alias="fullConfigCli")
 
 
 class ConfigGroupResponsePayload(BaseModel):

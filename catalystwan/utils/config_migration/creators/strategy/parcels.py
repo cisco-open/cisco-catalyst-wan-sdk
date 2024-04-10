@@ -54,7 +54,9 @@ class ServiceParcelPusher(ParcelPusher):
         parcel = transformed_parcel.parcel
         if isinstance(parcel, LanVpnParcel):
             self.builder.add_parcel_vpn(parcel)  # type: ignore
-        if isinstance(parcel, (InterfaceEthernetParcel, InterfaceGreParcel, InterfaceIpsecParcel, InterfaceSviParcel)):
+        elif isinstance(
+            parcel, (InterfaceEthernetParcel, InterfaceGreParcel, InterfaceIpsecParcel, InterfaceSviParcel)
+        ):
             # TODO: Assiging logic
             # Every Service VPN parcel can have interface childs and
             # there can be multiple service VPNs in one feature profile
