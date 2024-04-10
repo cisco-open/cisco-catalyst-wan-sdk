@@ -1,10 +1,10 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 # mypy: disable-error-code="empty-body"
-
+from typing import Literal
 from uuid import UUID
 
-from pydantic.v1 import BaseModel, Field, IPvAnyAddress
+from pydantic import BaseModel, ConfigDict, Field, IPvAnyAddress
 
 from catalystwan.endpoints import JSON, APIEndpoints, delete, get, post, put
 from catalystwan.models.policy.centralized import CentralizedPolicy, CentralizedPolicyEditPayload, CentralizedPolicyInfo
@@ -13,15 +13,16 @@ from catalystwan.typed_list import DataSequence
 
 
 class VSmartConnectivityStatus(BaseModel):
-    device_uuid: UUID = Field(alias="deviceUUID")
-    operation_mode: str = Field(alias="operationMode")
-    device_ip: IPvAnyAddress = Field(alias="deviceIp")
-    local_system_ip: IPvAnyAddress = Field(alias="local-system-ip")
-    is_online: bool = Field(alias="isOnline")
+    model_config = ConfigDict(populate_by_name=True)
+    device_uuid: UUID = Field(serialization_alias="deviceUUID", validation_alias="deviceUUID")
+    operation_mode: str = Field(serialization_alias="operationMode", validation_alias="operationMode")
+    device_ip: IPvAnyAddress = Field(serialization_alias="deviceIp", validation_alias="deviceIp")
+    local_system_ip: IPvAnyAddress = Field(serialization_alias="local-system-ip", validation_alias="local-system-ip")
+    is_online: bool = Field(serialization_alias="isOnline", validation_alias="isOnline")
 
 
 class AutoConfirm(BaseModel):
-    confirm: str = Field(default="true", const=True)
+    confirm: Literal["true"] = "true"
 
 
 class ActivateDeactivateTaskId(BaseModel):

@@ -2,59 +2,33 @@
 
 # mypy: disable-error-code="empty-body"
 import datetime
-from enum import Enum
 from typing import List, Literal, Optional, Union
 
-from pydantic.v1 import BaseModel, Field, IPvAnyAddress, validator
+from pydantic import BaseModel, ConfigDict, Field, IPvAnyAddress, field_validator
 
 from catalystwan.endpoints import JSON, APIEndpoints, get, post, put, view
 from catalystwan.typed_list import DataSequence
 from catalystwan.utils.session_type import ProviderView, SingleTenantView
 
-
-class ModeEnum(str, Enum):
-    ON = "on"
-    OFF = "off"
-
-
-class DataStreamIPTypeEnum(str, Enum):
-    SYSTEM = "systemIp"
-    MGMT = "mgmtIp"
-    TRANSPORT = "transportIp"
-
-
-class PasswordPolicyEnum(str, Enum):
-    DISABLED = "disabled"
-    MEDIUM = "mediumSecurity"
-    HIGH = "highSecurity"
-
-
-class SmartLicensingSettingModeEnum(str, Enum):
-    ONPREM = "on-prem"
-    OFFLINE = "offline"
-    ONLINE = "online"
-
-
-class CRLActionEnum(str, Enum):
-    DISABLE = "disable"
-    REVOKE = "revoke"
-    QUARANTINE = "quarantine"
+OnOffMode = Literal["on", "off"]
+DataStreamIPTypes = Literal["systemIp", "mgmtIp", "transportIp"]
+PasswordPolicies = Literal["disabled", "mediumSecurity", "highSecurity"]
+SmartLicensingSettingModes = Literal["on-prem", "offline", "online"]
+CRLActions = Literal["disable", "revoke", "quarantine"]
 
 
 class Organization(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
+    model_config = ConfigDict(populate_by_name=True)
     org: Optional[str] = Field(default=None)
-    domain_id: Optional[str] = Field(alias="domain-id")
-    control_connection_up: Optional[bool] = Field(alias="controlConnectionUp")
+    domain_id: Optional[str] = Field(serialization_alias="domain-id", validation_alias="domain-id")
+    control_connection_up: Optional[bool] = Field(
+        serialization_alias="controlConnectionUp", validation_alias="controlConnectionUp"
+    )
 
 
 class Device(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    domain_ip: Optional[str] = Field(default=None, alias="domainIp")
+    model_config = ConfigDict(populate_by_name=True)
+    domain_ip: Optional[str] = Field(default=None, serialization_alias="domainIp", validation_alias="domainIp")
     port: Optional[str] = Field(default="12346")
 
 
@@ -63,22 +37,22 @@ class EmailNotificationSettings(BaseModel):
 
 
 class HardwareRootCA(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    hardware_certificate: Optional[str] = Field(default=None, alias="hardwareCertificate")
-    control_connection_up: Optional[bool] = Field(default=False, alias="controlConnectionUp")
+    model_config = ConfigDict(populate_by_name=True)
+    hardware_certificate: Optional[str] = Field(
+        default=None, serialization_alias="hardwareCertificate", validation_alias="hardwareCertificate"
+    )
+    control_connection_up: Optional[bool] = Field(
+        default=False, serialization_alias="controlConnectionUp", validation_alias="controlConnectionUp"
+    )
 
 
 class Certificate(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    certificate_signing: str = Field(alias="certificateSigning")
-    validity_period: str = Field(alias="validityPeriod")
-    retrieve_interval: str = Field(alias="retrieveInterval")
-    first_name: Optional[str] = Field(default=None, alias="firstName")
-    last_name: Optional[str] = Field(default=None, alias="lastName")
+    model_config = ConfigDict(populate_by_name=True)
+    certificate_signing: str = Field(serialization_alias="certificateSigning", validation_alias="certificateSigning")
+    validity_period: str = Field(serialization_alias="validityPeriod", validation_alias="validityPeriod")
+    retrieve_interval: str = Field(serialization_alias="retrieveInterval", validation_alias="retrieveInterval")
+    first_name: Optional[str] = Field(default=None, serialization_alias="firstName", validation_alias="firstName")
+    last_name: Optional[str] = Field(default=None, serialization_alias="lastName", validation_alias="lastName")
     email: Optional[str] = Field(default=None)
 
 
@@ -87,96 +61,111 @@ class VEdgeCloud(BaseModel):
 
 
 class Banner(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    mode: Optional[ModeEnum] = ModeEnum.OFF
-    banner_detail: Optional[str] = Field(alias="bannerDetail")
+    model_config = ConfigDict(populate_by_name=True)
+    mode: Optional[OnOffMode] = "off"
+    banner_detail: Optional[str] = Field(serialization_alias="bannerDetail", validation_alias="bannerDetail")
 
 
 class ProxyHTTPServer(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
+    model_config = ConfigDict(populate_by_name=True)
     proxy: bool
-    proxy_ip: str = Field(default="", alias="proxyIp")
-    proxy_port: str = Field(default="", alias="proxyPort")
+    proxy_ip: str = Field(default="", serialization_alias="proxyIp", validation_alias="proxyIp")
+    proxy_port: str = Field(default="", serialization_alias="proxyPort", validation_alias="proxyPort")
 
 
 class ReverseProxy(BaseModel):
-    mode: Optional[ModeEnum] = ModeEnum.OFF
+    mode: Optional[OnOffMode] = "off"
 
 
 class CloudX(BaseModel):
-    mode: Optional[ModeEnum] = ModeEnum.OFF
+    mode: Optional[OnOffMode] = "off"
 
 
 class ManageEncryptedPassword(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    manage_type8_password: Optional[bool] = Field(default=False, alias="manageType8Password")
+    model_config = ConfigDict(populate_by_name=True)
+    manage_type8_password: Optional[bool] = Field(
+        default=False, serialization_alias="manageType8Password", validation_alias="manageType8Password"
+    )
 
 
 class CloudServices(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
+    model_config = ConfigDict(populate_by_name=True)
     enabled: Optional[bool] = False
-    vanalytics_enabled: Optional[bool] = Field(default=False, alias="vanalyticsEnabled")
-    vmonitoring_enabled: Optional[bool] = Field(default=False, alias="vmonitoringEnabled")
+    vanalytics_enabled: Optional[bool] = Field(
+        default=False, serialization_alias="vanalyticsEnabled", validation_alias="vanalyticsEnabled"
+    )
+    vmonitoring_enabled: Optional[bool] = Field(
+        default=False, serialization_alias="vmonitoringEnabled", validation_alias="vmonitoringEnabled"
+    )
     otp: Optional[str] = None
-    cloud_gateway_url: Optional[str] = Field(default=None, alias="cloudGatewayUrl")
-    vanalytics_enabled_time: Optional[datetime.datetime] = Field(default=None, alias="vanalyticsEnabledTime")
-    vmonitoring_enabled_time: Optional[datetime.datetime] = Field(default=None, alias="vmonitoringEnabledTime")
+    cloud_gateway_url: Optional[str] = Field(
+        default=None, serialization_alias="cloudGatewayUrl", validation_alias="cloudGatewayUrl"
+    )
+    vanalytics_enabled_time: Optional[datetime.datetime] = Field(
+        default=None, serialization_alias="vanalyticsEnabledTime", validation_alias="vanalyticsEnabledTime"
+    )
+    vmonitoring_enabled_time: Optional[datetime.datetime] = Field(
+        default=None, serialization_alias="vmonitoringEnabledTime", validation_alias="vmonitoringEnabledTime"
+    )
 
 
 class ClientSessionTimeout(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    is_enabled: Optional[bool] = Field(default=False, alias="isEnabled")
+    model_config = ConfigDict(populate_by_name=True)
+    is_enabled: Optional[bool] = Field(default=False, serialization_alias="isEnabled", validation_alias="isEnabled")
     timeout: Optional[int] = Field(default=None, ge=10, description="timeout in minutes")
 
 
 class SessionLifeTime(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    session_life_time: int = Field(alias="sessionLifeTime", ge=30, le=10080, description="lifetime in minutes")
+    model_config = ConfigDict(populate_by_name=True)
+    session_life_time: int = Field(
+        serialization_alias="sessionLifeTime",
+        validation_alias="sessionLifeTime",
+        ge=30,
+        le=10080,
+        description="lifetime in minutes",
+    )
 
 
 class ServerSessionTimeout(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    server_session_timeout: int = Field(alias="serverSessionTimeout", ge=10, le=30, description="timeout in minutes")
+    model_config = ConfigDict(populate_by_name=True)
+    server_session_timeout: int = Field(
+        serialization_alias="serverSessionTimeout",
+        validation_alias="serverSessionTimeout",
+        ge=10,
+        le=30,
+        description="timeout in minutes",
+    )
 
 
 class MaxSessionsPerUser(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    max_sessions_per_user: int = Field(alias="maxSessionsPerUser", ge=1, le=8)
+    model_config = ConfigDict(populate_by_name=True)
+    max_sessions_per_user: int = Field(
+        serialization_alias="maxSessionsPerUser", validation_alias="maxSessionsPerUser", ge=1, le=8
+    )
 
 
 class PasswordPolicy(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    password_policy: Union[bool, PasswordPolicyEnum] = Field(alias="passwordPolicy")
+    model_config = ConfigDict(populate_by_name=True)
+    password_policy: Union[bool, PasswordPolicies] = Field(
+        serialization_alias="passwordPolicy", validation_alias="passwordPolicy"
+    )
     password_expiration_time: Optional[int] = Field(
-        default=False, alias="passwordExpirationTime", ge=1, le=90, description="timeout in days"
+        default=False,
+        serialization_alias="passwordExpirationTime",
+        validation_alias="passwordExpirationTime",
+        ge=1,
+        le=90,
+        description="timeout in days",
     )
 
 
 class VManageDataStream(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
+    model_config = ConfigDict(populate_by_name=True)
     enable: Optional[bool] = False
-    ip_type: Optional[DataStreamIPTypeEnum] = Field(default=None, alias="ipType")
-    server_host_name: Union[IPvAnyAddress, DataStreamIPTypeEnum, None] = Field(default=None, alias="serverHostName")
+    ip_type: Optional[DataStreamIPTypes] = Field(default=None, serialization_alias="ipType", validation_alias="ipType")
+    server_host_name: Union[IPvAnyAddress, DataStreamIPTypes, None] = Field(
+        default=None, serialization_alias="serverHostName", validation_alias="serverHostName"
+    )
     vpn: Optional[int] = Field(default=None, le=512)
 
 
@@ -189,31 +178,39 @@ class SDWANTelemetry(BaseModel):
 
 
 class StatsOperation(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    stats_operation: str = Field(alias="statsOperation")
-    rid: int = Field(alias="@rid")
-    operation_interval: int = Field(alias="operationInterval", ge=1, description="interval in minutes")
-    default_interval: int = Field(alias="defaultInterval", ge=1, description="interval in minutes")
+    model_config = ConfigDict(populate_by_name=True)
+    stats_operation: str = Field(serialization_alias="statsOperation", validation_alias="statsOperation")
+    rid: int = Field(serialization_alias="@rid", validation_alias="@rid")
+    operation_interval: int = Field(
+        serialization_alias="operationInterval",
+        validation_alias="operationInterval",
+        ge=1,
+        description="interval in minutes",
+    )
+    default_interval: int = Field(
+        serialization_alias="defaultInterval",
+        validation_alias="defaultInterval",
+        ge=1,
+        description="interval in minutes",
+    )
 
 
 class MaintenanceWindow(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
+    model_config = ConfigDict(populate_by_name=True)
     enabled: Optional[bool] = False
     message: Optional[str] = ""
-    start: Optional[int] = Field(default=None, alias="epochStartTimeInMillis")
-    end: Optional[int] = Field(default=None, alias="epochEndTimeInMillis")
+    start: Optional[int] = Field(
+        default=None, serialization_alias="epochStartTimeInMillis", validation_alias="epochStartTimeInMillis"
+    )
+    end: Optional[int] = Field(
+        default=None, serialization_alias="epochEndTimeInMillis", validation_alias="epochEndTimeInMillis"
+    )
 
 
 class ElasticSearchDBSize(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    index_name: str = Field(alias="indexName")
-    size_in_gb: int = Field(alias="sizeInGB")
+    model_config = ConfigDict(populate_by_name=True)
+    index_name: str = Field(serialization_alias="indexName", validation_alias="indexName")
+    size_in_gb: int = Field(serialization_alias="sizeInGB", validation_alias="sizeInGB")
 
 
 class GoogleMapKey(BaseModel):
@@ -221,28 +218,26 @@ class GoogleMapKey(BaseModel):
 
 
 class SoftwareInstallTimeout(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
+    download_timeout: str = Field(serialization_alias="downloadTimeoutInMin", validation_alias="downloadTimeoutInMin")
+    activate_timeout: str = Field(serialization_alias="activateTimeoutInMin", validation_alias="activateTimeoutInMin")
+    control_pps: Optional[str] = Field(serialization_alias="controlPps", validation_alias="controlPps")
 
-    download_timeout: str = Field(alias="downloadTimeoutInMin")
-    activate_timeout: str = Field(alias="activateTimeoutInMin")
-    control_pps: Optional[str] = Field(alias="controlPps")
-
-    @validator("download_timeout")
+    @field_validator("download_timeout")
     def check_download_timeout(cls, download_timeout_str: str):
         download_timeout = int(download_timeout_str)
         if download_timeout < 60 or download_timeout > 360:
             raise ValueError("download timeout should be in range 60-360")
         return download_timeout_str
 
-    @validator("activate_timeout")
+    @field_validator("activate_timeout")
     def check_activate_timeout(cls, activate_timeout_str: str):
         activate_timeout = int(activate_timeout_str)
         if activate_timeout < 30 or activate_timeout > 180:
             raise ValueError("activate timeout should be in range 30-180")
         return activate_timeout_str
 
-    @validator("control_pps")
+    @field_validator("control_pps")
     def check_control_pps(cls, control_pps_str: str):
         control_pps = int(control_pps_str)
         if control_pps < 300 or control_pps > 65535:
@@ -251,13 +246,16 @@ class SoftwareInstallTimeout(BaseModel):
 
 
 class IPSSignatureSettings(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    is_enabled: Optional[bool] = Field(default=False, alias="isEnabled")
+    model_config = ConfigDict(populate_by_name=True)
+    is_enabled: Optional[bool] = Field(default=False, serialization_alias="isEnabled", validation_alias="isEnabled")
     username: Optional[str] = None
     update_interval: Optional[int] = Field(
-        default=None, alias="updateInterval", description="interval in minutes", ge=1, le=1440
+        default=None,
+        serialization_alias="updateInterval",
+        validation_alias="updateInterval",
+        description="interval in minutes",
+        ge=1,
+        le=1440,
     )
 
 
@@ -267,7 +265,7 @@ class SmartAccountCredentials(BaseModel):
 
 
 class PnPConnectSync(BaseModel):
-    mode: Optional[ModeEnum] = ModeEnum.OFF
+    mode: Optional[OnOffMode] = "off"
 
 
 class ClaimDevice(BaseModel):
@@ -275,30 +273,32 @@ class ClaimDevice(BaseModel):
 
 
 class WalkMe(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
+    model_config = ConfigDict(populate_by_name=True)
     walkme: bool
-    walkme_analytics: bool = Field(alias="walkmeAnalytics")
+    walkme_analytics: bool = Field(serialization_alias="walkmeAnalytics", validation_alias="walkmeAnalytics")
 
 
 class SmartLicensingSetting(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    mode: Optional[SmartLicensingSettingModeEnum] = None
-    ssm_server_url: Optional[str] = Field(None, alias="ssmServerUrl")
-    ssm_client_id: Optional[str] = Field(None, alias="ssmClientId")
-    ssm_client_secret: Optional[str] = Field(None, alias="ssmClientSecret")
+    model_config = ConfigDict(populate_by_name=True)
+    mode: Optional[SmartLicensingSettingModes] = None
+    ssm_server_url: Optional[str] = Field(None, serialization_alias="ssmServerUrl", validation_alias="ssmServerUrl")
+    ssm_client_id: Optional[str] = Field(None, serialization_alias="ssmClientId", validation_alias="ssmClientId")
+    ssm_client_secret: Optional[str] = Field(
+        None, serialization_alias="ssmClientSecret", validation_alias="ssmClientSecret"
+    )
 
 
 class StatsCollectionInterval(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    config_name: Literal["statsCollection"] = Field(default="statsCollection", alias="configName")
+    model_config = ConfigDict(populate_by_name=True)
+    config_name: Literal["statsCollection"] = Field(
+        default="statsCollection", serialization_alias="configName", validation_alias="configName"
+    )
     operation_interval: int = Field(
-        ge=5, le=180, alias="operationInterval", desctiption="collecion interval in minutes"
+        ge=5,
+        le=180,
+        serialization_alias="operationInterval",
+        validation_alias="operationInterval",
+        description="collecion interval in minutes",
     )
 
 
@@ -310,26 +310,24 @@ class StatsConfig(BaseModel):
 
     @staticmethod
     def from_collection_interval(interval: int) -> "StatsConfig":
-        return StatsConfig(config=[StatsCollectionInterval(operationInterval=interval)])
+        return StatsConfig(config=[StatsCollectionInterval(operation_interval=interval)])
 
 
 class CRLSettings(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    action: CRLActionEnum
-    crl_url: Optional[str] = Field(None, alias="crlUrl")
+    model_config = ConfigDict(populate_by_name=True)
+    action: CRLActions
+    crl_url: Optional[str] = Field(None, serialization_alias="crlUrl", validation_alias="crlUrl")
     polling_interval: Optional[str] = Field(description="Retrieval interval (1-24 hours)")
     vpn: Optional[str]
 
-    @validator("polling_interval")
+    @field_validator("polling_interval")
     def check_polling_interval(cls, polling_interval_str: str):
         polling_interval = int(polling_interval_str)
         if polling_interval < 1 or polling_interval > 24:
             raise ValueError("Polling interval should be in range 1-24")
         return polling_interval_str
 
-    @validator("vpn")
+    @field_validator("vpn")
     def check_vpn(cls, vpn_str: str):
         vpn = int(vpn_str)
         if vpn < 0 or vpn > 65530:
