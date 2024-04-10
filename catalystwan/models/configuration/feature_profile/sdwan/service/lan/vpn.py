@@ -430,7 +430,7 @@ class NatPortForward(BaseModel):
         serialization_alias="sourceIp", validation_alias="sourceIp"
     )
     translated_source_ip: Union[Variable, Global[str], Global[IPv4Address]] = Field(
-        serialization_alias="TranslatedSourceIp", validation_alias="TranslatedSourceIp"
+        serialization_alias="translatedSourceIp", validation_alias="translatedSourceIp"
     )
     protocol: Union[Variable, Global[NATPortForwardProtocol]]
 
@@ -445,7 +445,7 @@ class StaticNat(BaseModel):
         serialization_alias="sourceIp", validation_alias="sourceIp"
     )
     translated_source_ip: Union[Variable, Global[str], Global[IPv4Address]] = Field(
-        serialization_alias="TranslatedSourceIp", validation_alias="TranslatedSourceIp"
+        serialization_alias="translatedSourceIp", validation_alias="translatedSourceIp"
     )
     static_nat_direction: Union[Variable, Global[Direction]] = Field(
         serialization_alias="staticNatDirection", validation_alias="staticNatDirection"
@@ -462,7 +462,7 @@ class StaticNatSubnet(BaseModel):
         serialization_alias="sourceIpSubnet", validation_alias="sourceIpSubnet"
     )
     translated_source_ip_subnet: Union[Variable, Global[str]] = Field(
-        serialization_alias="TranslatedSourceIpSubnet", validation_alias="TranslatedSourceIpSubnet"
+        serialization_alias="translatedSourceIpSubnet", validation_alias="translatedSourceIpSubnet"
     )
     prefix_length: Union[Variable, Global[int]] = Field(
         serialization_alias="prefixLength", validation_alias="prefixLength"
