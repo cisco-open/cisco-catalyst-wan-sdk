@@ -78,7 +78,7 @@ class DeviceData(BaseModel):
     is_device_geo_data: Optional[bool] = Field(
         default=None, serialization_alias="isDeviceGeoData", validation_alias="isDeviceGeoData"
     )
-    lastupdated: Optional[str] = None
+    lastupdated: Optional[int] = None
     latitude: Optional[str] = None
     layout_level: Optional[int] = Field(default=None, serialization_alias="layoutLevel", validation_alias="layoutLevel")
     local_system_ip: Optional[str] = Field(
@@ -96,12 +96,12 @@ class DeviceData(BaseModel):
     state: Optional[str] = None
     state_description: Optional[str] = None
     status: Optional[str] = None
-    status_order: Optional[str] = Field(default=None, serialization_alias="statusOrder", validation_alias="statusOrder")
+    status_order: Optional[int] = Field(default=None, serialization_alias="statusOrder", validation_alias="statusOrder")
     system_ip: Optional[str] = Field(default=None, serialization_alias="system-ip", validation_alias="system-ip")
     testbed_mode: Optional[bool] = None
     timezone: Optional[str] = None
     total_cpu_count: Optional[str] = None
-    uptime_date: Optional[str] = Field(default=None, serialization_alias="uptime-date", validation_alias="uptime-date")
+    uptime_date: Optional[int] = Field(default=None, serialization_alias="uptime-date", validation_alias="uptime-date")
     uuid: Optional[str] = None
     validity: Optional[str] = None
     version: Optional[str] = None
