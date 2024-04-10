@@ -19,7 +19,7 @@ from catalystwan.typed_list import DataSequence
 
 class OtherFeatureProfile(APIEndpoints):
     @versions(supported_versions=(">=20.9"), raises=False)
-    @get("​/v1​/feature-profile​/sdwan​/other")
+    @get("/v1/feature-profile/sdwan/other")
     def get_sdwan_other_feature_profiles(
         self, payload: Optional[GetFeatureProfilesPayload]
     ) -> DataSequence[FeatureProfileInfo]:
