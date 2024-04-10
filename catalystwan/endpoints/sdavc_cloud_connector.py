@@ -4,18 +4,25 @@
 
 from typing import Optional
 
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from catalystwan.endpoints import APIEndpoints, get
 
 
 class CloudConnector(BaseModel):
-    cloud_enabled: Optional[bool] = Field(default=False, alias="cloudEnabled")
-    client_id: Optional[str] = Field(default=None, alias="clientId")
-    client_secret: Optional[str] = Field(default=None, alias="clientSecret")
-    org_name: Optional[str] = Field(default=None, alias="orgName")
+    model_config = ConfigDict(populate_by_name=True)
+    cloud_enabled: Optional[bool] = Field(
+        default=False, serialization_alias="cloudEnabled", validation_alias="cloudEnabled"
+    )
+    client_id: Optional[str] = Field(default=None, serialization_alias="clientId", validation_alias="clientId")
+    client_secret: Optional[str] = Field(
+        default=None, serialization_alias="clientSecret", validation_alias="clientSecret"
+    )
+    org_name: Optional[str] = Field(default=None, serialization_alias="orgName", validation_alias="orgName")
     affinity: Optional[str] = None
-    telemetry_enabled: Optional[bool] = Field(default=None, alias="telemetryEnabled")
+    telemetry_enabled: Optional[bool] = Field(
+        default=None, serialization_alias="telemetryEnabled", validation_alias="telemetryEnabled"
+    )
 
 
 class SDAVCCloudConnector(APIEndpoints):

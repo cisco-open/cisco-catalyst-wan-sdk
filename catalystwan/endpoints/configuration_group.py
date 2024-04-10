@@ -4,7 +4,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from catalystwan.endpoints import APIEndpoints, delete, get, post, put, versions
 from catalystwan.models.configuration.common import Solution
@@ -25,15 +25,16 @@ class ConfigGroupCreationPayload(BaseModel):
 
 
 class FeatureProfile(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     id: str
     name: str
     description: Optional[str]
     solution: str
     type: ProfileType
-    created_by: str = Field(alias="createdBy")
-    last_updated_by: str = Field(alias="lastUpdatedBy")
-    created_on: datetime = Field(alias="createdOn")
-    last_updated_on: datetime = Field(alias="lastUpdatedOn")
+    created_by: str = Field(serialization_alias="createdBy", validation_alias="createdBy")
+    last_updated_by: str = Field(serialization_alias="lastUpdatedBy", validation_alias="lastUpdatedBy")
+    created_on: datetime = Field(serialization_alias="createdOn", validation_alias="createdOn")
+    last_updated_on: datetime = Field(serialization_alias="lastUpdatedOn", validation_alias="lastUpdatedOn")
 
 
 class ConfigGroup(BaseModel):
@@ -73,13 +74,17 @@ class VariableData(BaseModel):
 
 
 class DeviceVariables(BaseModel):
-    device_id: str = Field(alias="device-id")
+    model_config = ConfigDict(populate_by_name=True)
+    device_id: str = Field(serialization_alias="device-id", validation_alias="device-id")
     variables: List[VariableData]
 
 
 class GroupVariables(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     name: str
-    group_variables: List[VariableData] = Field(alias="group-variables")
+    group_variables: List[VariableData] = Field(
+        serialization_alias="group-variables", validation_alias="group-variables"
+    )
 
 
 class ConfigGroupVariablesCreateResponse(BaseModel):

@@ -3,7 +3,7 @@
 # mypy: disable-error-code="empty-body"
 from typing import Dict, List, Optional
 
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from catalystwan.endpoints import APIEndpoints, delete, get, post, put, versions, view
 from catalystwan.models.tenant import Tenant
@@ -16,8 +16,9 @@ class TenantDeleteRequest(BaseModel):
 
 
 class TenantBulkDeleteRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     password: str
-    tenant_id_list: List[str] = Field(alias="tenantIdList")
+    tenant_id_list: List[str] = Field(serialization_alias="tenantIdList", validation_alias="tenantIdList")
 
 
 class TenantTaskId(BaseModel):
@@ -31,15 +32,17 @@ class CertificatesStatus(BaseModel):
 
 
 class ControlStatus(BaseModel):
-    control_up: int = Field(alias="controlUp")
+    model_config = ConfigDict(populate_by_name=True)
+    control_up: int = Field(serialization_alias="controlUp", validation_alias="controlUp")
     partial: int
-    control_down: int = Field(alias="controlDown")
+    control_down: int = Field(serialization_alias="controlDown", validation_alias="controlDown")
 
 
 class SiteHealth(BaseModel):
-    full_connectivity: int = Field(alias="fullConnectivity")
-    partial_connectivity: int = Field(alias="partialConnectivity")
-    no_connectivity: int = Field(alias="noConnectivity")
+    model_config = ConfigDict(populate_by_name=True)
+    full_connectivity: int = Field(serialization_alias="fullConnectivity", validation_alias="fullConnectivity")
+    partial_connectivity: int = Field(serialization_alias="partialConnectivity", validation_alias="partialConnectivity")
+    no_connectivity: int = Field(serialization_alias="noConnectivity", validation_alias="noConnectivity")
 
 
 class vEdgeHealth(BaseModel):
@@ -54,22 +57,32 @@ class vSmartStatus(BaseModel):
 
 
 class TenantStatus(BaseModel):
-    tenant_id: str = Field(alias="tenantId")
-    tenant_name: str = Field(alias="tenantName")
-    control_status: ControlStatus = Field(alias="controlStatus")
-    site_health: SiteHealth = Field(alias="siteHealth")
-    vedge_health: vEdgeHealth = Field(alias="vEdgeHealth")
-    vsmart_status: vSmartStatus = Field(alias="vSmartStatus")
+    model_config = ConfigDict(populate_by_name=True)
+    tenant_id: str = Field(serialization_alias="tenantId", validation_alias="tenantId")
+    tenant_name: str = Field(serialization_alias="tenantName", validation_alias="tenantName")
+    control_status: ControlStatus = Field(serialization_alias="controlStatus", validation_alias="controlStatus")
+    site_health: SiteHealth = Field(serialization_alias="siteHealth", validation_alias="siteHealth")
+    vedge_health: vEdgeHealth = Field(serialization_alias="vEdgeHealth", validation_alias="vEdgeHealth")
+    vsmart_status: vSmartStatus = Field(serialization_alias="vSmartStatus", validation_alias="vSmartStatus")
 
 
 class TenantUpdateRequest(BaseModel):
-    tenant_id: str = Field(alias="tenantId")
-    subdomain: str = Field(alias="subDomain")
+    model_config = ConfigDict(populate_by_name=True)
+    tenant_id: str = Field(serialization_alias="tenantId", validation_alias="tenantId")
+    subdomain: str = Field(serialization_alias="subDomain", validation_alias="subDomain")
     desc: str
-    wan_edge_forecast: Optional[int] = Field(alias="wanEdgeForecast")
-    edge_connector_enable: Optional[bool] = Field(alias="edgeConnectorEnable")
-    edge_connector_system_ip: Optional[str] = Field(alias="edgeConnectorSystemIp")
-    edge_connector_tunnel_interface_name: Optional[str] = Field(alias="edgeConnectorTunnelInterfaceName")
+    wan_edge_forecast: Optional[int] = Field(serialization_alias="wanEdgeForecast", validation_alias="wanEdgeForecast")
+    edge_connector_enable: Optional[bool] = Field(
+        serialization_alias="edgeConnectorEnable", validation_alias="edgeConnectorEnable"
+    )
+    edge_connector_system_ip: Optional[str] = Field(
+        default=None, serialization_alias="edgeConnectorSystemIp", validation_alias="edgeConnectorSystemIp"
+    )
+    edge_connector_tunnel_interface_name: Optional[str] = Field(
+        default=None,
+        serialization_alias="edgeConnectorTunnelInterfaceName",
+        validation_alias="edgeConnectorTunnelInterfaceName",
+    )
 
     @classmethod
     def from_tenant(cls, tenant: Tenant) -> "TenantUpdateRequest":
@@ -87,25 +100,29 @@ class TenantUpdateRequest(BaseModel):
         if not tenant.tenant_id:
             raise TypeError("tenantId required for update request")
         return TenantUpdateRequest(
-            tenantId=tenant.tenant_id,
+            tenant_id=tenant.tenant_id,
             desc=tenant.desc,
-            subDomain=tenant.subdomain,
-            wanEdgeForecast=tenant.wan_edge_forecast,
-            edgeConnectorEnable=tenant.edge_connector_enable,
-            edgeConnectorSystemIp=tenant.edge_connector_system_ip,
-            edgeConnectorTunnelInterfaceName=tenant.edge_connector_tunnel_interface_name,
+            subdomain=tenant.subdomain,
+            wan_edge_forecast=tenant.wan_edge_forecast,
+            edge_connector_enable=tenant.edge_connector_enable,
+            edge_connector_system_ip=tenant.edge_connector_system_ip,
+            edge_connector_tunnel_interface_name=tenant.edge_connector_tunnel_interface_name,
         )
 
 
 class vSmartPlacementUpdateRequest(BaseModel):
-    src_vsmart_uuid: str = Field(alias="srcvSmartUuid")
-    dest_vsmart_uuid: str = Field(alias="destvSmartUuid")
+    model_config = ConfigDict(populate_by_name=True)
+    src_vsmart_uuid: str = Field(serialization_alias="srcvSmartUuid", validation_alias="srcvSmartUuid")
+    dest_vsmart_uuid: str = Field(serialization_alias="destvSmartUuid", validation_alias="destvSmartUuid")
 
 
 class vSmartTenantCapacity(BaseModel):
-    vsmart_uuid: str = Field(alias="vSmartUuid")
-    total_tenant_capacity: int = Field(alias="totalTenantCapacity")
-    current_tenant_count: int = Field(alias="currentTenantCount")
+    model_config = ConfigDict(populate_by_name=True)
+    vsmart_uuid: str = Field(serialization_alias="vSmartUuid", validation_alias="vSmartUuid")
+    total_tenant_capacity: int = Field(
+        serialization_alias="totalTenantCapacity", validation_alias="totalTenantCapacity"
+    )
+    current_tenant_count: int = Field(serialization_alias="currentTenantCount", validation_alias="currentTenantCount")
 
 
 class vSmartTenantMap(BaseModel):
@@ -113,7 +130,8 @@ class vSmartTenantMap(BaseModel):
 
 
 class vSessionId(BaseModel):
-    vsessionid: str = Field(alias="VSessionId")
+    model_config = ConfigDict(populate_by_name=True)
+    vsessionid: str = Field(serialization_alias="VSessionId", validation_alias="VSessionId")
 
 
 class TenantManagement(APIEndpoints):

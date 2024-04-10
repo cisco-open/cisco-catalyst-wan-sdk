@@ -8,8 +8,7 @@ from pprint import pformat
 from typing import Any, Callable, Dict, Optional, Sequence, Type, TypeVar, Union, cast
 from urllib.parse import urlparse
 
-from pydantic import BaseModel as BaseModelV2
-from pydantic.v1 import BaseModel as BaseModelV1
+from pydantic import BaseModel
 from requests import PreparedRequest, Request, Response
 from requests.cookies import RequestsCookieJar
 from requests.exceptions import JSONDecodeError
@@ -178,7 +177,7 @@ class ManagerResponse(Response, APIEndpointClientResponse):
     def dataseq(self, cls: Type[T], sourcekey: Optional[str] = "data") -> DataSequence[T]:
         """Returns data contents from JSON payload parsed as DataSequence of Dataclass/BaseModel instances
         Args:
-            cls: Dataclass/BaseModelV1 subtype (eg. Devices)
+            cls: Dataclass/BaseModel subtype (eg. Devices)
             sourcekey: name of the JSON key from response payload to be parsed. If None whole JSON payload will be used
 
         Returns:
@@ -195,9 +194,7 @@ class ManagerResponse(Response, APIEndpointClientResponse):
         else:
             sequence = [cast(dict, data)]
 
-        if issubclass(cls, BaseModelV1):
-            return DataSequence(cls, [cls.parse_obj(item) for item in sequence])  # type: ignore
-        if issubclass(cls, BaseModelV2):
+        if issubclass(cls, BaseModel):
             return DataSequence(cls, [cls.model_validate(item) for item in sequence])  # type: ignore
         return DataSequence(cls, [create_dataclass(cls, item) for item in sequence])
 
@@ -216,10 +213,8 @@ class ManagerResponse(Response, APIEndpointClientResponse):
         else:
             data = self.payload.json.get(sourcekey)
 
-        if issubclass(cls, BaseModelV1):
-            return cls.parse_obj(data)  # type: ignore
-        if issubclass(cls, BaseModelV2):
-            return cls.model_validate(data)  # type: ignore
+        if issubclass(cls, BaseModel):
+            return cls.model_validate(data)  # type: ignore[return-value]
         return create_dataclass(cls, data)
 
     def get_error_info(self) -> ManagerErrorInfo:

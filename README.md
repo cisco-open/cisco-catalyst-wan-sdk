@@ -288,13 +288,13 @@ api = session.api.tenant_management
 tenants = [
     Tenant(
         name="tenant1",
-        orgName="CiscoDevNet",
-        subDomain="alpha.bravo.net",
+        org_name="CiscoDevNet",
+        subdomain="alpha.bravo.net",
         desc="This is tenant for unit tests",
-        edgeConnectorEnable=True,
-        edgeConnectorSystemIp="172.16.255.81",
-        edgeConnectorTunnelInterfaceName="GigabitEthernet1",
-        wanEdgeForecast=1,
+        edge_connector_enable=True,
+        edge_connector_system_ip="172.16.255.81",
+        edge_connector_tunnel_interface_name="GigabitEthernet1",
+        wan_edge_forecast=1,
     )
 ]
 create_task = api.create(tenants)

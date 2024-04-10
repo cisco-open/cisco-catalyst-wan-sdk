@@ -13,9 +13,7 @@ from uuid import UUID, uuid4
 import pytest  # type: ignore
 from packaging.version import Version  # type: ignore
 from parameterized import parameterized  # type: ignore
-from pydantic import BaseModel as BaseModelV2
-from pydantic import Field as FieldV2
-from pydantic.v1 import BaseModel as BaseModelV1
+from pydantic import BaseModel, Field
 from typing_extensions import Annotated
 
 from catalystwan.endpoints import (
@@ -35,31 +33,19 @@ from catalystwan.typed_list import DataSequence
 from catalystwan.utils.session_type import ProviderAsTenantView, ProviderView, TenantView
 
 
-class BaseModelV1Example(BaseModelV1):
+class BaseModelExample(BaseModel):
     id: str
     size: int
     capacity: float
     active: bool
 
 
-class ParamsModelV1Example(BaseModelV1):
-    name: str
-    color: str
-
-
-class BaseModelV2Example(BaseModelV2):
-    id: str
-    size: int
-    capacity: float
-    active: bool
-
-
-class BaseModelV2Example2(BaseModelV2):
+class BaseModelExample2(BaseModel):
     other_id: str
     active: bool
 
 
-class ParamsModelV2Example(BaseModelV2):
+class ParamsModelExample(BaseModel):
     name: str
     color: str
 
@@ -88,17 +74,14 @@ class TestAPIEndpoints(unittest.TestCase):
             "active": True,
         }
         self.json_payload = json.dumps(self.dict_payload)
-        self.basemodel_v1_payload = BaseModelV1Example.parse_obj(self.dict_payload)
-        self.basemodel_v2_payload = BaseModelV2Example.model_validate(self.dict_payload)
+        self.basemodel_payload = BaseModelExample.model_validate(self.dict_payload)
         self.list_dict_payload = [self.dict_payload] * 2
         self.dict_params = {
             "name": "purple",
             "color": "haze",
         }
-        self.basemodel_v1_params = ParamsModelV1Example.parse_obj(self.dict_params)
-        self.basemodel_v2_params = ParamsModelV2Example.model_validate(self.dict_params)
-        self.basemodel_v1_sequence_payload = [self.basemodel_v1_payload] * 2
-        self.basemodel_v2_sequence_payload = [self.basemodel_v2_payload] * 2
+        self.basemodel_params = ParamsModelExample.model_validate(self.dict_params)
+        self.basemodel_sequence_payload = [self.basemodel_payload] * 2
 
     @parameterized.expand(
         [
@@ -203,25 +186,15 @@ class TestAPIEndpoints(unittest.TestCase):
                 assert str(allowed) in log.output[0]
             assert str(current_session) in log.output[0]
 
-    def test_basemodel_v1_payload(self):
-        self.endpoints._request("GET", f"/{__name__}", payload=self.basemodel_v1_payload)
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
+    def test_basemodel_payload(self):
+        self.endpoints._request("GET", f"/{__name__}", payload=self.basemodel_payload)
         _, kwargs = self.session_mock.request.call_args
         assert json.loads(kwargs.get("data")) == self.dict_payload
 
     @pytest.mark.filterwarnings("ignore::DeprecationWarning")
-    def test_basemodel_v2_payload(self):
-        self.endpoints._request("GET", f"/{__name__}", payload=self.basemodel_v2_payload)
-        _, kwargs = self.session_mock.request.call_args
-        assert json.loads(kwargs.get("data")) == self.dict_payload
-
-    def test_basemodel_v1_sequence_payload(self):
-        self.endpoints._request("GET", f"/{__name__}", payload=self.basemodel_v1_sequence_payload)
-        _, kwargs = self.session_mock.request.call_args
-        assert json.loads(kwargs.get("data")) == self.list_dict_payload
-
-    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
-    def test_basemodel_v2_sequence_payload(self):
-        self.endpoints._request("GET", f"/{__name__}", payload=self.basemodel_v2_sequence_payload)
+    def test_basemodel_sequence_payload(self):
+        self.endpoints._request("GET", f"/{__name__}", payload=self.basemodel_sequence_payload)
         _, kwargs = self.session_mock.request.call_args
         assert json.loads(kwargs.get("data")) == self.list_dict_payload
 
@@ -281,14 +254,9 @@ class TestAPIEndpoints(unittest.TestCase):
         _, kwargs = self.session_mock.request.call_args
         assert kwargs.get("params") == self.dict_params
 
-    def test_basemodel_v1_params(self):
-        self.endpoints._request("POST", f"/{__name__}", params=self.basemodel_v1_params)
-        _, kwargs = self.session_mock.request.call_args
-        assert kwargs.get("params") == self.dict_params
-
     @pytest.mark.filterwarnings("ignore::DeprecationWarning")
-    def test_basemodel_v2_params(self):
-        self.endpoints._request("POST", f"/{__name__}", params=self.basemodel_v2_params)
+    def test_basemodel_params(self):
+        self.endpoints._request("POST", f"/{__name__}", params=self.basemodel_params)
         _, kwargs = self.session_mock.request.call_args
         assert kwargs.get("params") == self.dict_params
 
@@ -321,7 +289,7 @@ class TestAPIEndpoints(unittest.TestCase):
 
             class TestAPI(APIEndpoints):
                 @request("GET", "/v1/data")
-                def get_data(self) -> List[BaseModelV1Example]:  # type: ignore [empty-body]
+                def get_data(self) -> List[BaseModelExample]:  # type: ignore [empty-body]
                     ...
 
     def test_request_decorator_unsupported_payload_type(self):
@@ -345,40 +313,40 @@ class TestAPIEndpoints(unittest.TestCase):
 
             class TestAPI(APIEndpoints):
                 @request("POST", "/v1/data")
-                def get_data(self, payload: Dict[str, BaseModelV1Example]) -> None:  # type: ignore [empty-body]
+                def get_data(self, payload: Dict[str, BaseModelExample]) -> None:  # type: ignore [empty-body]
                     ...
 
     @parameterized.expand(
         [
-            (BaseModelV1Example, False, TypeSpecifier(True, None, BaseModelV1Example, None, False, False)),
-            (List[BaseModelV1Example], False, TypeSpecifier(True, list, BaseModelV1Example, None, False, False)),
-            (Optional[BaseModelV1Example], False, TypeSpecifier(True, None, BaseModelV1Example, None, False, True)),
+            (BaseModelExample, False, TypeSpecifier(True, None, BaseModelExample, None, False, False)),
+            (List[BaseModelExample], False, TypeSpecifier(True, list, BaseModelExample, None, False, False)),
+            (Optional[BaseModelExample], False, TypeSpecifier(True, None, BaseModelExample, None, False, True)),
             (
-                Optional[List[BaseModelV1Example]],
+                Optional[List[BaseModelExample]],
                 False,
-                TypeSpecifier(True, list, BaseModelV1Example, None, False, True),
+                TypeSpecifier(True, list, BaseModelExample, None, False, True),
             ),
-            (List[Optional[BaseModelV1Example]], True, None),
-            (List[BaseModelV2Example], False, TypeSpecifier(True, list, BaseModelV2Example, None, False, False)),
-            (Optional[BaseModelV2Example], False, TypeSpecifier(True, None, BaseModelV2Example, None, False, True)),
+            (List[Optional[BaseModelExample]], True, None),
+            (List[BaseModelExample], False, TypeSpecifier(True, list, BaseModelExample, None, False, False)),
+            (Optional[BaseModelExample], False, TypeSpecifier(True, None, BaseModelExample, None, False, True)),
             (
-                Optional[List[BaseModelV2Example]],
+                Optional[List[BaseModelExample]],
                 False,
-                TypeSpecifier(True, list, BaseModelV2Example, None, False, True),
+                TypeSpecifier(True, list, BaseModelExample, None, False, True),
             ),
-            (List[Optional[BaseModelV2Example]], True, None),
+            (List[Optional[BaseModelExample]], True, None),
             (JSON, False, TypeSpecifier(True, None, None, None, True, False)),
             (str, False, TypeSpecifier(True, None, str, None, False, False)),
             (bytes, False, TypeSpecifier(True, None, bytes, None, False, False)),
             (
-                Union[BaseModelV2Example, BaseModelV2Example2],
+                Union[BaseModelExample, BaseModelExample2],
                 False,
-                TypeSpecifier(True, None, None, [BaseModelV2Example, BaseModelV2Example2], False, False),
+                TypeSpecifier(True, None, None, [BaseModelExample, BaseModelExample2], False, False),
             ),
             (
-                Annotated[Union[BaseModelV2Example, BaseModelV2Example2], None],
+                Annotated[Union[BaseModelExample, BaseModelExample2], None],
                 False,
-                TypeSpecifier(True, None, None, [BaseModelV2Example, BaseModelV2Example2], False, False),
+                TypeSpecifier(True, None, None, [BaseModelExample, BaseModelExample2], False, False),
             ),
             (None, True, None),
         ]
@@ -427,24 +395,24 @@ class TestAPIEndpoints(unittest.TestCase):
 
             class TestAPI(APIEndpoints):
                 @request("POST", "/v1/data/{id}")  # type: ignore [empty-body]
-                def get_data(self, id: str, payload: BaseModelV1Example, bogus: str) -> None:
+                def get_data(self, id: str, payload: BaseModelExample, bogus: str) -> None:
                     ...
 
     def test_request_decorator_accepts_optional_payload(self):
         # Arrange
         class TestAPIOptional(APIEndpoints):
             @request("GET", "/v1/data")
-            def get_data1(self, payload: Optional[BaseModelV1Example]) -> None:  # type: ignore [empty-body]
+            def get_data1(self, payload: Optional[BaseModelExample]) -> None:  # type: ignore [empty-body]
                 ...
 
         class TestAPIUnion(APIEndpoints):
             @request("GET", "/v2/data")
-            def get_data2(self, payload: Union[None, BaseModelV1Example]) -> None:  # type: ignore [empty-body]
+            def get_data2(self, payload: Union[None, BaseModelExample]) -> None:  # type: ignore [empty-body]
                 ...
 
         class TestAPIOptionalModelSequence(APIEndpoints):
             @request("GET", "/v3/data")
-            def get_data3(self, payload: Optional[List[BaseModelV1Example]]) -> None:  # type: ignore [empty-body]
+            def get_data3(self, payload: Optional[List[BaseModelExample]]) -> None:  # type: ignore [empty-body]
                 ...
 
     def test_request_decorator_call_from_unsuitable_base_class(self):
@@ -461,17 +429,17 @@ class TestAPIEndpoints(unittest.TestCase):
         # Arrange
         class TestAPI(APIEndpoints):
             @request("GET", "/v1/data/{id}")
-            def get_data(self, id: str, payload: BaseModelV2Example) -> None:  # type: ignore [empty-body]
+            def get_data(self, id: str, payload: BaseModelExample) -> None:  # type: ignore [empty-body]
                 ...
 
         api = TestAPI(self.session_mock)
         # Act
-        api.get_data("ID123", self.basemodel_v1_payload)
+        api.get_data("ID123", self.basemodel_payload)
         # Assert
         self.session_mock.request.assert_called_once_with(
             "GET",
             self.base_path + "/v1/data/ID123",
-            data=self.json_payload,
+            data=self.basemodel_payload.model_dump_json(),
             headers={"content-type": "application/json"},
         )
 
@@ -480,20 +448,20 @@ class TestAPIEndpoints(unittest.TestCase):
         class TestAPI(APIEndpoints):
             @request("GET", "/v2/{category}/items")
             def get_data(
-                self, payload: BaseModelV2Example, category: str, params: ParamsModelV1Example
+                self, payload: BaseModelExample, category: str, params: ParamsModelExample
             ) -> None:  # type: ignore [empty-body]
                 ...
 
         api = TestAPI(self.session_mock)
         # Act
-        api.get_data(self.basemodel_v1_payload, "clothes", self.basemodel_v1_params)
+        api.get_data(self.basemodel_payload, "clothes", self.basemodel_params)
         # Assert
         self.session_mock.request.assert_called_once_with(
             "GET",
             self.base_path + "/v2/clothes/items",
-            data=self.json_payload,
+            data=self.basemodel_payload.model_dump_json(),
             headers={"content-type": "application/json"},
-            params=self.basemodel_v1_params,
+            params=self.basemodel_params.model_dump(),
         )
 
     def test_request_decorator_call_with_keyword_arguments(self):
@@ -501,20 +469,20 @@ class TestAPIEndpoints(unittest.TestCase):
         class TestAPI(APIEndpoints):
             @request("GET", "/v2/{category}/items")
             def get_data(
-                self, payload: BaseModelV2Example, category: str, params: ParamsModelV1Example
+                self, payload: BaseModelExample, category: str, params: ParamsModelExample
             ) -> None:  # type: ignore [empty-body]
                 ...
 
         api = TestAPI(self.session_mock)
         # Act
-        api.get_data(category="clothes", params=self.basemodel_v1_params, payload=self.basemodel_v1_payload)
+        api.get_data(category="clothes", params=self.basemodel_params, payload=self.basemodel_payload)
         # Assert
         self.session_mock.request.assert_called_once_with(
             "GET",
             self.base_path + "/v2/clothes/items",
-            data=self.json_payload,
+            data=self.basemodel_payload.model_dump_json(),
             headers={"content-type": "application/json"},
-            params=self.basemodel_v1_params,
+            params=self.basemodel_params.model_dump(),
         )
 
     def test_request_decorator_call_with_json_payload(self):
@@ -540,7 +508,7 @@ class TestAPIEndpoints(unittest.TestCase):
         # Arrange
         class TestAPI(APIEndpoints):
             @request("PUT", "/v1/data/{id}")
-            def put_data(self, id: str, payload: Optional[BaseModelV1Example]) -> None:  # type: ignore [empty-body]
+            def put_data(self, id: str, payload: Optional[BaseModelExample]) -> None:  # type: ignore [empty-body]
                 ...
 
         api = TestAPI(self.session_mock)
@@ -556,31 +524,31 @@ class TestAPIEndpoints(unittest.TestCase):
         # Arrange
         class TestAPI(APIEndpoints):
             @request("GET", "/v1/items")
-            def get_data(self) -> BaseModelV1Example:  # type: ignore [empty-body]
+            def get_data(self) -> BaseModelExample:  # type: ignore [empty-body]
                 ...
 
-        self.session_mock.request.return_value.dataobj = MagicMock(return_value=self.basemodel_v1_payload)
+        self.session_mock.request.return_value.dataobj = MagicMock(return_value=self.basemodel_payload)
         api = TestAPI(self.session_mock)
         # Act
         retval = api.get_data()
         # Assert
         self.session_mock.request.return_value.dataobj.assert_called_once()
-        assert retval == self.basemodel_v1_payload
+        assert retval == self.basemodel_payload
 
     def test_request_decorator_call_and_return_model_datasequece(self):
         # Arrange
         class TestAPI(APIEndpoints):
             @request("GET", "/v1/items")
-            def get_data(self) -> DataSequence[BaseModelV1Example]:  # type: ignore [empty-body]
+            def get_data(self) -> DataSequence[BaseModelExample]:  # type: ignore [empty-body]
                 ...
 
-        self.session_mock.request.return_value.dataseq = MagicMock(return_value=self.basemodel_v1_sequence_payload)
+        self.session_mock.request.return_value.dataseq = MagicMock(return_value=self.basemodel_sequence_payload)
         api = TestAPI(self.session_mock)
         # Act
         retval = api.get_data()
         # Assert
         self.session_mock.request.return_value.dataseq.assert_called_once()
-        assert retval == self.basemodel_v1_sequence_payload
+        assert retval == self.basemodel_sequence_payload
 
     def test_request_decorator_call_and_return_str(self):
         # Arrange
@@ -717,7 +685,7 @@ class TestAPIEndpoints(unittest.TestCase):
         class TestAPI(APIEndpoints):
             @request("GET", "/v2/{category}/items")
             def get_data(
-                self, payload: BaseModelV1Example, category: str, params: ParamsModelV1Example
+                self, payload: BaseModelExample, category: str, params: ParamsModelExample
             ) -> None:  # type: ignore [empty-body]
                 ...
 
@@ -728,31 +696,31 @@ class TestAPIEndpoints(unittest.TestCase):
                 {"id": "id2", "size": 120, "capacity": 1.9, "active": False},
             ]:
                 for params in [
-                    ParamsModelV1Example(name="submarine", color="yellow"),
-                    ParamsModelV1Example(name="oyster", color="blue"),
+                    ParamsModelExample(name="submarine", color="yellow"),
+                    ParamsModelExample(name="oyster", color="blue"),
                 ]:
                     # Act
-                    payload = BaseModelV1Example.parse_obj(dict_payload)
+                    payload = BaseModelExample.model_validate(dict_payload)
                     api.get_data(category=category, params=params, payload=payload)
                     # Assert
                     self.session_mock.request.assert_called_once_with(
                         "GET",
                         self.base_path + f"/v2/{category}/items",
-                        data=json.dumps(dict_payload),
+                        data=payload.model_dump_json(),
                         headers={"content-type": "application/json"},
-                        params=params,
+                        params=params.model_dump(),
                     )
                     self.session_mock.reset_mock()
 
-    def test_request_decorator_call_with_defaults_arguments(self):
+    def test_request_decorator_call_with_default_arguments(self):
         # Arrange
         class TestAPI(APIEndpoints):
             @request("GET", "/v2/{category}/items")
             def get_data(
                 self,
-                payload: BaseModelV1Example = self.basemodel_v1_payload,
+                payload: BaseModelExample = self.basemodel_payload,
                 category: str = "default-category",
-                params: ParamsModelV1Example = self.basemodel_v1_params,
+                params: ParamsModelExample = self.basemodel_params,
             ) -> None:  # type: ignore [empty-body]
                 ...
 
@@ -763,9 +731,9 @@ class TestAPIEndpoints(unittest.TestCase):
         self.session_mock.request.assert_called_once_with(
             "GET",
             self.base_path + "/v2/default-category/items",
-            data=self.json_payload,
+            data=self.basemodel_payload.model_dump_json(),
             headers={"content-type": "application/json"},
-            params=self.basemodel_v1_params,
+            params=self.dict_params,
         )
 
     def test_request_decorator_call_with_defaults_arguments_override(self):
@@ -774,25 +742,25 @@ class TestAPIEndpoints(unittest.TestCase):
             @request("GET", "/v2/{category}/items")
             def get_data(
                 self,
-                payload: BaseModelV1Example = self.basemodel_v1_payload,
+                payload: BaseModelExample = self.basemodel_payload,
                 category: str = "default",
-                params: ParamsModelV1Example = self.basemodel_v1_params,
+                params: ParamsModelExample = self.basemodel_params,
             ) -> None:  # type: ignore [empty-body]
                 ...
 
         api = TestAPI(self.session_mock)
         # Act
-        payload_override = BaseModelV1Example(id="override-id", size=500, capacity=9.0001, active=False)
+        payload_override = BaseModelExample(id="override-id", size=500, capacity=9.0001, active=False)
         category_override = "override-category!"
-        params_override = ParamsModelV1Example(name="override-Name", color="override with orange!")
+        params_override = ParamsModelExample(name="override-Name", color="override with orange!")
         api.get_data(payload_override, category_override, params_override)
         # Assert
         self.session_mock.request.assert_called_once_with(
             "GET",
             self.base_path + f"/v2/{category_override}/items",
-            data=payload_override.json(),
+            data=payload_override.model_dump_json(),
             headers={"content-type": "application/json"},
-            params=params_override,
+            params=params_override.model_dump(),
         )
 
     def test_decorator_chaining_order(self):
@@ -801,7 +769,7 @@ class TestAPIEndpoints(unittest.TestCase):
             @request("GET", "/v2/{category}/items")
             @versions("<2")
             def get_data(
-                self, payload: BaseModelV1Example, category: str, params: ParamsModelV1Example
+                self, payload: BaseModelExample, category: str, params: ParamsModelExample
             ) -> None:  # type: ignore [empty-body]
                 ...
 
@@ -810,7 +778,7 @@ class TestAPIEndpoints(unittest.TestCase):
             @versions("<2")
             @view({ProviderView})
             def get_data(
-                self, payload: BaseModelV1Example, category: str, params: ParamsModelV1Example
+                self, payload: BaseModelExample, category: str, params: ParamsModelExample
             ) -> None:  # type: ignore [empty-body]
                 ...
 
@@ -887,20 +855,20 @@ class TestAPIEndpoints(unittest.TestCase):
         class TestAPI(APIEndpoints):
             @request("GET", "/v1/data")
             def get_data(
-                self, payload: Union[BaseModelV2Example, BaseModelV2Example2]
+                self, payload: Union[BaseModelExample, BaseModelExample2]
             ) -> None:  # type: ignore [empty-body]
                 ...
 
     def test_request_decorator_accept_annotated_union_of_models(self):
-        class BaseModelV2_A(BaseModelV2):
+        class BaseModel_A(BaseModel):
             field: Literal["number"] = "number"
             num: float
 
-        class BaseModelV2_B(BaseModelV2):
+        class BaseModel_B(BaseModel):
             field: Literal["name"] = "name"
             name: str
 
-        AnyBaseModel = Annotated[Union[BaseModelV2_A, BaseModelV2_B], FieldV2(discriminator="field")]
+        AnyBaseModel = Annotated[Union[BaseModel_A, BaseModel_B], Field(discriminator="field")]
 
         class TestAPI(APIEndpoints):
             @request("POST", "/v1/data")
