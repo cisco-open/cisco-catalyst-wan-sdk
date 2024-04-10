@@ -3,13 +3,14 @@
 # mypy: disable-error-code="empty-body"
 from typing import Dict
 
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from catalystwan.endpoints import APIEndpoints, post, view
 from catalystwan.utils.session_type import ProviderView
 
 
 class FeatureToCLIPayload(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     device_specific_variables: Dict[str, str] = Field(alias="device")
     is_edited: bool = Field(alias="isEdited")
     is_master_edited: bool = Field(alias="isMasterEdited")

@@ -4,7 +4,7 @@ import datetime as dt
 from typing import List, Optional
 
 from attr import define, field  # type: ignore
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from catalystwan.exceptions import RetrieveIntervalOutOfRange
 from catalystwan.utils.alarm_status import Severity
@@ -504,16 +504,17 @@ class SoftwareInstallTimeout(DataclassBase):
 
 
 class FeatureTemplatesTypes(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     parent: str
     default: str
-    display_name: str = Field(alias="displayName")
+    display_name: str = Field(serialization_alias="displayName", validation_alias="displayName")
     name: str
-    type_class: str = Field(alias="typeClass")
+    type_class: str = Field(serialization_alias="typeClass", validation_alias="typeClass")
     description: str
     write_permission: bool
     read_permission: bool
-    helper_type: List[str] = Field(default=[], alias="helperType")
-    device_models: List[dict] = Field(default=[], alias="deviceModels")
+    helper_type: List[str] = Field(default=[], serialization_alias="helperType", validation_alias="helperType")
+    device_models: List[dict] = Field(default=[], serialization_alias="deviceModels", validation_alias="deviceModels")
 
 
 @define

@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 
 
 class FullConfig(BaseModel):
@@ -10,6 +10,6 @@ class FullConfig(BaseModel):
 
 
 class FullConfigParcel(BaseModel):
-    name: str = Field(regex=r'^[^&<>! "]+$', min_length=1, max_length=128)
+    name: str = Field(pattern=r'^[^&<>! "]+$', min_length=1, max_length=128)
     description: Optional[str]
     data: FullConfig
