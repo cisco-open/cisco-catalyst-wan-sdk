@@ -11,9 +11,9 @@ Cisco Catalyst WAN SDK is a package for creating simple and parallel automatic r
 Welcome to the Cisco Catalyst WAN SDK!
 
 We are thrilled to announce that Cisco Catalyst WAN SDK is now available in early beta. This is an exciting step forward in enabling developers to harness the full potential of Cisco's networking solutions.
-Please be aware that, as an early beta release, this version of the SDK is still undergoing significant development and testing. As such, it is provided "as is" and may contain bugs, errors, or other issues that could affect its performance.
+Please be aware that, as an early beta release, this version of the SDK is still undergoing development and testing. As such, it is provided "as is" and support to address any issues are limited and best effort.
 
-## Use at your own risk
+## Not recommend to use in production environments.
 We encourage developers to explore and test the SDK's capabilities, but please exercise caution when using it in production environments.  We are dedicated to improving the Cisco Catalyst WAN SDK and we value your input. Your feedback is crucial to us-it will guide us in refining and enhancing the SDK to better meet your needs.
 To report any issues, share your insights, or suggest improvements, please visit our Issues page on GitHub or reach out to us through the provided communication channels.
 
