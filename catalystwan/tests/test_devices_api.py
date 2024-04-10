@@ -116,7 +116,7 @@ class TestDevicesAPI(TestCase):
         self.edges_dataseq = DataSequence(Device, [create_dataclass(Device, self.devices[3])])
         self.system_ips_list = [device["local-system-ip"] for device in self.devices]
         self.ips_list = [device["deviceId"] for device in self.devices]
-        self.list_all_devices_resp = DataSequence(DeviceData, [DeviceData.parse_obj(dev) for dev in self.devices])
+        self.list_all_devices_resp = DataSequence(DeviceData, [DeviceData.model_validate(dev) for dev in self.devices])
 
     @patch.object(DevicesAPI, "get")
     def test_controllers(self, mock_devices):
