@@ -1,11 +1,11 @@
 import logging
 from copy import deepcopy
 from ipaddress import IPv4Interface, IPv6Interface
-from typing import Literal, Type, Union
+from typing import List, Literal, Type, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, IPvAnyAddress
 
-from catalystwan.api.configuration_groups.parcel import as_default, as_global, as_variable
+from catalystwan.api.configuration_groups.parcel import Global, as_default, as_global, as_variable
 from catalystwan.models.configuration.feature_profile.common import Prefix
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import (
     DHCP,
@@ -227,10 +227,15 @@ class LanVpnParcelTemplateConverter:
             for entry in host:
                 host_mapping_item = HostMapping(
                     host_name=entry["hostname"],
-                    list_of_ip=entry["ip"],
+                    list_of_ip=self._get_list_of_ips(entry),
                 )
                 host_mapping_items.append(host_mapping_item)
             values["new_host_mapping"] = host_mapping_items
+
+    def _get_list_of_ips(self, entry) -> Global[List[IPvAnyAddress]]:
+        # Feature Template payload has space in ip string, so we need to strip it
+        list_of_ips = entry.get("ip", Global[List[str]](value=[])).value
+        return Global[List[IPvAnyAddress]](value=[IPvAnyAddress(ip.strip()) for ip in list_of_ips])
 
     def configure_service(self, values: dict) -> None:
         if service := values.get("service", []):

@@ -4,7 +4,7 @@ from ipaddress import IPv4Address, IPv6Address, IPv6Interface
 from typing import List, Literal, Optional, Union
 from uuid import UUID
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, IPvAnyAddress
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
 from catalystwan.models.configuration.feature_profile.common import Prefix
@@ -124,7 +124,9 @@ class HostMapping(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
     host_name: Union[Variable, Global[str]] = Field(serialization_alias="hostName", validation_alias="hostName")
-    list_of_ip: Union[Variable, Global[List[str]]] = Field(serialization_alias="listOfIp", validation_alias="listOfIp")
+    list_of_ip: Union[Variable, Global[List[IPvAnyAddress]]] = Field(
+        serialization_alias="listOfIp", validation_alias="listOfIp"
+    )
 
 
 class RoutePrefix(BaseModel):
