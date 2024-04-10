@@ -15,6 +15,7 @@ from .lan.vpn import LanVpnParcel
 from .ospf import OspfParcel
 from .ospfv3 import Ospfv3IPv4Parcel, Ospfv3IPv6Parcel
 from .route_policy import RoutePolicyParcel
+from .switchport import SwitchportParcel
 
 AnyTopLevelServiceParcel = Annotated[
     Union[
@@ -26,6 +27,7 @@ AnyTopLevelServiceParcel = Annotated[
         Ospfv3IPv6Parcel,
         RoutePolicyParcel,
         EigrpParcel,
+        SwitchportParcel,
         Ipv6AclParcel,
         Ipv4AclParcel,
         # TrackerGroupData,
@@ -60,6 +62,7 @@ __all__ = [
     "Ospfv3IPv6Parcel",
     "Ipv6AclParcel",
     "Ipv4AclParcel",
+    "SwitchportParcel",
     "InterfaceSviParcel",
     "InterfaceGreParcel",
     "AnyServiceParcel",

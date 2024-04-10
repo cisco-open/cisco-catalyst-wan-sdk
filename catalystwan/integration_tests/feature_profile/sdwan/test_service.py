@@ -33,6 +33,17 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 impor
     Ospfv3IPv6Parcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.switchport import (
+    ControlDirection,
+    Duplex,
+    HostMode,
+    PortControl,
+    Speed,
+    StaticMacAddress,
+    SwitchportInterface,
+    SwitchportMode,
+    SwitchportParcel,
+)
 
 
 class TestServiceFeatureProfileModels(TestFeatureProfileModels):
@@ -165,6 +176,56 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv4_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_default_values_switchport_expect_successful_post(self):
+        # Arrange
+        switchport_parcel = SwitchportParcel(
+            parcel_name="TestSwitchportParcel",
+            parcel_description="Test Switchport Parcel",
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, switchport_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_fully_specified_values_switchport_expect_successful_post(self):
+        # Arrange
+        switchport_parcel = SwitchportParcel(
+            parcel_name="TestSwitchportParcel",
+            parcel_description="Test Switchport Parcel",
+            age_time=Global[int](value=100),
+            static_mac_address=[
+                StaticMacAddress(
+                    mac_address=as_global("00:00:00:00:00:00"),
+                    vlan=Global[int](value=1),
+                    interface_name=as_global("GigabitEthernet0/0/0"),
+                )
+            ],
+            interface=[
+                SwitchportInterface(
+                    interface_name=as_global("GigabitEthernet0/0/0"),
+                    mode=Global[SwitchportMode](value="access"),
+                    shutdown=Global[bool](value=True),
+                    speed=Global[Speed](value="10"),
+                    duplex=Global[Duplex](value="full"),
+                    switchport_access_vlan=Global[int](value=1),
+                    switchport_trunk_allowed_vlans=Global[str](value="1-10"),
+                    switchport_trunk_native_vlan=Global[int](value=1),
+                    voice_vlan=Global[int](value=1),
+                    host_mode=Global[HostMode](value="single-host"),
+                    port_control=Global[PortControl](value="auto"),
+                    control_direction=Global[ControlDirection](value="both"),
+                    pae_enable=Global[bool](value=True),
+                    guest_vlan=Global[int](value=1),
+                    critical_vlan=Global[int](value=1),
+                    enable_voice=Global[bool](value=True),
+                )
+            ],
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, switchport_parcel).id
         # Assert
         assert parcel_id
 
