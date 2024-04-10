@@ -3,16 +3,15 @@
 We're really glad you want to help.
 
 ## Here are some important resources:
-
-  * Want to add something from yourself? [Make a PR](https://github.com/CiscoDevNet/vManage-client/pulls) - remember to follow code guidelines.
+  * Want to add something from yourself? [Make a PR](https://github.com/CiscoDevNet/catalystwan/pulls) - remember to follow [code guidelines](#code-guidelines).
     ### Contributors from CiscoDevNet organization:
     To make a PR - pull the repository, create branch for your changes, make said changes and make the pull request. Now just wait for the review and feedback from our developers.  
     ### Contributors outside CiscoDevNet organization
     To make a PR - fork our repository, make your changes and make the pull request. Now just wait for the review and feedback from our developers.
-  * Feel free to review existing [PR](https://github.com/CiscoDevNet/vManage-client/pulls)s, any suggestion is welcome.
-  * Want to help but you don't have any new ideas for improvement or feature? Take any [issue](https://github.com/CiscoDevNet/vManage-client/issues) and fix it.
-  * Bugs? [Report it here](https://github.com/CiscoDevNet/vManage-client/issues/new?assignees=&labels=needs+review&template=bug_report.yml) - remember to provide as much information as you can.
-  * Need some additional feature? [Let us know here](https://github.com/CiscoDevNet/vManage-client/issues/new?assignees=&labels=enhancement&template=feature_request.yml)
+  * Feel free to review existing [PR](https://github.com/CiscoDevNet/catalystwan/pulls)s, any suggestion is welcome.
+  * Want to help but you don't have any new ideas for improvement or feature? Take any [issue](https://github.com/CiscoDevNet/catalystwan/issues) and fix it.
+  * Bugs? [Report it here](https://github.com/CiscoDevNet/catalystwan/issues/new?assignees=&labels=needs+review&template=bug_report.yml) - remember to provide as much information as you can.
+  * Need some additional feature? [Let us know here](https://github.com/CiscoDevNet/catalystwan/issues/new?assignees=&labels=enhancement&template=feature_request.yml)
 
 ## Testing
 
@@ -23,9 +22,9 @@ Test newly implemented features on Cisco SD-WAN, ideally on different versions. 
   ```
   poetry build
   ```
-  Then in `/vManage-client/dist/` directory there is a `.whl` file named `vmngclient-<version>-py3-none-any.whl`, which can be installed by running
+  Then in `/catalystwan/dist/` directory there is a `.whl` file named `catalystwan-<version>-py3-none-any.whl`, which can be installed by running
   ```
-  pip install vmngclient-<version>-py3-none-any.whl
+  pip install catalystwan-<version>-py3-none-any.whl
   ```
 
 ## Submitting changes
@@ -38,7 +37,7 @@ Always write a clear log message for your commits.
 1. Download Python3.8 or higher.
 2. Download repository
     ```
-    git clone https://github.com/CiscoDevNet/vManage-client.git
+    git clone https://github.com/CiscoDevNet/catalystwan.git
     ```
 3. Install and configure poetry (v1.3.1 or higher)
     https://python-poetry.org/docs/#installation
@@ -57,7 +56,9 @@ Always write a clear log message for your commits.
     pre-commit install
     ```
 ### Environment Variables
-- `VMNGCLIENT_DEVEL` when set: loggers will be configured according to `./logging.conf` and `urllib3.exceptions.InsecureRequestWarning` will be suppressed
+- `catalystwan_devel` when set: loggers will be configured according to `./logging.conf` and `urllib3.exceptions.InsecureRequestWarning` will be suppressed
+
+- `catalystwan_export_endpoints` when set `endpoints-md` pre-commit step will generate `ENDPOINTS.md` file in addition to perform definition checks. This should be set only when creating version bump commit with new release tag.
 
 ## Code guidelines
 
@@ -77,7 +78,7 @@ Start reading our code, and you'll get the hang of it.
 ## Introducing new API
 
   ### API Endpoints:
-  vManage-client APIs should make requests only through API Endpoints layer. This layer defines:
+  catalystwan APIs should make requests only through API Endpoints layer. This layer defines:
   * http method
   * endpoint url
   * payload data-model (subtyping `pydantic.BaseModel` and others)
@@ -88,10 +89,11 @@ Start reading our code, and you'll get the hang of it.
   Example:
 
   ```python
+  # to keep example brief we define models and endpoints in single file - however it is suggested to use separate files
   from pydantic import BaseModel, Field
   from typing import List
-  from vmngclient.endpoints import APIEndpoints, delete, versions, view
-  from vmngclient.utils.session_type import ProviderView
+  from catalystwan.endpoints import APIEndpoints, delete, versions, view
+  from catalystwan.utils.session_type import ProviderView
 
   class TenantBulkDeleteRequest(BaseModel):
       password: str
@@ -111,21 +113,24 @@ Start reading our code, and you'll get the hang of it.
 
   Please note that when using `@request` decorator method must have no body. Request will be built automatically and return value based on defined type will be provided.
 
-  API endpoints Definitions can be found in: `vmngclient/endpoints` directory.
+  API endpoints definitions can be found in: `catalystwan/endpoints` directory.
 
-  The organization of items **strictly** follows an OpenAPI spec: https://developer.cisco.com/docs/sdwan/#!sd-wan-vmanage-v20-9
+  The organization of items should follow OpenAPI spec: https://developer.cisco.com/docs/sdwan/#!sd-wan-vmanage-v20-9
+
+  For example with given tag `Configuration - Feature Profile (SDWAN)` items should be placed in:
+  - `catalystwan/endpoints/configuration/feature_profile/sdwan/...` for APIEndpoints sub-classes
+  - `catalystwan/models/configuration/feature_profile/sdwan/...` for pydantic models defining payload, return type and possibly query params.
 
   Auto generated python methods names can be found in: https://ghe-msite.cisco.com/sbasan/openapi-generator-vmanage
 
-  If common data-model is being reused by more than one `APIEndpoints` class it should be moved to `vmngclient/model` folder with appropriate module name.
 
   Dedicated pre-commit step will automatically check corectness and add documentation for endpoints with `@request` (or `@get`, `@post`, `@put`, `@delete`) decorator.
 
-  Custom payload types are allowed (eg. for sending various types of files) please check example: [**SoftwarePackageUpdatePayload**](vmngclient/utils/upgrades_helper.py#L68)
+  Custom payload types are allowed (eg. for sending various types of files) please check example: [**SoftwarePackageUploadPayload**](catalystwan/utils/upgrades_helper.py#L77)
 
-1. Check that endpoints you want to utilize in your API already defined in `vmngclient/endpoints`.
+1. Check that endpoints you want to utilize in your API already defined in `catalystwan/endpoints`.
 2. If endpoint not present, create new file with endpoint including data-model and methods with `@request`, `@view` and `@versions` decorators when needed.
-3. Implement higher level API in `vmngclient/api` using created endpoints.
+3. Implement higher level API in `catalystwan/api` using created endpoints.
 
 Thanks,\
-vmngclient team
+catalystwan team

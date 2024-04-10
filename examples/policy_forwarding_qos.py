@@ -1,6 +1,7 @@
-# mypy: ignore-errors
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
+
 """
-This example demonstrates usage of PolicyAPI in vmngclient
+This example demonstrates usage of PolicyAPI in catalystwan
 Code below provides same results as obtained after executing workflow manually via WEB-UI according to:
 'Forwarding and QoS Configuration Guide for vEdge Routers, Cisco SD-WAN Release 20'
 https://www.cisco.com/c/en/us/td/docs/routers/sdwan/configuration/qos/vEdge-20-x/qos-book/forwarding-qos.html#Cisco_Concept.dita_aa3e0d07-462e-463f-8f45-681f38f61ab0
@@ -14,13 +15,15 @@ IV.  Apply QoS and Re-write Policy to WAN Interface Feature Template
 V.   Define Centralized Traffic Data QoS Policy to Classify Traffic into Proper Queue
 VI.  Apply Centralized Policy
 
-To run example provide (url, port, username, password) to reachable vmanage instance as command line arguments:
+To run example provide (url, port, username, password) to reachable Manager instance as command line arguments:
 python examples/policy_forwarding_qos.py 127.0.0.1 433 admin p4s$w0rD
 """
 
 import logging
 import sys
 from dataclasses import dataclass
+from typing import Dict, Optional
+from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
@@ -31,17 +34,17 @@ class CmdArguments:
     port: int
     user: str
     password: str
-    device_template: str = None
+    device_template: Optional[str] = None
 
 
 def run_demo(args: CmdArguments):
-    from vmngclient.exceptions import vManageClientError
-    from vmngclient.session import create_vManageSession
+    from catalystwan.exceptions import CatalystwanException
+    from catalystwan.session import create_manager_session
 
-    with create_vManageSession(url=args.url, port=args.port, username=args.user, password=args.password) as session:
+    with create_manager_session(url=args.url, port=args.port, username=args.user, password=args.password) as session:
         api = session.api.policy
         """ I. Map Each Forwarding Class to an Output Queue:
-            1. From the Cisco vManage menu, choose Configuration > Policies.
+            1. From the Cisco Manager menu, choose Configuration > Policies.
             2. From the Custom Options drop-down, select Lists under Localized Policy.
             3. Select the Class Map from the list types.
             4. Click the New Class List. The Class List pop-up page is displayed.
@@ -62,9 +65,11 @@ def run_demo(args: CmdArguments):
                 +-------------------+-------+
         """
         logger.info("I. Map Each Forwarding Class to an Output Queue")
-        from vmngclient.models.policy.lists import ClassMapList
+        from catalystwan.models.policy import ClassMapList
 
-        pol_dict = {}  # this variable will hold a dictionary of created policy references by names used in examples
+        pol_dict: Dict[
+            str, UUID
+        ] = {}  # this variable will hold a dictionary of created policy references by names used in examples
         for i, name in enumerate(
             ["VOICE", "CRITICAL_DATA", "BULK", "DEFAULT", "INTERACTIVE_VIDEO", "CONTROL_SIGNALING"]
         ):
@@ -73,7 +78,7 @@ def run_demo(args: CmdArguments):
             pol_dict[name] = api.lists.create(class_map)
 
         """ II.A. Configure Localized Policy: Enable Cloud QoS
-            1. From the Cisco vManage menu, choose Configuration > Policies.
+            1. From the Cisco Manager menu, choose Configuration > Policies.
             2. Click Localized Policy.
             3. Create a customized localized policy following the steps below:
             4. Click Add Policy.
@@ -83,7 +88,7 @@ def run_demo(args: CmdArguments):
             and select the Cloud QoS Service side checkbox to enable QoS on the service side.
         """
         logger.info("II.A. Configure Localized Policy: Enable Cloud QoS")
-        from vmngclient.models.policy.localized import LocalizedPolicy
+        from catalystwan.models.policy import LocalizedPolicy
 
         loc_pol = LocalizedPolicy(policy_name="My-Localized-Policy", policy_description="desc text")
         loc_pol.policy_definition.settings.cloud_qos = True
@@ -115,9 +120,9 @@ def run_demo(args: CmdArguments):
             10. Click Save Policy.
         """
         logger.info("II.B. Configure Localized Policy: Configure QoS Scheduler")
-        from vmngclient.models.policy.definitions.qos_map import QoSMap
+        from catalystwan.models.policy import QoSMapPolicy
 
-        qos_map = QoSMap(name="My-QosMap-Policy")
+        qos_map = QoSMapPolicy(name="My-QosMap-Policy")
         qos_map.add_scheduler(queue=1, class_map_ref=pol_dict["CRITICAL_DATA"], bandwidth=30, buffer=30)
         qos_map.add_scheduler(queue=2, class_map_ref=pol_dict["BULK"], bandwidth=10, buffer=10)
         qos_map.add_scheduler(queue=3, class_map_ref=pol_dict["DEFAULT"], bandwidth=20, buffer=20)
@@ -157,10 +162,10 @@ def run_demo(args: CmdArguments):
                 | INTERACTIVE_VIDEO | High     |   34 |                        4 |
                 +-------------------+----------+------+--------------------------+
             12. Click Save Policy.
-            13. Click Save Policy Changes to save the changes to the localized master policy.
+            13. Click Save Policy Changes to save the changes to the localized parent policy.
         """
         logger.info("II.C. Configure Localized Policy: Create Re-write Policy")
-        from vmngclient.models.policy.definitions.rewrite import RewritePolicy
+        from catalystwan.models.policy import RewritePolicy
 
         rw_pol = RewritePolicy(name="My-Rewrite-Policy")
         rw_pol.add_rule(class_map_ref=pol_dict["BULK"], plp="low", dscp=10, l2cos=1)
@@ -178,7 +183,7 @@ def run_demo(args: CmdArguments):
         pol_dict["My-Localized-Policy"] = api.localized.create(loc_pol)
 
         """ III.Apply Localized Policy to the Device Template
-            1. From the Cisco vManage menu, choose Configuration > Templates
+            1. From the Cisco Manager menu, choose Configuration > Templates
             2. Click Device Templates and select the desired template.
             3. Click …, and click Edit.
             4. Click Additional Templates.
@@ -190,23 +195,23 @@ def run_demo(args: CmdArguments):
                 If more than one device is attached to the device template,
                 you will receive a warning that you are changing multiple devices.
             7. Click Next, and then Configure Devices.
-            8. Wait for the validation process and push configuration from Cisco vManage to the device
+            8. Wait for the validation process and push configuration from Cisco Manager to the device
         """
         logger.info("III.Apply Localized Policy to the Device Template")
         if args.device_template is None:
             logger.info("Pre-defined existing device template name not provided, skipping III")
         else:
             try:
-                from vmngclient.api.templates.device_template.device_template import DeviceTemplate
+                from catalystwan.api.templates.device_template.device_template import DeviceTemplate
 
                 device_template = DeviceTemplate.get(args.device_template, session)
-                device_template.policy_id = pol_dict["My-Localized-Policy"]
+                device_template.policy_id = str(pol_dict["My-Localized-Policy"])
                 session.api.templates.edit(device_template)
-            except vManageClientError:
+            except CatalystwanException:
                 logger.warning("Failed to attach My-Localized-Policy to Device Template")
 
         """ V. Define Centralized Traffic Data QoS Policy to Classify Traffic into Proper Queue
-            1. From the Cisco vManage menu, choose Configuration > Policies.
+            1. From the Cisco Manager menu, choose Configuration > Policies.
             2. Click Centralized Policy.
             3. For the desired policy in the list, click ..., and select Edit.
                 (Optionally) If the desired policy is not available in the list,
@@ -234,8 +239,7 @@ def run_demo(args: CmdArguments):
                 b. Click Save Data Policy.
         """
         logger.info("V. Define Centralized Traffic Data QoS Policy to Classify Traffic into Proper Queue")
-        from vmngclient.models.policy.centralized import CentralizedPolicy
-        from vmngclient.models.policy.definitions.traffic_data import TrafficDataPolicy
+        from catalystwan.models.policy import CentralizedPolicy, TrafficDataPolicy
 
         centralized_pol = CentralizedPolicy(policy_name="My-Centralized-Policy")
         data_pol = TrafficDataPolicy(name="My-Traffic-Data-Policy")
@@ -253,12 +257,12 @@ def run_demo(args: CmdArguments):
         6. Click Save Policy Changes.
         7. A window pops up indicating the policy will be applied to the Cisco vSmart controller.
         8. Click Activate.
-        9. Cisco vManage pushes the configuration to the Cisco vSmart controller and indicates success.
+        9. Cisco Manager pushes the configuration to the Cisco vSmart controller and indicates success.
         """
         logger.info("VI. Apply Centralized Policy ...")
         pol_application = centralized_pol.add_traffic_data_policy(pol_dict["My-Traffic-Data-Policy"])
 
-        from vmngclient.models.policy.lists import SiteList, VPNList
+        from catalystwan.models.policy import SiteList, VPNList
 
         site_list = SiteList(name="My-Site-List")
         site_list.add_sites({4, 5})
@@ -267,14 +271,14 @@ def run_demo(args: CmdArguments):
         vpn_list.add_vpn_range((100, 300))
         pol_dict["My-VPN-List"] = api.lists.create(vpn_list)
 
-        pol_application.apply([pol_dict["My-Site-List"]], [pol_dict["My-VPN-List"]], direction="tunnel")
+        pol_application.assign_to([pol_dict["My-VPN-List"]], "tunnel", site_lists=[pol_dict["My-Site-List"]])
         pol_dict["My-Centralized-Policy"] = api.centralized.create(centralized_pol)
 
         try:
             policy_activate_task = api.centralized.activate(pol_dict["My-Centralized-Policy"])
             policy_activate_task.wait_for_completed()
-        except vManageClientError:
-            logger.warning("My-Centralized-Policy activation failed! are vSmarts in vmanage mode?")
+        except CatalystwanException:
+            logger.warning("My-Centralized-Policy activation failed! are vSmarts in Manager mode?")
 
         """End of procedure, below is user prompt to check created policies and delete everything afterwards"""
 
@@ -297,7 +301,7 @@ def run_demo(args: CmdArguments):
         api.lists.delete(VPNList, pol_dict["My-VPN-List"])
         api.localized.delete(pol_dict["My-Localized-Policy"])
         api.definitions.delete(RewritePolicy, pol_dict["My-Rewrite-Policy"])
-        api.definitions.delete(QoSMap, pol_dict["My-QosMap-Policy"])
+        api.definitions.delete(QoSMapPolicy, pol_dict["My-QosMap-Policy"])
         api.lists.delete(ClassMapList, pol_dict["VOICE"])
         api.lists.delete(ClassMapList, pol_dict["CRITICAL_DATA"])
         api.lists.delete(ClassMapList, pol_dict["BULK"])
