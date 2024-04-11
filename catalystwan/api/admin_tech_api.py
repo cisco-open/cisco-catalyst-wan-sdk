@@ -10,8 +10,8 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional
 
-from requests import Response
-from requests.exceptions import HTTPError
+from requests import Response  # type: ignore
+from requests.exceptions import HTTPError  # type: ignore
 
 from catalystwan.dataclasses import AdminTech, DeviceAdminTech
 from catalystwan.exceptions import CatalystwanException
@@ -131,11 +131,15 @@ class AdminTechAPI:
             polling_timer -= polling_interval
         raise GenerateAdminTechLogError(f"It is not possible to generate admintech log for {device_id}")
 
-    def _get_token_id(self, filename: str) -> str:
-        admin_techs = self.get_all()
-        for admin_tech in admin_techs:
-            if filename == admin_tech.filename:
-                return admin_tech.token_id
+    def _get_token_id(self, filename: str, timeout: int = 3600, interval: int = 30) -> str:
+        # Wait for the file to be ready and obtain the token_id
+        end_time = time.time() + timeout
+        while time.time() < end_time:
+            admin_techs = self.get_all()
+            for admin_tech in admin_techs:
+                if filename == admin_tech.filename and admin_tech.state == "done":
+                    return admin_tech.token_id
+            time.sleep(interval)
         raise RequestTokenIdNotFound(
             f"requestTokenId of admin tech generation request not found for file name: {filename}"
         )
