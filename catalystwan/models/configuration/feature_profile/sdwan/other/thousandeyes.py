@@ -6,44 +6,11 @@ from typing import List, Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_global, as_variable
+from catalystwan.models.common import SubnetMask
 
 ProxyTypeStatic = Literal["static"]
 ProxyTypePac = Literal["pac"]
 ProxyTypeNone = Literal["none"]
-TeMgmtSubnetMask = Literal[
-    "255.255.255.255",
-    "255.255.255.254",
-    "255.255.255.252",
-    "255.255.255.248",
-    "255.255.255.240",
-    "255.255.255.224",
-    "255.255.255.192",
-    "255.255.255.128",
-    "255.255.255.0",
-    "255.255.254.0",
-    "255.255.252.0",
-    "255.255.248.0",
-    "255.255.240.0",
-    "255.255.224.0",
-    "255.255.192.0",
-    "255.255.128.0",
-    "255.255.0.0",
-    "255.254.0.0",
-    "255.252.0.0",
-    "255.240.0.0",
-    "255.224.0.0",
-    "255.192.0.0",
-    "255.128.0.0",
-    "255.0.0.0",
-    "254.0.0.0",
-    "252.0.0.0",
-    "248.0.0.0",
-    "240.0.0.0",
-    "224.0.0.0",
-    "192.0.0.0",
-    "128.0.0.0",
-    "0.0.0.0",
-]
 
 
 class ProxyConfigStatic(BaseModel):
@@ -135,7 +102,7 @@ class VirtualApplicationItem(BaseModel):
         validation_alias="teMgmtIp",
         description="Set the Agent IP Address",
     )
-    te_mgmt_subnet_mask: Optional[Union[Variable, Global[TeMgmtSubnetMask]]] = Field(
+    te_mgmt_subnet_mask: Optional[Union[Variable, Global[SubnetMask]]] = Field(
         default=None,
         serialization_alias="teMgmtSubnetMask",
         validation_alias="teMgmtSubnetMask",

@@ -4,10 +4,8 @@ from ipaddress import IPv4Address, IPv4Network
 from typing import List
 
 from catalystwan.api.configuration_groups.parcel import Global, Variable, as_global, as_variable
-from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import (
-    LanVpnDhcpServerParcel,
-    SubnetMask,
-)
+from catalystwan.models.common import SubnetMask
+from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import LanVpnDhcpServerParcel
 
 logger = logging.getLogger(__name__)
 
