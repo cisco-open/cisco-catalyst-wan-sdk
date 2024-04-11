@@ -146,7 +146,7 @@ class AdminTechAPI:
     def _get_token_id(self, filename: str) -> str:
         admin_techs = self.get_all()
         for admin_tech in admin_techs:
-            if filename == admin_tech.filename:
+            if filename == admin_tech.filename and admin_tech.state == "done":
                 return admin_tech.token_id
         raise RequestTokenIdNotFound(
             f"requestTokenId of admin tech generation request not found for file name: {filename}"
