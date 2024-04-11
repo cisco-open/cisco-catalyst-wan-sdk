@@ -20,8 +20,8 @@ class Tenant(BaseModel):
 
     organization_name: str
     tier_name: str
-    tenant_info: Optional[TenantInfo]
-    tier_info: Optional[TierInfo]
+    tenant_info: Optional[TenantInfo] = None
+    tier_info: Optional[TierInfo] = None
 
 
 class TenantModel(FeatureTemplate):
