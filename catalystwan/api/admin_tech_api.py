@@ -10,11 +10,9 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional
 
-from requests import Response  # type: ignore
-from requests.exceptions import HTTPError  # type: ignore
-
 from catalystwan.dataclasses import AdminTech, DeviceAdminTech
-from catalystwan.exceptions import CatalystwanException
+from catalystwan.exceptions import CatalystwanException, ManagerHTTPError
+from catalystwan.response import ManagerResponse
 from catalystwan.utils.creation_tools import create_dataclass
 
 if TYPE_CHECKING:
@@ -117,7 +115,7 @@ class AdminTechAPI:
                     json=body,
                     timeout=request_timeout,
                 )
-            except HTTPError as http_error:
+            except ManagerHTTPError as http_error:
                 response = http_error.response  # type: ignore
             if response.status_code == 200:
                 return response.json()["fileName"]
@@ -131,7 +129,7 @@ class AdminTechAPI:
             polling_timer -= polling_interval
         raise GenerateAdminTechLogError(f"It is not possible to generate admintech log for {device_id}")
 
-    def _get_token_id(self, filename: str, timeout: int = 3600, interval: int = 30) -> str:
+    def _get_token_id(self, filename: str, timeout: int, interval: int) -> str:
         # Wait for the file to be ready and obtain the token_id
         end_time = time.time() + timeout
         while time.time() < end_time:
@@ -144,7 +142,7 @@ class AdminTechAPI:
             f"requestTokenId of admin tech generation request not found for file name: {filename}"
         )
 
-    def delete(self, filename: str) -> Response:
+    def delete(self, filename: str, timeout: int = 3600, interval: int = 30) -> ManagerResponse:
         """Deletes admin tech logs for a device.
         Args:
             filename: name of admin_tech file
@@ -152,7 +150,7 @@ class AdminTechAPI:
             response: http response for delete operation
         """
 
-        token_id = self._get_token_id(filename)
+        token_id = self._get_token_id(filename, timeout, interval)
         response = self.session.delete(f"/dataservice/device/tools/admintech/{token_id}")
         if response.status_code == 200:
             logger.info(f"Deleted AdminTech file {filename} on remote")
