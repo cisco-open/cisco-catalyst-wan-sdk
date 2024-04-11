@@ -25,22 +25,28 @@ class Tier(BaseModel):
     vpn: int
     rid: int = Field(serialization_alias="@rid", validation_alias="@rid")
     ipv4_route_limit_type: Optional[str] = Field(
-        serialization_alias="ipv4RouteLimitType", validation_alias="ipv4RouteLimitType"
+        default=None, serialization_alias="ipv4RouteLimitType", validation_alias="ipv4RouteLimitType"
     )
     ipv4_route_limit_threshold: Optional[int] = Field(
-        serialization_alias="ipv4RouteLimitThreshold", validation_alias="ipv4RouteLimitThreshold"
+        default=None, serialization_alias="ipv4RouteLimitThreshold", validation_alias="ipv4RouteLimitThreshold"
     )
-    ipv4_route_limit: Optional[int] = Field(serialization_alias="ipv4RouteLimit", validation_alias="ipv4RouteLimit")
+    ipv4_route_limit: Optional[int] = Field(
+        default=None, serialization_alias="ipv4RouteLimit", validation_alias="ipv4RouteLimit"
+    )
     ipv6_route_limit_type: Optional[str] = Field(
-        serialization_alias="ipv6RouteLimitType", validation_alias="ipv6RouteLimitType"
+        default=None, serialization_alias="ipv6RouteLimitType", validation_alias="ipv6RouteLimitType"
     )
     ipv6_route_limit_threshold: Optional[int] = Field(
-        serialization_alias="ipv6RouteLimitThreshold", validation_alias="ipv6RouteLimitThreshold"
+        default=None, serialization_alias="ipv6RouteLimitThreshold", validation_alias="ipv6RouteLimitThreshold"
     )
-    ipv6_route_limit: Optional[int] = Field(serialization_alias="ipv6RouteLimit", validation_alias="ipv6RouteLimit")
+    ipv6_route_limit: Optional[int] = Field(
+        default=None, serialization_alias="ipv6RouteLimit", validation_alias="ipv6RouteLimit"
+    )
     tlocs: List[TLOC] = Field(default=[])
     # New in 20.12 version
-    nat_session_limit: Optional[int] = Field(serialization_alias="natSessionLimit", validation_alias="natSessionLimit")
+    nat_session_limit: Optional[int] = Field(
+        default=None, serialization_alias="natSessionLimit", validation_alias="natSessionLimit"
+    )
 
 
 class DeviceData(BaseModel):
