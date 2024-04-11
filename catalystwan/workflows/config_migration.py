@@ -60,6 +60,7 @@ SUPPORTED_TEMPLATE_TYPES = [
     "vpn-interface-svi",
     "cisco_ospf",
     "switchport",
+    "cisco_wireless_lan",
 ]
 
 FEATURE_PROFILE_SYSTEM = [
@@ -107,6 +108,7 @@ FEATURE_PROFILE_SERVICE = [
     "vpn-interface-svi",
     "cisco_ospf",
     "switchport",
+    "cisco_wireless_lan",
 ]
 
 
