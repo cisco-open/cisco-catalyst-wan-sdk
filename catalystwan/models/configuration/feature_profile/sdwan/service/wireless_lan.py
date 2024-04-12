@@ -140,7 +140,7 @@ class MeStaticIpConfig(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     me_ipv4_address: Union[Global[IPv4Address], Variable] = Field(
-        serialization_alias="meIpv4Address", validation_default="meIpv4Address"
+        serialization_alias="meIpv4Address", validation_alias="meIpv4Address"
     )
     netmask: Union[Global[SubnetMask], Variable]
     default_gateway: Union[Global[IPv4Address], Variable] = Field(
