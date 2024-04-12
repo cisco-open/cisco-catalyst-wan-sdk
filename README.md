@@ -416,4 +416,4 @@ except ManagerHTTPError as error:
 
 ## Seeking support
 
-You can contact us by submitting [issues](https://github.com/cisco-open/cisco-catalyst-wan-sdk/issues), or directly via mail on vmngclient@cisco.com.
+You can contact us by submitting [issues](https://github.com/cisco-open/cisco-catalyst-wan-sdk/issues), or directly via mail on catalystwan@cisco.com.
