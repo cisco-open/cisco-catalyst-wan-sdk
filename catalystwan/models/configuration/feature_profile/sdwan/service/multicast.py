@@ -1,11 +1,14 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
+from ipaddress import IPv4Address
 from typing import List, Literal, Optional, Union
 from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+
+SptThreshold = Literal["infinity", "0"]
 
 
 class LocalConfig(BaseModel):
@@ -29,10 +32,10 @@ class MulticastBasicAttributes(BaseModel):
 class StaticJoin(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    group_address: Union[Global[str], Variable] = Field(
+    group_address: Union[Global[IPv4Address], Variable] = Field(
         serialization_alias="groupAddress", validation_alias="groupAddress"
     )
-    source_address: Optional[Union[Global[str], Variable, Default[None]]] = Field(
+    source_address: Optional[Union[Global[IPv4Address], Variable, Default[None]]] = Field(
         serialization_alias="sourceAddress", validation_alias="sourceAddress", default=Default[None](value=None)
     )
 
@@ -59,22 +62,17 @@ class SmmFlag(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     enable_ssm_flag: Global[bool] = Global[bool](value=True)
-    range: Optional[Union[Global[str], Variable, Default[None]]] = Default[None](value=None)
+    range: Union[Global[str], Variable, Default[None]] = Default[None](value=None)
 
 
-class SptThreshold:
-    INFINITY = "infinity"
-    ZERO = "0"
-
-
-class SsmAttrubutes(BaseModel):
+class SsmAttributes(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     ssm_range_config: SmmFlag = Field(serialization_alias="ssmRangeConfig", validation_alias="ssmRangeConfig")
     spt_threshold: Optional[Union[Global[SptThreshold], Variable, Default[SptThreshold]]] = Field(
         serialization_alias="sptThreshold",
         validation_alias="sptThreshold",
-        default=Default[SptThreshold](value=SptThreshold.ZERO),
+        default=Default[SptThreshold](value="0"),
     )
 
 
@@ -95,7 +93,7 @@ class PimInterfaceParameters(BaseModel):
 class StaticRpAddress(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    address: Union[Global[str], Variable]
+    address: Union[Global[IPv4Address], Variable]
     access_list: Union[Global[str], Variable] = Field(serialization_alias="accessList", validation_alias="accessList")
     override: Optional[Union[Global[bool], Variable, Default[bool]]] = Default[bool](value=False)
 
@@ -163,7 +161,7 @@ class PimBsrAttributes(BaseModel):
 class PimAttributes(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    ssm: SsmAttrubutes
+    ssm: SsmAttributes
     interface: Optional[List[PimInterfaceParameters]] = None
     rp_addres: Optional[List[StaticRpAddress]] = Field(
         serialization_alias="rpAddr", validation_alias="rpAddr", default=None

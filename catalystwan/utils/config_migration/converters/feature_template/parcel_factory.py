@@ -22,6 +22,11 @@ from .global_ import GlobalTemplateConverter
 from .gre import InterfaceGRETemplateConverter
 from .ipsec import InterfaceIpsecTemplateConverter
 from .logging_ import LoggingTemplateConverter
+from .multicast import (
+    IgmpToMulticastTemplateConverter,
+    MulticastToMulticastTemplateConverter,
+    PimToMulticastTemplateConverter,
+)
 from .normalizer import template_definition_normalization
 from .ntp import NTPTemplateConverter
 from .omp import OMPTemplateConverter
@@ -59,6 +64,9 @@ available_converters = [
     OspfTemplateConverter,
     Ospfv3TemplateConverter,
     SwitchportTemplateConverter,
+    MulticastToMulticastTemplateConverter,
+    PimToMulticastTemplateConverter,
+    IgmpToMulticastTemplateConverter,
 ]
 
 
