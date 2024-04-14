@@ -295,7 +295,7 @@ class DeviceVersions:
 
         devices_payload = DataSequence(
             PartitionDevice,
-            [PartitionDevice(device_id=device.uuid, device_ip=device.local_system_ip) for device in devices],  # type: ignore
+            [PartitionDevice(device_id=device.uuid, device_ip=device.local_system_ip) for device in devices],
         )
         all_dev_versions = self.repository.get_devices_versions_repository()
         for device in devices_payload:
