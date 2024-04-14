@@ -202,7 +202,7 @@ class DeviceVersions:
 
     def _validate_devices_required_fields(self, devices: DataSequence[DeviceDetailsResponse]):
         for device in devices:
-            if not device.uuid or not device.device_ip:
+            if not device.uuid or not device.local_system_ip:
                 raise ValueError(
                     f"Provided device '{device.host_name}' doesn't include required fields for this operation:"
                     f"device.uuid (current value: {device.uuid})"
@@ -295,7 +295,7 @@ class DeviceVersions:
 
         devices_payload = DataSequence(
             PartitionDevice,
-            [PartitionDevice(device_id=device.uuid, device_ip=device.device_ip) for device in devices],  # type: ignore
+            [PartitionDevice(device_id=device.uuid, device_ip=device.local_system_ip) for device in devices],  # type: ignore
         )
         all_dev_versions = self.repository.get_devices_versions_repository()
         for device in devices_payload:
