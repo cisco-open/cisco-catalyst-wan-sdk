@@ -1,11 +1,14 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
+from ipaddress import IPv4Address
 from typing import List, Literal, Optional, Union
 from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+
+SptThreshold = Literal["infinity", "0"]
 
 
 class LocalConfig(BaseModel):
@@ -29,10 +32,12 @@ class MulticastBasicAttributes(BaseModel):
 class StaticJoin(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    group_address: Union[Global[str], Variable] = Field(
-        serialization_alias="groupAddress", validation_alias="groupAddress"
+    group_address: Union[Global[IPv4Address], Variable] = Field(
+        serialization_alias="groupAddress",
+        validation_alias="groupAddress",
+        description="Address range: 224.0.0.0 ~ 239.255.255.255",
     )
-    source_address: Optional[Union[Global[str], Variable, Default[None]]] = Field(
+    source_address: Optional[Union[Global[IPv4Address], Variable, Default[None]]] = Field(
         serialization_alias="sourceAddress", validation_alias="sourceAddress", default=Default[None](value=None)
     )
 
@@ -58,23 +63,20 @@ class IgmpAttributes(BaseModel):
 class SmmFlag(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    enable_ssm_flag: Global[bool] = Global[bool](value=True)
-    range: Optional[Union[Global[str], Variable, Default[None]]] = Default[None](value=None)
+    enable_ssm_flag: Global[bool] = Field(
+        default=Global[bool](value=True), serialization_alias="enableSSMFlag", validation_alias="enableSSMFlag"
+    )
+    range: Union[Global[str], Variable, Default[None]] = Default[None](value=None)
 
 
-class SptThreshold:
-    INFINITY = "infinity"
-    ZERO = "0"
-
-
-class SsmAttrubutes(BaseModel):
+class SsmAttributes(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     ssm_range_config: SmmFlag = Field(serialization_alias="ssmRangeConfig", validation_alias="ssmRangeConfig")
     spt_threshold: Optional[Union[Global[SptThreshold], Variable, Default[SptThreshold]]] = Field(
         serialization_alias="sptThreshold",
         validation_alias="sptThreshold",
-        default=Default[SptThreshold](value=SptThreshold.ZERO),
+        default=Default[SptThreshold](value="0"),
     )
 
 
@@ -95,7 +97,7 @@ class PimInterfaceParameters(BaseModel):
 class StaticRpAddress(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    address: Union[Global[str], Variable]
+    address: Union[Global[IPv4Address], Variable]
     access_list: Union[Global[str], Variable] = Field(serialization_alias="accessList", validation_alias="accessList")
     override: Optional[Union[Global[bool], Variable, Default[bool]]] = Default[bool](value=False)
 
@@ -156,16 +158,16 @@ class PimBsrAttributes(BaseModel):
         serialization_alias="rpCandidate", validation_alias="rpCandidate", default=None
     )
     bsr_candidate: Optional[List[BsrCandidateAttributes]] = Field(
-        serialization_alias="bsdCandidate", validation_alias="bsdCandidate", default=None
+        serialization_alias="bsrCandidate", validation_alias="bsrCandidate", default=None
     )
 
 
 class PimAttributes(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    ssm: SsmAttrubutes
+    ssm: SsmAttributes
     interface: Optional[List[PimInterfaceParameters]] = None
-    rp_addres: Optional[List[StaticRpAddress]] = Field(
+    rp_address: Optional[List[StaticRpAddress]] = Field(
         serialization_alias="rpAddr", validation_alias="rpAddr", default=None
     )
     auto_rp: Optional[AutoRpAttributes] = Field(serialization_alias="autoRp", validation_alias="autoRp", default=None)
@@ -182,7 +184,7 @@ class DefaultMsdpPeer(BaseModel):
 class MsdpPeerAttributes(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    peer_ip: Union[Global[str], Variable] = Field(serialization_alias="peerIp", validation_alias="peerIp")
+    peer_ip: Union[Global[IPv4Address], Variable] = Field(serialization_alias="peerIp", validation_alias="peerIp")
     connect_source_intf: Optional[Union[Global[str], Variable, Default[None]]] = Field(
         serialization_alias="connectSourceIntf", validation_alias="connectSourceIntf", default=None
     )
@@ -194,7 +196,10 @@ class MsdpPeerAttributes(BaseModel):
         serialization_alias="keepaliveInterval", validation_alias="keepaliveInterval", default=None
     )
     keepalive_holdtime: Optional[Union[Global[int], Variable, Default[None]]] = Field(
-        serialization_alias="keepaliveHoldTime", validation_alias="keepaliveHoldTime", default=None
+        serialization_alias="keepaliveHoldTime",
+        validation_alias="keepaliveHoldTime",
+        default=None,
+        description="Hold-Time must be higher than Keep Alive",
     )
     sa_limit: Optional[Union[Global[int], Variable, Default[None]]] = Field(
         serialization_alias="saLimit", validation_alias="saLimit", default=None

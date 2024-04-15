@@ -24,6 +24,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.acl import I
 from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import EigrpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import BasicGre
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import IpsecAddress, IpsecTunnelMode
+from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import MulticastParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 import Ospfv3IPv4Parcel, Ospfv3IPv6Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.wireless_lan import WirelessLanParcel
@@ -118,6 +119,7 @@ service_endpoint_mapping = {
     Ipv6AclParcel: "ipv6-acl",
     Ipv4AclParcel: "ipv4-acl",
     SwitchportParcel: "switchport",
+    MulticastParcel: "routing/multicast",
     WirelessLanParcel: "wirelesslan",
 }
 

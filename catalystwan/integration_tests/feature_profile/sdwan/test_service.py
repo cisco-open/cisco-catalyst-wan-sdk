@@ -25,6 +25,27 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec im
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.svi import InterfaceSviParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import (
+    AutoRpAttributes,
+    BsrCandidateAttributes,
+    IgmpAttributes,
+    IgmpInterfaceParameters,
+    LocalConfig,
+    MsdpAttributes,
+    MsdpPeer,
+    MsdpPeerAttributes,
+    MulticastBasicAttributes,
+    MulticastParcel,
+    PimAttributes,
+    PimBsrAttributes,
+    PimInterfaceParameters,
+    RPAnnounce,
+    RpDiscoveryScope,
+    SmmFlag,
+    SsmAttributes,
+    StaticJoin,
+    StaticRpAddress,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.service.ospf import OspfParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 import (
     Ospfv3InterfaceParametres,
@@ -238,6 +259,111 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, switchport_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_default_values_multicast_expect_successful_post(self):
+        # Arrange
+        multicast_parcel = MulticastParcel(
+            parcel_name="TestMulticastParcel",
+            parcel_description="Test Multicast Parcel",
+            basic=MulticastBasicAttributes(),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, multicast_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_fully_specified_values_multicast_expect_successful_post(self):
+        # Arrange
+        multicast_parcel = MulticastParcel(
+            parcel_name="TestMulticastParcel_FullySpecified",
+            parcel_description="Test Multicast Parcel",
+            basic=MulticastBasicAttributes(
+                spt_only=as_global(True),
+                local_config=LocalConfig(
+                    local=as_global(True),
+                    threshold=as_global(10),
+                ),
+            ),
+            igmp=IgmpAttributes(
+                interface=[
+                    IgmpInterfaceParameters(
+                        interface_name=as_global("GigabitEthernet0/0/0"),
+                        version=as_global(2),
+                        join_group=[
+                            StaticJoin(
+                                group_address=Global[IPv4Address](value=IPv4Address("239.255.255.255")),
+                            )
+                        ],
+                    )
+                ]
+            ),
+            pim=PimAttributes(
+                ssm=SsmAttributes(ssm_range_config=SmmFlag(enable_ssm_flag=as_global(True), range=as_global("20"))),
+                interface=[
+                    PimInterfaceParameters(
+                        interface_name=as_global("GigabitEthernet0/0/0"),
+                        query_interval=as_global(10),
+                        join_prune_interval=as_global(10),
+                    )
+                ],
+                rp_address=[
+                    StaticRpAddress(
+                        address=Global[IPv4Address](value=IPv4Address("40.2.3.1")),
+                        access_list=as_global("TestAccessList"),
+                        override=as_global(True),
+                    )
+                ],
+                auto_rp=AutoRpAttributes(
+                    enable_auto_rp_flag=as_global(False),
+                    send_rp_announce_list=[
+                        RPAnnounce(interface_name=as_global("GigabitEthernet0/0/0"), scope=as_global(3))
+                    ],
+                    send_rp_discovery=[
+                        RPAnnounce(interface_name=as_global("GigabitEthernet0/0/0"), scope=as_global(3))
+                    ],
+                ),
+                pim_bsr=PimBsrAttributes(
+                    rp_candidate=[
+                        RpDiscoveryScope(
+                            interface_name=as_global("GigabitEthernet0/0/0"),
+                            group_list=as_global("TestGroupList"),
+                            interval=as_global(10),
+                            priority=as_global(10),
+                        )
+                    ],
+                    bsr_candidate=[
+                        BsrCandidateAttributes(
+                            interface_name=as_global("GigabitEthernet0/0/0"),
+                            mask=as_global(10),
+                            priority=as_global(10),
+                            accept_rp_candidate=as_global("True"),
+                        )
+                    ],
+                ),
+            ),
+            msdp=MsdpAttributes(
+                msdp_list=[
+                    MsdpPeer(
+                        mesh_group=as_global("TestMeshGroup"),
+                        peer=[
+                            MsdpPeerAttributes(
+                                peer_ip=Global[IPv4Address](value=IPv4Address("5.5.5.5")),
+                                connect_source_intf=as_global("GigabitEthernet0/0/0"),
+                                remote_as=as_global(10),
+                                password=as_global("TestPassword"),
+                                keepalive_holdtime=as_global(20),
+                                keepalive_interval=as_global(10),
+                                sa_limit=as_global(10),
+                            )
+                        ],
+                    )
+                ]
+            ),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, multicast_parcel).id
         # Assert
         assert parcel_id
 
