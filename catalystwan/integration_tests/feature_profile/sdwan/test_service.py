@@ -366,7 +366,7 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
         parcel_id = self.api.create_parcel(self.profile_uuid, multicast_parcel).id
         # Assert
         assert parcel_id
-        
+
     def test_when_fully_specified_values_wireless_lan_expect_successful_post(self):
         # Arrange
         wireless_lan_parcel = WirelessLanParcel(
