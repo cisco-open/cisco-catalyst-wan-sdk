@@ -33,7 +33,9 @@ class StaticJoin(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     group_address: Union[Global[IPv4Address], Variable] = Field(
-        serialization_alias="groupAddress", validation_alias="groupAddress"
+        serialization_alias="groupAddress",
+        validation_alias="groupAddress",
+        description="Address range: 224.0.0.0 ~ 239.255.255.255",
     )
     source_address: Optional[Union[Global[IPv4Address], Variable, Default[None]]] = Field(
         serialization_alias="sourceAddress", validation_alias="sourceAddress", default=Default[None](value=None)
@@ -61,7 +63,9 @@ class IgmpAttributes(BaseModel):
 class SmmFlag(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    enable_ssm_flag: Global[bool] = Global[bool](value=True)
+    enable_ssm_flag: Global[bool] = Field(
+        default=Global[bool](value=True), serialization_alias="enableSSMFlag", validation_alias="enableSSMFlag"
+    )
     range: Union[Global[str], Variable, Default[None]] = Default[None](value=None)
 
 
@@ -154,7 +158,7 @@ class PimBsrAttributes(BaseModel):
         serialization_alias="rpCandidate", validation_alias="rpCandidate", default=None
     )
     bsr_candidate: Optional[List[BsrCandidateAttributes]] = Field(
-        serialization_alias="bsdCandidate", validation_alias="bsdCandidate", default=None
+        serialization_alias="bsrCandidate", validation_alias="bsrCandidate", default=None
     )
 
 
@@ -192,7 +196,10 @@ class MsdpPeerAttributes(BaseModel):
         serialization_alias="keepaliveInterval", validation_alias="keepaliveInterval", default=None
     )
     keepalive_holdtime: Optional[Union[Global[int], Variable, Default[None]]] = Field(
-        serialization_alias="keepaliveHoldTime", validation_alias="keepaliveHoldTime", default=None
+        serialization_alias="keepaliveHoldTime",
+        validation_alias="keepaliveHoldTime",
+        default=None,
+        description="Hold-Time must be higher than Keep Alive",
     )
     sa_limit: Optional[Union[Global[int], Variable, Default[None]]] = Field(
         serialization_alias="saLimit", validation_alias="saLimit", default=None

@@ -281,8 +281,7 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
                         version=as_global(2),
                         join_group=[
                             StaticJoin(
-                                group_address=Global[IPv4Address](value=IPv4Address("10.0.2.1")),
-                                source_address=Global[IPv4Address](value=IPv4Address("3.2.1.2")),
+                                group_address=Global[IPv4Address](value=IPv4Address("239.255.255.255")),
                             )
                         ],
                     )
@@ -327,28 +326,28 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
                             interface_name=as_global("GigabitEthernet0/0/0"),
                             mask=as_global(10),
                             priority=as_global(10),
-                            accept_rp_candidate=as_global(True),
+                            accept_rp_candidate=as_global("True"),
                         )
                     ],
                 ),
-                msdp=MsdpAttributes(
-                    msdp_list=[
-                        MsdpPeer(
-                            mesh_group=as_global("TestMeshGroup"),
-                            peer=[
-                                MsdpPeerAttributes(
-                                    peer_ip=Global[IPv4Address](value=IPv4Address("5.5.5.5")),
-                                    connect_source_intf=as_global("GigabitEthernet0/0/0"),
-                                    remote_as=as_global(10),
-                                    password=as_global("TestPassword"),
-                                    keepalive_holdtime=as_global(10),
-                                    keepalive_interval=as_global(10),
-                                    sa_limit=as_global(10),
-                                )
-                            ],
-                        )
-                    ]
-                ),
+            ),
+            msdp=MsdpAttributes(
+                msdp_list=[
+                    MsdpPeer(
+                        mesh_group=as_global("TestMeshGroup"),
+                        peer=[
+                            MsdpPeerAttributes(
+                                peer_ip=Global[IPv4Address](value=IPv4Address("5.5.5.5")),
+                                connect_source_intf=as_global("GigabitEthernet0/0/0"),
+                                remote_as=as_global(10),
+                                password=as_global("TestPassword"),
+                                keepalive_holdtime=as_global(20),
+                                keepalive_interval=as_global(10),
+                                sa_limit=as_global(10),
+                            )
+                        ],
+                    )
+                ]
             ),
         )
         # Act
