@@ -1,10 +1,12 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
+from ipaddress import IPv4Address
 from typing import List, Literal, Optional, Union
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+from catalystwan.models.common import SubnetMask
 
 CountryCode = Literal[
     "AE",
@@ -137,9 +139,11 @@ SecurityType = Literal[
 class MeStaticIpConfig(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    me_ipv4_address: Union[Global[str], Variable]
-    netmask: Union[Global[str], Variable]
-    default_gateway: Union[Global[str], Variable] = Field(
+    me_ipv4_address: Union[Global[IPv4Address], Variable] = Field(
+        serialization_alias="meIpv4Address", validation_alias="meIpv4Address"
+    )
+    netmask: Union[Global[SubnetMask], Variable]
+    default_gateway: Union[Global[IPv4Address], Variable] = Field(
         serialization_alias="defaultGateway", validation_alias="defaultGateway"
     )
 
@@ -152,14 +156,16 @@ class MeIpConfig(BaseModel):
         validation_alias="meDynamicIpEnabled",
         default=Default[bool](value=True),
     )
-    me_static_ip_config: Optional[MeStaticIpConfig] = None
+    me_static_ip_config: Optional[MeStaticIpConfig] = Field(
+        default=None, serialization_alias="meStaticIpCfg", validation_alias="meStaticIpCfg"
+    )
 
 
 class SecurityConfig(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     security_type: Global[SecurityType] = Field(serialization_alias="securityType", validation_alias="securityType")
-    radius_server_ip: Optional[Union[Global[str], Variable]] = Field(
+    radius_server_ip: Optional[Union[Global[IPv4Address], Variable]] = Field(
         serialization_alias="radiusServerIp", validation_alias="radiusServerIp", default=None
     )
     radius_server_port: Optional[Union[Global[int], Variable, Default[int]]] = Field(

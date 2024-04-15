@@ -1,14 +1,15 @@
 from ipaddress import IPv4Address
+from secrets import token_hex
 from uuid import UUID
 
 from catalystwan.api.configuration_groups.parcel import Global, as_global, as_variable
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
+from catalystwan.models.common import SubnetMask
 from catalystwan.models.configuration.feature_profile.common import Prefix
 from catalystwan.models.configuration.feature_profile.sdwan.service.acl import Ipv4AclParcel, Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import (
     AddressPool,
     LanVpnDhcpServerParcel,
-    SubnetMask,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import (
     AddressFamily,
@@ -64,6 +65,17 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.switchport i
     SwitchportInterface,
     SwitchportMode,
     SwitchportParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.service.wireless_lan import (
+    SSID,
+    CountryCode,
+    MeIpConfig,
+    MeStaticIpConfig,
+    QosProfile,
+    RadioType,
+    SecurityConfig,
+    SecurityType,
+    WirelessLanParcel,
 )
 
 
@@ -352,6 +364,46 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, multicast_parcel).id
+        # Assert
+        assert parcel_id
+        
+    def test_when_fully_specified_values_wireless_lan_expect_successful_post(self):
+        # Arrange
+        wireless_lan_parcel = WirelessLanParcel(
+            parcel_name="TestWirelessLanParcel",
+            parcel_description="Test Wireless Lan Parcel",
+            enable_2_4G=as_global(True),
+            enable_5G=as_global(True),
+            country=as_global("US", CountryCode),
+            username=as_global("admin"),
+            password=as_global(token_hex(16) + "TEST!@#"),
+            ssid=[
+                SSID(
+                    name=as_global("TestSSID"),
+                    admin_state=as_global(True),
+                    vlan_id=as_global(1),
+                    broadcast_ssid=as_global(True),
+                    radio_type=as_global("all", RadioType),
+                    qos_profile=as_global("platinum", QosProfile),
+                    security_config=SecurityConfig(
+                        security_type=as_global("enterprise", SecurityType),
+                        radius_server_ip=as_global(IPv4Address("1.1.1.1")),
+                        radius_server_port=as_global(1884),
+                        radius_server_secret=as_global("23452345245"),
+                    ),
+                )
+            ],
+            me_ip_config=MeIpConfig(
+                me_dynamic_ip_enabled=as_global(False),
+                me_static_ip_config=MeStaticIpConfig(
+                    me_ipv4_address=as_global(IPv4Address("10.2.3.2")),
+                    netmask=as_global("255.255.255.0", SubnetMask),
+                    default_gateway=as_global(IPv4Address("10.0.0.1")),
+                ),
+            ),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, wireless_lan_parcel).id
         # Assert
         assert parcel_id
 

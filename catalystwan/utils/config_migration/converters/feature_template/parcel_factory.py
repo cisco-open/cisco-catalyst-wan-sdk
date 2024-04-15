@@ -9,6 +9,7 @@ from catalystwan.utils.config_migration.converters.feature_template.dhcp import 
 from catalystwan.utils.config_migration.converters.feature_template.ethernet import InterfaceEthernetTemplateConverter
 from catalystwan.utils.config_migration.converters.feature_template.snmp import SNMPTemplateConverter
 from catalystwan.utils.config_migration.converters.feature_template.switchport import SwitchportTemplateConverter
+from catalystwan.utils.config_migration.converters.feature_template.wireless_lan import WirelessLanTemplateConverter
 from catalystwan.utils.feature_template.find_template_values import find_template_values
 
 from .aaa import AAATemplateConverter
@@ -67,6 +68,7 @@ available_converters = [
     MulticastToMulticastTemplateConverter,
     PimToMulticastTemplateConverter,
     IgmpToMulticastTemplateConverter,
+    WirelessLanTemplateConverter,
 ]
 
 

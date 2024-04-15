@@ -27,6 +27,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec im
 from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import MulticastParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 import Ospfv3IPv4Parcel, Ospfv3IPv6Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.wireless_lan import WirelessLanParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system import (
     AAAParcel,
     BannerParcel,
@@ -119,6 +120,7 @@ service_endpoint_mapping = {
     Ipv4AclParcel: "ipv4-acl",
     SwitchportParcel: "switchport",
     MulticastParcel: "routing/multicast",
+    WirelessLanParcel: "wirelesslan",
 }
 
 service_interface_parcels = [

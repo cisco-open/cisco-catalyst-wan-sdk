@@ -2,8 +2,7 @@ from ipaddress import AddressValueError, IPv4Address, IPv4Interface, IPv6Address
 from typing import List, Optional, Union, get_args
 
 from catalystwan.api.configuration_groups.parcel import Global, as_global
-from catalystwan.models.common import MetricType, TLOCColor
-from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import SubnetMask
+from catalystwan.models.common import MetricType, SubnetMask, TLOCColor
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import (
     IkeCiphersuite,
     IkeMode,
@@ -29,6 +28,12 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.switchport i
     HostMode,
     PortControl,
     SwitchportMode,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.service.wireless_lan import (
+    CountryCode,
+    QosProfile,
+    RadioType,
+    SecurityType,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.system.logging_parcel import (
     AuthType,
@@ -71,6 +76,10 @@ CastableLiterals = Union[
     PortControl,
     HostMode,
     ControlDirection,
+    CountryCode,
+    RadioType,
+    QosProfile,
+    SecurityType,
 ]
 
 CastedTypes = Union[
