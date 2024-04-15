@@ -88,7 +88,7 @@ class PimToMulticastTemplateConverter:
         return PimAttributes(
             ssm=self._set_ssm_attributes(values),
             interface=self._set_interface(values),
-            rp_addres=self._set_rp_address(values),
+            rp_address=self._set_rp_address(values),
             auto_rp=self._set_auto_rp(values),
             pim_bsr=self._set_pim_bsr(values),
         )

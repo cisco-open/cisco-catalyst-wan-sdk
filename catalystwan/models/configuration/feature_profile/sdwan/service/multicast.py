@@ -163,7 +163,7 @@ class PimAttributes(BaseModel):
 
     ssm: SsmAttributes
     interface: Optional[List[PimInterfaceParameters]] = None
-    rp_addres: Optional[List[StaticRpAddress]] = Field(
+    rp_address: Optional[List[StaticRpAddress]] = Field(
         serialization_alias="rpAddr", validation_alias="rpAddr", default=None
     )
     auto_rp: Optional[AutoRpAttributes] = Field(serialization_alias="autoRp", validation_alias="autoRp", default=None)
@@ -180,7 +180,7 @@ class DefaultMsdpPeer(BaseModel):
 class MsdpPeerAttributes(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    peer_ip: Union[Global[str], Variable] = Field(serialization_alias="peerIp", validation_alias="peerIp")
+    peer_ip: Union[Global[IPv4Address], Variable] = Field(serialization_alias="peerIp", validation_alias="peerIp")
     connect_source_intf: Optional[Union[Global[str], Variable, Default[None]]] = Field(
         serialization_alias="connectSourceIntf", validation_alias="connectSourceIntf", default=None
     )
