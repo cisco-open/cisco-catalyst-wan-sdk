@@ -3,7 +3,7 @@
 # mypy: disable-error-code="empty-body"
 
 from catalystwan.endpoints import APIEndpoints, get
-from catalystwan.models.server_info import ServerInfoResponse
+from catalystwan.models.monitoring.server_info import ServerInfoResponse
 
 
 class ServerInfo(APIEndpoints):
