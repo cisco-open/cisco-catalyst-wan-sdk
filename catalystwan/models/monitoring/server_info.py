@@ -6,5 +6,7 @@ from pydantic import BaseModel, Field
 class ServerInfoResponse(BaseModel):
     """The response may contain an incorrect spelling "Achitecture"."""
 
-    Architecture: str = Field(..., alias="Achitecture")
-    Available_processors: int
+    architecture: str = Field(..., alias="Achitecture")
+    available_processors: int = Field(
+        ..., serialization_alias="Available processors", validation_alias="Available processors"
+    )

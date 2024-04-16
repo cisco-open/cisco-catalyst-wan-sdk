@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from catalystwan.api.monitoring_status_api import MonitoringStatusAPI
-from catalystwan.endpoints.monitoring_status import (
+from catalystwan.endpoints.monitoring.status import (
     DisabledDeviceListResponse,
     EnabledIndexDeviceListResponse,
     Status,

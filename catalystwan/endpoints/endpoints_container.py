@@ -84,9 +84,9 @@ from catalystwan.endpoints.configuration_feature_profile import (
 from catalystwan.endpoints.configuration_group import ConfigurationGroup
 from catalystwan.endpoints.configuration_settings import ConfigurationSettings
 from catalystwan.endpoints.misc import MiscellaneousEndpoints
-from catalystwan.endpoints.monitoring_device_details import MonitoringDeviceDetails
-from catalystwan.endpoints.monitoring_status import MonitoringStatus
+from catalystwan.endpoints.monitoring.device_details import MonitoringDeviceDetails
 from catalystwan.endpoints.monitoring.server_info import ServerInfo
+from catalystwan.endpoints.monitoring.status import MonitoringStatus
 from catalystwan.endpoints.real_time_monitoring.reboot_history import RealTimeMonitoringRebootHistory
 from catalystwan.endpoints.sdavc_cloud_connector import SDAVCCloudConnector
 from catalystwan.endpoints.tenant_backup_restore import TenantBackupRestore
