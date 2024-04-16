@@ -16,9 +16,9 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.multicast im
     PimInterfaceParameters,
     RPAnnounce,
     RpDiscoveryScope,
-    SmmFlag,
     SptThreshold,
     SsmAttributes,
+    SsmFlag,
     StaticJoin,
     StaticRpAddress,
 )
@@ -31,7 +31,7 @@ class MulticastToMulticastTemplateConverter:
     Feature Templates: Multicast, IGMP, PIM.
     """
 
-    supported_template_types = ("cedge_multicast",)
+    supported_template_types = ("cedge_multicast", "cisco_multicast", "multicast")
 
     delete_keys = ("multicast", "multicast_replicator")
 
@@ -74,7 +74,7 @@ class PimToMulticastTemplateConverter:
     Feature Templates: Multicast, IGMP, PIM.
     """
 
-    supported_template_types = ("cedge_pim",)
+    supported_template_types = ("cedge_pim", "cisco_pim", "pim")
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> MulticastParcel:
         values = self.prepare_values(template_values)
@@ -99,7 +99,7 @@ class PimToMulticastTemplateConverter:
             spt_threshold = as_global(spt_threshold.value, SptThreshold)
 
         return SsmAttributes(
-            ssm_range_config=SmmFlag(range=values.get("ssm", {}).get("range", as_default("eqw"))),
+            ssm_range_config=SsmFlag(range=values.get("ssm", {}).get("range", as_default("eqw"))),
             spt_threshold=spt_threshold,
         )
 
@@ -252,7 +252,7 @@ class IgmpToMulticastTemplateConverter:
     Feature Templates: Multicast, IGMP, PIM.
     """
 
-    supported_template_types = ("cedge_igmp",)
+    supported_template_types = ("cedge_igmp", "cisco_IGMP", "igmp")
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> MulticastParcel:
         print(template_values)

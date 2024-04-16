@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing_extensions import Annotated
 
-from catalystwan.api.templates.device_template.device_template import DeviceTemplate
+from catalystwan.api.templates.device_template.device_template import DeviceTemplate, GeneralTemplate
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
 from catalystwan.models.configuration.feature_profile.sdwan.other import AnyOtherParcel
@@ -42,6 +42,24 @@ class DeviceTemplateWithInfo(DeviceTemplate):
             devices_attached=info.devices_attached,
             **info_dict
         )
+
+    def get_flattened_general_templates(self) -> List[GeneralTemplate]:
+        """
+        Flatten the representation but leave cisco vpn templates as they are.
+
+        Returns:
+            A list of GeneralTemplate objects representing the flattened templates list.
+        """
+        result = []
+        for template in self.general_templates:
+            subtemplates = template.subTemplates
+            if subtemplates and template.templateType != "cisco_vpn":
+                template.subTemplates = []
+                for subtemplate in subtemplates:
+                    result.append(subtemplate)
+            result.append(template)
+
+        return result
 
 
 class UX1Policies(BaseModel):
@@ -133,6 +151,8 @@ class UX2Config(BaseModel):
         if not profile_parcels:
             profile_parcels = values.get("profile_parcels", [])
         for profile_parcel in profile_parcels:
+            if not isinstance(profile_parcel, dict):
+                break
             profile_parcel["parcel"]["type_"] = profile_parcel["header"]["type"]
         return values
 

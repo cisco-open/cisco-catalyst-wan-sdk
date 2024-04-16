@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 from typing import Callable
 from uuid import UUID, uuid4
 
@@ -19,6 +20,7 @@ from catalystwan.utils.config_migration.converters.feature_template import creat
 from catalystwan.utils.config_migration.converters.policy.policy_lists import convert as convert_policy_list
 from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigRollback
 from catalystwan.utils.config_migration.reverters.config_reverter import UX2ConfigReverter
+from catalystwan.utils.config_migration.steps.transform import merge_parcels
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +63,16 @@ SUPPORTED_TEMPLATE_TYPES = [
     "cisco_ospf",
     "switchport",
     "cisco_wireless_lan",
+    "cisco_multicast",
+    "cisco_pim",
+    "cisco_igmp",
+    "cisco_IGMP",
+    "igmp",
+    "pim",
+    "multicast",
+    "cedge_igmp",
+    "cedge_multicast",
+    "cedge_pim",
 ]
 
 FEATURE_PROFILE_SYSTEM = [
@@ -109,6 +121,16 @@ FEATURE_PROFILE_SERVICE = [
     "cisco_ospf",
     "switchport",
     "cisco_wireless_lan",
+    "cisco_multicast",
+    "cisco_pim",
+    "cisco_igmp",
+    "cisco_IGMP",
+    "igmp",
+    "pim",
+    "multicast",
+    "cedge_igmp",
+    "cedge_multicast",
+    "cedge_pim",
 ]
 
 
@@ -118,10 +140,10 @@ def log_progress(task: str, completed: int, total: int) -> None:
 
 def transform(ux1: UX1Config) -> UX2Config:
     ux2 = UX2Config()
+    subtemplates_mapping = defaultdict(set)
     # Create Feature Profiles and Config Group
     for dt in ux1.templates.device_templates:
         templates = dt.get_flattened_general_templates()
-
         # Create Feature Profiles
         fp_system_uuid = uuid4()
         transformed_fp_system = TransformedFeatureProfile(
@@ -159,12 +181,18 @@ def transform(ux1: UX1Config) -> UX2Config:
 
         for template in templates:
             # Those feature templates IDs are real UUIDs and are used to map to the feature profiles
+            template_uuid = UUID(template.templateId)
             if template.templateType in FEATURE_PROFILE_SYSTEM:
-                transformed_fp_system.header.subelements.add(UUID(template.templateId))
+                transformed_fp_system.header.subelements.add(template_uuid)
             elif template.templateType in FEATURE_PROFILE_OTHER:
-                transformed_fp_other.header.subelements.add(UUID(template.templateId))
+                transformed_fp_other.header.subelements.add(template_uuid)
             elif template.templateType in FEATURE_PROFILE_SERVICE:
-                transformed_fp_service.header.subelements.add(UUID(template.templateId))
+                transformed_fp_service.header.subelements.add(template_uuid)
+            # Map subtemplates
+            if len(template.subTemplates) > 0:
+                subtemplates_mapping[template_uuid] = set(
+                    [UUID(subtemplate.templateId) for subtemplate in template.subTemplates]
+                )
 
         transformed_cg = TransformedConfigGroup(
             header=TransformHeader(
@@ -188,10 +216,12 @@ def transform(ux1: UX1Config) -> UX2Config:
     for ft in ux1.templates.feature_templates:
         if ft.template_type in SUPPORTED_TEMPLATE_TYPES:
             parcel = create_parcel_from_template(ft)
+            ft_template_uuid = UUID(ft.id)
             transformed_parcel = TransformedParcel(
                 header=TransformHeader(
                     type=parcel._get_parcel_type(),
-                    origin=UUID(ft.id),
+                    origin=ft_template_uuid,
+                    subelements=subtemplates_mapping[ft_template_uuid],
                 ),
                 parcel=parcel,
             )
@@ -206,6 +236,8 @@ def transform(ux1: UX1Config) -> UX2Config:
             ux2.profile_parcels.append(TransformedParcel(header=header, parcel=policy_parcel))
         else:
             logger.warning(f"{policy_list.type} {policy_list.list_id} {policy_list.name} was not converted")
+
+    ux2 = merge_parcels(ux2)
     return ux2
 
 
