@@ -7,6 +7,6 @@ from catalystwan.models.monitoring.server_info import ServerInfoResponse
 
 
 class ServerInfo(APIEndpoints):
-    @get("server/info")
+    @get("/server/info")
     def get_server_info(self) -> ServerInfoResponse:
         ...
