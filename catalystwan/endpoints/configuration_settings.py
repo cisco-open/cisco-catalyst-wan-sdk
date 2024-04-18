@@ -29,7 +29,7 @@ class Organization(BaseModel):
 class Device(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     domain_ip: Optional[str] = Field(default=None, serialization_alias="domainIp", validation_alias="domainIp")
-    port: Optional[Union[str, int]] = Field(default="12346")
+    port: Optional[str] = Field(default="12346")
 
 
 class EmailNotificationSettings(BaseModel):
@@ -50,9 +50,7 @@ class Certificate(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     certificate_signing: str = Field(serialization_alias="certificateSigning", validation_alias="certificateSigning")
     validity_period: str = Field(serialization_alias="validityPeriod", validation_alias="validityPeriod")
-    retrieve_interval: Union[str, int] = Field(
-        serialization_alias="retrieveInterval", validation_alias="retrieveInterval"
-    )
+    retrieve_interval: str = Field(serialization_alias="retrieveInterval", validation_alias="retrieveInterval")
     first_name: Optional[str] = Field(default=None, serialization_alias="firstName", validation_alias="firstName")
     last_name: Optional[str] = Field(default=None, serialization_alias="lastName", validation_alias="lastName")
     email: Optional[str] = Field(default=None)
