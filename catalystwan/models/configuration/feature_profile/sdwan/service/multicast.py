@@ -60,7 +60,7 @@ class IgmpAttributes(BaseModel):
     interface: List[IgmpInterfaceParameters]
 
 
-class SmmFlag(BaseModel):
+class SsmFlag(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     enable_ssm_flag: Global[bool] = Field(
@@ -72,7 +72,7 @@ class SmmFlag(BaseModel):
 class SsmAttributes(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    ssm_range_config: SmmFlag = Field(serialization_alias="ssmRangeConfig", validation_alias="ssmRangeConfig")
+    ssm_range_config: SsmFlag = Field(serialization_alias="ssmRangeConfig", validation_alias="ssmRangeConfig")
     spt_threshold: Optional[Union[Global[SptThreshold], Variable, Default[SptThreshold]]] = Field(
         serialization_alias="sptThreshold",
         validation_alias="sptThreshold",

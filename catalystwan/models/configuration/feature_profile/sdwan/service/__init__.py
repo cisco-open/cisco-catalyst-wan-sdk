@@ -12,10 +12,12 @@ from .lan.gre import InterfaceGreParcel
 from .lan.ipsec import InterfaceIpsecParcel
 from .lan.svi import InterfaceSviParcel
 from .lan.vpn import LanVpnParcel
+from .multicast import MulticastParcel
 from .ospf import OspfParcel
 from .ospfv3 import Ospfv3IPv4Parcel, Ospfv3IPv6Parcel
 from .route_policy import RoutePolicyParcel
 from .switchport import SwitchportParcel
+from .wireless_lan import WirelessLanParcel
 
 AnyTopLevelServiceParcel = Annotated[
     Union[
@@ -30,6 +32,8 @@ AnyTopLevelServiceParcel = Annotated[
         SwitchportParcel,
         Ipv6AclParcel,
         Ipv4AclParcel,
+        WirelessLanParcel,
+        MulticastParcel,
         # TrackerGroupData,
         # WirelessLanData,
         # SwitchportData
@@ -65,6 +69,8 @@ __all__ = [
     "SwitchportParcel",
     "InterfaceSviParcel",
     "InterfaceGreParcel",
+    "WirelessLanParcel",
+    "MulticastParcel",
     "AnyServiceParcel",
     "AnyTopLevelServiceParcel",
     "AnyLanVpnInterfaceParcel",

@@ -41,8 +41,8 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.multicast im
     PimInterfaceParameters,
     RPAnnounce,
     RpDiscoveryScope,
-    SmmFlag,
     SsmAttributes,
+    SsmFlag,
     StaticJoin,
     StaticRpAddress,
 )
@@ -300,7 +300,7 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
                 ]
             ),
             pim=PimAttributes(
-                ssm=SsmAttributes(ssm_range_config=SmmFlag(enable_ssm_flag=as_global(True), range=as_global("20"))),
+                ssm=SsmAttributes(ssm_range_config=SsmFlag(enable_ssm_flag=as_global(True), range=as_global("20"))),
                 interface=[
                     PimInterfaceParameters(
                         interface_name=as_global("GigabitEthernet0/0/0"),
