@@ -20,16 +20,16 @@ CRLActions = Literal["disable", "revoke", "quarantine"]
 class Organization(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     org: Optional[str] = Field(default=None)
-    domain_id: Optional[str] = Field(serialization_alias="domain-id", validation_alias="domain-id")
+    domain_id: Optional[str] = Field(default=None, serialization_alias="domain-id", validation_alias="domain-id")
     control_connection_up: Optional[bool] = Field(
-        serialization_alias="controlConnectionUp", validation_alias="controlConnectionUp"
+        default=None, serialization_alias="controlConnectionUp", validation_alias="controlConnectionUp"
     )
 
 
 class Device(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     domain_ip: Optional[str] = Field(default=None, serialization_alias="domainIp", validation_alias="domainIp")
-    port: Optional[str] = Field(default="12346")
+    port: Optional[Union[str, int]] = Field(default="12346")
 
 
 class EmailNotificationSettings(BaseModel):
@@ -50,7 +50,9 @@ class Certificate(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     certificate_signing: str = Field(serialization_alias="certificateSigning", validation_alias="certificateSigning")
     validity_period: str = Field(serialization_alias="validityPeriod", validation_alias="validityPeriod")
-    retrieve_interval: str = Field(serialization_alias="retrieveInterval", validation_alias="retrieveInterval")
+    retrieve_interval: Union[str, int] = Field(
+        serialization_alias="retrieveInterval", validation_alias="retrieveInterval"
+    )
     first_name: Optional[str] = Field(default=None, serialization_alias="firstName", validation_alias="firstName")
     last_name: Optional[str] = Field(default=None, serialization_alias="lastName", validation_alias="lastName")
     email: Optional[str] = Field(default=None)
