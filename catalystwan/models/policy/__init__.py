@@ -35,6 +35,7 @@ from catalystwan.models.policy.list.region import RegionList, RegionListInfo
 from catalystwan.models.policy.list.site import SiteList, SiteListInfo
 from catalystwan.models.policy.list.sla import SLAClassList, SLAClassListInfo
 from catalystwan.models.policy.list.tloc import TLOCList, TLOCListInfo
+from catalystwan.models.policy.list.trunkgroup import TrunkGroupList, TrunkGroupListInfo
 from catalystwan.models.policy.list.url import URLAllowList, URLAllowListInfo, URLBlockList, URLBlockListInfo
 from catalystwan.models.policy.list.vpn import VPNList, VPNListInfo
 from catalystwan.models.policy.list.zone import ZoneList, ZoneListInfo
@@ -115,6 +116,7 @@ AnyPolicyList = Annotated[
         SiteList,
         SLAClassList,
         TLOCList,
+        TrunkGroupList,
         URLBlockList,
         URLAllowList,
         VPNList,
@@ -150,6 +152,7 @@ AnyPolicyListInfo = Annotated[
         SiteListInfo,
         SLAClassListInfo,
         TLOCListInfo,
+        TrunkGroupListInfo,
         URLAllowListInfo,
         URLBlockListInfo,
         VPNListInfo,
@@ -231,6 +234,7 @@ __all__ = (
     "SLAClassList",
     "TLOCActionType",
     "TLOCList",
+    "TrunkGroupList",
     "TrafficDataDirection",
     "TrafficDataPolicy",
     "UnifiedSecurityPolicy",

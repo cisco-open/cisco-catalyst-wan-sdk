@@ -64,6 +64,7 @@ from catalystwan.endpoints.configuration.policy.list.region import Configuration
 from catalystwan.endpoints.configuration.policy.list.site import ConfigurationPolicySiteList, SiteListInfo
 from catalystwan.endpoints.configuration.policy.list.sla import ConfigurationPolicySLAClassList, SLAClassListInfo
 from catalystwan.endpoints.configuration.policy.list.tloc import ConfigurationPolicyTLOCList, TLOCListInfo
+from catalystwan.endpoints.configuration.policy.list.trunkgroup import ConfigurationPolicyTrunkGroupList
 from catalystwan.endpoints.configuration.policy.list.url_allow_list import (
     ConfigurationPolicyURLAllowList,
     URLAllowListInfo,
@@ -141,6 +142,7 @@ from catalystwan.models.policy.list.geo_location import GeoLocationListInfo
 from catalystwan.models.policy.list.ips_signature import IPSSignatureListInfo
 from catalystwan.models.policy.list.ipv6_prefix import IPv6PrefixListInfo
 from catalystwan.models.policy.list.local_domain import LocalDomainListInfo
+from catalystwan.models.policy.list.trunkgroup import TrunkGroupList, TrunkGroupListInfo
 from catalystwan.models.policy.localized import (
     LocalizedPolicy,
     LocalizedPolicyDeviceInfo,
@@ -192,6 +194,7 @@ POLICY_LIST_ENDPOINTS_MAP: Mapping[type, type] = {
     SiteList: ConfigurationPolicySiteList,
     SLAClassList: ConfigurationPolicySLAClassList,
     TLOCList: ConfigurationPolicyTLOCList,
+    TrunkGroupList: ConfigurationPolicyTrunkGroupList,
     URLBlockList: ConfigurationPolicyURLBlockList,
     URLAllowList: ConfigurationPolicyURLAllowList,
     VPNList: ConfigurationPolicyVPNList,
@@ -452,6 +455,10 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[TrunkGroupList]) -> DataSequence[TrunkGroupListInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[URLBlockList]) -> DataSequence[URLBlockListInfo]:
         ...
 
@@ -567,6 +574,10 @@ class PolicyListsAPI:
 
     @overload
     def get(self, type: Type[TLOCList], id: UUID) -> TLOCListInfo:
+        ...
+
+    @overload
+    def get(self, type: Type[TrunkGroupList], id: UUID) -> TrunkGroupListInfo:
         ...
 
     @overload
