@@ -27,7 +27,7 @@ class ActionId(BaseModel):
 
 
 class GroupId(BaseModel):
-    group_id: str = Field(default="all", serialization_alias="groupID", validation_alias="groupID")
+    group_id: str = Field(default="all", serialization_alias="groupId", validation_alias="groupId")
 
 
 class ZTPUpgradeSettings(BaseModel):
