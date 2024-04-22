@@ -2,6 +2,8 @@
 
 # mypy: disable-error-code="empty-body"
 
+from typing import Optional
+
 from catalystwan.endpoints import APIEndpoints, get
 from catalystwan.models.monitoring.tunnelhealth import (
     TunnelHealthHistoryItem,
