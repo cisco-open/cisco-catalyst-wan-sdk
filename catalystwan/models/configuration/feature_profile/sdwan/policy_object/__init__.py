@@ -5,6 +5,8 @@ from typing import List, Union
 from pydantic import Field
 from typing_extensions import Annotated
 
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.policy.as_path import AsPathParcel
+
 from .policy.app_probe import AppProbeMapItem, AppProbeParcel
 from .policy.application_list import ApplicationFamilyListEntry, ApplicationListEntry, ApplicationListParcel
 from .policy.color_list import ColorEntry, ColorParcel
@@ -39,6 +41,7 @@ AnyPolicyObjectParcel = Annotated[
         URLParcel,
         ApplicationListParcel,
         AppProbeParcel,
+        AsPathParcel,
         ColorParcel,
         DataPrefixParcel,
         ExpandedCommunityParcel,
@@ -72,6 +75,7 @@ __all__ = (
     "AppProbeEntry",
     "AppProbeMapItem",
     "AppProbeParcel",
+    "AsPathParcel",
     "BaseURLListEntry",
     "ColorEntry",
     "ColorParcel",
