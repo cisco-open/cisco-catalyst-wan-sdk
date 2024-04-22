@@ -63,7 +63,7 @@ class TestAdminTechAPI(unittest.TestCase):
         self.download_file = io.BytesIO(self.download_file_content.encode())
 
     @patch("catalystwan.session.ManagerSession")
-    @patch("requests.Response")
+    @patch("catalystwan.response.ManagerResponse")
     def test_get(self, mock_session, mock_response):
         # Arrange
         mock_session.post.return_value = mock_response
@@ -78,7 +78,7 @@ class TestAdminTechAPI(unittest.TestCase):
         self.assertIsInstance(admintechs[0], DeviceAdminTech)
 
     @patch("catalystwan.session.ManagerSession")
-    @patch("requests.Response")
+    @patch("catalystwan.response.ManagerResponse")
     def test_get_all(self, mock_session, mock_response):
         # Arrange
         mock_session.get.return_value = mock_response
@@ -90,7 +90,7 @@ class TestAdminTechAPI(unittest.TestCase):
         self.assertEqual(len(admintechs), len(self.admin_tech_infos["data"]))
 
     @patch("catalystwan.session.ManagerSession")
-    @patch("requests.Response")
+    @patch("catalystwan.response.ManagerResponse")
     def test_generate(self, mock_session, mock_response):
         # Arrange
         mock_session.post.return_value = mock_response
@@ -106,7 +106,7 @@ class TestAdminTechAPI(unittest.TestCase):
         self.assertEqual(filename, self.admin_tech_generate_response["fileName"])
 
     @patch("catalystwan.session.ManagerSession")
-    @patch("requests.Response")
+    @patch("catalystwan.response.ManagerResponse")
     def test_generate_in_progress_error_retry(self, mock_session, mock_response):
         # Arrange
         mock_session.post.return_value = mock_response
@@ -124,7 +124,7 @@ class TestAdminTechAPI(unittest.TestCase):
         self.assertEqual(mock_session.post.call_count, count)
 
     @patch("catalystwan.session.ManagerSession")
-    @patch("requests.Response")
+    @patch("catalystwan.response.ManagerResponse")
     def test_generate_error(self, mock_session, mock_response):
         # Arrange
         mock_session.post.return_value = mock_response
@@ -142,7 +142,7 @@ class TestAdminTechAPI(unittest.TestCase):
         mock_session.post.assert_called_once()
 
     @patch("catalystwan.session.ManagerSession")
-    @patch("requests.Response")
+    @patch("catalystwan.response.ManagerResponse")
     def test_delete(self, mock_session, mock_response):
         # Arrange
         filename = self.admin_tech_generate_response["fileName"]
@@ -155,17 +155,17 @@ class TestAdminTechAPI(unittest.TestCase):
         mock_session.delete.assert_called_once_with(f"/dataservice/device/tools/admintech/{token_id}")
 
     @patch("catalystwan.session.ManagerSession")
-    @patch("requests.Response")
+    @patch("catalystwan.response.ManagerResponse")
     def test_delete_token_not_found(self, mock_session, mock_response):
         # Arrange
         mock_session.get.return_value = mock_response
         mock_response.json.return_value = self.admin_tech_infos
         # Act/Assert
         with self.assertRaises(RequestTokenIdNotFound):
-            AdminTechAPI(mock_session).delete("fake-filename.tar.gz")
+            AdminTechAPI(mock_session).delete("fake-filename.tar.gz", timeout=0.01, interval=0.01)
 
     @patch("catalystwan.session.ManagerSession")
-    @patch("requests.Response")
+    @patch("catalystwan.response.ManagerResponse")
     def test_download(self, mock_session, mock_response):
         # Arrange
         filename = self.admin_tech_generate_response["fileName"]
@@ -180,7 +180,7 @@ class TestAdminTechAPI(unittest.TestCase):
             self.assertEqual(download_path, Path(tmpdir) / filename)
 
     @patch("catalystwan.session.ManagerSession")
-    @patch("requests.Response")
+    @patch("catalystwan.response.ManagerResponse")
     def test_download_error(self, mock_session, mock_response):
         # Arrange
         mock_session.get.return_value = mock_response

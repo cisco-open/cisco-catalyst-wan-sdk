@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, List
 
-from catalystwan.endpoints.monitoring_status import MonitoringStatus, Status, UpdateStatus
+from catalystwan.endpoints.monitoring.status import MonitoringStatus, Status, UpdateStatus
 from catalystwan.typed_list import DataSequence
 
 logger = logging.getLogger(__name__)
