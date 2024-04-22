@@ -9,7 +9,7 @@ StateValues = Literal["Down", "Up"]
 # Optional Params for both endpoints.
 class TunnelHealthRequest(BaseModel):
     last_n_hours: int = Field(default=12, description="Time range for the data in hours.")
-    site: Optional[str] = Field(None, description="Specific site to filter the data.")
+    site: Optional[str] = Field(default=None, description="Specific site to filter the data.")
     limit: int = Field(default=30, description="Limit for the number of records returned.")
 
 
