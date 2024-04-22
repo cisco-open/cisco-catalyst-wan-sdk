@@ -1,6 +1,6 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-from typing import List, Literal, Optional, Union, overload
+from typing import Any, List, Literal, Optional, Union, overload
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -24,6 +24,11 @@ ControlDirection = Literal[
     "in",
     "out",
 ]
+
+
+def assert_feature_defintion(definition: Any) -> "CentralizedPolicyDefinition":
+    assert isinstance(definition, CentralizedPolicyDefinition)
+    return definition
 
 
 class DataApplicationEntry(BaseModel):
@@ -196,7 +201,7 @@ class CentralizedPolicyDefinition(PolicyDefinition):
 
 
 class CentralizedPolicy(PolicyCreationPayload):
-    policy_definition: CentralizedPolicyDefinition = Field(
+    policy_definition: Union[CentralizedPolicyDefinition, str] = Field(
         default=CentralizedPolicyDefinition(),
         serialization_alias="policyDefinition",
         validation_alias="policyDefinition",
@@ -206,20 +211,24 @@ class CentralizedPolicy(PolicyCreationPayload):
     )
 
     def add_traffic_data_policy(self, traffic_data_policy_id: UUID) -> TrafficDataPolicyItem:
+        policy_definition = assert_feature_defintion(self.policy_definition)
         item = TrafficDataPolicyItem(definition_id=traffic_data_policy_id)
-        self.policy_definition.assembly.append(item)
+        policy_definition.assembly.append(item)
         return item
 
     def add_control_policy(self, control_policy_id: UUID) -> ControlPolicyItem:
+        policy_definition = assert_feature_defintion(self.policy_definition)
         item = ControlPolicyItem(definition_id=control_policy_id)
-        self.policy_definition.assembly.append(item)
+        policy_definition.assembly.append(item)
         return item
 
     def add_mesh_policy(self, mesh_policy_id: UUID) -> None:
-        self.policy_definition.assembly.append(MeshPolicyItem(definition_id=mesh_policy_id))
+        policy_definition = assert_feature_defintion(self.policy_definition)
+        policy_definition.assembly.append(MeshPolicyItem(definition_id=mesh_policy_id))
 
     def add_hub_and_spoke_policy(self, hub_and_spoke_policy_id: UUID) -> None:
-        self.policy_definition.assembly.append(HubAndSpokePolicyItem(definition_id=hub_and_spoke_policy_id))
+        policy_definition = assert_feature_defintion(self.policy_definition)
+        policy_definition.assembly.append(HubAndSpokePolicyItem(definition_id=hub_and_spoke_policy_id))
 
     @model_validator(mode="before")
     @classmethod
