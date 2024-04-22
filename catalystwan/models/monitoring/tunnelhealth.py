@@ -6,6 +6,13 @@ HealthValues = Literal["fair", "good", "n/a", "poor"]
 StateValues = Literal["Down", "Up"]
 
 
+# Optional Params for both endpoints.
+class TunnelHealthRequest(BaseModel):
+    last_n_hours: int = Field(default=12, description="Time range for the data in hours.")
+    site: Optional[str] = Field(None, description="Specific site to filter the data.")
+    limit: int = Field(default=30, description="Limit for the number of records returned.")
+
+
 # Models for tunnelhealth/history
 class DeviceHealthEntryItem(BaseModel):
     cpu_load: Optional[float] = None

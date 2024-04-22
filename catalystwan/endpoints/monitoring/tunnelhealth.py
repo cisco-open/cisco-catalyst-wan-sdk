@@ -3,15 +3,19 @@
 # mypy: disable-error-code="empty-body"
 
 from catalystwan.endpoints import APIEndpoints, get
-from catalystwan.models.monitoring.tunnelhealth import TunnelHealthOverview, TunnelHealthHistoryItem
+from catalystwan.models.monitoring.tunnelhealth import (
+    TunnelHealthHistoryItem,
+    TunnelHealthOverview,
+    TunnelHealthRequest,
+)
 from catalystwan.typed_list import DataSequence
 
 
 class TunnelHealth(APIEndpoints):
     @get("/statistics/tunnelhealth/history")
-    def get_tunnelhealth_history(self) -> DataSequence[TunnelHealthHistoryItem]:
+    def get_tunnelhealth_history(self, params: TunnelHealthRequest = None) -> DataSequence[TunnelHealthHistoryItem]:
         ...
 
     @get("/statistics/tunnelhealth/overview/{type}")
-    def get_tunnelhealth_overview(self, type: str) -> TunnelHealthOverview:
+    def get_tunnelhealth_overview(self, type: str, params: TunnelHealthRequest = None) -> TunnelHealthOverview:
         ...
