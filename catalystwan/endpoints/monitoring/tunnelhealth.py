@@ -17,5 +17,5 @@ class TunnelHealth(APIEndpoints):
         ...
 
     @get("/statistics/tunnelhealth/overview/{type}")
-    def get_tunnelhealth_overview(self, type: str, params: TunnelHealthRequest = None) -> TunnelHealthOverview:
+    def get_tunnelhealth_overview(self, type: str, params: Optional[TunnelHealthRequest] = None) -> TunnelHealthOverview:
         ...
