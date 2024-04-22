@@ -1,11 +1,70 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-from typing import Dict, List, Literal, Optional, Sequence, Set, Tuple, Union
+from dataclasses import InitVar, dataclass, field
+from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Union
 from uuid import UUID
 
-from pydantic import PlainSerializer
+from packaging.specifiers import SpecifierSet  # type: ignore
+from packaging.version import Version  # type: ignore
+from pydantic import PlainSerializer, SerializationInfo
+from pydantic.fields import FieldInfo
 from pydantic.functional_validators import BeforeValidator
 from typing_extensions import Annotated
+
+
+@dataclass()
+class VersionedField:
+    """
+    This class could be used as field type annotation for pydantic.BaseModel fields.
+    Together with dedicated @model_serializer it allows pick different serialization alias.
+    When version provided as specifier set eg. ">=20.13" matches Manager API version detected at runtime
+    original serialization_alias will be overriden.
+
+    Example:
+    >>> from catalystwan.models.common import VersionedField
+    >>> from pydantic import BaseModel, SerializationInfo, SerializerFunctionWrapHandler, model_serializer
+    >>> from typing_extensions import Annotated
+    >>>
+    >>> class Payload(BaseModel):
+    >>>     snake_case: Annotated[int, VersionedField(versions="<=20.12", serialization_alias="kebab-case")]
+    >>>
+    >>> @model_serializer(mode="wrap", when_used="json")
+    >>>     def serialize(self, handler: SerializerFunctionWrapHandler, info: SerializationInfo) -> Dict[str, Any]:
+    >>>         return VersionedField.update_model_fields(self.model_fields, handler(self), info)
+    """
+
+    versions: InitVar[str]
+    versions_set: SpecifierSet = field(init=False)
+    serialization_alias: str
+
+    def __post_init__(self, versions):
+        self.versions_set = SpecifierSet(versions)
+
+    @staticmethod
+    def update_model_fields(
+        model_fields: Dict[str, FieldInfo], model_dict: Dict[str, Any], serialization_info: SerializationInfo
+    ) -> Dict[str, Any]:
+        """To be reused in methods decorated with pydantic.model_serializer
+        Args:
+            model_fields (Dict[str, FieldInfo]): obtained from BaseModel class
+            model_dict (Dict[str, Any]): obtained from serialized BaseModel instance
+            serialization_info (SerializationInfo): passed from serializer
+
+        Returns:
+            Dict[str, Any]: model_dict with updated field names according to matching runtime version
+        """
+        if serialization_info.context is not None:
+            api_version: Optional[Version] = serialization_info.context.get("api_version")
+            if api_version is not None:
+                for field_name, field_info in model_fields.items():
+                    versioned_fields = [meta for meta in field_info.metadata if isinstance(meta, VersionedField)]
+                    for versioned_field in versioned_fields:
+                        if api_version in versioned_field.versions_set:
+                            current_field_name = field_info.serialization_alias or field_info.alias or field_name
+                            if model_dict.get(current_field_name) is not None:
+                                model_dict[versioned_field.serialization_alias] = model_dict[current_field_name]
+                                del model_dict[current_field_name]
+        return model_dict
 
 
 def check_fields_exclusive(values: Dict, field_names: Set[str], at_least_one: bool = False) -> bool:

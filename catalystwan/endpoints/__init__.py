@@ -131,9 +131,7 @@ class TypeSpecifier:
             if annotated_origin := get_args(annotation):
                 if (len(annotated_origin) >= 1) and get_origin(annotated_origin[0]) == Union:
                     type_args = get_args(annotated_origin[0])
-                    if all(isclass(t) for t in type_args) and all(
-                        issubclass(t, BaseModel) for t in type_args
-                    ):
+                    if all(isclass(t) for t in type_args) and all(issubclass(t, BaseModel) for t in type_args):
                         models_types.extend(list(type_args))
                         return models_types
                     else:
@@ -203,16 +201,18 @@ class APIEndpoints:
     """
 
     @classmethod
-    def _prepare_payload(cls, payload: PayloadType, force_json: bool = False) -> PreparedPayload:
+    def _prepare_payload(
+        cls, payload: PayloadType, force_json: bool = False, context: Dict[str, Any] = {}
+    ) -> PreparedPayload:
         """Helper method to prepare data for sending based on type"""
         if force_json or isinstance(payload, dict):
             return PreparedPayload(data=json.dumps(payload), headers={"content-type": "application/json"})
         if isinstance(payload, (str, bytes)):
             return PreparedPayload(data=payload)
         elif isinstance(payload, (BaseModel)):
-            return cls._prepare_basemodel_payload(payload)
+            return cls._prepare_basemodel_payload(payload, context)
         elif isinstance(payload, Sequence) and not isinstance(payload, (str, bytes)):
-            return cls._prepare_sequence_payload(payload)  # type: ignore[arg-type]
+            return cls._prepare_sequence_payload(payload, context)  # type: ignore[arg-type]
             # offender is List[JSON] which is also a Sequence can be ignored as long as force_json is passed correctly
         elif isinstance(payload, CustomPayloadType):
             return payload.prepared()
@@ -220,26 +220,27 @@ class APIEndpoints:
             raise APIRequestPayloadTypeError(payload)
 
     @classmethod
-    def _prepare_basemodel_payload(cls, payload: BaseModel) -> PreparedPayload:
+    def _prepare_basemodel_payload(cls, payload: BaseModel, context: Dict[str, Any] = {}) -> PreparedPayload:
         """Helper method to prepare BaseModel instance for sending"""
         return PreparedPayload(
-            data=payload.model_dump_json(exclude_none=True, by_alias=True), headers={"content-type": "application/json"}
+            data=payload.model_dump_json(exclude_none=True, by_alias=True, context=context),
+            headers={"content-type": "application/json"},
         )
 
     @classmethod
-    def _prepare_sequence_payload(cls, payload: Iterable[BaseModel]) -> PreparedPayload:
+    def _prepare_sequence_payload(cls, payload: Iterable[BaseModel], context: Dict[str, Any] = {}) -> PreparedPayload:
         """Helper method to prepare sequences for sending"""
         items = []
         for item in payload:
-            items.append(item.model_dump(exclude_none=True, by_alias=True))
+            items.append(item.model_dump(exclude_none=True, by_alias=True, context=context))
         data = json.dumps(items)
         return PreparedPayload(data=data, headers={"content-type": "application/json"})
 
     @classmethod
-    def _prepare_params(cls, params: RequestParamsType) -> Dict[str, Any]:
+    def _prepare_params(cls, params: RequestParamsType, context: Dict[str, Any] = {}) -> Dict[str, Any]:
         """Helper method to prepare params for sending"""
         if isinstance(params, BaseModel):
-            return params.model_dump(exclude_none=True, by_alias=True)
+            return params.model_dump(exclude_none=True, by_alias=True, context=context)
         return params
 
     def __init__(self, client: APIEndpointClient):
@@ -257,10 +258,11 @@ class APIEndpoints:
     ) -> APIEndpointClientResponse:
         """Prepares and sends request using client protocol"""
         _kwargs = dict(kwargs)
+        context = dict(api_version=self._api_version)
         if payload is not None:
-            _kwargs.update(self._prepare_payload(payload, force_json_payload).asdict())
+            _kwargs.update(self._prepare_payload(payload, force_json_payload, context).asdict())
         if params is not None:
-            _kwargs.update({"params": self._prepare_params(params)})
+            _kwargs.update({"params": self._prepare_params(params, context)})
         return self._client.request(method, self._basepath + url, **_kwargs)
 
     @property
