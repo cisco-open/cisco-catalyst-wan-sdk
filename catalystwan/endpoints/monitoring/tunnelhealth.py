@@ -15,9 +15,13 @@ from catalystwan.typed_list import DataSequence
 
 class TunnelHealth(APIEndpoints):
     @get("/statistics/tunnelhealth/history")
-    def get_tunnelhealth_history(self, params: Optional[TunnelHealthRequest] = None) -> DataSequence[TunnelHealthHistoryItem]:
+    def get_tunnelhealth_history(
+        self, params: Optional[TunnelHealthRequest] = None
+    ) -> DataSequence[TunnelHealthHistoryItem]:
         ...
 
     @get("/statistics/tunnelhealth/overview/{type}")
-    def get_tunnelhealth_overview(self, type: str, params: Optional[TunnelHealthRequest] = None) -> TunnelHealthOverview:
+    def get_tunnelhealth_overview(
+        self, type: str, params: Optional[TunnelHealthRequest] = None
+    ) -> TunnelHealthOverview:
         ...
