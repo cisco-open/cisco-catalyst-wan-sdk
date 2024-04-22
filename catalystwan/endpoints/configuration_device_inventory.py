@@ -2,7 +2,7 @@
 
 # mypy: disable-error-code="empty-body"
 from pathlib import Path
-from typing import List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -126,7 +126,7 @@ class DeviceDetailsResponse(BaseModel):
         default=None, validation_alias="resourceGroup", serialization_alias="resourceGroup"
     )
     id: Optional[str] = None
-    tags: Optional[List[str]] = None
+    tags: Optional[Union[List[str], List[Dict]]] = None
     draft_mode: Optional[str] = Field(default=None, validation_alias="draftMode", serialization_alias="draftMode")
     solution: Optional[str] = None
     device_lock: Optional[str] = Field(default=None, validation_alias="device-lock", serialization_alias="device-lock")
