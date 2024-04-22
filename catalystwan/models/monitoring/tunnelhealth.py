@@ -1,24 +1,9 @@
-from enum import Enum
-from typing import List, Dict, Optional
+from typing import Dict, List, Literal, Optional
+
 from pydantic import BaseModel, Field
 
-
-# Common Enums
-class HealthEnum(str, Enum):
-    fair = "fair"
-    good = "good"
-    na = "n/a"
-    poor = "poor"
-
-
-class ReachabilityEnum(str, Enum):
-    reachable = "reachable"
-    unreachable = "unreachable"
-
-
-class StateEnum(str, Enum):
-    down = "Down"
-    up = "Up"
+HealthValues = Literal["fair", "good", "n/a", "poor"]
+StateValues = Literal["Down", "Up"]
 
 
 # Models for tunnelhealth/history
@@ -26,7 +11,7 @@ class DeviceHealthEntryItem(BaseModel):
     cpu_load: Optional[float] = None
     data: Dict = Field(default_factory=dict)  # Empty dictionary by default
     entry_time: int
-    health: HealthEnum
+    health: HealthValues
     health_score: float
     memory_utilization: Optional[float] = None
 
@@ -36,13 +21,13 @@ class TunnelHealthData(BaseModel):
     latency: float
     loss_percentage: float
     rx_octets: int
-    state: StateEnum
+    state: StateValues
     tx_octets: int
     vqoe_score: float
 
 
 class TunnelHealthHistoryItem(BaseModel):
-    health: HealthEnum
+    health: HealthValues
     health_score: float
     history: List[DeviceHealthEntryItem]
     local_color: str
@@ -55,7 +40,7 @@ class TunnelHealthHistoryItem(BaseModel):
 
 # Models for tunnelhealth/overview/<type>
 class TunnelHealthOverviewEntry(BaseModel):
-    health: HealthEnum
+    health: HealthValues
     health_score: float
     jitter: float
     latency: float
@@ -66,7 +51,7 @@ class TunnelHealthOverviewEntry(BaseModel):
     remote_color: str
     remote_system_ip: str
     rx_octets: int
-    state: StateEnum
+    state: StateValues
     tx_octets: int
     vqoe_score: float
 
