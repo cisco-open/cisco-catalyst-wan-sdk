@@ -20,9 +20,9 @@ CRLActions = Literal["disable", "revoke", "quarantine"]
 class Organization(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     org: Optional[str] = Field(default=None)
-    domain_id: Optional[str] = Field(serialization_alias="domain-id", validation_alias="domain-id")
+    domain_id: Optional[str] = Field(default=None, serialization_alias="domain-id", validation_alias="domain-id")
     control_connection_up: Optional[bool] = Field(
-        serialization_alias="controlConnectionUp", validation_alias="controlConnectionUp"
+        default=None, serialization_alias="controlConnectionUp", validation_alias="controlConnectionUp"
     )
 
 
