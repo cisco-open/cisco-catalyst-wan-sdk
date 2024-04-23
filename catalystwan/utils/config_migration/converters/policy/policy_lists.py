@@ -5,6 +5,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
     AnyPolicyObjectParcel,
     ApplicationListParcel,
     AppProbeParcel,
+    AsPathParcel,
     ColorParcel,
     DataPrefixParcel,
     ExpandedCommunityParcel,
@@ -31,6 +32,7 @@ from catalystwan.models.policy import (
     AnyPolicyList,
     AppList,
     AppProbeClassList,
+    ASPathList,
     ClassMapList,
     ColorList,
     CommunityList,
@@ -76,7 +78,13 @@ def app_list(in_: AppList) -> ApplicationListParcel:
     return out
 
 
-# TODO: def as_path(in_: ASPathList):
+def as_path(in_: ASPathList) -> AsPathParcel:
+    out = AsPathParcel(**_get_parcel_name_desc(in_))
+    for entry in in_.entries:
+        out.add_as_path(entry.as_path)
+    return out
+
+
 def class_map(in_: ClassMapList) -> FowardingClassParcel:
     out = FowardingClassParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
@@ -258,6 +266,7 @@ class ConvertAllResult(NamedTuple):
 CONVERTERS: Mapping[Type[Input], Callable[[Any], Output]] = {
     AppProbeClassList: app_probe,
     AppList: app_list,
+    ASPathList: as_path,
     ClassMapList: class_map,
     ColorList: color,
     CommunityList: community,
