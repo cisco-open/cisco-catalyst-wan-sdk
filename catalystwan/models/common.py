@@ -1,7 +1,7 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from dataclasses import InitVar, dataclass, field
-from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union
 from uuid import UUID
 
 from packaging.specifiers import SpecifierSet  # type: ignore
@@ -36,19 +36,28 @@ class VersionedField:
     versions: InitVar[str]
     versions_set: SpecifierSet = field(init=False)
     serialization_alias: str
+    default: Any = None
+    is_defined: bool = True
+    is_required: bool = False
 
     def __post_init__(self, versions):
         self.versions_set = SpecifierSet(versions)
 
     @staticmethod
     def update_model_fields(
-        model_fields: Dict[str, FieldInfo], model_dict: Dict[str, Any], serialization_info: SerializationInfo
+        model_fields: Dict[str, FieldInfo],
+        model_dict: Dict[str, Any],
+        serialization_info: SerializationInfo,
+        replaced_keys: Optional[Mapping[str, Tuple[Optional[str], str]]] = None,
     ) -> Dict[str, Any]:
         """To be reused in methods decorated with pydantic.model_serializer
         Args:
             model_fields (Dict[str, FieldInfo]): obtained from BaseModel class
             model_dict (Dict[str, Any]): obtained from serialized BaseModel instance
             serialization_info (SerializationInfo): passed from serializer
+            replaced_keys (Dict[str, Tuple(Optional[str], str)]): field names that were replaced
+                previously during serialization
+                (Tuple represent path and new field name - this currently supports up to 1 level deep alias path only)
 
         Returns:
             Dict[str, Any]: model_dict with updated field names according to matching runtime version
@@ -61,9 +70,16 @@ class VersionedField:
                     for versioned_field in versioned_fields:
                         if api_version in versioned_field.versions_set:
                             current_field_name = field_info.serialization_alias or field_info.alias or field_name
-                            if model_dict.get(current_field_name) is not None:
-                                model_dict[versioned_field.serialization_alias] = model_dict[current_field_name]
+                            new_field_name = versioned_field.serialization_alias
+                            if current_field_name in model_dict:
+                                model_dict[new_field_name] = model_dict[current_field_name]
                                 del model_dict[current_field_name]
+                            elif replaced_keys is not None:
+                                if current_field_path := replaced_keys.get(current_field_name):
+                                    path, name = current_field_path
+                                    dict_ = model_dict[path] if path is not None else model_dict
+                                    dict_[new_field_name] = dict_[name]
+                                    del dict_[name]
         return model_dict
 
 
