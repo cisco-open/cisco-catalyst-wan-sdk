@@ -9,6 +9,7 @@ from catalystwan.api.configuration_groups.parcel import Global, as_global, as_va
 from catalystwan.api.feature_profile_api import ServiceFeatureProfileAPI, SystemFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
+from catalystwan.models.configuration.feature_profile.common import ParcelAssociationPayload, ParcelCreationResponse
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
     AppqoeParcel,
     InterfaceEthernetParcel,
@@ -125,7 +126,7 @@ service_endpoint_mapping = {
 
 service_interface_parcels = [
     (
-        "gre",
+        "interface/gre",
         InterfaceGreParcel(
             parcel_name="TestGreParcel",
             parcel_description="Test Gre Parcel",
@@ -133,7 +134,7 @@ service_interface_parcels = [
         ),
     ),
     (
-        "svi",
+        "interface/svi",
         InterfaceSviParcel(
             parcel_name="TestSviParcel",
             parcel_description="Test Svi Parcel",
@@ -142,7 +143,7 @@ service_interface_parcels = [
         ),
     ),
     (
-        "ethernet",
+        "interface/ethernet",
         InterfaceEthernetParcel(
             parcel_name="TestEthernetParcel",
             parcel_description="Test Ethernet Parcel",
@@ -151,7 +152,7 @@ service_interface_parcels = [
         ),
     ),
     (
-        "ipsec",
+        "interface/ipsec",
         InterfaceIpsecParcel(
             parcel_name="TestIpsecParcel",
             parcel_description="Test Ipsec Parcel",
@@ -171,6 +172,16 @@ service_interface_parcels = [
             mtu_v6=as_variable("{{test}}"),
         ),
     ),
+]
+
+service_vpn_sub_parcels = [
+    (
+        "routing/multicast",
+        MulticastParcel(
+            parcel_name="TestMulticastParcel",
+            parcel_description="Test Multicast Parcel",
+        ),
+    )
 ]
 
 
@@ -198,6 +209,20 @@ class TestServiceFeatureProfileAPI(unittest.TestCase):
         self.api.create_parcel(self.profile_uuid, parcel, self.vpn_uuid)
 
         # Assert
-        self.mock_endpoint.create_lan_vpn_interface_parcel.assert_called_once_with(
+        self.mock_endpoint.create_lan_vpn_sub_parcel.assert_called_once_with(
             self.profile_uuid, self.vpn_uuid, parcel_type, parcel
+        )
+
+    @parameterized.expand(service_vpn_sub_parcels)
+    def test_post_method_create_then_assigin_subparcel(self, parcel_type, parcel):
+        # Arrange
+        self.mock_endpoint.create_service_parcel.return_value = ParcelCreationResponse(id=self.parcel_uuid)
+
+        # Act
+        self.api.create_parcel(self.profile_uuid, parcel, self.vpn_uuid)
+
+        # Assert
+        self.mock_endpoint.create_service_parcel.assert_called_once_with(self.profile_uuid, parcel_type, parcel)
+        self.mock_endpoint.associate_parcel_with_vpn.assert_called_once_with(
+            self.profile_uuid, self.vpn_uuid, parcel_type, ParcelAssociationPayload(parcel_id=self.parcel_uuid)
         )

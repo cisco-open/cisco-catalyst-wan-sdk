@@ -252,6 +252,12 @@ class ServiceFeatureProfileAPI:
                 )
         return self.endpoint.create_service_parcel(profile_uuid, payload._get_parcel_type(), payload)
 
+    def delete_parcel(self, profile_uuid: UUID, parcel_type: Type[AnyServiceParcel], parcel_uuid: UUID) -> None:
+        """
+        Delete Service Parcel for selected profile_uuid based on payload type
+        """
+        return self.endpoint.delete_service_parcel(profile_uuid, parcel_type._get_parcel_type(), parcel_uuid)
+
 
 class SystemFeatureProfileAPI:
     """
