@@ -144,7 +144,7 @@ class AclQos(BaseModel):
 
 
 class InterfaceSviParcel(_ParcelBase):
-    type_: Literal["svi"] = Field(default="svi", exclude=True)
+    type_: Literal["interface/svi"] = Field(default="interface/svi", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     shutdown: Union[Global[bool], Variable, Default[bool]] = Field(
@@ -152,7 +152,7 @@ class InterfaceSviParcel(_ParcelBase):
     )
     interface_name: Union[Global[str], Variable] = Field(validation_alias=AliasPath("data", "interfaceName"))
     svi_description: Optional[Union[Global[str], Variable, Default[None]]] = Field(
-        default=Default[bool](value=True), validation_alias=AliasPath("data", "description")
+        default=Default[None](value=None), validation_alias=AliasPath("data", "description")
     )
     interface_mtu: Optional[Union[Global[int], Variable, Default[int]]] = Field(
         validation_alias=AliasPath("data", "ifMtu"), default=Default[int](value=1500)

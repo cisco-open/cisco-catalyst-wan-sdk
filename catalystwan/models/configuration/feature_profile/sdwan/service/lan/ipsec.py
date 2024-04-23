@@ -30,7 +30,7 @@ class IpsecAddress(BaseModel):
 
 
 class InterfaceIpsecParcel(_ParcelBase):
-    type_: Literal["ipsec"] = Field(default="ipsec", exclude=True)
+    type_: Literal["interface/ipsec"] = Field(default="interface/ipsec", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     interface_name: Union[Global[str], Variable] = Field(validation_alias=AliasPath("data", "ifName"))
@@ -39,7 +39,7 @@ class InterfaceIpsecParcel(_ParcelBase):
     )
     tunnel_mode: Optional[Union[Global[IpsecTunnelMode], Default[IpsecTunnelMode]]] = Field(
         validation_alias=AliasPath("data", "tunnelMode"),
-        default=Default[IpsecTunnelMode](value="ipv4"),
+        default=None,
     )
     ipsec_description: Union[Global[str], Variable, Default[None]] = Field(
         default=Default[None](value=None), validation_alias=AliasPath("data", "description")
@@ -65,8 +65,8 @@ class InterfaceIpsecParcel(_ParcelBase):
     tcp_mss_adjust: Union[Global[int], Variable, Default[None]] = Field(
         validation_alias=AliasPath("data", "tcpMssAdjust"), default=Default[None](value=None)
     )
-    tcp_mss_adjust_v6: Union[Global[int], Variable, Default[None]] = Field(
-        validation_alias=AliasPath("data", "tcpMssAdjustV6"), default=Default[None](value=None)
+    tcp_mss_adjust_v6: Optional[Union[Global[int], Variable, Default[None]]] = Field(
+        validation_alias=AliasPath("data", "tcpMssAdjustV6"), default=None
     )
     clear_dont_fragment: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(
         validation_alias=AliasPath("data", "clearDontFragment"),

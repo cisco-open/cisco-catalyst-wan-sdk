@@ -1,13 +1,17 @@
 from copy import deepcopy
 from ipaddress import IPv4Interface, IPv6Address
 
-from catalystwan.api.configuration_groups.parcel import Default, as_global
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import IkeGroup
+from catalystwan.api.configuration_groups.parcel import Default, as_default, as_global, as_variable
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import IkeGroup, TunnelApplication
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import InterfaceIpsecParcel, IpsecAddress
+from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 
 
 class InterfaceIpsecTemplateConverter:
     supported_template_types = ("cisco_vpn_interface_ipsec", "vpn-vedge-interface-ipsec")
+
+    # Default Values
+    pre_shared_secret = "{{vpn_if_pre_shared_secret}}"
 
     delete_keys = (
         "dead_peer_detection",
@@ -18,9 +22,11 @@ class InterfaceIpsecTemplateConverter:
         "multiplexing",
         "ipsec",
         "ipv6",
+        "ip",
     )
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceIpsecParcel:
+        print(template_values)
         values = deepcopy(template_values)
         self.configure_interface_name(values)
         self.configure_description(values)
@@ -32,6 +38,8 @@ class InterfaceIpsecTemplateConverter:
         self.configure_ipv6_address(values)
         self.configure_address(values)
         self.configure_tracker(values)
+        self.configure_application(values)
+        self.configure_pre_shared_secret(values)
         self.cleanup_keys(values)
         return InterfaceIpsecParcel(parcel_name=name, parcel_description=description, **values)
 
@@ -42,19 +50,22 @@ class InterfaceIpsecTemplateConverter:
         values["ipsec_description"] = values.get("description", Default[None](value=None))
 
     def configure_dead_peer_detection(self, values: dict) -> None:
-        values["dpd_interval"] = values.get("dead_peer_detection", {}).get("dpd_interval")
-        values["dpd_retries"] = values.get("dead_peer_detection", {}).get("dpd_retries")
+        values["dpd_interval"] = values.get("dead_peer_detection", {}).get("dpd_interval", as_default(10))
+        values["dpd_retries"] = values.get("dead_peer_detection", {}).get("dpd_retries", as_default(3))
 
     def configure_ipv6_address(self, values: dict) -> None:
         values["ipv6_address"] = values.get("ipv6", {}).get("address")
 
     def configure_address(self, values: dict) -> None:
         address = values.get("ip", {}).get("address", {})
-        if address:
-            values["address"] = IpsecAddress(
-                address=as_global(str(address.network.network_address)),
-                mask=as_global(str(address.network.netmask)),
+        if not address:
+            raise CatalystwanConverterCantConvertException(
+                "Ipsec Address is required in UX2 parcel but in a Feature Template can be optional."
             )
+        values["address"] = IpsecAddress(
+            address=as_global(str(address.value.network.network_address)),
+            mask=as_global(str(address.value.network.netmask)),
+        )
 
     def configure_ike(self, values: dict) -> None:
         ike = values.get("ike", {})
@@ -90,6 +101,13 @@ class InterfaceIpsecTemplateConverter:
         if tracker:
             tracker = as_global("".join(tracker.value))
         values["tracker"] = tracker
+
+    def configure_application(self, values: dict) -> None:
+        if application := values.get("application"):
+            values["application"] = as_global(application.value, TunnelApplication)
+
+    def configure_pre_shared_secret(self, values: dict) -> None:
+        values["pre_shared_secret"] = values.get("pre_shared_secret", as_variable(self.pre_shared_secret))
 
     def cleanup_keys(self, values: dict) -> None:
         for key in self.delete_keys:

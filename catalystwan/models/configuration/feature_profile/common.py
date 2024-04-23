@@ -157,7 +157,7 @@ class ParcelInfo(BaseModel, Generic[T]):
 class ParcelAssociationPayload(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    parcel_id: str = Field(alias="parcelId")
+    parcel_id: UUID = Field(serialization_alias="parcelId", validation_alias="parcelId")
 
 
 class Prefix(BaseModel):

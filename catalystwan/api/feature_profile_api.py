@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional, Protocol, Type, Union, get_args, overload
+from typing import TYPE_CHECKING, Any, Optional, Protocol, Type, Union, overload
 from uuid import UUID
 
 from pydantic import Json
@@ -12,7 +12,8 @@ from catalystwan.endpoints.configuration.feature_profile.sdwan.service import Se
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
 from catalystwan.models.configuration.feature_profile.sdwan.other import AnyOtherParcel
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.url import URLParcel
-from catalystwan.models.configuration.feature_profile.sdwan.service import AnyLanVpnInterfaceParcel, AnyServiceParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import MulticastParcel
 from catalystwan.typed_list import DataSequence
 
 if TYPE_CHECKING:
@@ -27,6 +28,7 @@ from catalystwan.models.configuration.feature_profile.common import (
     FeatureProfileInfo,
     GetFeatureProfilesPayload,
     Parcel,
+    ParcelAssociationPayload,
     ParcelCreationResponse,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import (
@@ -238,10 +240,16 @@ class ServiceFeatureProfileAPI:
         """
         Create Service Parcel for selected profile_id based on payload type
         """
-        if type(payload) in get_args(AnyLanVpnInterfaceParcel)[0].__args__:
-            return self.endpoint.create_lan_vpn_interface_parcel(
-                profile_uuid, vpn_uuid, payload._get_parcel_type(), payload
-            )
+        if vpn_uuid is not None:
+            if isinstance(payload, MulticastParcel):
+                response = self.endpoint.create_service_parcel(profile_uuid, payload._get_parcel_type(), payload)
+                return self.endpoint.associate_parcel_with_vpn(
+                    profile_uuid, vpn_uuid, payload._get_parcel_type(), ParcelAssociationPayload(parcel_id=response.id)
+                )
+            else:
+                return self.endpoint.create_lan_vpn_sub_parcel(
+                    profile_uuid, vpn_uuid, payload._get_parcel_type(), payload
+                )
         return self.endpoint.create_service_parcel(profile_uuid, payload._get_parcel_type(), payload)
 
 

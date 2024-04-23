@@ -192,7 +192,7 @@ class AdvancedGre(BaseModel):
 
 
 class InterfaceGreParcel(_ParcelBase):
-    type_: Literal["gre"] = Field(default="gre", exclude=True)
+    type_: Literal["interface/gre"] = Field(default="interface/gre", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     basic: BasicGre = Field(validation_alias=AliasPath("data", "basic"))
