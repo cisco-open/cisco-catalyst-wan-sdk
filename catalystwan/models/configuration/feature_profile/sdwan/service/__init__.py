@@ -51,6 +51,14 @@ AnyLanVpnInterfaceParcel = Annotated[
     Field(discriminator="type_"),
 ]
 
+AnyAssociatoryParcel = Annotated[
+    Union[
+        MulticastParcel,
+        # DHCP
+    ],
+    Field(discriminator="type_"),
+]
+
 AnyServiceParcel = Annotated[
     Union[AnyTopLevelServiceParcel, AnyLanVpnInterfaceParcel],
     Field(discriminator="type_"),

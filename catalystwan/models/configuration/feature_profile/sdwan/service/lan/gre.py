@@ -102,10 +102,10 @@ class BasicGre(BaseModel):
     )
     shutdown: Optional[Union[Global[bool], Variable, Default[bool]]] = Default[bool](value=False)
     tunnel_protection: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(
-        serialization_alias="tunnelProtection", validation_alias="tunnelProtection", default=Default[bool](value=False)
+        serialization_alias="tunnelProtection", validation_alias="tunnelProtection", default=None
     )
-    tunnel_mode: Union[Global[GreTunnelMode], Default[GreTunnelMode]] = Field(
-        default=Default[GreTunnelMode](value="ipv4"),
+    tunnel_mode: Optional[Union[Global[GreTunnelMode], Default[GreTunnelMode]]] = Field(
+        default=None,
         serialization_alias="tunnelMode",
         validation_alias="tunnelMode",
     )
@@ -131,30 +131,30 @@ class BasicGre(BaseModel):
     clear_dont_fragment: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(
         serialization_alias="clearDontFragment",
         validation_alias="clearDontFragment",
-        default=Default[bool](value=False),
+        default=None,
     )
     dpd_interval: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        serialization_alias="dpdInterval", validation_alias="dpdInterval", default=Default[int](value=10)
+        serialization_alias="dpdInterval", validation_alias="dpdInterval", default=None
     )
     dpd_retries: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        serialization_alias="dpdRetries", validation_alias="dpdRetries", default=Default[int](value=3)
+        serialization_alias="dpdRetries", validation_alias="dpdRetries", default=None
     )
     ike_version: Optional[Union[Global[int], Default[int]]] = Field(
-        serialization_alias="ikeVersion", validation_alias="ikeVersion", default=Default[int](value=1)
+        serialization_alias="ikeVersion", validation_alias="ikeVersion", default=None
     )
     ike_mode: Optional[Union[Global[IkeMode], Variable, Default[IkeMode]]] = Field(
-        serialization_alias="ikeMode", validation_alias="ikeMode", default=Default[IkeMode](value="main")
+        serialization_alias="ikeMode", validation_alias="ikeMode", default=None
     )
     ike_rekey_interval: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        serialization_alias="ikeRekeyInterval", validation_alias="ikeRekeyInterval", default=Default[int](value=14400)
+        serialization_alias="ikeRekeyInterval", validation_alias="ikeRekeyInterval", default=None
     )
     ike_ciphersuite: Optional[Union[Global[IkeCiphersuite], Variable, Default[IkeCiphersuite]]] = Field(
         serialization_alias="ikeCiphersuite",
         validation_alias="ikeCiphersuite",
-        default=Default[IkeCiphersuite](value="aes256-cbc-sha1"),
+        default=None,
     )
     ike_group: Optional[Union[Global[IkeGroup], Variable, Default[IkeGroup]]] = Field(
-        serialization_alias="ikeGroup", validation_alias="ikeGroup", default=Default[IkeGroup](value="16")
+        serialization_alias="ikeGroup", validation_alias="ikeGroup", default=None
     )
     pre_shared_secret: Optional[Union[Global[str], Variable, Default[None]]] = Field(
         serialization_alias="preSharedSecret", validation_alias="preSharedSecret", default=None
@@ -168,20 +168,20 @@ class BasicGre(BaseModel):
     ipsec_rekey_interval: Optional[Union[Global[int], Variable, Default[int]]] = Field(
         serialization_alias="ipsecRekeyInterval",
         validation_alias="ipsecRekeyInterval",
-        default=Default[int](value=3600),
+        default=None,
     )
     ipsec_replay_window: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        serialization_alias="ipsecReplayWindow", validation_alias="ipsecReplayWindow", default=Default[int](value=512)
+        serialization_alias="ipsecReplayWindow", validation_alias="ipsecReplayWindow", default=None
     )
     ipsec_ciphersuite: Optional[Union[Global[IpsecCiphersuite], Variable, Default[IpsecCiphersuite]]] = Field(
         serialization_alias="ipsecCiphersuite",
         validation_alias="ipsecCiphersuite",
-        default=Default[IpsecCiphersuite](value="aes256-gcm"),
+        default=None,
     )
     perfect_forward_secrecy: Optional[Union[Global[PfsGroup], Variable, Default[PfsGroup]]] = Field(
         serialization_alias="perfectForwardSecrecy",
         validation_alias="perfectForwardSecrecy",
-        default=Default[PfsGroup](value="group-16"),
+        default=None,
     )
 
 
@@ -192,7 +192,7 @@ class AdvancedGre(BaseModel):
 
 
 class InterfaceGreParcel(_ParcelBase):
-    type_: Literal["gre"] = Field(default="gre", exclude=True)
+    type_: Literal["interface/gre"] = Field(default="interface/gre", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     basic: BasicGre = Field(validation_alias=AliasPath("data", "basic"))

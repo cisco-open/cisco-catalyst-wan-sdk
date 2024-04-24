@@ -20,6 +20,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service import (
     LanVpnDhcpServerParcel,
     LanVpnParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import MulticastParcel
 
 if TYPE_CHECKING:
     from catalystwan.session import ManagerSession
@@ -27,8 +28,8 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 IndependedParcels = Annotated[Union[AppqoeParcel, LanVpnDhcpServerParcel], Field(discriminator="type_")]
-DependedInterfaceParcels = Annotated[
-    Union[InterfaceGreParcel, InterfaceSviParcel, InterfaceEthernetParcel, InterfaceIpsecParcel],
+DependedVpnSubparcels = Annotated[
+    Union[InterfaceGreParcel, InterfaceSviParcel, InterfaceEthernetParcel, InterfaceIpsecParcel, MulticastParcel],
     Field(discriminator="type_"),
 ]
 
@@ -51,7 +52,7 @@ class ServiceFeatureProfileBuilder:
         self._endpoints = ServiceFeatureProfile(session)
         self._independent_items: List[IndependedParcels] = []
         self._independent_items_vpns: Dict[UUID, LanVpnParcel] = {}
-        self._depended_items_on_vpns: Dict[UUID, List[DependedInterfaceParcels]] = defaultdict(list)
+        self._depended_items_on_vpns: Dict[UUID, List[DependedVpnSubparcels]] = defaultdict(list)
 
     def add_profile_name_and_description(self, feature_profile: FeatureProfileCreationPayload) -> None:
         """
@@ -93,9 +94,9 @@ class ServiceFeatureProfileBuilder:
         self._independent_items_vpns[vpn_tag] = parcel
         return vpn_tag
 
-    def add_parcel_vpn_interface(self, vpn_tag: UUID, parcel: DependedInterfaceParcels) -> None:
+    def add_parcel_vpn_subparcel(self, vpn_tag: UUID, parcel: DependedVpnSubparcels) -> None:
         """
-        Adds an interface parcel dependent on a VPN to the builder.
+        Adds an subparcel parcel dependent on a VPN to the builder.
 
         Args:
             vpn_tag (UUID): The UUID of the VPN.
@@ -104,13 +105,13 @@ class ServiceFeatureProfileBuilder:
         Returns:
             None
         """
-        logger.debug(f"Adding interface parcel {parcel.parcel_name} to VPN {vpn_tag}")
+        logger.debug(f"Adding subparcel parcel {parcel.parcel_name} to VPN {vpn_tag}")
         self._depended_items_on_vpns[vpn_tag].append(parcel)
 
     def build(self) -> UUID:
         """
         Builds the feature profile by creating parcels for independent items,
-        VPNs, and interface parcels dependent on VPNs.
+        VPNs, and sub-parcels dependent on VPNs.
 
         Returns:
             Service feature profile UUID
@@ -123,8 +124,8 @@ class ServiceFeatureProfileBuilder:
         for vpn_tag, vpn_parcel in self._independent_items_vpns.items():
             vpn_uuid = self._api.create_parcel(profile_uuid, vpn_parcel).id
 
-            for interface_parcel in self._depended_items_on_vpns[vpn_tag]:
-                logger.debug(f"Creating interface parcel {interface_parcel.parcel_name} to VPN {vpn_tag}")
-                self._api.create_parcel(profile_uuid, interface_parcel, vpn_uuid)
+            for sub_parcel in self._depended_items_on_vpns[vpn_tag]:
+                logger.debug(f"Creating subparcel parcel {sub_parcel.parcel_name} to VPN {vpn_uuid}")
+                self._api.create_parcel(profile_uuid, sub_parcel, vpn_uuid)
 
         return profile_uuid

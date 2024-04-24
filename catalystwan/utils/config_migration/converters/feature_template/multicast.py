@@ -255,7 +255,6 @@ class IgmpToMulticastTemplateConverter:
     supported_template_types = ("cedge_igmp", "cisco_IGMP", "igmp")
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> MulticastParcel:
-        print(template_values)
         values = self.prepare_values(template_values)
         return MulticastParcel(
             parcel_name=name,

@@ -44,7 +44,6 @@ class InterfaceGRETemplateConverter:
         Returns:
             InterfaceGreParcel: The created InterfaceGreParcel object.
         """
-        print(template_values)
         basic_values, advanced_values = self.prepare_values(template_values)
         self.configure_dead_peer_detection(basic_values)
         self.configure_ike(basic_values)
