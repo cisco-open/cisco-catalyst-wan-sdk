@@ -3,10 +3,11 @@
 # mypy: disable-error-code="empty-body"
 
 from catalystwan.endpoints import APIEndpoints, get
-from catalystwan.models.monitoring.security_policy import DeviceListResponse
+from catalystwan.models.monitoring.security_policy import SecurityPolicyDeviceList
+from catalystwan.typed_list import DataSequence
 
 
 class MonitoringSecurityPolicy(APIEndpoints):
-    @get("/security/policy/devicelist")
-    def get_device_list(self) -> DeviceListResponse:
+    @get("/security/policy/devicelist", "data")
+    def get_device_list(self) -> SecurityPolicyDeviceList:
         ...
