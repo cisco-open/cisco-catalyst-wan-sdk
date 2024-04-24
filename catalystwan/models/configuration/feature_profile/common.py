@@ -59,6 +59,7 @@ ParcelType = Literal[
     "security-zone",
     "security-localapp",
     "security-data-ip-prefix",
+    "unified/advanced-inspection-profile",
 ]
 
 ProfileType = Literal[
