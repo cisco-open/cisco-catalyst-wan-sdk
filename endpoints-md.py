@@ -110,6 +110,7 @@ class CompositeTypeLink(CodeLink, MarkdownRenderer):
                 if payloadtype.__module__ == "builtins":
                     return CompositeTypeLink.text_only(payloadtype.__name__)
                 elif sourcefile := getsourcefile(payloadtype):
+                    print(payloadtype)
                     return CompositeTypeLink(
                         link_text=payloadtype.__name__,
                         sourcefile=create_sourcefile_link(sourcefile),

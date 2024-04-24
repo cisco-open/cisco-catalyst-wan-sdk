@@ -13,8 +13,7 @@ from catalystwan.api.feature_profile_api import (
 )
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
-from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
-from catalystwan.models.configuration.feature_profile.common import ParcelAssociationPayload, ParcelCreationResponse
+from catalystwan.models.configuration.feature_profile.parcel import ParcelAssociationPayload, ParcelCreationResponse
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
     AppqoeParcel,
     InterfaceEthernetParcel,
@@ -84,7 +83,7 @@ class TestSystemFeatureProfileAPI(unittest.TestCase):
     @parameterized.expand(system_endpoint_mapping.items())
     def test_get_method_with_valid_arguments(self, parcel, expected_path):
         # Act
-        self.api.get_parcels(self.profile_uuid, parcel, self.parcel_uuid)
+        self.api.get_parcel(self.profile_uuid, parcel, self.parcel_uuid)
 
         # Assert
         self.mock_endpoint.get_by_id.assert_called_once_with(self.profile_uuid, expected_path, self.parcel_uuid)
@@ -136,7 +135,10 @@ service_interface_parcels = [
         InterfaceGreParcel(
             parcel_name="TestGreParcel",
             parcel_description="Test Gre Parcel",
-            basic=BasicGre(if_name=as_global("gre1"), tunnel_destination=as_global(IPv4Address("4.4.4.4"))),
+            basic=BasicGre(
+                if_name=as_global("gre1"),
+                tunnel_destination=as_global(IPv4Address("4.4.4.4")),
+            ),
         ),
     ),
     (
@@ -230,7 +232,10 @@ class TestServiceFeatureProfileAPI(unittest.TestCase):
         # Assert
         self.mock_endpoint.create_service_parcel.assert_called_once_with(self.profile_uuid, parcel_type, parcel)
         self.mock_endpoint.associate_parcel_with_vpn.assert_called_once_with(
-            self.profile_uuid, self.vpn_uuid, parcel_type, ParcelAssociationPayload(parcel_id=self.parcel_uuid)
+            self.profile_uuid,
+            self.vpn_uuid,
+            parcel_type,
+            ParcelAssociationPayload(parcel_id=self.parcel_uuid),
         )
 
 
