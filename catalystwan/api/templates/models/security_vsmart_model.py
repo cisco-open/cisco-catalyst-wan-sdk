@@ -10,16 +10,23 @@ from catalystwan.api.templates.feature_template import FeatureTemplate
 
 
 class Protocol(str, Enum):
-    DTLS: str = "dtls"
-    TLS: str = "tls"
+    DTLS = "dtls"
+    TLS = "tls"
 
 
 class SecurityvSmart(FeatureTemplate):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+    _docs_description: str = "Security settings for vSmart controller"
 
-    protocol: Optional[Protocol] = Field(default=None, json_schema_extra={"data_path": ["control"]})
+    protocol: Optional[Protocol] = Field(
+        default=None,
+        json_schema_extra={"data_path": ["control"]},
+        description="The security protocol used for control plane communication",
+    )
     tls_port: Optional[int] = Field(
-        default=None, json_schema_extra={"vmanage_key": "tls-port", "data_path": ["control"]}
+        default=None,
+        json_schema_extra={"vmanage_key": "tls-port", "data_path": ["control"]},
+        description="The port used for TLS communications",
     )
     payload_path: ClassVar[Path] = Path(__file__).parent / "DEPRECATED"
     type: ClassVar[str] = "security-vsmart"

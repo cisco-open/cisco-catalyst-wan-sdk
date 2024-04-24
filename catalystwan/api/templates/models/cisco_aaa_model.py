@@ -106,7 +106,7 @@ class TacacsGroup(FeatureTemplateValidator):
 
 class CiscoAAAModel(FeatureTemplate):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-    docs_description: str = Field(exclude=True, description="Cisco AAA Feature Template configuration.")
+    _docs_description: str = "Cisco AAA Feature Template configuration"
 
     user: Optional[List[User]] = Field(default=False, description="List of user configurations")
     authentication_group: bool = Field(
