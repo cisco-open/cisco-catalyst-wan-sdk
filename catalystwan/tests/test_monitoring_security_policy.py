@@ -10,14 +10,16 @@ from catalystwan.models.monitoring.security_policy import DeviceListResponse
 class TestMonitoringSecurityPolicy(unittest.TestCase):
     def setUp(self) -> None:
         self.mock_device_list_data = {
-            "amp_down": ["2.2.2.2"],
-            "amp_up": ["3.3.3.3"],
-            "ips_down": ["2.2.2.2"],
-            "ips_up": ["1.1.1.1"],
-            "urlf_down": ["3.3.3.3"],
-            "urlf_up": ["1.1.1.1", "2.2.2.2"],
-            "zbfw_down": [],
-            "zbfw_up": ["1.1.1.1", "2.2.2.2", "3.3.3.3"]
+            "data": {
+                "amp_down": ["2.2.2.2"],
+                "amp_up": ["3.3.3.3"],
+                "ips_down": ["2.2.2.2"],
+                "ips_up": ["1.1.1.1"],
+                "urlf_down": ["3.3.3.3"],
+                "urlf_up": ["1.1.1.1", "2.2.2.2"],
+                "zbfw_down": [],
+                "zbfw_up": ["1.1.1.1", "2.2.2.2", "3.3.3.3"]
+            }
         }
 
     @patch("catalystwan.session.ManagerSession")
@@ -39,22 +41,22 @@ class TestMonitoringSecurityPolicy(unittest.TestCase):
 
         # Assert
         self.assertIsInstance(response, DeviceListResponse)
-        self.assertEqual(response.get_amp_down, self.mock_device_list_data["amp_down"])
-        self.assertEqual(response.get_amp_down, ["2.2.2.2"])
-        self.assertEqual(response.get_amp_up, self.mock_device_list_data["amp_up"])
-        self.assertEqual(response.get_amp_up, ["3.3.3.3"])
-        self.assertEqual(response.get_ips_down, self.mock_device_list_data["ips_down"])
-        self.assertEqual(response.get_ips_down, ["2.2.2.2"])
-        self.assertEqual(response.get_ips_up, self.mock_device_list_data["ips_up"])
-        self.assertEqual(response.get_ips_up, ["1.1.1.1"])
-        self.assertEqual(response.get_urlf_down, self.mock_device_list_data["urlf_down"])
-        self.assertEqual(response.get_urlf_down, ["3.3.3.3"])
-        self.assertEqual(response.get_urlf_up, self.mock_device_list_data["urlf_up"])
-        self.assertEqual(response.get_urlf_up, ["1.1.1.1", "2.2.2.2"])
-        self.assertEqual(response.get_zbfw_down, self.mock_device_list_data["zbfw_down"])
-        self.assertEqual(response.get_zbfw_down, [])
-        self.assertEqual(response.get_zbfw_up, self.mock_device_list_data["zbfw_up"])
-        self.assertEqual(response.get_zbfw_up, ["1.1.1.1", "2.2.2.2", "3.3.3.3"])
+        self.assertEqual(response.get_amp_down(), self.mock_device_list_data["data"]["amp_down"])
+        self.assertEqual(response.get_amp_down(), ["2.2.2.2"])
+        self.assertEqual(response.get_amp_up(), self.mock_device_list_data["data"]["amp_up"])
+        self.assertEqual(response.get_amp_up(), ["3.3.3.3"])
+        self.assertEqual(response.get_ips_down(), self.mock_device_list_data["data"]["ips_down"])
+        self.assertEqual(response.get_ips_down(), ["2.2.2.2"])
+        self.assertEqual(response.get_ips_up(), self.mock_device_list_data["data"]["ips_up"])
+        self.assertEqual(response.get_ips_up(), ["1.1.1.1"])
+        self.assertEqual(response.get_urlf_down(), self.mock_device_list_data["data"]["urlf_down"])
+        self.assertEqual(response.get_urlf_down(), ["3.3.3.3"])
+        self.assertEqual(response.get_urlf_up(), self.mock_device_list_data["data"]["urlf_up"])
+        self.assertEqual(response.get_urlf_up(), ["1.1.1.1", "2.2.2.2"])
+        self.assertEqual(response.get_zbfw_down(), self.mock_device_list_data["data"]["zbfw_down"])
+        self.assertEqual(response.get_zbfw_down(), [])
+        self.assertEqual(response.get_zbfw_up(), self.mock_device_list_data["data"]["zbfw_up"])
+        self.assertEqual(response.get_zbfw_up(), ["1.1.1.1", "2.2.2.2", "3.3.3.3"])
 
         # Ensure the request method was called
         mock_session_instance.request.assert_called_once()
