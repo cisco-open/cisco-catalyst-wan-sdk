@@ -11,6 +11,7 @@ from catalystwan.utils.timezone import Timezone
 
 class SystemVsmart(FeatureTemplate):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+    _docs_description: str = "Security settings for vSmart controller"
 
     timezone: Optional[Timezone] = Field(default=None, description="The timezone setting for the vSmart controller")
     idle_timeout: Optional[int] = Field(

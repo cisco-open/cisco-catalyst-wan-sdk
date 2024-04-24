@@ -28,7 +28,7 @@ class TlsProfile(FeatureTemplateValidator):
     auth_type: AuthType = Field(
         json_schema_extra={"vmanage_key": "auth-type"}, description="The authentication type for the TLS connection"
     )
-    ciphersuite_list: Optional[List] = Field(
+    ciphersuite_list: Optional[List[str]] = Field(
         default=None,
         json_schema_extra={"data_path": ["ciphersuite"], "vmanage_key": "ciphersuite-list"},
         description="The list of ciphersuites for the TLS connection",
