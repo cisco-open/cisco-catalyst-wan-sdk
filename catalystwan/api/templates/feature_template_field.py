@@ -122,7 +122,6 @@ class FeatureTemplateField(BaseModel):
             output["vipType"] = vip_type or FeatureTemplateOptionType.CONSTANT.value
             children_output = []
             for obj in value:
-                print(obj)
                 obj_json_dump = obj.model_dump(mode="json")
                 child_payload: dict = {}
                 for child in self.children:  # Child in schema
