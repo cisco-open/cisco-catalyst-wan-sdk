@@ -34,6 +34,7 @@ from catalystwan.models.policy.list.protocol_name import ProtocolNameList, Proto
 from catalystwan.models.policy.list.region import RegionList, RegionListInfo
 from catalystwan.models.policy.list.site import SiteList, SiteListInfo
 from catalystwan.models.policy.list.sla import SLAClassList, SLAClassListInfo
+from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList, ThreatGridApiKeyListInfo
 from catalystwan.models.policy.list.tloc import TLOCList, TLOCListInfo
 from catalystwan.models.policy.list.trunkgroup import TrunkGroupList, TrunkGroupListInfo
 from catalystwan.models.policy.list.url import URLAllowList, URLAllowListInfo, URLBlockList, URLBlockListInfo
@@ -115,6 +116,7 @@ AnyPolicyList = Annotated[
         RegionList,
         SiteList,
         SLAClassList,
+        ThreatGridApiKeyList,
         TLOCList,
         TrunkGroupList,
         URLBlockList,
@@ -151,6 +153,7 @@ AnyPolicyListInfo = Annotated[
         RegionListInfo,
         SiteListInfo,
         SLAClassListInfo,
+        ThreatGridApiKeyListInfo,
         TLOCListInfo,
         TrunkGroupListInfo,
         URLAllowListInfo,
@@ -232,6 +235,7 @@ __all__ = (
     "ServiceType",
     "SiteList",
     "SLAClassList",
+    "ThreatGridApiKeyList",
     "TLOCActionType",
     "TLOCList",
     "TrunkGroupList",

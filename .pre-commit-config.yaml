@@ -13,7 +13,7 @@ repos:
         args: ["-l", "120", "--profile", "black"]
 
   - repo: https://github.com/hadialqattan/pycln
-    rev: v1.3.3
+    rev: v2.4.0
     hooks:
       - id: pycln
         args: ["--all"]
