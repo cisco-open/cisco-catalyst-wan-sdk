@@ -10,10 +10,12 @@ from pydantic import Json
 from catalystwan.endpoints.configuration.feature_profile.sdwan.other import OtherFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
+from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
 from catalystwan.models.configuration.feature_profile.sdwan.other import AnyOtherParcel
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.url import URLParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import MulticastParcel
+from catalystwan.models.configuration.feature_profile.sdwan.transport import AnyTransportParcel
 from catalystwan.typed_list import DataSequence
 
 if TYPE_CHECKING:
@@ -83,6 +85,7 @@ class SDWANFeatureProfilesAPI:
         self.system = SystemFeatureProfileAPI(session=session)
         self.other = OtherFeatureProfileAPI(session=session)
         self.service = ServiceFeatureProfileAPI(session=session)
+        self.transport = TransportFeatureProfileAPI(session=session)
 
 
 class FeatureProfileAPI(Protocol):
@@ -133,6 +136,46 @@ class SDRoutingCLIFeatureProfileAPI(FeatureProfileAPI):
         Deletes CLI feature-profile
         """
         self.endpoint.delete_cli_feature_profile(cli_fp_id=fp_id)
+
+
+class TransportFeatureProfileAPI:
+    """
+    SDWAN Feature Profile Transport APIs
+    """
+
+    def __init__(self, session: ManagerSession):
+        self.session = session
+        self.endpoint = TransportFeatureProfile(session)
+
+    def get_profiles(
+        self, limit: Optional[int] = None, offset: Optional[int] = None
+    ) -> DataSequence[FeatureProfileInfo]:
+        """
+        Get all Transport Feature Profiles
+        """
+        payload = GetFeatureProfilesPayload(limit=limit if limit else None, offset=offset if offset else None)
+
+        return self.endpoint.get_transport_feature_profiles(payload)
+
+    def create_profile(self, name: str, description: str) -> FeatureProfileCreationResponse:
+        """
+        Create Transport Feature Profile
+        """
+        payload = FeatureProfileCreationPayload(name=name, description=description)
+        return self.endpoint.create_transport_feature_profile(payload)
+
+    def delete_profile(self, profile_id: UUID) -> None:
+        """
+        Delete Transport Feature Profile
+        """
+        self.endpoint.delete_transport_feature_profile(profile_id)
+
+    def create_parcel(self, profile_id: UUID, payload: AnyTransportParcel) -> ParcelCreationResponse:
+        """
+        Create Transport Parcel for selected profile_id based on payload type
+        """
+
+        return self.endpoint.create_transport_parcel(profile_id, payload._get_parcel_type(), payload)
 
 
 class OtherFeatureProfileAPI:
