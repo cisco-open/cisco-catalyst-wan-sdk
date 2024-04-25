@@ -228,7 +228,6 @@ class Ospfv3Ipv4TemplateSubconverter(BaseOspfv3TemplateSubconverter):
             return None
         redistribute_list = []
         for redistribute in redistributes:
-            print(redistribute)
             redistribute_list.append(
                 RedistributedRoute(
                     protocol=as_global(redistribute.get("protocol").value, RedistributeProtocol),
@@ -251,7 +250,6 @@ class Ospfv3Ipv6TemplateSubconverter(BaseOspfv3TemplateSubconverter):
             return None
         range_list = []
         for range_ in ranges:
-            print(range_)
             range_list.append(
                 SummaryRouteIPv6(
                     network=range_.get("address"),
@@ -267,7 +265,6 @@ class Ospfv3Ipv6TemplateSubconverter(BaseOspfv3TemplateSubconverter):
             return None
         redistribute_list = []
         for redistribute in redistributes:
-            print(redistribute)
             if redistribute.get("protocol").value not in get_args(RedistributeProtocolIPv6):
                 continue
             redistribute_list.append(

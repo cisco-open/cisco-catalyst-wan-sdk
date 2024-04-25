@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from ipaddress import IPv4Address
-from typing import Generic, List, Literal, Optional, TypeVar, Union
+from typing import List, Literal, Optional, Union
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -10,60 +10,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
 from catalystwan.models.configuration.common import Solution
 
-T = TypeVar("T")
-
-
 IPV4Address = str
 IPv6Address = str
-
-ParcelType = Literal[
-    "appqoe",
-    "as-path",
-    "lan/vpn",
-    "lan/vpn/interface/ethernet",
-    "lan/vpn/interface/gre",
-    "lan/vpn/interface/ipsec",
-    "lan/vpn/interface/svi",
-    "dhcp-server",
-    "tracker",
-    "trackergroup",
-    "routing/bgp",
-    "routing/eigrp",
-    "routing/multicast",
-    "routing/ospf",
-    "routing/ospfv3/ipv4",
-    "routing/ospfv3/ipv6",
-    "wirelesslan",
-    "switchport",
-    "app-probe",
-    "app-list",
-    "color",
-    "data-prefix",
-    "expanded-community",
-    "class",
-    "data-ipv6-prefix",
-    "ipv6-prefix",
-    "prefix",
-    "policer",
-    "preferred-color-group",
-    "sla-class",
-    "tloc",
-    "standard-community",
-    "security-localdomain",
-    "security-fqdn",
-    "security-ipssignature",
-    "security-urllist",
-    "security-urllist",
-    "security-port",
-    "security-protocolname",
-    "security-geolocation",
-    "security-zone",
-    "security-localapp",
-    "security-data-ip-prefix",
-    "unified/advanced-malware-protection",
-    "unified/intrusion-prevention",
-    "unified/url-filtering",
-]
 
 ProfileType = Literal[
     "transport",
@@ -129,41 +77,6 @@ class FeatureProfileCreationResponse(BaseModel):
     id: UUID
 
 
-class ParcelCreationResponse(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-
-    id: UUID = Field(serialization_alias="parcelId", validation_alias="parcelId")
-
-
-class Parcel(BaseModel, Generic[T]):
-    parcel_id: str = Field(alias="parcelId")
-    parcel_type: ParcelType = Field(alias="parcelType")
-    created_by: str = Field(alias="createdBy")
-    last_updated_by: str = Field(alias="lastUpdatedBy")
-    created_on: int = Field(alias="createdOn")
-    last_updated_on: int = Field(alias="lastUpdatedOn")
-    payload: T
-
-
-class Header(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
-    generated_on: int = Field(alias="generatedOn")
-
-
-class ParcelInfo(BaseModel, Generic[T]):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    header: Header
-    data: List[Parcel[T]]
-
-
-class ParcelAssociationPayload(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
-    parcel_id: UUID = Field(serialization_alias="parcelId", validation_alias="parcelId")
-
-
 class Prefix(BaseModel):
     address: Union[Variable, Global[str], Global[IPv4Address], Global[IPv6Address]]
     mask: Union[Variable, Global[str]]
@@ -175,20 +88,9 @@ class SchemaTypeQuery(BaseModel):
     schema_type: SchemaType = Field(alias="schemaType")
 
 
-class ParcelId(BaseModel):
-    id: str = Field(alias="parcelId")
-
-
 class GetFeatureProfilesPayload(BaseModel):
     limit: Optional[int]
     offset: Optional[int]
-
-
-class ParcelSequence(BaseModel, Generic[T]):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    header: Header
-    data: List[Parcel[T]]
 
 
 class DNSIPv4(BaseModel):
