@@ -4,7 +4,6 @@
 
 from catalystwan.endpoints import APIEndpoints, get
 from catalystwan.models.monitoring.security_policy import SecurityPolicyDeviceList
-from catalystwan.typed_list import DataSequence
 
 
 class MonitoringSecurityPolicy(APIEndpoints):
