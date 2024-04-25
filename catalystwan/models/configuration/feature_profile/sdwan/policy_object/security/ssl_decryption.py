@@ -24,7 +24,12 @@ class CaCertBundle(BaseModel):
 
 class SslDecryptionParcel(_ParcelBase):
     type_: Literal["unified/ssl-decryption"] = Field(default="unified/ssl-decryption", exclude=True)
-    description: str = ""
+    parcel_description: str = Field(
+        default="",
+        serialization_alias="description",
+        validation_alias="description",
+        description="Set the parcel description",
+    )
     ssl_enable: Global[bool] = Field(default=Global[bool](value=True), validation_alias=AliasPath("data", "sslEnable"))
     expired_certificate: Global[Action] = Field(
         default=Global[Action](value="drop"), validation_alias=AliasPath("data", "expiredCertificate")
