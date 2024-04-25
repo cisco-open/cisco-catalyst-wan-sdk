@@ -63,6 +63,7 @@ from catalystwan.endpoints.configuration.policy.list.protocol_name import (
 from catalystwan.endpoints.configuration.policy.list.region import ConfigurationPolicyRegionList, RegionListInfo
 from catalystwan.endpoints.configuration.policy.list.site import ConfigurationPolicySiteList, SiteListInfo
 from catalystwan.endpoints.configuration.policy.list.sla import ConfigurationPolicySLAClassList, SLAClassListInfo
+from catalystwan.endpoints.configuration.policy.list.threat_grid_api_key import ConfigurationPolicyThreatGridApiKeyList
 from catalystwan.endpoints.configuration.policy.list.tloc import ConfigurationPolicyTLOCList, TLOCListInfo
 from catalystwan.endpoints.configuration.policy.list.trunkgroup import ConfigurationPolicyTrunkGroupList
 from catalystwan.endpoints.configuration.policy.list.url_allow_list import (
@@ -142,6 +143,7 @@ from catalystwan.models.policy.list.geo_location import GeoLocationListInfo
 from catalystwan.models.policy.list.ips_signature import IPSSignatureListInfo
 from catalystwan.models.policy.list.ipv6_prefix import IPv6PrefixListInfo
 from catalystwan.models.policy.list.local_domain import LocalDomainListInfo
+from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList, ThreatGridApiKeyListInfo
 from catalystwan.models.policy.list.trunkgroup import TrunkGroupList, TrunkGroupListInfo
 from catalystwan.models.policy.localized import (
     LocalizedPolicy,
@@ -193,6 +195,7 @@ POLICY_LIST_ENDPOINTS_MAP: Mapping[type, type] = {
     RegionList: ConfigurationPolicyRegionList,
     SiteList: ConfigurationPolicySiteList,
     SLAClassList: ConfigurationPolicySLAClassList,
+    ThreatGridApiKeyList: ConfigurationPolicyThreatGridApiKeyList,
     TLOCList: ConfigurationPolicyTLOCList,
     TrunkGroupList: ConfigurationPolicyTrunkGroupList,
     URLBlockList: ConfigurationPolicyURLBlockList,
@@ -451,6 +454,10 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[ThreatGridApiKeyList]) -> DataSequence[ThreatGridApiKeyListInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[TLOCList]) -> DataSequence[TLOCListInfo]:
         ...
 
@@ -570,6 +577,10 @@ class PolicyListsAPI:
 
     @overload
     def get(self, type: Type[SLAClassList], id: UUID) -> SLAClassListInfo:
+        ...
+
+    @overload
+    def get(self, type: Type[ThreatGridApiKeyList], id: UUID) -> ThreatGridApiKeyListInfo:
         ...
 
     @overload
