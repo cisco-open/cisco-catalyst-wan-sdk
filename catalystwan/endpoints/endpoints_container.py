@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-
 from catalystwan.endpoints.administration_user_and_group import AdministrationUserAndGroup
 from catalystwan.endpoints.certificate_management_device import CertificateManagementDevice
 from catalystwan.endpoints.certificate_management_vmanage import CertificateManagementVManage
