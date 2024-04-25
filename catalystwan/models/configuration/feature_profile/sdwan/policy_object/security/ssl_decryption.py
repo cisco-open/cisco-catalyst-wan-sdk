@@ -16,7 +16,7 @@ CaTpLabel = Literal["PROXY-SIGNING-CA"]
 
 
 class CaCertBundle(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     default: Global[bool] = Field(default=Global[bool](value=True), validation_alias="default")
     file_name: Global[str] = Field(default=None, validation_alias="fileName")
     bundle_string: Global[str] = Field(default=None, validation_alias="bundle_string")
