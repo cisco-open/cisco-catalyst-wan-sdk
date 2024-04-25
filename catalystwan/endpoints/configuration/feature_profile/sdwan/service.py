@@ -10,9 +10,8 @@ from catalystwan.models.configuration.feature_profile.common import (
     FeatureProfileCreationResponse,
     FeatureProfileInfo,
     GetFeatureProfilesPayload,
-    ParcelAssociationPayload,
-    ParcelCreationResponse,
 )
+from catalystwan.models.configuration.feature_profile.parcel import ParcelAssociationPayload, ParcelCreationResponse
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
     AnyLanVpnInterfaceParcel,
     AnyTopLevelServiceParcel,
