@@ -1,7 +1,8 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from pydantic import BaseModel, Field
 from typing import List
+
+from pydantic import BaseModel, Field
 
 
 class SecurityPolicyDeviceList(BaseModel):
