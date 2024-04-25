@@ -5,7 +5,6 @@ from typing import List
 
 
 class SecurityPolicyDeviceList(BaseModel):
-    #data: dict = Field(..., alias="data")
     amp_down: List[str] = Field(..., alias="amp_down")
     amp_up: List[str] = Field(..., alias="amp_up")
     ips_down: List[str] = Field(..., alias="ips_down")
