@@ -44,6 +44,7 @@ from catalystwan.models.policy.list.zone import ZoneList, ZoneListInfo
 from .centralized import CentralizedPolicy, TrafficDataDirection
 from .definition.access_control_list import AclPolicy, AclPolicyGetResponse
 from .definition.access_control_list_ipv6 import AclIPv6Policy, AclIPv6PolicyGetResponse
+from .definition.amp import AdvancedMalwareProtectionPolicy, AdvancedMalwareProtectionPolicyGetResponse
 from .definition.control import ControlPolicy, ControlPolicyGetResponse
 from .definition.device_access import DeviceAccessPolicy, DeviceAccessPolicyGetResponse
 from .definition.device_access_ipv6 import DeviceAccessIPv6Policy, DeviceAccessIPv6PolicyGetResponse
@@ -74,6 +75,7 @@ AnyPolicyDefinition = Annotated[
     Union[
         AclIPv6Policy,
         AclPolicy,
+        AdvancedMalwareProtectionPolicy,
         ControlPolicy,
         DeviceAccessIPv6Policy,
         DeviceAccessPolicy,
@@ -166,6 +168,7 @@ AnyPolicyListInfo = Annotated[
 
 AnyPolicyDefinitionInfo = Annotated[
     Union[
+        AdvancedMalwareProtectionPolicyGetResponse,
         AclIPv6PolicyGetResponse,
         AclPolicyGetResponse,
         ControlPolicyGetResponse,
@@ -188,6 +191,7 @@ AnyPolicyDefinitionInfo = Annotated[
 __all__ = (
     "AclIPv6Policy",
     "AclPolicy",
+    "AdvancedMalwareProtectionPolicy",
     "AnyPolicyList",
     "AnyPolicyDefinitionInfo",
     "AppList",
