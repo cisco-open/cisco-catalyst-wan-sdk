@@ -59,7 +59,9 @@ class ConfigGroup(BaseModel):
     )
     origin: Optional[str] = None
     topology: Optional[str] = None
-    full_config_cli: bool = Field(serialization_alias="fullConfigCli", validation_alias="fullConfigCli")
+    full_config_cli: Optional[bool] = Field(
+        default=None, serialization_alias="fullConfigCli", validation_alias="fullConfigCli"
+    )
 
 
 class ConfigGroupResponsePayload(BaseModel):

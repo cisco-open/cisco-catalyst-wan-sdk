@@ -120,16 +120,16 @@ class OspfParcel(_ParcelBase):
     type_: Literal["routing/ospf"] = Field(default="routing/ospf", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    router_id: Optional[Union[Global[str], Global[IPv4Address], Variable, Default[None]]] = Field(
+    router_id: Union[Global[str], Global[IPv4Address], Variable, Default[None]] = Field(
         validation_alias=AliasPath("data", "routerId"), default=Default[None](value=None)
     )
-    reference_bandwidth: Optional[Union[Global[int], Variable, Default[int]]] = Field(
+    reference_bandwidth: Union[Global[int], Variable, Default[int]] = Field(
         validation_alias=AliasPath("data", "referenceBandwidth"), default=as_default(100)
     )
-    rfc1583: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(
-        validation_alias=AliasPath("data", "rfc1583"), default=as_default(False)
+    rfc1583: Union[Global[bool], Variable, Default[bool]] = Field(
+        validation_alias=AliasPath("data", "rfc1583"), default=as_default(True)
     )
-    originate: Optional[Union[Global[bool], Default[bool]]] = Field(
+    originate: Union[Global[bool], Default[bool]] = Field(
         validation_alias=AliasPath("data", "originate"), default=as_default(False)
     )
     always: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(

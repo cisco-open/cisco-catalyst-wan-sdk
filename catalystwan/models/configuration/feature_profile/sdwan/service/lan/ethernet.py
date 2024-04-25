@@ -293,7 +293,7 @@ class AdvancedEthernetAttributes(BaseModel):
 
 
 class InterfaceEthernetParcel(_ParcelBase):
-    type_: Literal["ethernet"] = Field(default="ethernet", exclude=True)
+    type_: Literal["interface/ethernet"] = Field(default="interface/ethernet", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     shutdown: Union[Global[bool], Variable, Default[bool]] = Field(

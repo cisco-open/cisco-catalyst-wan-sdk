@@ -42,6 +42,7 @@ class InterfaceSviTemplateConverter:
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceSviParcel:
         values = deepcopy(template_values)
         self.configure_interface_name(values)
+        self.configure_svi_description(values)
         self.configure_ipv4_address(values)
         self.configure_ipv6_address(values)
         self.configure_arp(values)

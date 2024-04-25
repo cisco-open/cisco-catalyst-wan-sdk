@@ -445,7 +445,7 @@ class StaticNat(BaseModel):
         serialization_alias="sourceIp", validation_alias="sourceIp"
     )
     translated_source_ip: Union[Variable, Global[str], Global[IPv4Address]] = Field(
-        serialization_alias="translatedSourceIp", validation_alias="translatedSourceIp"
+        serialization_alias="TranslatedSourceIp", validation_alias="TranslatedSourceIp"
     )
     static_nat_direction: Union[Variable, Global[Direction]] = Field(
         serialization_alias="staticNatDirection", validation_alias="staticNatDirection"

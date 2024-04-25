@@ -6,9 +6,15 @@ from uuid import uuid4
 from parameterized import parameterized  # type: ignore
 
 from catalystwan.api.configuration_groups.parcel import Global, as_global, as_variable
-from catalystwan.api.feature_profile_api import ServiceFeatureProfileAPI, SystemFeatureProfileAPI
+from catalystwan.api.feature_profile_api import (
+    ServiceFeatureProfileAPI,
+    SystemFeatureProfileAPI,
+    TransportFeatureProfileAPI,
+)
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
+from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
+from catalystwan.models.configuration.feature_profile.parcel import ParcelAssociationPayload, ParcelCreationResponse
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
     AppqoeParcel,
     InterfaceEthernetParcel,
@@ -41,6 +47,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.system import (
     SecurityParcel,
     SNMPParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.transport import ManagementVpn
 
 system_endpoint_mapping = {
     AAAParcel: "aaa",
@@ -77,7 +84,7 @@ class TestSystemFeatureProfileAPI(unittest.TestCase):
     @parameterized.expand(system_endpoint_mapping.items())
     def test_get_method_with_valid_arguments(self, parcel, expected_path):
         # Act
-        self.api.get_parcels(self.profile_uuid, parcel, self.parcel_uuid)
+        self.api.get_parcel(self.profile_uuid, parcel, self.parcel_uuid)
 
         # Assert
         self.mock_endpoint.get_by_id.assert_called_once_with(self.profile_uuid, expected_path, self.parcel_uuid)
@@ -125,15 +132,18 @@ service_endpoint_mapping = {
 
 service_interface_parcels = [
     (
-        "gre",
+        "interface/gre",
         InterfaceGreParcel(
             parcel_name="TestGreParcel",
             parcel_description="Test Gre Parcel",
-            basic=BasicGre(if_name=as_global("gre1"), tunnel_destination=as_global(IPv4Address("4.4.4.4"))),
+            basic=BasicGre(
+                if_name=as_global("gre1"),
+                tunnel_destination=as_global(IPv4Address("4.4.4.4")),
+            ),
         ),
     ),
     (
-        "svi",
+        "interface/svi",
         InterfaceSviParcel(
             parcel_name="TestSviParcel",
             parcel_description="Test Svi Parcel",
@@ -142,7 +152,7 @@ service_interface_parcels = [
         ),
     ),
     (
-        "ethernet",
+        "interface/ethernet",
         InterfaceEthernetParcel(
             parcel_name="TestEthernetParcel",
             parcel_description="Test Ethernet Parcel",
@@ -151,7 +161,7 @@ service_interface_parcels = [
         ),
     ),
     (
-        "ipsec",
+        "interface/ipsec",
         InterfaceIpsecParcel(
             parcel_name="TestIpsecParcel",
             parcel_description="Test Ipsec Parcel",
@@ -171,6 +181,16 @@ service_interface_parcels = [
             mtu_v6=as_variable("{{test}}"),
         ),
     ),
+]
+
+service_vpn_sub_parcels = [
+    (
+        "routing/multicast",
+        MulticastParcel(
+            parcel_name="TestMulticastParcel",
+            parcel_description="Test Multicast Parcel",
+        ),
+    )
 ]
 
 
@@ -198,6 +218,47 @@ class TestServiceFeatureProfileAPI(unittest.TestCase):
         self.api.create_parcel(self.profile_uuid, parcel, self.vpn_uuid)
 
         # Assert
-        self.mock_endpoint.create_lan_vpn_interface_parcel.assert_called_once_with(
+        self.mock_endpoint.create_lan_vpn_sub_parcel.assert_called_once_with(
             self.profile_uuid, self.vpn_uuid, parcel_type, parcel
         )
+
+    @parameterized.expand(service_vpn_sub_parcels)
+    def test_post_method_create_then_assigin_subparcel(self, parcel_type, parcel):
+        # Arrange
+        self.mock_endpoint.create_service_parcel.return_value = ParcelCreationResponse(id=self.parcel_uuid)
+
+        # Act
+        self.api.create_parcel(self.profile_uuid, parcel, self.vpn_uuid)
+
+        # Assert
+        self.mock_endpoint.create_service_parcel.assert_called_once_with(self.profile_uuid, parcel_type, parcel)
+        self.mock_endpoint.associate_parcel_with_vpn.assert_called_once_with(
+            self.profile_uuid,
+            self.vpn_uuid,
+            parcel_type,
+            ParcelAssociationPayload(parcel_id=self.parcel_uuid),
+        )
+
+
+transport_enpoint_mapping = {
+    ManagementVpn: "management/vpn",
+}
+
+
+class TestTransportFeatureProfileAPI(unittest.TestCase):
+    def setUp(self):
+        self.profile_uuid = uuid4()
+        self.vpn_uuid = uuid4()
+        self.parcel_uuid = uuid4()
+        self.mock_session = Mock()
+        self.mock_endpoint = Mock(spec=TransportFeatureProfile)
+        self.api = TransportFeatureProfileAPI(self.mock_session)
+        self.api.endpoint = self.mock_endpoint
+
+    @parameterized.expand(transport_enpoint_mapping.items())
+    def test_post_method_parcel(self, parcel, parcel_type):
+        # Act
+        self.api.create_parcel(self.profile_uuid, parcel)
+
+        # Assert
+        self.mock_endpoint.create_transport_parcel.assert_called_once_with(self.profile_uuid, parcel_type, parcel)
