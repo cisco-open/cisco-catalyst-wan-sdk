@@ -13,6 +13,7 @@ from catalystwan.api.feature_profile_api import (
 )
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
+from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
 from catalystwan.models.configuration.feature_profile.parcel import ParcelAssociationPayload, ParcelCreationResponse
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
     AppqoeParcel,
