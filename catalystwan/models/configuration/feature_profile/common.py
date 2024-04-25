@@ -316,3 +316,11 @@ class WANIPv6StaticRoute(BaseModel):
 
 class WANService(BaseModel):
     service_type: Global[Literal["TE"]] = Field(alias="serviceType")
+
+
+class RefIdItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    ref_id: Global[str] = Field(..., serialization_alias="refId", validation_alias="refId")

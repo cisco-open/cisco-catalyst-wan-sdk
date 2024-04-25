@@ -5,7 +5,7 @@ from typing import List, Literal
 from pydantic import AliasPath, Field
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase
-from catalystwan.models.configuration.feature_profile.sdwan.transport.bgp import RefIdItem
+from catalystwan.models.configuration.feature_profile.common import RefIdItem
 
 WebCategories = Literal[
     "abortion",
