@@ -6,11 +6,11 @@ from pydantic import BaseModel, Field
 
 
 class SecurityPolicyDeviceList(BaseModel):
-    amp_down: List[str] = Field(..., alias="amp_down")
-    amp_up: List[str] = Field(..., alias="amp_up")
-    ips_down: List[str] = Field(..., alias="ips_down")
-    ips_up: List[str] = Field(..., alias="ips_up")
-    urlf_down: List[str] = Field(..., alias="urlf_down")
-    urlf_up: List[str] = Field(..., alias="urlf_up")
-    zbfw_down: List[str] = Field(..., serialization_alias="zbfw_down", validation_alias="zbfw_down")
-    zbfw_up: List[str] = Field(..., serialization_alias="zbfw_up", validation_alias="zbfw_up")
+    amp_down: List[str]
+    amp_up: List[str]
+    ips_down: List[str]
+    ips_up: List[str]
+    urlf_down: List[str]
+    urlf_up: List[str]
+    zbfw_down: List[str]
+    zbfw_up: List[str]
