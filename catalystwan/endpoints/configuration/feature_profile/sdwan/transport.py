@@ -14,6 +14,7 @@ from catalystwan.models.configuration.feature_profile.common import (
     GetFeatureProfilesPayload,
     SchemaTypeQuery,
 )
+from catalystwan.models.configuration.feature_profile.parcel import ParcelCreationResponse, ParcelId
 from catalystwan.models.configuration.feature_profile.sdwan.transport import (
     AnyTransportParcel,
     CellularControllerParcel,
