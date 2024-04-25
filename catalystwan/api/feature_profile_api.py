@@ -29,6 +29,8 @@ from catalystwan.models.configuration.feature_profile.common import (
     FeatureProfileCreationResponse,
     FeatureProfileInfo,
     GetFeatureProfilesPayload,
+)
+from catalystwan.models.configuration.feature_profile.parcel import (
     Parcel,
     ParcelAssociationPayload,
     ParcelCreationResponse,
@@ -357,22 +359,6 @@ class SystemFeatureProfileAPI:
     def get_parcels(
         self,
         profile_id: UUID,
-        parcel_type: Type[BFDParcel],
-    ) -> DataSequence[Parcel[BFDParcel]]:
-        ...
-
-    @overload
-    def get_parcels(
-        self,
-        profile_id: UUID,
-        parcel_type: Type[LoggingParcel],
-    ) -> DataSequence[Parcel[LoggingParcel]]:
-        ...
-
-    @overload
-    def get_parcels(
-        self,
-        profile_id: UUID,
         parcel_type: Type[BannerParcel],
     ) -> DataSequence[Parcel[BannerParcel]]:
         ...
@@ -389,6 +375,14 @@ class SystemFeatureProfileAPI:
     def get_parcels(
         self,
         profile_id: UUID,
+        parcel_type: Type[BFDParcel],
+    ) -> DataSequence[Parcel[BFDParcel]]:
+        ...
+
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
         parcel_type: Type[GlobalParcel],
     ) -> DataSequence[Parcel[GlobalParcel]]:
         ...
@@ -397,8 +391,8 @@ class SystemFeatureProfileAPI:
     def get_parcels(
         self,
         profile_id: UUID,
-        parcel_type: Type[NTPParcel],
-    ) -> DataSequence[Parcel[NTPParcel]]:
+        parcel_type: Type[LoggingParcel],
+    ) -> DataSequence[Parcel[LoggingParcel]]:
         ...
 
     @overload
@@ -407,6 +401,14 @@ class SystemFeatureProfileAPI:
         profile_id: UUID,
         parcel_type: Type[MRFParcel],
     ) -> DataSequence[Parcel[MRFParcel]]:
+        ...
+
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[NTPParcel],
+    ) -> DataSequence[Parcel[NTPParcel]]:
         ...
 
     @overload
@@ -430,107 +432,6 @@ class SystemFeatureProfileAPI:
         self,
         profile_id: UUID,
         parcel_type: Type[SNMPParcel],
-    ) -> DataSequence[Parcel[SNMPParcel]]:
-        ...
-
-    # get by id
-
-    @overload
-    def get_parcels(
-        self,
-        profile_id: UUID,
-        parcel_type: Type[AAAParcel],
-        parcel_id: UUID,
-    ) -> DataSequence[Parcel[AAAParcel]]:
-        ...
-
-    @overload
-    def get_parcels(
-        self,
-        profile_id: UUID,
-        parcel_type: Type[BFDParcel],
-        parcel_id: UUID,
-    ) -> DataSequence[Parcel[BFDParcel]]:
-        ...
-
-    @overload
-    def get_parcels(
-        self,
-        profile_id: UUID,
-        parcel_type: Type[LoggingParcel],
-        parcel_id: UUID,
-    ) -> DataSequence[Parcel[LoggingParcel]]:
-        ...
-
-    @overload
-    def get_parcels(
-        self,
-        profile_id: UUID,
-        parcel_type: Type[BannerParcel],
-        parcel_id: UUID,
-    ) -> DataSequence[Parcel[BannerParcel]]:
-        ...
-
-    @overload
-    def get_parcels(
-        self,
-        profile_id: UUID,
-        parcel_type: Type[BasicParcel],
-        parcel_id: UUID,
-    ) -> DataSequence[Parcel[BasicParcel]]:
-        ...
-
-    @overload
-    def get_parcels(
-        self,
-        profile_id: UUID,
-        parcel_type: Type[GlobalParcel],
-        parcel_id: UUID,
-    ) -> DataSequence[Parcel[GlobalParcel]]:
-        ...
-
-    @overload
-    def get_parcels(
-        self,
-        profile_id: UUID,
-        parcel_type: Type[NTPParcel],
-        parcel_id: UUID,
-    ) -> DataSequence[Parcel[NTPParcel]]:
-        ...
-
-    @overload
-    def get_parcels(
-        self,
-        profile_id: UUID,
-        parcel_type: Type[MRFParcel],
-        parcel_id: UUID,
-    ) -> DataSequence[Parcel[MRFParcel]]:
-        ...
-
-    @overload
-    def get_parcels(
-        self,
-        profile_id: UUID,
-        parcel_type: Type[OMPParcel],
-        parcel_id: UUID,
-    ) -> DataSequence[Parcel[OMPParcel]]:
-        ...
-
-    @overload
-    def get_parcels(
-        self,
-        profile_id: UUID,
-        parcel_type: Type[SecurityParcel],
-        parcel_id: UUID,
-    ) -> DataSequence[Parcel[SecurityParcel]]:
-        ...
-
-    @overload
-    def get_parcels(
-        self,
-        profile_id: UUID,
-        parcel_type: Type[SNMPParcel],
-        parcel_id: UUID,
     ) -> DataSequence[Parcel[SNMPParcel]]:
         ...
 
@@ -538,14 +439,120 @@ class SystemFeatureProfileAPI:
         self,
         profile_id: UUID,
         parcel_type: Type[AnySystemParcel],
-        parcel_id: Union[UUID, None] = None,
-    ) -> DataSequence[Parcel[Any]]:
+    ) -> DataSequence:
         """
-        Get all System Parcels for selected profile_id and selected type or get one System Parcel given parcel id
+        Get all System Parcels given profile id and parcel type
         """
+        return self.endpoint.get_all(profile_id, parcel_type._get_parcel_type())
 
-        if not parcel_id:
-            return self.endpoint.get_all(profile_id, parcel_type._get_parcel_type())
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[AAAParcel],
+        parcel_id: UUID,
+    ) -> Parcel[AAAParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[BannerParcel],
+        parcel_id: UUID,
+    ) -> Parcel[BannerParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[BasicParcel],
+        parcel_id: UUID,
+    ) -> Parcel[BasicParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[BFDParcel],
+        parcel_id: UUID,
+    ) -> Parcel[BFDParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[GlobalParcel],
+        parcel_id: UUID,
+    ) -> Parcel[GlobalParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[LoggingParcel],
+        parcel_id: UUID,
+    ) -> Parcel[LoggingParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[MRFParcel],
+        parcel_id: UUID,
+    ) -> Parcel[MRFParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[NTPParcel],
+        parcel_id: UUID,
+    ) -> Parcel[NTPParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[OMPParcel],
+        parcel_id: UUID,
+    ) -> Parcel[OMPParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[SecurityParcel],
+        parcel_id: UUID,
+    ) -> Parcel[SecurityParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[SNMPParcel],
+        parcel_id: UUID,
+    ) -> Parcel[SNMPParcel]:
+        ...
+
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[AnySystemParcel],
+        parcel_id: UUID,
+    ) -> Parcel:
+        """
+        Get one System Parcel given profile id, parcel type and parcel id
+        """
         return self.endpoint.get_by_id(profile_id, parcel_type._get_parcel_type(), parcel_id)
 
     def create_parcel(self, profile_id: UUID, payload: AnySystemParcel) -> ParcelCreationResponse:

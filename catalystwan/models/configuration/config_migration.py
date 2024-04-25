@@ -1,30 +1,20 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from typing import Any, Dict, List, Set, Tuple, Union
+from typing import Any, Dict, List, Set, Tuple
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from typing_extensions import Annotated
 
 from catalystwan.api.templates.device_template.device_template import DeviceTemplate, GeneralTemplate
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
-from catalystwan.models.configuration.feature_profile.sdwan.other import AnyOtherParcel
-from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
-from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
-from catalystwan.models.configuration.feature_profile.sdwan.system import AnySystemParcel
-from catalystwan.models.configuration.feature_profile.sdwan.transport import AnyTransportParcel
+from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
 from catalystwan.models.configuration.topology_group import TopologyGroup
 from catalystwan.models.policy import AnyPolicyDefinitionInfo, AnyPolicyListInfo
 from catalystwan.models.policy.centralized import CentralizedPolicyInfo
 from catalystwan.models.policy.localized import LocalizedPolicyInfo
 from catalystwan.models.policy.security import AnySecurityPolicyInfo
 from catalystwan.models.templates import FeatureTemplateInformation, TemplateInformation
-
-AnyParcel = Annotated[
-    Union[AnySystemParcel, AnyPolicyObjectParcel, AnyServiceParcel, AnyOtherParcel, AnyTransportParcel],
-    Field(discriminator="type_"),
-]
 
 
 class DeviceTemplateWithInfo(DeviceTemplate):
@@ -65,16 +55,24 @@ class DeviceTemplateWithInfo(DeviceTemplate):
 class UX1Policies(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     centralized_policies: List[CentralizedPolicyInfo] = Field(
-        default=[], serialization_alias="centralizedPolicies", validation_alias="centralizedPolicies"
+        default=[],
+        serialization_alias="centralizedPolicies",
+        validation_alias="centralizedPolicies",
     )
     localized_policies: List[LocalizedPolicyInfo] = Field(
-        default=[], serialization_alias="localizedPolicies", validation_alias="localizedPolicies"
+        default=[],
+        serialization_alias="localizedPolicies",
+        validation_alias="localizedPolicies",
     )
     security_policies: List[AnySecurityPolicyInfo] = Field(
-        default=[], serialization_alias="securityPolicies", validation_alias="securityPolicies"
+        default=[],
+        serialization_alias="securityPolicies",
+        validation_alias="securityPolicies",
     )
     policy_definitions: List[AnyPolicyDefinitionInfo] = Field(
-        default=[], serialization_alias="policyDefinitions", validation_alias="policyDefinitions"
+        default=[],
+        serialization_alias="policyDefinitions",
+        validation_alias="policyDefinitions",
     )
     policy_lists: List[AnyPolicyListInfo] = Field(
         default=[], serialization_alias="policyLists", validation_alias="policyLists"
@@ -83,10 +81,14 @@ class UX1Policies(BaseModel):
 
 class UX1Templates(BaseModel):
     feature_templates: List[FeatureTemplateInformation] = Field(
-        default=[], serialization_alias="featureTemplates", validation_alias="featureTemplates"
+        default=[],
+        serialization_alias="featureTemplates",
+        validation_alias="featureTemplates",
     )
     device_templates: List[DeviceTemplateWithInfo] = Field(
-        default=[], serialization_alias="deviceTemplates", validation_alias="deviceTemplates"
+        default=[],
+        serialization_alias="deviceTemplates",
+        validation_alias="deviceTemplates",
     )
 
 
@@ -129,19 +131,27 @@ class UX2Config(BaseModel):
     # All UX2 Configuration items - Mega Model
     model_config = ConfigDict(populate_by_name=True)
     topology_groups: List[TransformedTopologyGroup] = Field(
-        default=[], serialization_alias="topologyGroups", validation_alias="topologyGroups"
+        default=[],
+        serialization_alias="topologyGroups",
+        validation_alias="topologyGroups",
     )
     config_groups: List[TransformedConfigGroup] = Field(
-        default=[], serialization_alias="configurationGroups", validation_alias="configurationGroups"
+        default=[],
+        serialization_alias="configurationGroups",
+        validation_alias="configurationGroups",
     )
     policy_groups: List[TransformedConfigGroup] = Field(
         default=[], serialization_alias="policyGroups", validation_alias="policyGroups"
     )
     feature_profiles: List[TransformedFeatureProfile] = Field(
-        default=[], serialization_alias="featureProfiles", validation_alias="featureProfiles"
+        default=[],
+        serialization_alias="featureProfiles",
+        validation_alias="featureProfiles",
     )
     profile_parcels: List[TransformedParcel] = Field(
-        default=[], serialization_alias="profileParcels", validation_alias="profileParcels"
+        default=[],
+        serialization_alias="profileParcels",
+        validation_alias="profileParcels",
     )
 
     @model_validator(mode="before")
@@ -159,10 +169,14 @@ class UX2Config(BaseModel):
 
 class UX2ConfigRollback(BaseModel):
     config_group_ids: List[UUID] = Field(
-        default_factory=list, serialization_alias="ConfigGroupIds", validation_alias="ConfigGroupIds"
+        default_factory=list,
+        serialization_alias="ConfigGroupIds",
+        validation_alias="ConfigGroupIds",
     )
     feature_profile_ids: List[Tuple[UUID, ProfileType]] = Field(
-        default_factory=list, serialization_alias="FeatureProfileIds", validation_alias="FeatureProfileIds"
+        default_factory=list,
+        serialization_alias="FeatureProfileIds",
+        validation_alias="FeatureProfileIds",
     )
 
     def add_config_group(self, config_group_id: UUID) -> None:
