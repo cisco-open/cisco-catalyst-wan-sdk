@@ -14,7 +14,12 @@ class AdvancedInspectionProfileParcel(_ParcelBase):
     type_: Literal["unified/advanced-inspection-profile"] = Field(
         default="unified/advanced-inspection-profile", exclude=True
     )
-    description: str = ""
+    parcel_description: str = Field(
+        default="",
+        serialization_alias="description",
+        validation_alias="description",
+        description="Set the parcel description",
+    )
     tls_decryption_action: Global[TlsDecryptionAction] = Field(
         default=Global[TlsDecryptionAction](value="skipDecrypt"),
         validation_alias=AliasPath("data", "tlsDecryptionAction"),
