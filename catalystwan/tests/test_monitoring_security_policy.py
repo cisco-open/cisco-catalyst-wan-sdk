@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 
 from catalystwan.endpoints.monitoring.security_policy import MonitoringSecurityPolicy
 from catalystwan.models.monitoring.security_policy import SecurityPolicyDeviceList
-from catalystwan.typed_list import DataSequence
 
 
 class TestMonitoringSecurityPolicy(unittest.TestCase):
