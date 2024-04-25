@@ -98,7 +98,12 @@ DecryptThreshold = Literal["high-risk", "low-risk", "moderate-risk", "suspicious
 
 class SslDecryptionProfileParcel(_ParcelBase):
     type_: Literal["unified/ssl-decryption-profile"] = Field(default="unified/ssl-decryption-profile", exclude=True)
-    description: str = ""
+    parcel_description: str = Field(
+        default="",
+        serialization_alias="description",
+        validation_alias="description",
+        description="Set the parcel description",
+    )
     decrypt_categories: Global[List[Categories]] = Field(
         default=Global[List[Categories]](value=[]), validation_alias=AliasPath("data", "decryptCategories")
     )
