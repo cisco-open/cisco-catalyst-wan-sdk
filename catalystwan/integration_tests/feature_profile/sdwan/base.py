@@ -7,6 +7,7 @@ from catalystwan.api.feature_profile_api import (
     OtherFeatureProfileAPI,
     ServiceFeatureProfileAPI,
     SystemFeatureProfileAPI,
+    TransportFeatureProfileAPI,
 )
 from catalystwan.session import ManagerSession, create_manager_session
 
@@ -14,7 +15,7 @@ from catalystwan.session import ManagerSession, create_manager_session
 class TestFeatureProfileModels(unittest.TestCase):
     session: ManagerSession
     profile_uuid: UUID
-    api: Union[SystemFeatureProfileAPI, ServiceFeatureProfileAPI, OtherFeatureProfileAPI]
+    api: Union[SystemFeatureProfileAPI, ServiceFeatureProfileAPI, OtherFeatureProfileAPI, TransportFeatureProfileAPI]
 
     @classmethod
     def setUpClass(cls) -> None:

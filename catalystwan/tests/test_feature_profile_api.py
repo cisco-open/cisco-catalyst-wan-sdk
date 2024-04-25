@@ -6,9 +6,14 @@ from uuid import uuid4
 from parameterized import parameterized  # type: ignore
 
 from catalystwan.api.configuration_groups.parcel import Global, as_global, as_variable
-from catalystwan.api.feature_profile_api import ServiceFeatureProfileAPI, SystemFeatureProfileAPI
+from catalystwan.api.feature_profile_api import (
+    ServiceFeatureProfileAPI,
+    SystemFeatureProfileAPI,
+    TransportFeatureProfileAPI,
+)
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
+from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
 from catalystwan.models.configuration.feature_profile.common import ParcelAssociationPayload, ParcelCreationResponse
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
     AppqoeParcel,
@@ -42,6 +47,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.system import (
     SecurityParcel,
     SNMPParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.transport import ManagementVpn
 
 system_endpoint_mapping = {
     AAAParcel: "aaa",
@@ -226,3 +232,27 @@ class TestServiceFeatureProfileAPI(unittest.TestCase):
         self.mock_endpoint.associate_parcel_with_vpn.assert_called_once_with(
             self.profile_uuid, self.vpn_uuid, parcel_type, ParcelAssociationPayload(parcel_id=self.parcel_uuid)
         )
+
+
+transport_enpoint_mapping = {
+    ManagementVpn: "management/vpn",
+}
+
+
+class TestTransportFeatureProfileAPI(unittest.TestCase):
+    def setUp(self):
+        self.profile_uuid = uuid4()
+        self.vpn_uuid = uuid4()
+        self.parcel_uuid = uuid4()
+        self.mock_session = Mock()
+        self.mock_endpoint = Mock(spec=TransportFeatureProfile)
+        self.api = TransportFeatureProfileAPI(self.mock_session)
+        self.api.endpoint = self.mock_endpoint
+
+    @parameterized.expand(transport_enpoint_mapping.items())
+    def test_post_method_parcel(self, parcel, parcel_type):
+        # Act
+        self.api.create_parcel(self.profile_uuid, parcel)
+
+        # Assert
+        self.mock_endpoint.create_transport_parcel.assert_called_once_with(self.profile_uuid, parcel_type, parcel)
