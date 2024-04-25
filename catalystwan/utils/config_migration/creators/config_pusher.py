@@ -80,7 +80,9 @@ class UX2ConfigPusher:
                 continue
             pusher = ParcelPusherFactory.get_pusher(self._session, profile_type)
             parcels = self._create_parcels_list(transformed_feature_profile)
-            created_profile_id = pusher.push(transformed_feature_profile.feature_profile, parcels)
+            created_profile_id = pusher.push(
+                transformed_feature_profile.feature_profile, parcels, self._config_map.parcel_map
+            )
             config_group_profiles.append(ProfileId(id=created_profile_id))
             self._config_rollback.add_feature_profile(created_profile_id, profile_type)
         return config_group_profiles

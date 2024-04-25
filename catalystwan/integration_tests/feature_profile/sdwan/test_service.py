@@ -1,5 +1,4 @@
 from ipaddress import IPv4Address
-from secrets import token_hex
 from uuid import UUID
 
 from catalystwan.api.configuration_groups.parcel import Global, as_global, as_variable
@@ -17,12 +16,12 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import
     SummaryAddress,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet import InterfaceEthernetParcel
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import BasicGre, InterfaceGreParcel
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import (
-    InterfaceIpsecParcel,
-    IpsecAddress,
-    IpsecTunnelMode,
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import (
+    BasicGre,
+    GreAddress,
+    InterfaceGreParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import InterfaceIpsecParcel, IpsecAddress
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.svi import InterfaceSviParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import (
@@ -212,21 +211,14 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
         # Assert
         assert parcel_id
 
-    def test_when_default_values_switchport_expect_successful_post(self):
+    def test_when_correct_values_switchport_parcel_expect_successful_post(self):
         # Arrange
-        switchport_parcel = SwitchportParcel(
-            parcel_name="TestSwitchportParcel",
+        switchport_default_values_parcel = SwitchportParcel(
+            parcel_name="TestSwitchportParcelDefaultValues",
             parcel_description="Test Switchport Parcel",
         )
-        # Act
-        parcel_id = self.api.create_parcel(self.profile_uuid, switchport_parcel).id
-        # Assert
-        assert parcel_id
-
-    def test_when_fully_specified_values_switchport_expect_successful_post(self):
-        # Arrange
-        switchport_parcel = SwitchportParcel(
-            parcel_name="TestSwitchportParcel",
+        switchport_fully_specified_parcel = SwitchportParcel(
+            parcel_name="TestSwitchportParcelFullySpecified",
             parcel_description="Test Switchport Parcel",
             age_time=Global[int](value=100),
             static_mac_address=[
@@ -257,10 +249,15 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
                 )
             ],
         )
+        switchport_parcels = [switchport_default_values_parcel, switchport_fully_specified_parcel]
         # Act
-        parcel_id = self.api.create_parcel(self.profile_uuid, switchport_parcel).id
-        # Assert
-        assert parcel_id
+        for switchport_parcel in switchport_parcels:
+            with self.subTest(switchport_parcel=switchport_parcel.parcel_name):
+                parcel_id = self.api.create_parcel(self.profile_uuid, switchport_parcel).id
+                # Assert
+                assert parcel_id
+                # Cleanup
+                self.api.delete_parcel(self.profile_uuid, SwitchportParcel, parcel_id)
 
     def test_when_default_values_multicast_expect_successful_post(self):
         # Arrange
@@ -376,7 +373,7 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
             enable_5G=as_global(True),
             country=as_global("US", CountryCode),
             username=as_global("admin"),
-            password=as_global(token_hex(16) + "TEST!@#"),
+            password=as_variable("{{wireless_lan_password}}"),
             ssid=[
                 SSID(
                     name=as_global("TestSSID"),
@@ -413,7 +410,7 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
         super().tearDownClass()
 
 
-class TestServiceFeatureProfileVPNInterfaceModels(TestFeatureProfileModels):
+class TestServiceFeatureProfileVPNSubparcelModels(TestFeatureProfileModels):
     vpn_parcel_uuid: UUID
 
     @classmethod
@@ -433,7 +430,14 @@ class TestServiceFeatureProfileVPNInterfaceModels(TestFeatureProfileModels):
         gre_parcel = InterfaceGreParcel(
             parcel_name="TestGreParcel",
             parcel_description="Test Gre Parcel",
-            basic=BasicGre(if_name=as_global("gre1"), tunnel_destination=as_global(IPv4Address("4.4.4.4"))),
+            basic=BasicGre(
+                if_name=as_global("gre1"),
+                address=GreAddress(
+                    address=as_global("1.1.1.1"),
+                    mask=as_global("255.255.255.0"),
+                ),
+                tunnel_destination=as_global(IPv4Address("4.4.4.4")),
+            ),
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, gre_parcel, self.vpn_parcel_uuid).id
@@ -477,17 +481,24 @@ class TestServiceFeatureProfileVPNInterfaceModels(TestFeatureProfileModels):
             ike_local_id=as_global("123"),
             ike_remote_id=as_global("123"),
             application=as_variable("{{ipsec_application}}"),
-            tunnel_mode=Global[IpsecTunnelMode](value="ipv6"),
-            tunnel_destination_v6=as_variable("{{ipsec_tunnelDestinationV6}}"),
-            tunnel_source_v6=Global[str](value="::"),
             tunnel_source_interface=as_variable("{{ipsec_ipsecSourceInterface}}"),
-            ipv6_address=as_variable("{{test}}"),
             address=IpsecAddress(address=as_global("10.0.0.1"), mask=as_global("255.255.255.0")),
             tunnel_destination=IpsecAddress(address=as_global("10.0.0.5"), mask=as_global("255.255.255.0")),
-            mtu_v6=as_variable("{{test}}"),
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, ipsec_parcel, self.vpn_parcel_uuid).id
+        # Assert
+        assert parcel_id
+
+    def test_when_routing_parcel_and_vpn_uuid_present_expect_create_then_assign_to_vpn(self):
+        # Arrange
+        multicast_parcel = MulticastParcel(
+            parcel_name="TestMulticastParcel",
+            parcel_description="Test Multicast Parcel",
+            basic=MulticastBasicAttributes(),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, multicast_parcel, self.vpn_parcel_uuid).id
         # Assert
         assert parcel_id
 

@@ -74,7 +74,7 @@ class WirelessLanTemplateConverter:
             values["me_ip_config"] = MeIpConfig(me_dynamic_ip_enabled=as_default(True))
         else:
             values["me_ip_config"] = MeIpConfig(
-                me_dynamic_ip_enabled=as_default(False),
+                me_dynamic_ip_enabled=as_global(False),
                 me_static_ip_config=MeStaticIpConfig(
                     me_ipv4_address=address,
                     netmask=netmask,

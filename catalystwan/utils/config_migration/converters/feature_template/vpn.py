@@ -67,7 +67,7 @@ class OmpMappingItem(BaseModel):
     ux2_field: Literal["omp_advertise_ipv4", "omp_advertise_ipv6"]
 
 
-class LanVpnParcelTemplateConverter:
+class VpnParcelsTemplateConverter:
     """
     A class for converting template values into a LanVpnParcel object.
     """
@@ -154,7 +154,7 @@ class LanVpnParcelTemplateConverter:
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> LanVpnParcel:
         """
-        Creates a LanVpnParcel object based on the provided parameters.
+        Creates a parcel from VPN family object based on the provided parameters.
 
         Args:
             name (str): The name of the parcel.
@@ -162,11 +162,25 @@ class LanVpnParcelTemplateConverter:
             template_values (dict): A dictionary containing the template values.
 
         Returns:
-            LanVpnParcel: The created LanVpnParcel object.
+            VPN: The created VPN object.
         """
         values = deepcopy(template_values)
+        vpn_id = self.get_vpn_id(values)
+        if vpn_id == 0:
+            return LanVpnParcel(
+                parcel_name=name,
+                parcel_description=f"{description} - This should be a VPN 0",
+                vpn_id=as_global(77),
+            )
+        elif vpn_id == 512:
+            return LanVpnParcel(
+                parcel_name=name,
+                parcel_description=f"{description} - This should be a VPN 512",
+                vpn_id=as_global(77),
+            )
+
+        self.configure_vpn_id(values)
         self.configure_vpn_name(values)
-        self.configure_vpn_id(name, values)
         self.configure_natpool(values)
         self.configure_port_forwarding(values)
         self.configure_static_nat(values)
@@ -197,19 +211,13 @@ class LanVpnParcelTemplateConverter:
         if vpn_name := values.get("name", None):
             values["vpn_name"] = vpn_name
 
-    def configure_vpn_id(self, name: str, values: dict) -> None:
+    def get_vpn_id(self, values: dict) -> int:
+        return int(values["vpn_id"].value)
+
+    def configure_vpn_id(self, values: dict) -> None:
         if vpn_id := values.get("vpn_id"):
             vpn_id_value = int(vpn_id.value)
-            # VPN 0 contains all of a device's interfaces except for the management interface,
-            # and all interfaces are disabled.
-            # VPN 512 is RESERVED for OOB network management
-            if vpn_id_value in (0, 512):
-                logger.warning(
-                    f"VPN ID {vpn_id_value} is reserved for system use. " f"VPN ID will be set to 1 for VPN {name}."
-                )
-                values["vpn_id"] = as_global(1)
-            else:
-                values["vpn_id"] = as_global(vpn_id_value)
+            values["vpn_id"] = as_global(vpn_id_value)
 
     def configure_dns(self, values: dict) -> None:
         if dns := values.get("dns", []):

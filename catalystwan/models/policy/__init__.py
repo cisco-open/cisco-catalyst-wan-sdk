@@ -34,6 +34,7 @@ from catalystwan.models.policy.list.protocol_name import ProtocolNameList, Proto
 from catalystwan.models.policy.list.region import RegionList, RegionListInfo
 from catalystwan.models.policy.list.site import SiteList, SiteListInfo
 from catalystwan.models.policy.list.sla import SLAClassList, SLAClassListInfo
+from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList, ThreatGridApiKeyListInfo
 from catalystwan.models.policy.list.tloc import TLOCList, TLOCListInfo
 from catalystwan.models.policy.list.trunkgroup import TrunkGroupList, TrunkGroupListInfo
 from catalystwan.models.policy.list.url import URLAllowList, URLAllowListInfo, URLBlockList, URLBlockListInfo
@@ -43,6 +44,7 @@ from catalystwan.models.policy.list.zone import ZoneList, ZoneListInfo
 from .centralized import CentralizedPolicy, TrafficDataDirection
 from .definition.access_control_list import AclPolicy, AclPolicyGetResponse
 from .definition.access_control_list_ipv6 import AclIPv6Policy, AclIPv6PolicyGetResponse
+from .definition.amp import AdvancedMalwareProtectionPolicy, AdvancedMalwareProtectionPolicyGetResponse
 from .definition.control import ControlPolicy, ControlPolicyGetResponse
 from .definition.device_access import DeviceAccessPolicy, DeviceAccessPolicyGetResponse
 from .definition.device_access_ipv6 import DeviceAccessIPv6Policy, DeviceAccessIPv6PolicyGetResponse
@@ -73,6 +75,7 @@ AnyPolicyDefinition = Annotated[
     Union[
         AclIPv6Policy,
         AclPolicy,
+        AdvancedMalwareProtectionPolicy,
         ControlPolicy,
         DeviceAccessIPv6Policy,
         DeviceAccessPolicy,
@@ -115,6 +118,7 @@ AnyPolicyList = Annotated[
         RegionList,
         SiteList,
         SLAClassList,
+        ThreatGridApiKeyList,
         TLOCList,
         TrunkGroupList,
         URLBlockList,
@@ -151,6 +155,7 @@ AnyPolicyListInfo = Annotated[
         RegionListInfo,
         SiteListInfo,
         SLAClassListInfo,
+        ThreatGridApiKeyListInfo,
         TLOCListInfo,
         TrunkGroupListInfo,
         URLAllowListInfo,
@@ -163,6 +168,7 @@ AnyPolicyListInfo = Annotated[
 
 AnyPolicyDefinitionInfo = Annotated[
     Union[
+        AdvancedMalwareProtectionPolicyGetResponse,
         AclIPv6PolicyGetResponse,
         AclPolicyGetResponse,
         ControlPolicyGetResponse,
@@ -185,6 +191,7 @@ AnyPolicyDefinitionInfo = Annotated[
 __all__ = (
     "AclIPv6Policy",
     "AclPolicy",
+    "AdvancedMalwareProtectionPolicy",
     "AnyPolicyList",
     "AnyPolicyDefinitionInfo",
     "AppList",
@@ -232,6 +239,7 @@ __all__ = (
     "ServiceType",
     "SiteList",
     "SLAClassList",
+    "ThreatGridApiKeyList",
     "TLOCActionType",
     "TLOCList",
     "TrunkGroupList",

@@ -18,6 +18,7 @@ IPv6Address = str
 
 ParcelType = Literal[
     "appqoe",
+    "as-path",
     "lan/vpn",
     "lan/vpn/interface/ethernet",
     "lan/vpn/interface/gre",
@@ -60,6 +61,9 @@ ParcelType = Literal[
     "security-localapp",
     "security-data-ip-prefix",
     "unified/advanced-inspection-profile",
+    "unified/advanced-malware-protection",
+    "unified/intrusion-prevention",
+    "unified/url-filtering",
 ]
 
 ProfileType = Literal[
@@ -158,7 +162,7 @@ class ParcelInfo(BaseModel, Generic[T]):
 class ParcelAssociationPayload(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    parcel_id: str = Field(alias="parcelId")
+    parcel_id: UUID = Field(serialization_alias="parcelId", validation_alias="parcelId")
 
 
 class Prefix(BaseModel):
