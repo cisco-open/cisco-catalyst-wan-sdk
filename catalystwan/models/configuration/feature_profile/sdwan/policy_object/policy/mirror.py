@@ -15,4 +15,4 @@ class MirrorEntry(BaseModel):
 
 class MirrorParcel(_ParcelBase):
     type_: Literal["mirror"] = Field(default="mirror", exclude=True)
-    entries: List[MirrorEntry] = Field(validation_alias=AliasPath("data", "entries"), min_items=1, max_items=1)
+    entries: List[MirrorEntry] = Field(validation_alias=AliasPath("data", "entries"), min_length=1, max_length=1)
