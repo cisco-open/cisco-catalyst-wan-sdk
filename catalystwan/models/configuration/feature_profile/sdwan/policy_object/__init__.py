@@ -37,6 +37,7 @@ from .security.local_domain import LocalDomainListEntry, LocalDomainParcel
 from .security.protocol_list import ProtocolListEntry, ProtocolListParcel
 from .security.security_port import SecurityPortListEntry, SecurityPortParcel
 from .security.ssl_decryption import SslDecryptionParcel
+from .security.ssl_decryption_profile import SslDecryptionProfileParcel
 from .security.url import BaseURLListEntry, URLAllowParcel, URLBlockParcel, URLParcel
 from .security.zone import SecurityZoneListEntry, SecurityZoneListParcel
 
@@ -70,6 +71,7 @@ AnyPolicyObjectParcel = Annotated[
         SecurityZoneListParcel,
         SLAClassParcel,
         SslDecryptionParcel,
+        SslDecryptionProfileParcel,
         StandardCommunityParcel,
         TlocParcel,
     ],
@@ -133,6 +135,7 @@ __all__ = (
     "SLAClassListEntry",
     "SLAClassParcel",
     "SslDecryptionParcel",
+    "SslDecryptionProfileParcel",
     "StandardCommunityEntry",
     "StandardCommunityParcel",
     "TlocEntry",

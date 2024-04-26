@@ -8,6 +8,7 @@ from typing import List, Literal, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_variable
+from catalystwan.models.configuration.feature_profile.common import RefIdItem
 
 FamilyType = Literal["ipv4-unicast", "vpnv4-unicast", "vpnv6-unicast"]
 FamilyTypeIpv6 = Literal["ipv6-unicast", "vpnv6-unicast"]
@@ -50,14 +51,6 @@ PolicyTypeRestart = Literal["restart"]
 PolicyTypeWarningDisablePeer = Literal["warning-only", "disable-peer"]
 Protocol = Literal["static", "connected", "ospf", "ospfv3", "nat"]
 Protocol2 = Literal["static", "connected", "ospf"]
-
-
-class RefIdItem(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    ref_id: Global[str] = Field(..., serialization_alias="refId", validation_alias="refId")
 
 
 class MaxPrefixConfigDisabled(BaseModel):

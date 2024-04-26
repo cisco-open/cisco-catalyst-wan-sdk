@@ -7,7 +7,7 @@ from pydantic import AliasPath, Field
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
 
-WebCategories = Literal[
+Categories = Literal[
     "abortion",
     "abused-drugs",
     "adult-and-pornography",
@@ -93,23 +93,37 @@ WebCategories = Literal[
     "web-hosting",
 ]
 
-WebCategoriesAction = Literal["block", "allow"]
-WebReputation = Literal["high-risk", "low-risk", "moderate-risk", "suspicious", "trustworthy"]
-BlockPageAction = Literal["text", "redirect-url"]
-Alerts = Literal["blacklist", "whitelist", "categories-reputation"]
+DecryptThreshold = Literal["high-risk", "low-risk", "moderate-risk", "suspicious", "trustworthy"]
 
 
-class UrlFilteringParcel(_ParcelBase):
-    type_: Literal["unified/url-filtering"] = Field(default="unified/url-filtering", exclude=True)
-    web_categories_action: Global[WebCategoriesAction] = Field(
-        validation_alias=AliasPath("data", "webCategoriesAction")
+class SslDecryptionProfileParcel(_ParcelBase):
+    type_: Literal["unified/ssl-decryption-profile"] = Field(default="unified/ssl-decryption-profile", exclude=True)
+    parcel_description: str = Field(
+        default="",
+        serialization_alias="description",
+        validation_alias="description",
+        description="Set the parcel description",
     )
-    web_categories: Global[List[WebCategories]] = Field(validation_alias=AliasPath("data", "webCategories"))
-    web_reputation: Global[WebReputation] = Field(validation_alias=AliasPath("data", "webReputation"))
+    decrypt_categories: Global[List[Categories]] = Field(
+        default=Global[List[Categories]](value=[]), validation_alias=AliasPath("data", "decryptCategories")
+    )
+    never_decrypt_categories: Global[List[Categories]] = Field(
+        default=Global[List[Categories]](value=[]), validation_alias=AliasPath("data", "neverDecryptCategories")
+    )
+    skip_decrypt_categories: Global[List[Categories]] = Field(
+        default=None, validation_alias=AliasPath("data", "skipDecryptCategories")
+    )
+    reputation: Global[bool] = Field(
+        default=Global[bool](value=False), validation_alias=AliasPath("data", "reputation")
+    )
+    decrypt_threshold: Global[DecryptThreshold] = Field(
+        default=None, validation_alias=AliasPath("data", "decryptThreshold")
+    )
+    skip_decrypt_threshold: Global[DecryptThreshold] = Field(
+        default=None, validation_alias=AliasPath("data", "skipDecryptThreshold")
+    )
+    fail_decrypt: Global[bool] = Field(
+        default=Global[bool](value=False), validation_alias=AliasPath("data", "failDecrypt")
+    )
     url_allowed_list: RefIdItem = Field(default=None, validation_alias=AliasPath("data", "urlAllowedList"))
     url_blocked_list: RefIdItem = Field(default=None, validation_alias=AliasPath("data", "urlBlockedList"))
-    block_page_action: Global[BlockPageAction] = Field(validation_alias=AliasPath("data", "blockPageAction"))
-    block_page_contents: Global[str] = Field(default=None, validation_alias=AliasPath("data", "blockPageContents"))
-    redirect_url: Global[str] = Field(default=None, validation_alias=AliasPath("data", "redirectUrl"))
-    enable_alerts: Global[bool] = Field(validation_alias=AliasPath("data", "enableAlerts"))
-    alerts: Global[List[Alerts]] = Field(default=None, validation_alias=AliasPath("data", "alerts"))

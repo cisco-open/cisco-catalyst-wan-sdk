@@ -64,11 +64,11 @@ ParcelType = Literal[
     "security-geolocation",
     "security-zone",
     "security-localapp",
-    "security-data-ip-prefix",
     "unified/advanced-inspection-profile",
     "unified/advanced-malware-protection",
     "unified/intrusion-prevention",
     "unified/ssl-decryption",
+    "unified/ssl-decryption-profile",
     "unified/url-filtering",
 ]
 
