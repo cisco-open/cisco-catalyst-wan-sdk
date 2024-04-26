@@ -68,6 +68,7 @@ ParcelType = Literal[
     "unified/advanced-inspection-profile",
     "unified/advanced-malware-protection",
     "unified/intrusion-prevention",
+    "unified/ssl-decryption",
     "unified/url-filtering",
 ]
 
