@@ -6,14 +6,16 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+ZoneListId = Union[UUID, Literal["self", "default"]]
+
 
 class PolicyId(BaseModel):
     policy_id: UUID = Field(serialization_alias="policyId", validation_alias="policyId")
 
 
 class NGFirewallZoneListEntry(BaseModel):
-    src_zone_list_id: UUID = Field(serialization_alias="srcZoneListId", validation_alias="srcZoneListId")
-    dst_zone_list_id: UUID = Field(serialization_alias="dstZoneListId", validation_alias="dstZoneListId")
+    src_zone_list_id: ZoneListId = Field(serialization_alias="srcZoneListId", validation_alias="srcZoneListId")
+    dst_zone_list_id: ZoneListId = Field(serialization_alias="dstZoneListId", validation_alias="dstZoneListId")
     model_config = ConfigDict(populate_by_name=True)
 
 
