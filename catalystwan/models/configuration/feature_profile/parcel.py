@@ -47,6 +47,7 @@ ParcelType = Literal[
     "class",
     "data-ipv6-prefix",
     "ipv6-prefix",
+    "mirror",
     "prefix",
     "policer",
     "preferred-color-group",
