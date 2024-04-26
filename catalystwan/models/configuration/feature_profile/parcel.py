@@ -22,6 +22,7 @@ ParcelType = Literal[
     "security",
     "snmp",
     "appqoe",
+    "as-path",
     "lan/vpn",
     "lan/vpn/interface/ethernet",
     "lan/vpn/interface/gre",
@@ -63,6 +64,10 @@ ParcelType = Literal[
     "security-zone",
     "security-localapp",
     "security-data-ip-prefix",
+    "unified/advanced-inspection-profile",
+    "unified/advanced-malware-protection",
+    "unified/intrusion-prevention",
+    "unified/url-filtering",
 ]
 
 
