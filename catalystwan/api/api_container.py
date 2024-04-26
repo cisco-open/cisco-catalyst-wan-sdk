@@ -26,13 +26,13 @@ from catalystwan.api.partition_manager_api import PartitionManagerAPI
 from catalystwan.api.policy_api import PolicyAPI
 from catalystwan.api.resource_pool_api import ResourcePoolAPI
 from catalystwan.api.software_action_api import SoftwareActionAPI
-from catalystwan.api.virtual_image_action_api import LxcActionAPI
 from catalystwan.api.speedtest_api import SpeedtestAPI
 from catalystwan.api.template_api import TemplatesAPI
 from catalystwan.api.tenant_backup_restore_api import TenantBackupRestoreAPI
 from catalystwan.api.tenant_management_api import TenantManagementAPI
 from catalystwan.api.tenant_migration_api import TenantMigrationAPI
 from catalystwan.api.versions_utils import RepositoryAPI
+from catalystwan.api.virtual_image_action_api import LxcActionAPI
 
 if TYPE_CHECKING:
     from catalystwan.session import ManagerSession

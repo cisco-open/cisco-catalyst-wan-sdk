@@ -9,9 +9,9 @@ from catalystwan.api.task_status_api import Task
 from catalystwan.api.versions_utils import DeviceVersions, RepositoryAPI
 from catalystwan.endpoints.configuration_device_actions import (
     LxcImageActivatePayload,
+    LxcImageDeletePayload,
     LxcImageUpgradePayload,
     LxcInstallInput,
-    LxcImageDeletePayload,
 )
 from catalystwan.endpoints.configuration_device_inventory import DeviceDetailsResponse
 from catalystwan.exceptions import EmptyVersionPayloadError, ImageNotInRepositoryError  # type: ignore

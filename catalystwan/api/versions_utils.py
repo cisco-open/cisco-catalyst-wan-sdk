@@ -10,10 +10,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from catalystwan.endpoints.configuration.software_actions import SoftwareImageDetails
 from catalystwan.endpoints.configuration_device_actions import (
-    PartitionDevice,
-    LxcActivateDevice,
     InstallLxcImage,
+    LxcActivateDevice,
     LxcUpgradeDevice,
+    PartitionDevice,
 )
 from catalystwan.endpoints.configuration_device_inventory import DeviceDetailsResponse
 from catalystwan.exceptions import ImageNotInRepositoryError
