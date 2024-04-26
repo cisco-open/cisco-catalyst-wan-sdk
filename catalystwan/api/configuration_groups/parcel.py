@@ -67,7 +67,7 @@ class _ParcelBase(BaseModel):
             del model_dict[key]
 
         # versioned field update
-        model_dict = VersionedField.update_model_fields(self.model_fields, model_dict, info, replaced_keys)
+        model_dict = VersionedField.dump(self.model_fields, model_dict, info, replaced_keys)
 
         return model_dict
 

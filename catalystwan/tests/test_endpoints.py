@@ -890,7 +890,7 @@ class TestAPIEndpoints(unittest.TestCase):
 
             @model_serializer(mode="wrap")
             def serialize(self, handler, info):
-                return VersionedField.update_model_fields(self.model_fields, handler(self), info)
+                return VersionedField.dump(self.model_fields, handler(self), info)
 
         class ExampleAPI(APIEndpoints):
             @request("POST", "/v1/data")
