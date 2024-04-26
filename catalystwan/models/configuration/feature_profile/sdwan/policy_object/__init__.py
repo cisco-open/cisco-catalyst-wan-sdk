@@ -14,12 +14,14 @@ from .policy.expanded_community_list import ExpandedCommunityParcel
 from .policy.fowarding_class import FowardingClassParcel, FowardingClassQueueEntry
 from .policy.ipv6_data_prefix import IPv6DataPrefixEntry, IPv6DataPrefixParcel
 from .policy.ipv6_prefix_list import IPv6PrefixListEntry, IPv6PrefixListParcel
+from .policy.mirror import MirrorParcel
 from .policy.policer import PolicerEntry, PolicerParcel
 from .policy.prefered_group_color import Preference, PreferredColorGroupEntry, PreferredColorGroupParcel
 from .policy.prefix_list import PrefixListEntry, PrefixListParcel
 from .policy.sla_class import FallbackBestTunnel, SLAAppProbeClass, SLAClassCriteria, SLAClassListEntry, SLAClassParcel
 from .policy.standard_community import StandardCommunityEntry, StandardCommunityParcel
 from .policy.tloc_list import TlocEntry, TlocParcel
+from .security.aip import AdvancedInspectionProfileParcel
 from .security.amp import AdvancedMalwareProtectionParcel
 from .security.application_list import (
     SecurityApplicationFamilyListEntry,
@@ -40,6 +42,7 @@ from .security.zone import SecurityZoneListEntry, SecurityZoneListParcel
 
 AnyPolicyObjectParcel = Annotated[
     Union[
+        AdvancedInspectionProfileParcel,
         AdvancedMalwareProtectionParcel,
         URLParcel,
         ApplicationListParcel,
@@ -56,6 +59,7 @@ AnyPolicyObjectParcel = Annotated[
         IPv6DataPrefixParcel,
         IPv6PrefixListParcel,
         LocalDomainParcel,
+        MirrorParcel,
         PolicerParcel,
         PreferredColorGroupParcel,
         PrefixListParcel,
@@ -73,6 +77,7 @@ AnyPolicyObjectParcel = Annotated[
 ]
 
 __all__ = (
+    "AdvancedInspectionProfileParcel",
     "AdvancedMalwareProtectionParcel",
     "AnyPolicyObjectParcel",
     "ApplicationFamilyListEntry",
@@ -104,6 +109,7 @@ __all__ = (
     "IPv6PrefixListParcel",
     "LocalDomainListEntry",
     "LocalDomainParcel",
+    "MirrorParcel",
     "PolicerEntry",
     "PolicerParcel",
     "Preference",
