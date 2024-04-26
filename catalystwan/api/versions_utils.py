@@ -9,8 +9,12 @@ from typing import TYPE_CHECKING, Dict, List, Union
 from pydantic import BaseModel, ConfigDict, Field
 
 from catalystwan.endpoints.configuration.software_actions import SoftwareImageDetails
-from catalystwan.endpoints.configuration_device_actions import PartitionDevice, LxcActivateDevice,InstallLxcImage,\
-    LxcUpgradeDevice
+from catalystwan.endpoints.configuration_device_actions import (
+    PartitionDevice,
+    LxcActivateDevice,
+    InstallLxcImage,
+    LxcUpgradeDevice,
+)
 from catalystwan.endpoints.configuration_device_inventory import DeviceDetailsResponse
 from catalystwan.exceptions import ImageNotInRepositoryError
 from catalystwan.typed_list import DataSequence
@@ -75,7 +79,9 @@ class RepositoryAPI:
         Returns:
             list: software images list
         """
-        software_images = self.session.endpoints.configuration_software_actions.get_list_of_all_images("imageType=virtualmachine")
+        software_images = self.session.endpoints.configuration_software_actions.get_list_of_all_images(
+            "imageType=virtualmachine"
+        )
         return software_images
 
     def get_devices_versions_repository(self) -> Dict[str, DeviceSoftwareRepository]:
@@ -220,33 +226,49 @@ class DeviceVersions:
                     f"device.device_ip (current value: {device.device_ip})"
                 )
 
-    def get_lxcactivate_device_list(self, version_to_set_up: str, devices: DataSequence[DeviceDetailsResponse],
-                        ) -> DataSequence[PartitionDevice]:
+    def get_lxcactivate_device_list(
+        self,
+        version_to_set_up: str,
+        devices: DataSequence[DeviceDetailsResponse],
+    ) -> DataSequence[PartitionDevice]:
         self._validate_devices_required_fields(devices)
         install_image_payload = DataSequence(
             InstallLxcImage,
-            [InstallLxcImage(network_function_type="app-hosting", version_name=version_to_set_up,
-                             version_type_name="UTD-Snort-Feature")]
+            [
+                InstallLxcImage(
+                    network_function_type="app-hosting",
+                    version_name=version_to_set_up,
+                    version_type_name="UTD-Snort-Feature",
+                )
+            ],
         )
         devices_payload = DataSequence(
             LxcActivateDevice,
-            [LxcActivateDevice(device_id=device.uuid, device_ip=device.local_system_ip,
-                               install_images=install_image_payload) for device in devices],  # type: ignore
+            [
+                LxcActivateDevice(
+                    device_id=device.uuid, device_ip=device.local_system_ip, install_images=install_image_payload
+                )
+                for device in devices
+            ],  # type: ignore
         )
 
         return devices_payload
 
-    def get_lxcupgrade_device_list(self, version_to_set_up: str, devices: DataSequence[DeviceDetailsResponse],
-                        ) -> DataSequence[PartitionDevice]:
+    def get_lxcupgrade_device_list(
+        self,
+        version_to_set_up: str,
+        devices: DataSequence[DeviceDetailsResponse],
+    ) -> DataSequence[PartitionDevice]:
         self._validate_devices_required_fields(devices)
-        install_image_payload = DataSequence(
-            InstallLxcImage,
-            [InstallLxcImage(version_name=version_to_set_up)]
-        )
+        install_image_payload = DataSequence(InstallLxcImage, [InstallLxcImage(version_name=version_to_set_up)])
         devices_payload = DataSequence(
             LxcUpgradeDevice,
-            [LxcUpgradeDevice(device_id=device.uuid, device_ip=device.local_system_ip,
-                               install_images=install_image_payload) for device in devices],  # type: ignore
+            [
+                LxcUpgradeDevice(
+                    device_id=device.uuid, device_ip=device.local_system_ip, install_images=install_image_payload
+                )
+                for device in devices
+            ],  # type: ignore
         )
 
         return devices_payload
@@ -269,7 +291,8 @@ class DeviceVersions:
         self._validate_devices_required_fields(devices)
         devices_payload = DataSequence(
             PartitionDevice,
-            [PartitionDevice(device_id=device.uuid, device_ip=device.local_system_ip) for device in devices],  # type: ignore
+            [PartitionDevice(device_id=device.uuid, device_ip=device.local_system_ip) for device in devices],
+            # type: ignore
         )
 
         all_dev_versions = self.repository.get_devices_versions_repository()
@@ -338,9 +361,10 @@ class DeviceVersions:
 
         devices_payload = DataSequence(
             PartitionDevice,
-            [PartitionDevice(
-                device_id=device.uuid, device_ip=device.local_system_ip  # type: ignore
-            ) for device in devices],  # type: ignore
+            [
+                PartitionDevice(device_id=device.uuid, device_ip=device.local_system_ip)  # type: ignore
+                for device in devices
+            ],  # type: ignore
         )
         all_dev_versions = self.repository.get_devices_versions_repository()
         for device in devices_payload:

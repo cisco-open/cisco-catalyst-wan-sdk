@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, List, Optional, cast
+from typing import TYPE_CHECKING, Optional, cast
 
 from catalystwan.api.task_status_api import Task
 from catalystwan.api.versions_utils import DeviceVersions, RepositoryAPI
@@ -11,7 +11,7 @@ from catalystwan.endpoints.configuration_device_actions import (
     LxcImageActivatePayload,
     LxcImageUpgradePayload,
     LxcInstallInput,
-    LxcImageDeletePayload
+    LxcImageDeletePayload,
 )
 from catalystwan.endpoints.configuration_device_inventory import DeviceDetailsResponse
 from catalystwan.exceptions import EmptyVersionPayloadError, ImageNotInRepositoryError  # type: ignore
@@ -87,10 +87,12 @@ class LxcActionAPI:
                 raise EmptyVersionPayloadError("lxc activate payload contains entry with empty version field.")
 
         device_type = get_install_specification(devices.first()).device_type.value
-        install_input = LxcInstallInput(v_edge_vpn="0",version_type="vmanage")
+        install_input = LxcInstallInput(v_edge_vpn="0", version_type="vmanage")
         partition_payload = LxcImageActivatePayload(
-            action="lxc_activate", devices=[dev for dev in payload_devices], device_type=device_type,
-            input=install_input
+            action="lxc_activate",
+            devices=[dev for dev in payload_devices],
+            device_type=device_type,
+            input=install_input,
         )
 
         partition_action = self.session.endpoints.configuration_device_actions.process_lxc_activate(
@@ -140,10 +142,9 @@ class LxcActionAPI:
                 raise EmptyVersionPayloadError("lxc upgrade payload contains entry with empty version field.")
 
         device_type = get_install_specification(devices.first()).device_type.value
-        install_input = LxcInstallInput(v_edge_vpn="0",version_type="vmanage")
+        install_input = LxcInstallInput(v_edge_vpn="0", version_type="vmanage")
         partition_payload = LxcImageUpgradePayload(
-            action="lxc_upgrade", devices=[dev for dev in payload_devices], device_type=device_type,
-            input=install_input
+            action="lxc_upgrade", devices=[dev for dev in payload_devices], device_type=device_type, input=install_input
         )
 
         partition_action = self.session.endpoints.configuration_device_actions.process_lxc_upgrade(
@@ -187,7 +188,9 @@ class LxcActionAPI:
 
         device_type = get_install_specification(devices.first()).device_type.value
         partition_payload = LxcImageDeletePayload(
-            action="lxc_delete", devices=[dev for dev in payload_devices], device_type=device_type,
+            action="lxc_delete",
+            devices=[dev for dev in payload_devices],
+            device_type=device_type,
         )
 
         partition_action = self.session.endpoints.configuration_device_actions.process_lxc_delete(

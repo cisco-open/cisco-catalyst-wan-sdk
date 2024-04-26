@@ -50,12 +50,18 @@ class PartitionDevice(BaseModel):
 
 VersionList = Annotated[Union[str, List[str]], BeforeValidator(convert_to_list)]
 
+
 class InstallLxcImage(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    network_function_type: str = Field(default="app-hosting", serialization_alias="networkFunctionType", validation_alias="networkFunctionType")
+    network_function_type: str = Field(
+        default="app-hosting", serialization_alias="networkFunctionType", validation_alias="networkFunctionType"
+    )
     version_name: str = Field(serialization_alias="versionName", validation_alias="versionName")
-    version_type_name: str = Field(default="UTD-Snort-Feature", serialization_alias="versionTypeName", validation_alias="versionTypeName")
+    version_type_name: str = Field(
+        default="UTD-Snort-Feature", serialization_alias="versionTypeName", validation_alias="versionTypeName"
+    )
+
 
 class LxcActivateDevice(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -63,8 +69,9 @@ class LxcActivateDevice(BaseModel):
     device_id: str = Field(serialization_alias="deviceId", validation_alias="deviceId")
     device_ip: str = Field(serialization_alias="deviceIP", validation_alias="deviceIP")
     install_images: List[InstallLxcImage] = Field(serialization_alias="installImages", validation_alias="installImages")
-    vedge_vpn: str = Field(default="0", serialization_alias="vEdgeVPN",validation_alias="vEdgeVPN")
-    version_type: str = Field(default="vmanage",serialization_alias="versionType",validation_alias="versionType")
+    vedge_vpn: str = Field(default="0", serialization_alias="vEdgeVPN", validation_alias="vEdgeVPN")
+    version_type: str = Field(default="vmanage", serialization_alias="versionType", validation_alias="versionType")
+
 
 class LxcUpgradeDevice(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -72,6 +79,7 @@ class LxcUpgradeDevice(BaseModel):
     device_id: str = Field(serialization_alias="deviceId", validation_alias="deviceId")
     device_ip: str = Field(serialization_alias="deviceIP", validation_alias="deviceIP")
     install_images: List[InstallLxcImage] = Field(serialization_alias="installImages", validation_alias="installImages")
+
 
 class RemovePartitionDevice(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -88,6 +96,7 @@ class PartitionActionPayload(BaseModel):
     device_type: str = Field(serialization_alias="deviceType", validation_alias="deviceType")
     devices: List[PartitionDevice]
 
+
 class LxcInstallInput(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
@@ -103,6 +112,7 @@ class LxcImageActivatePayload(BaseModel):
     devices: List[LxcActivateDevice]
     input: LxcInstallInput
 
+
 class LxcImageUpgradePayload(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
@@ -111,12 +121,14 @@ class LxcImageUpgradePayload(BaseModel):
     devices: List[LxcUpgradeDevice]
     input: LxcInstallInput
 
+
 class LxcImageDeletePayload(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     action: LxcActionType
     device_type: str = Field(serialization_alias="deviceType", validation_alias="deviceType")
     devices: List[LxcUpgradeDevice]
+
 
 class RemovePartitionActionPayload(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -234,8 +246,7 @@ class ConfigurationDeviceActions(APIEndpoints):
     @get("/device/action/install/devices/{device_type}", "data")
     def get_list_of_installed_devices(
         self, device_type: DeviceType = "controller", params: GroupId = GroupId()
-    ) -> DataSequence[InstalledDeviceData]:
-        ...
+    ) -> DataSequence[InstalledDeviceData]: ...
 
     def generate_install_info(self):
         # GET /device/action/install
@@ -266,8 +277,7 @@ class ConfigurationDeviceActions(APIEndpoints):
         ...
 
     @get("/device/action/ztp/upgrade/setting", "data")
-    def get_ztp_upgrade_config_setting(self) -> DataSequence[ZTPUpgradeSettings]:
-        ...
+    def get_ztp_upgrade_config_setting(self) -> DataSequence[ZTPUpgradeSettings]: ...
 
     def initiate_image_download(self):
         # POST /device/action/image-download
@@ -282,24 +292,21 @@ class ConfigurationDeviceActions(APIEndpoints):
         ...
 
     @post("/device/action/changepartition")
-    def process_mark_change_partition(self, payload: PartitionActionPayload) -> ActionId:
-        ...
+    def process_mark_change_partition(self, payload: PartitionActionPayload) -> ActionId: ...
 
     def process_deactivate_smu(self):
         # POST /device/action/deactivate
         ...
 
     @post("/device/action/defaultpartition")
-    def process_mark_default_partition(self, payload: PartitionActionPayload) -> ActionId:
-        ...
+    def process_mark_default_partition(self, payload: PartitionActionPayload) -> ActionId: ...
 
     def process_delete_amp_api_key(self):
         # DELETE /device/action/security/amp/apikey/{uuid}
         ...
 
     @post("/device/action/install")
-    def process_install_operation(self, payload: InstallActionPayload) -> ActionId:
-        ...
+    def process_install_operation(self, payload: InstallActionPayload) -> ActionId: ...
 
     @post("/device/action/lxcactivate")
     def process_lxc_activate(self, payload: PartitionActionPayload) -> ActionId:
@@ -333,8 +340,7 @@ class ConfigurationDeviceActions(APIEndpoints):
         ...
 
     @post("/device/action/removepartition")
-    def process_remove_partition(self, payload: RemovePartitionActionPayload) -> ActionId:
-        ...
+    def process_remove_partition(self, payload: RemovePartitionActionPayload) -> ActionId: ...
 
     def process_remove_software_image(self):
         # POST /device/action/image-remove
