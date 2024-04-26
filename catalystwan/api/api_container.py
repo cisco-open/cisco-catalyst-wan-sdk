@@ -26,6 +26,7 @@ from catalystwan.api.partition_manager_api import PartitionManagerAPI
 from catalystwan.api.policy_api import PolicyAPI
 from catalystwan.api.resource_pool_api import ResourcePoolAPI
 from catalystwan.api.software_action_api import SoftwareActionAPI
+from catalystwan.api.virtual_image_action_api import LxcActionAPI
 from catalystwan.api.speedtest_api import SpeedtestAPI
 from catalystwan.api.template_api import TemplatesAPI
 from catalystwan.api.tenant_backup_restore_api import TenantBackupRestoreAPI
@@ -58,6 +59,7 @@ class APIContainer:
         self.repository = RepositoryAPI(session)
         self.resource_pool = ResourcePoolAPI(session)
         self.software = SoftwareActionAPI(session)
+        self.lxcsoftware = LxcActionAPI(session)
         self.partition = PartitionManagerAPI(session)
         self.users = UsersAPI(session)
         self.cluster_management = ClusterManagementAPI(session)

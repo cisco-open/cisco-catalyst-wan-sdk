@@ -20,6 +20,7 @@ DeviceType = Literal["vedge", "controller", "vmanage"]
 VersionType = Literal["vmanage", "remote"]
 
 PartitionActionType = Literal["removepartition", "defaultpartition", "changepartition"]
+LxcActionType = Literal["lxc_activate", "lxc_upgrade", "lxc_delete"]
 
 
 class ActionId(BaseModel):
@@ -49,6 +50,28 @@ class PartitionDevice(BaseModel):
 
 VersionList = Annotated[Union[str, List[str]], BeforeValidator(convert_to_list)]
 
+class InstallLxcImage(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    network_function_type: str = Field(default="app-hosting", serialization_alias="networkFunctionType", validation_alias="networkFunctionType")
+    version_name: str = Field(serialization_alias="versionName", validation_alias="versionName")
+    version_type_name: str = Field(default="UTD-Snort-Feature", serialization_alias="versionTypeName", validation_alias="versionTypeName")
+
+class LxcActivateDevice(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    device_id: str = Field(serialization_alias="deviceId", validation_alias="deviceId")
+    device_ip: str = Field(serialization_alias="deviceIP", validation_alias="deviceIP")
+    install_images: List[InstallLxcImage] = Field(serialization_alias="installImages", validation_alias="installImages")
+    vedge_vpn: str = Field(default="0", serialization_alias="vEdgeVPN",validation_alias="vEdgeVPN")
+    version_type: str = Field(default="vmanage",serialization_alias="versionType",validation_alias="versionType")
+
+class LxcUpgradeDevice(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    device_id: str = Field(serialization_alias="deviceId", validation_alias="deviceId")
+    device_ip: str = Field(serialization_alias="deviceIP", validation_alias="deviceIP")
+    install_images: List[InstallLxcImage] = Field(serialization_alias="installImages", validation_alias="installImages")
 
 class RemovePartitionDevice(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -65,6 +88,35 @@ class PartitionActionPayload(BaseModel):
     device_type: str = Field(serialization_alias="deviceType", validation_alias="deviceType")
     devices: List[PartitionDevice]
 
+class LxcInstallInput(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    v_edge_vpn: int = Field(serialization_alias="vEdgeVPN", validation_alias="vEdgeVPN")
+    version_type: VersionType = Field(serialization_alias="versionType", validation_alias="versionType")
+
+
+class LxcImageActivatePayload(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    action: LxcActionType
+    device_type: str = Field(serialization_alias="deviceType", validation_alias="deviceType")
+    devices: List[LxcActivateDevice]
+    input: LxcInstallInput
+
+class LxcImageUpgradePayload(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    action: LxcActionType
+    device_type: str = Field(serialization_alias="deviceType", validation_alias="deviceType")
+    devices: List[LxcUpgradeDevice]
+    input: LxcInstallInput
+
+class LxcImageDeletePayload(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    action: LxcActionType
+    device_type: str = Field(serialization_alias="deviceType", validation_alias="deviceType")
+    devices: List[LxcUpgradeDevice]
 
 class RemovePartitionActionPayload(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -249,11 +301,13 @@ class ConfigurationDeviceActions(APIEndpoints):
     def process_install_operation(self, payload: InstallActionPayload) -> ActionId:
         ...
 
-    def process_lxc_activate(self):
+    @post("/device/action/lxcactivate")
+    def process_lxc_activate(self, payload: PartitionActionPayload) -> ActionId:
         # POST /device/action/lxcactivate
         ...
 
-    def process_lxc_delete(self):
+    @post("/device/action/lxcdelete")
+    def process_lxc_delete(self, payload: PartitionActionPayload) -> ActionId:
         # POST /device/action/lxcdelete
         ...
 
@@ -269,7 +323,8 @@ class ConfigurationDeviceActions(APIEndpoints):
         # POST /device/action/lxcreset
         ...
 
-    def process_lxc_upgrade(self):
+    @post("/device/action/lxcupgrade")
+    def process_lxc_upgrade(self, payload: PartitionActionPayload) -> ActionId:
         # POST /device/action/lxcupgrade
         ...
 
