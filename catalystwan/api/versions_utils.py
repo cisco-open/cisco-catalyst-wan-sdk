@@ -230,23 +230,22 @@ class DeviceVersions:
         self,
         version_to_set_up: str,
         devices: DataSequence[DeviceDetailsResponse],
-    ) -> DataSequence[PartitionDevice]:
+    ) -> DataSequence[LxcActivateDevice]:
         self._validate_devices_required_fields(devices)
-        install_image_payload = DataSequence(
-            InstallLxcImage,
-            [
-                InstallLxcImage(
-                    network_function_type="app-hosting",
-                    version_name=version_to_set_up,
-                    version_type_name="UTD-Snort-Feature",
-                )
-            ],
-        )
+        install_image_payload = [
+            InstallLxcImage(
+                network_function_type="app-hosting",
+                version_name=version_to_set_up,
+                version_type_name="UTD-Snort-Feature",
+            )
+        ]
         devices_payload = DataSequence(
             LxcActivateDevice,
             [
                 LxcActivateDevice(
-                    device_id=device.uuid, device_ip=device.local_system_ip, install_images=install_image_payload
+                    device_id=str(device.uuid),
+                    device_ip=str(device.local_system_ip),
+                    install_images=install_image_payload,
                 )
                 for device in devices
             ],  # type: ignore
@@ -258,14 +257,16 @@ class DeviceVersions:
         self,
         version_to_set_up: str,
         devices: DataSequence[DeviceDetailsResponse],
-    ) -> DataSequence[PartitionDevice]:
+    ) -> DataSequence[LxcUpgradeDevice]:
         self._validate_devices_required_fields(devices)
-        install_image_payload = DataSequence(InstallLxcImage, [InstallLxcImage(version_name=version_to_set_up)])
+        install_image_payload = [InstallLxcImage(version_name=version_to_set_up)]
         devices_payload = DataSequence(
             LxcUpgradeDevice,
             [
                 LxcUpgradeDevice(
-                    device_id=device.uuid, device_ip=device.local_system_ip, install_images=install_image_payload
+                    device_id=str(device.uuid),
+                    device_ip=str(device.local_system_ip),
+                    install_images=install_image_payload,
                 )
                 for device in devices
             ],  # type: ignore
@@ -291,7 +292,7 @@ class DeviceVersions:
         self._validate_devices_required_fields(devices)
         devices_payload = DataSequence(
             PartitionDevice,
-            [PartitionDevice(device_id=device.uuid, device_ip=device.local_system_ip) for device in devices],
+            [PartitionDevice(device_id=str(device.uuid), device_ip=str(device.local_system_ip)) for device in devices],
             # type: ignore
         )
 

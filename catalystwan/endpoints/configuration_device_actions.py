@@ -100,7 +100,7 @@ class PartitionActionPayload(BaseModel):
 class LxcInstallInput(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    v_edge_vpn: int = Field(serialization_alias="vEdgeVPN", validation_alias="vEdgeVPN")
+    v_edge_vpn: str = Field(serialization_alias="vEdgeVPN", validation_alias="vEdgeVPN")
     version_type: VersionType = Field(serialization_alias="versionType", validation_alias="versionType")
 
 
@@ -246,7 +246,8 @@ class ConfigurationDeviceActions(APIEndpoints):
     @get("/device/action/install/devices/{device_type}", "data")
     def get_list_of_installed_devices(
         self, device_type: DeviceType = "controller", params: GroupId = GroupId()
-    ) -> DataSequence[InstalledDeviceData]: ...
+    ) -> DataSequence[InstalledDeviceData]:
+        ...
 
     def generate_install_info(self):
         # GET /device/action/install
@@ -277,7 +278,8 @@ class ConfigurationDeviceActions(APIEndpoints):
         ...
 
     @get("/device/action/ztp/upgrade/setting", "data")
-    def get_ztp_upgrade_config_setting(self) -> DataSequence[ZTPUpgradeSettings]: ...
+    def get_ztp_upgrade_config_setting(self) -> DataSequence[ZTPUpgradeSettings]:
+        ...
 
     def initiate_image_download(self):
         # POST /device/action/image-download
@@ -292,21 +294,24 @@ class ConfigurationDeviceActions(APIEndpoints):
         ...
 
     @post("/device/action/changepartition")
-    def process_mark_change_partition(self, payload: PartitionActionPayload) -> ActionId: ...
+    def process_mark_change_partition(self, payload: PartitionActionPayload) -> ActionId:
+        ...
 
     def process_deactivate_smu(self):
         # POST /device/action/deactivate
         ...
 
     @post("/device/action/defaultpartition")
-    def process_mark_default_partition(self, payload: PartitionActionPayload) -> ActionId: ...
+    def process_mark_default_partition(self, payload: PartitionActionPayload) -> ActionId:
+        ...
 
     def process_delete_amp_api_key(self):
         # DELETE /device/action/security/amp/apikey/{uuid}
         ...
 
     @post("/device/action/install")
-    def process_install_operation(self, payload: InstallActionPayload) -> ActionId: ...
+    def process_install_operation(self, payload: InstallActionPayload) -> ActionId:
+        ...
 
     @post("/device/action/lxcactivate")
     def process_lxc_activate(self, payload: PartitionActionPayload) -> ActionId:
@@ -340,7 +345,8 @@ class ConfigurationDeviceActions(APIEndpoints):
         ...
 
     @post("/device/action/removepartition")
-    def process_remove_partition(self, payload: RemovePartitionActionPayload) -> ActionId: ...
+    def process_remove_partition(self, payload: RemovePartitionActionPayload) -> ActionId:
+        ...
 
     def process_remove_software_image(self):
         # POST /device/action/image-remove

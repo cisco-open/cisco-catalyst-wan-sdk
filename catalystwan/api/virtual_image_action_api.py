@@ -56,7 +56,7 @@ class LxcActionAPI:
     def lxcactivate(
         self,
         devices: DataSequence[DeviceDetailsResponse],
-        version_to_activate: [str],
+        version_to_activate: str,
     ) -> Task:
         """
         Requires that selected devices have already version_to_activate installed(upgraded)
@@ -156,7 +156,7 @@ class LxcActionAPI:
     def lxcdelete(
         self,
         devices: DataSequence[DeviceDetailsResponse],
-        version_to_delete: [str],
+        version_to_delete: str,
     ) -> Task:
         """
         Requires that selected devices have already version_to_delete
