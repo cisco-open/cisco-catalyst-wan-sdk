@@ -2,7 +2,7 @@
 
 # mypy: disable-error-code="empty-body"
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -58,7 +58,7 @@ class ConfigGroup(BaseModel):
         serialization_alias="numberOfDevicesUpToDate", validation_alias="numberOfDevicesUpToDate"
     )
     origin: Optional[str] = None
-    topology: Optional[str] = None
+    topology: Any = None
     full_config_cli: Optional[bool] = Field(
         default=None, serialization_alias="fullConfigCli", validation_alias="fullConfigCli"
     )

@@ -6,11 +6,10 @@ from uuid import UUID
 from catalystwan.endpoints import JSON, APIEndpoints, delete, get, post, put
 from catalystwan.models.policy.security import (
     AnySecurityPolicy,
+    AnySecurityPolicyInfoList,
     SecurityPolicyEditResponse,
-    SecurityPolicyInfoRoot,
     SecurityPolicyRoot,
 )
-from catalystwan.typed_list import DataSequence
 
 
 class ConfigurationSecurityTemplatePolicy(APIEndpoints):
@@ -36,7 +35,7 @@ class ConfigurationSecurityTemplatePolicy(APIEndpoints):
         ...
 
     @get("/template/policy/security", "data")
-    def generate_security_template_list(self) -> DataSequence[SecurityPolicyInfoRoot]:
+    def generate_security_template_list(self) -> AnySecurityPolicyInfoList:
         ...
 
     def get_device_list_by_id(self):
