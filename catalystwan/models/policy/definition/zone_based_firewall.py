@@ -21,6 +21,7 @@ from catalystwan.models.policy.policy_definition import (
     DestinationIPEntry,
     DestinationPortEntry,
     DestinationPortListEntry,
+    DestinationScalableGroupTagListEntry,
     LogAction,
     Match,
     PolicyActionType,
@@ -40,6 +41,7 @@ from catalystwan.models.policy.policy_definition import (
     SourceIPEntry,
     SourcePortEntry,
     SourcePortListEntry,
+    SourceScalableGroupTagListEntry,
 )
 
 ZoneBasedFWPolicySequenceEntry = Annotated[
@@ -53,6 +55,7 @@ ZoneBasedFWPolicySequenceEntry = Annotated[
         DestinationIPEntry,
         DestinationPortEntry,
         DestinationPortListEntry,
+        DestinationScalableGroupTagListEntry,
         ProtocolEntry,
         ProtocolNameEntry,
         ProtocolNameListEntry,
@@ -65,6 +68,7 @@ ZoneBasedFWPolicySequenceEntry = Annotated[
         SourceIPEntry,
         SourcePortEntry,
         SourcePortListEntry,
+        SourceScalableGroupTagListEntry,
     ],
     Field(discriminator="field"),
 ]

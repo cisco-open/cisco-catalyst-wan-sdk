@@ -19,6 +19,7 @@ from catalystwan.models.policy.policy import (
     URLFilteringAssemblyItem,
     ZoneBasedFWAssemblyItem,
 )
+from catalystwan.typed_list import DataSequence
 
 SecurityPolicyAssemblyItem = Annotated[
     Union[
@@ -121,7 +122,7 @@ class UnifiedSecurityPolicyDefinition(PolicyDefinition):
 
 
 class SecurityPolicy(PolicyCreationPayload):
-    policy_mode: Union[Literal["security"], None] = Field(
+    policy_mode: Literal[None, "security"] = Field(
         default="security", serialization_alias="policyMode", validation_alias="policyMode"
     )
     policy_type: str = Field(default="feature", serialization_alias="policyType", validation_alias="policyType")
@@ -223,5 +224,17 @@ class UnifiedSecurityPolicyInfo(UnifiedSecurityPolicy, PolicyInfo):
 AnySecurityPolicyInfo = Union[SecurityPolicyInfo, UnifiedSecurityPolicyInfo]
 
 
-class SecurityPolicyInfoRoot(RootModel):
-    root: AnySecurityPolicyInfo
+class AnySecurityPolicyInfoList(RootModel):
+    root: List[AnySecurityPolicyInfo]
+
+    @property
+    def all(self) -> List[AnySecurityPolicyInfo]:
+        return self.root
+
+    @property
+    def security(self) -> DataSequence[SecurityPolicyInfo]:
+        return DataSequence(SecurityPolicyInfo, [p for p in self.root if p.policy_mode == "security"])
+
+    @property
+    def unified(self) -> DataSequence[UnifiedSecurityPolicyInfo]:
+        return DataSequence(UnifiedSecurityPolicyInfo, [p for p in self.root if p.policy_mode == "unified"])
