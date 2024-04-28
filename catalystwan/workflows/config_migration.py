@@ -17,6 +17,7 @@ from catalystwan.models.configuration.config_migration import (
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.session import ManagerSession
 from catalystwan.utils.config_migration.converters.feature_template import create_parcel_from_template
+from catalystwan.utils.config_migration.converters.policy.policy_lists import PolicyListConversionError
 from catalystwan.utils.config_migration.converters.policy.policy_lists import convert as convert_policy_list
 from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigRollback
 from catalystwan.utils.config_migration.reverters.config_reverter import UX2ConfigReverter
@@ -230,12 +231,12 @@ def transform(ux1: UX1Config) -> UX2Config:
 
     # Policy Lists
     for policy_list in ux1.policies.policy_lists:
-        policy_parcel = convert_policy_list(policy_list)
-        if policy_parcel is not None:
+        try:
+            policy_parcel = convert_policy_list(policy_list)
             header = TransformHeader(type=policy_parcel._get_parcel_type(), origin=policy_list.list_id)
             ux2.profile_parcels.append(TransformedParcel(header=header, parcel=policy_parcel))
-        else:
-            logger.warning(f"{policy_list.type} {policy_list.list_id} {policy_list.name} was not converted")
+        except PolicyListConversionError as e:
+            logger.warning(f"{policy_list.type} {policy_list.list_id} {policy_list.name} was not converted: {e}")
 
     ux2 = merge_parcels(ux2)
     return ux2
@@ -263,15 +264,15 @@ def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, in
         progress("Collecting Policy Definitions", i + 1, len(policy_definition_types_and_ids))
 
     progress("Collecting Centralized Policies", 0, 1)
-    ux1.policies.centralized_policies = [item for item in policy_api.centralized.get()]
+    ux1.policies.centralized_policies = policy_api.centralized.get().data
     progress("Collecting Centralized Policies", 1, 1)
 
     progress("Collecting Localized Policies", 0, 1)
-    ux1.policies.localized_policies = [item for item in policy_api.localized.get()]
+    ux1.policies.localized_policies = policy_api.localized.get().data
     progress("Collecting Localized Policies", 1, 1)
 
     progress("Collecting Security Policies", 0, 1)
-    ux1.policies.security_policies = [item for item in policy_api.security.get()]
+    ux1.policies.security_policies = policy_api.security.get().root
     progress("Collecting Security Policies", 1, 1)
 
     """Collect Templates"""

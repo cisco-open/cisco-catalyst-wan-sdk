@@ -15,7 +15,7 @@ class AsPathEntry(BaseModel):
 class AsPathParcel(_ParcelBase):
     type_: Literal["as-path"] = Field(default="as-path", exclude=True)
     as_path_list_num: Global[int] = Field(validation_alias=AliasPath("data", "asPathListNum"))
-    entries: List[AsPathEntry] = Field(validation_alias=AliasPath("data", "entries"))
+    entries: List[AsPathEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
 
     def add_as_path(self, as_path: str):
         self.entries.append(AsPathEntry(as_path=as_global(as_path)))

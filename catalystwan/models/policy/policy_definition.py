@@ -567,8 +567,18 @@ class SourcePortListEntry(BaseModel):
     ref: UUID
 
 
+class SourceScalableGroupTagListEntry(BaseModel):
+    field: Literal["sourceScalableGroupTagList"] = "sourceScalableGroupTagList"
+    ref: UUID
+
+
 class DestinationPortListEntry(BaseModel):
     field: Literal["destinationPortList"] = "destinationPortList"
+    ref: UUID
+
+
+class DestinationScalableGroupTagListEntry(BaseModel):
+    field: Literal["destinationScalableGroupTagList"] = "destinationScalableGroupTagList"
     ref: UUID
 
 
@@ -858,6 +868,7 @@ MatchEntry = Annotated[
         DestinationPortEntry,
         DestinationPortListEntry,
         DestinationRegionEntry,
+        DestinationScalableGroupTagListEntry,
         DNSAppListEntry,
         DNSEntry,
         DomainIDEntry,
@@ -894,6 +905,7 @@ MatchEntry = Annotated[
         SourceIPv6Entry,
         SourcePortEntry,
         SourcePortListEntry,
+        SourceScalableGroupTagListEntry,
         TCPEntry,
         TLOCEntry,
         TLOCListEntry,

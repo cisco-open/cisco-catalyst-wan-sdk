@@ -122,7 +122,7 @@ class UnifiedSecurityPolicyDefinition(PolicyDefinition):
 
 
 class SecurityPolicy(PolicyCreationPayload):
-    policy_mode: Literal["security", None] = Field(
+    policy_mode: Literal[None, "security"] = Field(
         default="security", serialization_alias="policyMode", validation_alias="policyMode"
     )
     policy_type: str = Field(default="feature", serialization_alias="policyType", validation_alias="policyType")
@@ -221,9 +221,7 @@ class UnifiedSecurityPolicyInfo(UnifiedSecurityPolicy, PolicyInfo):
     supported_devices: List[str] = Field(serialization_alias="supportedDevices", validation_alias="supportedDevices")
 
 
-AnySecurityPolicyInfo = Annotated[
-    Union[SecurityPolicyInfo, UnifiedSecurityPolicyInfo], Field(discriminator="policy_mode")
-]
+AnySecurityPolicyInfo = Union[SecurityPolicyInfo, UnifiedSecurityPolicyInfo]
 
 
 class AnySecurityPolicyInfoList(RootModel):
