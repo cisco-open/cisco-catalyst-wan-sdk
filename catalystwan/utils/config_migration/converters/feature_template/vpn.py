@@ -6,6 +6,7 @@ from typing import List, Literal, Type, Union
 from pydantic import BaseModel, IPvAnyAddress
 
 from catalystwan.api.configuration_groups.parcel import Global, as_default, as_global, as_variable
+from catalystwan.models.common import SubnetMask
 from catalystwan.models.configuration.feature_profile.common import Prefix
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import (
     DHCP,
@@ -47,6 +48,28 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn impo
     StaticRouteIPv6,
     StaticRouteVPN,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import (
+    DnsIpv4,
+    DnsIpv6,
+    Gateway,
+    Ipv4RouteItem,
+    Ipv6RouteItem,
+    ManagementVpnParcel,
+    NewHostMappingItem,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import (
+    NextHopContainer as TransportNextHopContainer,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import (
+    NextHopItem,
+    NextHopItemIpv6,
+    OneOfIpRouteNextHopContainer,
+    OneOfIpRouteNull0,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import Prefix as TransportPrefix
+from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import ServiceItem
+from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import ServiceType as TransportServiceType
+from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import TransportVpnParcel
 
 logger = logging.getLogger(__name__)
 
@@ -67,12 +90,179 @@ class OmpMappingItem(BaseModel):
     ux2_field: Literal["omp_advertise_ipv4", "omp_advertise_ipv6"]
 
 
-class VpnParcelsTemplateConverter:
+class BaseTransportAndManagementTemplateConverter:
+    delete_keys = (
+        "ecmp_hash_key",
+        "omp_admin_distance_ipv4",
+        "omp_admin_distance_ipv6",
+        "dns",
+        "host",
+        "ip",
+        "ipv6",
+        "vpn_id",
+        "name",
+    )
+
+    def configure_new_host_mapping(self, values: dict) -> None:
+        hosts = values.get("host", [])
+        if not hosts:
+            return
+        host_mapping_items = []
+        for host in hosts:
+            host_mapping_items.append(
+                NewHostMappingItem(
+                    host_name=host["hostname"],
+                    list_of_ip=host["ip"],
+                )
+            )
+        values["new_host_mapping"] = host_mapping_items
+
+    def configure_dns(self, values: dict) -> None:
+        dns = values.get("dns", [])
+        if not dns:
+            return
+        dns_ipv4 = DnsIpv4()
+        dns_ipv6 = DnsIpv6()
+        for dns_entry in dns:
+            if dns_entry["role"].value == "primary":
+                dns_ipv4.primary_dns_address_ipv4 = dns_entry["dns_addr"]
+            elif dns_entry["role"].value == "secondary":
+                dns_ipv4.secondary_dns_address_ipv4 = dns_entry["dns_addr"]
+            elif dns_entry["role"].value == "primaryv6":
+                dns_ipv6.primary_dns_address_ipv6 = dns_entry["dns_addr"]
+            elif dns_entry["role"].value == "secondaryv6":
+                dns_ipv6.secondary_dns_address_ipv6 = dns_entry["dns_addr"]
+        values["dns_ipv4"] = dns_ipv4
+        values["dns_ipv6"] = dns_ipv6
+
+    def configure_route_ipv4(self, values: dict) -> None:
+        routes = values.get("ip", {}).get("route", [])
+        if not routes:
+            return
+        static_routes = []
+        for route in routes:
+            prefix = route.get("prefix")
+            ipv4route_item = Ipv4RouteItem(
+                prefix=TransportPrefix(
+                    ip_address=as_global(prefix.value.network.network_address),
+                    subnet_mask=as_global(str(prefix.value.netmask), SubnetMask),
+                )
+            )
+            if "next_hop" in route:
+                ipv4route_item.gateway = as_global("nextHop", Gateway)
+                ipv4route_item.next_hop = [
+                    NextHopItem(
+                        address=next_hop.get("address"),
+                        distance=next_hop.get("distance", as_default(1)),
+                    )
+                    for next_hop in route["next_hop"]
+                ]
+            elif "dhcp" in route:
+                ipv4route_item.gateway = as_global("dhcp", Gateway)
+            static_routes.append(ipv4route_item)
+        values["ipv4_route"] = static_routes
+
+    def configure_route_ipv6(self, values: dict) -> None:
+        routes = values.get("ipv6", {}).get("route", [])
+        if not routes:
+            return
+        static_routes = []
+        for route in routes:
+            one_of_ip_route: Union[OneOfIpRouteNull0, OneOfIpRouteNextHopContainer] = OneOfIpRouteNull0()
+            if "null0" in route:
+                one_of_ip_route = OneOfIpRouteNull0(null0=route.get("null0"))
+            elif "next_hop" in route:
+                one_of_ip_route = OneOfIpRouteNextHopContainer(
+                    next_hop_container=TransportNextHopContainer(
+                        next_hop=[
+                            NextHopItemIpv6(
+                                address=next_hop.get("address"),
+                                distance=next_hop.get("distance", as_default(1)),
+                            )
+                            for next_hop in route["next_hop"]
+                        ]
+                    )
+                )
+            else:
+                one_of_ip_route = OneOfIpRouteNull0()
+            ipv6route_item = Ipv6RouteItem(prefix=route.get("prefix"), one_of_ip_route=one_of_ip_route)
+            static_routes.append(ipv6route_item)
+        values["ipv6_route"] = static_routes
+
+    def cleanup_keys(self, values: dict) -> None:
+        for key in self.delete_keys:
+            values.pop(key, None)
+
+
+class ManagementVpnTemplateConverter(BaseTransportAndManagementTemplateConverter):
+    def create_parcel(self, name: str, description: str, template_values: dict) -> ManagementVpnParcel:
+        """
+        Creates a ManagementVpnParcel parcel.
+
+        Args:
+            name (str): The name of the parcel.
+            description (str): The description of the parcel.
+            template_values (dict): A dictionary containing the template values.
+
+        Returns:
+            VPN: The created ManagementVpnParcel.
+        """
+        values = deepcopy(template_values)
+        print(values)
+        self.configure_dns(values)
+        self.configure_new_host_mapping(values)
+        self.configure_route_ipv4(values)
+        self.configure_route_ipv6(values)
+        self.cleanup_keys(values)
+        return ManagementVpnParcel(parcel_name=name, parcel_description=description, **values)
+
+
+class TransportVpnTemplateConverter(BaseTransportAndManagementTemplateConverter):
+    def create_parcel(self, name: str, description: str, template_values: dict) -> TransportVpnParcel:
+        """
+        Creates a TransportVpnParcel parcel.
+
+        Args:
+            name (str): The name of the parcel.
+            description (str): The description of the parcel.
+            template_values (dict): A dictionary containing the template values.
+
+        Returns:
+            VPN: The created TransportVpnParcel.
+        """
+        values = deepcopy(template_values)
+        print(values)
+        self.configure_dns(values)
+        self.configure_new_host_mapping(values)
+        self.configure_enhance_ecmp_keying(values)
+        self.configure_service_type(values)
+        self.configure_route_ipv4(values)
+        self.configure_route_ipv6(values)
+        self.cleanup_keys(values)
+        return TransportVpnParcel(parcel_name=name, parcel_description=description, **values)
+
+    def configure_service_type(self, values: dict) -> None:
+        services = values.get("service", [])
+        if not services:
+            return
+        service_items = []
+        for service in services:
+            service_items.append(
+                ServiceItem(
+                    service_type=as_global(service["svc_type"].value, TransportServiceType),
+                )
+            )
+        values["service"] = service_items
+
+    def configure_enhance_ecmp_keying(self, values: dict) -> None:
+        if enhance_ecmp_keying := values.get("ecmp_hash_key", {}).get("layer4"):
+            values["enhance_ecmp_keying"] = enhance_ecmp_keying
+
+
+class ServiceVpnTemplateConverter:
     """
     A class for converting template values into a LanVpnParcel object.
     """
-
-    supported_template_types = ("cisco_vpn", "vpn-vedge", "vpn-vsmart")
 
     delete_keys = (
         "ecmp_hash_key",
@@ -165,20 +355,6 @@ class VpnParcelsTemplateConverter:
             VPN: The created VPN object.
         """
         values = deepcopy(template_values)
-        vpn_id = self.get_vpn_id(values)
-        if vpn_id == 0:
-            return LanVpnParcel(
-                parcel_name=name,
-                parcel_description=f"{description} - This should be a VPN 0",
-                vpn_id=as_global(77),
-            )
-        elif vpn_id == 512:
-            return LanVpnParcel(
-                parcel_name=name,
-                parcel_description=f"{description} - This should be a VPN 512",
-                vpn_id=as_global(77),
-            )
-
         self.configure_vpn_id(values)
         self.configure_vpn_name(values)
         self.configure_natpool(values)
@@ -210,9 +386,6 @@ class VpnParcelsTemplateConverter:
     def configure_vpn_name(self, values: dict) -> None:
         if vpn_name := values.get("name", None):
             values["vpn_name"] = vpn_name
-
-    def get_vpn_id(self, values: dict) -> int:
-        return int(values["vpn_id"].value)
 
     def configure_vpn_id(self, values: dict) -> None:
         if vpn_id := values.get("vpn_id"):
@@ -532,3 +705,31 @@ class VpnParcelsTemplateConverter:
                 configuration["source_vpn"] = rl["source_vpn"]
             items.append(pydantic_model(**configuration))
         values[pydantic_field] = items
+
+
+class VpnTemplateConverter:
+    supported_template_types = ("cisco_vpn", "vpn-vedge", "vpn-vsmart")
+
+    def create_parcel(
+        self, name: str, description: str, template_values: dict
+    ) -> Union[LanVpnParcel, TransportVpnParcel, ManagementVpnParcel]:
+        """
+        Creates a parcel from VPN family object based on the provided parameters.
+
+        Args:
+            name (str): The name of the parcel.
+            description (str): The description of the parcel.
+            template_values (dict): A dictionary containing the template values.
+
+        Returns:
+            VPN: The created VPN object.
+        """
+        if 0 == self.get_vpn_id(template_values):
+            return TransportVpnTemplateConverter().create_parcel(name, description, template_values)
+        elif 512 == self.get_vpn_id(template_values):
+            return ManagementVpnTemplateConverter().create_parcel(name, description, template_values)
+        else:
+            return ServiceVpnTemplateConverter().create_parcel(name, description, template_values)
+
+    def get_vpn_id(self, values: dict) -> int:
+        return int(values["vpn_id"].value)

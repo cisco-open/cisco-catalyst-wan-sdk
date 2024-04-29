@@ -19,7 +19,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport import (
     AnyTransportParcel,
     CellularControllerParcel,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn_management import ManagementVpn
+from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import ManagementVpnParcel
 from catalystwan.typed_list import DataSequence
 
 
@@ -81,7 +81,7 @@ class TransportFeatureProfile(APIEndpoints):
     @versions(supported_versions=(">=20.13"), raises=False)
     @put("/v1/feature-profile/sdwan/transport/{profile_id}/management/vpn/{parcel_id}")
     def edit_management_vpn_parcel(
-        self, profile_id: str, parcel_id: str, payload: ManagementVpn
+        self, profile_id: str, parcel_id: str, payload: ManagementVpnParcel
     ) -> ParcelCreationResponse:
         ...
 

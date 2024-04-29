@@ -37,7 +37,7 @@ from .security import SecurityTemplateConverter
 from .svi import InterfaceSviTemplateConverter
 from .thousandeyes import ThousandEyesTemplateConverter
 from .ucse import UcseTemplateConverter
-from .vpn import VpnParcelsTemplateConverter
+from .vpn import VpnTemplateConverter
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ available_converters = [
     DhcpTemplateConverter,
     SNMPTemplateConverter,
     AppqoeTemplateConverter,
-    VpnParcelsTemplateConverter,
+    VpnTemplateConverter,
     InterfaceGRETemplateConverter,
     InterfaceSviTemplateConverter,
     InterfaceEthernetTemplateConverter,
