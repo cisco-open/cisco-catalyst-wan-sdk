@@ -28,7 +28,7 @@ class VersionedFieldsModel(BaseModel):
 
     @model_serializer(mode="wrap")
     def dump(self, handler: SerializerFunctionWrapHandler, info: SerializationInfo) -> Dict[str, Any]:
-        return VersionedField.update_model_fields(self.model_fields, handler(self), info)
+        return VersionedField.dump(self.model_fields, handler(self), info)
 
 
 class Payload(BaseModel):
