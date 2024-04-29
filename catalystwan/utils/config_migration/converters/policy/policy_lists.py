@@ -1,6 +1,5 @@
 from typing import Any, Callable, Dict, Mapping, Type
 
-from catalystwan.exceptions import CatalystwanException
 from catalystwan.models.common import int_range_serializer
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import (
     AnyPolicyObjectParcel,
@@ -56,10 +55,7 @@ from catalystwan.models.policy import (
     URLBlockList,
     ZoneList,
 )
-
-
-class PolicyListConversionError(CatalystwanException):
-    pass
+from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 
 
 def _get_parcel_name_desc(policy_list: AnyPolicyList) -> Dict[str, Any]:
@@ -85,7 +81,7 @@ def app_list(in_: AppList, **context) -> ApplicationListParcel:
 
 def as_path(in_: ASPathList, **context) -> AsPathParcel:
     if not context:
-        raise PolicyListConversionError(f"Additional context required for {ASPathList.__name__}")
+        raise CatalystwanConverterCantConvertException(f"Additional context required for {ASPathList.__name__}")
     out = AsPathParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_as_path(entry.as_path)
@@ -297,7 +293,7 @@ def _find_converter(in_: Input) -> Callable[..., Output]:
     for key in CONVERTERS.keys():
         if isinstance(in_, key):
             return CONVERTERS[key]
-    raise PolicyListConversionError(f"No converter found for {type(in_).__name__}")
+    raise CatalystwanConverterCantConvertException(f"No converter found for {type(in_).__name__}")
 
 
 def convert(in_: Input, **context) -> Output:

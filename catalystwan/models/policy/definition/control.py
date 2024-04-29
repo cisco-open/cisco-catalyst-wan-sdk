@@ -10,12 +10,13 @@ from typing_extensions import Annotated
 from catalystwan.models.common import EncapType, TLOCColor
 from catalystwan.models.policy.policy_definition import (
     AffinityEntry,
-    Carrier,
     CarrierEntry,
+    CarrierType,
     ColorListEntry,
     CommunityAdditiveEntry,
     CommunityEntry,
     CommunityListEntry,
+    ControlPathType,
     DefinitionWithSequencesCommonBase,
     DomainIDEntry,
     ExpandedCommunityListEntry,
@@ -27,7 +28,6 @@ from catalystwan.models.policy.policy_definition import (
     OriginatorEntry,
     OriginEntry,
     OriginProtocol,
-    PathType,
     PathTypeEntry,
     PolicyActionBase,
     PolicyDefinitionBase,
@@ -149,7 +149,7 @@ class ControlPolicyRouteSequence(PolicyDefinitionSequenceBase):
     def match_originator(self, originator: IPv4Address) -> None:
         self._insert_match(OriginatorEntry(value=originator))
 
-    def match_path_type(self, path_type: PathType) -> None:
+    def match_path_type(self, path_type: ControlPathType) -> None:
         self._insert_match(PathTypeEntry(value=path_type))
 
     def match_preference(self, preference: int) -> None:
@@ -250,7 +250,7 @@ class ControlPolicyTLOCSequence(PolicyDefinitionSequenceBase):
     actions: List[ControlPolicyTLOCSequenceActions] = []
     model_config = ConfigDict(populate_by_name=True)
 
-    def match_carrier(self, carrier: Carrier) -> None:
+    def match_carrier(self, carrier: CarrierType) -> None:
         self._insert_match(CarrierEntry(value=carrier))
 
     def match_color_list(self, color_list_id: UUID) -> None:
