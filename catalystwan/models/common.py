@@ -39,17 +39,19 @@ class VersionedField:
     versions: InitVar[str]
     versions_set: SpecifierSet = field(init=False)
     serialization_alias: str
-    default: Any = None
-    is_defined: bool = True
-    is_required: bool = False
 
     def __post_init__(self, versions):
         self.versions_set = SpecifierSet(versions)
 
     @staticmethod
-    def matched(
+    def model_iterate(
         model_fields: Dict[str, FieldInfo], info: Union[SerializationInfo, ValidationInfo]
     ) -> Iterator[Tuple[str, FieldInfo, "VersionedField"]]:
+        """Itrerates over model fields that matches a version given in context (Serialization info or ValidationInfo)
+
+        Yields:
+            Tuple[str, FieldInfo, VersionedField]: a tuple containing field name, FieldInfo and VersionedField
+        """
         if info.context is not None:
             api_version: Optional[Version] = info.context.get("api_version")
             if api_version is not None:
@@ -78,7 +80,7 @@ class VersionedField:
         Returns:
             Dict[str, Any]: model_dict with updated field names according to matching runtime version
         """
-        for field_name, field_info, versioned_field in VersionedField.matched(model_fields, info):
+        for field_name, field_info, versioned_field in VersionedField.model_iterate(model_fields, info):
             current_field_name = field_info.serialization_alias or field_info.alias or field_name
             new_field_name = versioned_field.serialization_alias
             if current_field_name in model_dict:
