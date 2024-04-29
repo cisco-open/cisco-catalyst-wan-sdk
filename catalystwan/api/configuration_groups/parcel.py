@@ -54,7 +54,7 @@ class _ParcelBase(BaseModel):
         remove_keys = []
         replaced_keys: Dict[str, Tuple[str, str]] = {}
 
-        # de-enveloping
+        # enveloping
         for key in model_dict.keys():
             field_info = self.model_fields.get(key)
             if field_info and isinstance(field_info.validation_alias, AliasPath):

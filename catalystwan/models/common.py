@@ -1,7 +1,6 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from dataclasses import InitVar, dataclass, field
-from logging import getLogger
 from typing import Any, Dict, Iterator, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union
 from uuid import UUID
 
@@ -11,8 +10,6 @@ from pydantic import PlainSerializer, SerializationInfo, ValidationInfo
 from pydantic.fields import FieldInfo
 from pydantic.functional_validators import BeforeValidator
 from typing_extensions import Annotated
-
-logger = getLogger(__name__)
 
 
 @dataclass()
