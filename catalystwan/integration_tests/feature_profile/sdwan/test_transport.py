@@ -1,7 +1,6 @@
 from ipaddress import IPv4Address, IPv6Address
 
 from catalystwan.api.configuration_groups.parcel import as_global
-from catalystwan.exceptions import CatalystwanException
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
 from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1controller import (
     E1,
@@ -119,11 +118,7 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
             ],
         )
         # Act
-        try:
-            parcel_id = self.api.create_parcel(self.profile_uuid, t1e1controller).id
-        except CatalystwanException as e:
-            with open("error.json", "w") as f:
-                f.write(str(e.response.json()))
+        parcel_id = self.api.create_parcel(self.profile_uuid, t1e1controller).id
         # Assert
         assert parcel_id
 
@@ -159,11 +154,7 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
             ],
         )
         # Act
-        try:
-            parcel_id = self.api.create_parcel(self.profile_uuid, t1e1controller).id
-        except CatalystwanException as e:
-            with open("error.json", "w") as f:
-                f.write(str(e.response.json()))
+        parcel_id = self.api.create_parcel(self.profile_uuid, t1e1controller).id
         # Assert
         assert parcel_id
 
