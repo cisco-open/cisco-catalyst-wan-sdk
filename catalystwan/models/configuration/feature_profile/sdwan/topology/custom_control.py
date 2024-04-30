@@ -134,7 +134,7 @@ class ServiceChain(BaseModel):
     vpn: Optional[Global[int]] = Field(default=None)
 
     @model_validator(mode="after")
-    def tloc_xor_tloc_list(self):
+    def tloc_nand_tloc_list(self):
         check_fields_exclusive(self.__dict__, {"tloc", "tloc_list"}, False)
         return self
 
