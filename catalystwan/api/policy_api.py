@@ -164,7 +164,7 @@ from catalystwan.models.policy.policy_definition import (
 from catalystwan.models.policy.policy_list import PolicyListBase
 from catalystwan.models.policy.security import (
     AnySecurityPolicy,
-    AnySecurityPolicyInfo,
+    AnySecurityPolicyInfoList,
     SecurityPolicy,
     SecurityPolicyEditResponse,
     UnifiedSecurityPolicy,
@@ -328,7 +328,7 @@ class SecurityPolicyAPI:
         self._endpoints.delete_security_template(id)
 
     @overload
-    def get(self) -> List[AnySecurityPolicyInfo]:
+    def get(self) -> AnySecurityPolicyInfoList:
         ...
 
     @overload
@@ -338,7 +338,7 @@ class SecurityPolicyAPI:
     def get(self, id: Optional[UUID] = None) -> Any:
         if id is not None:
             return self._endpoints.get_security_template(id).root
-        return [info.root for info in self._endpoints.generate_security_template_list()]
+        return self._endpoints.generate_security_template_list()
 
 
 class PolicyListsAPI:

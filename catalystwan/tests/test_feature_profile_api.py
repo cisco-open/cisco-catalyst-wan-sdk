@@ -47,8 +47,11 @@ from catalystwan.models.configuration.feature_profile.sdwan.system import (
     SecurityParcel,
     SNMPParcel,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.transport import ManagementVpnParcel
-from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import TransportVpnParcel
+from catalystwan.models.configuration.feature_profile.sdwan.transport import (
+    ManagementVpnParcel,
+    T1E1ControllerParcel,
+    TransportVpnParcel,
+)
 
 system_endpoint_mapping = {
     AAAParcel: "aaa",
@@ -242,6 +245,7 @@ class TestServiceFeatureProfileAPI(unittest.TestCase):
 
 
 transport_enpoint_mapping = {
+    T1E1ControllerParcel: "t1-e1-controller",
     ManagementVpnParcel: "management/vpn",
     TransportVpnParcel: "wan/vpn",
 }

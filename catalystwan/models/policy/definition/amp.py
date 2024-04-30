@@ -57,7 +57,7 @@ class AdvancedMalwareProtectionDefinition(BaseModel):
 
 class AdvancedMalwareProtectionPolicy(PolicyDefinitionBase):
     type: Literal["advancedMalwareProtection"] = "advancedMalwareProtection"
-    mode: AMPPolicyType
+    mode: AMPPolicyType = "security"
     definition: AdvancedMalwareProtectionDefinition
 
 

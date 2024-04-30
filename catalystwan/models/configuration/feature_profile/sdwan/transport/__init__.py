@@ -7,13 +7,22 @@ from typing_extensions import Annotated
 
 from .bgp import WanRoutingBgpParcel as BGPParcel
 from .cellular_controller import CellularControllerParcel
+from .t1e1controller import T1E1ControllerParcel
 from .vpn import ManagementVpnParcel, TransportVpnParcel
 
 AnyTransportParcel = Annotated[
-    Union[BGPParcel, CellularControllerParcel, ManagementVpnParcel, TransportVpnParcel], Field(discriminator="type_")
+    Union[BGPParcel, CellularControllerParcel, ManagementVpnParcel, TransportVpnParcel, T1E1ControllerParcel],
+    Field(discriminator="type_"),
 ]
 
-__all__ = ["BGPParcel", "CellularControllerParcel", "ManagementVpnParcel", "TransportVpnParcel", "AnyTransportParcel"]
+__all__ = [
+    "BGPParcel",
+    "CellularControllerParcel",
+    "ManagementVpnParcel",
+    "TransportVpnParcel",
+    "AnyTransportParcel",
+    "T1E1ControllerParcel",
+]
 
 
 def __dir__() -> "List[str]":

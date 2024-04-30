@@ -1,7 +1,7 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from enum import Enum
-from typing import Any, Dict, Generic, Literal, Optional, TypeVar, get_origin
+from typing import Any, Dict, Generic, Literal, Optional, Tuple, TypeVar, get_origin
 
 from pydantic import (
     AliasPath,
@@ -9,11 +9,13 @@ from pydantic import (
     ConfigDict,
     Field,
     PrivateAttr,
+    SerializationInfo,
     SerializerFunctionWrapHandler,
     model_serializer,
 )
 
 from catalystwan.exceptions import CatalystwanException
+from catalystwan.models.common import VersionedField
 
 T = TypeVar("T")
 
@@ -38,7 +40,7 @@ class _ParcelBase(BaseModel):
     _parcel_data_key: str = PrivateAttr(default="data")
 
     @model_serializer(mode="wrap")
-    def envelope_parcel_data(self, handler: SerializerFunctionWrapHandler) -> Dict[str, Any]:
+    def envelope_parcel_data(self, handler: SerializerFunctionWrapHandler, info: SerializationInfo) -> Dict[str, Any]:
         """
         serializes model fields with respect to field validation_alias,
         sub-classing parcel fields can be defined like following:
@@ -50,16 +52,23 @@ class _ParcelBase(BaseModel):
         model_dict = handler(self)
         model_dict[self._parcel_data_key] = {}
         remove_keys = []
+        replaced_keys: Dict[str, Tuple[str, str]] = {}
 
+        # enveloping
         for key in model_dict.keys():
             field_info = self.model_fields.get(key)
             if field_info and isinstance(field_info.validation_alias, AliasPath):
                 aliases = field_info.validation_alias.convert_to_aliases()
                 if aliases and aliases[0] == self._parcel_data_key and len(aliases) == 2:
                     model_dict[self._parcel_data_key][aliases[1]] = model_dict[key]
+                    replaced_keys[key] = (self._parcel_data_key, str(aliases[1]))
                     remove_keys.append(key)
         for key in remove_keys:
             del model_dict[key]
+
+        # versioned field update
+        model_dict = VersionedField.dump(self.model_fields, model_dict, info, replaced_keys)
+
         return model_dict
 
     @classmethod

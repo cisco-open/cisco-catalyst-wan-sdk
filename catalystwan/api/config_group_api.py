@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, overload
 from uuid import UUID
 
 from catalystwan.typed_list import DataSequence
@@ -32,8 +32,8 @@ from catalystwan.endpoints.configuration_group import (
 
 class ConfigGroupAPI:
     def __init__(self, session: ManagerSession):
-        self.session = session
-        self.endpoint = ConfigurationGroup(session)
+        self._session = session
+        self._endpoints = ConfigurationGroup(session)
 
     def associate(self, cg_id: str, device_ids: list) -> None:
         """
@@ -46,7 +46,7 @@ class ConfigGroupAPI:
 
         payload = ConfigGroupAssociatePayload(devices=devices)
 
-        self.endpoint.associate(config_group_id=cg_id, payload=payload)
+        self._endpoints.associate(config_group_id=cg_id, payload=payload)
 
     def create(self, name: str, description: str, solution: Solution, profile_ids: list) -> ConfigGroupCreationResponse:
         """
@@ -60,7 +60,7 @@ class ConfigGroupAPI:
             name=name, description=description, solution=solution, profiles=profiles
         )
 
-        return self.endpoint.create_config_group(cg_payload)
+        return self._endpoints.create_config_group(cg_payload)
 
     def create_variables(
         self, cg_id: str, device_ids: list, suggestions: bool = True
@@ -69,13 +69,13 @@ class ConfigGroupAPI:
         Creates device specific variable data in given config-group
         """
         payload = ConfigGroupVariablesCreatePayload(deviceIds=device_ids, suggestions=suggestions)
-        return self.endpoint.create_variables(config_group_id=cg_id, payload=payload)
+        return self._endpoints.create_variables(config_group_id=cg_id, payload=payload)
 
     def delete(self, cg_id: str) -> None:
         """
         Deletes existing config-group with given ID
         """
-        self.endpoint.delete_config_group(cg_id)
+        self._endpoints.delete_config_group(cg_id)
 
     def deploy(self, cg_id: str, device_ids: list) -> ConfigGroupDeployResponse:
         """
@@ -86,7 +86,7 @@ class ConfigGroupAPI:
             devices.append(DeviceId(id=device_id))
 
         payload = ConfigGroupDeployPayload(devices=devices)
-        return self.endpoint.deploy(config_group_id=cg_id, payload=payload)
+        return self._endpoints.deploy(config_group_id=cg_id, payload=payload)
 
     def disassociate(self, cg_id: str, device_ids: list) -> ConfigGroupDisassociateResponse:
         """
@@ -97,7 +97,7 @@ class ConfigGroupAPI:
             devices.append(DeviceId(id=device_id))
 
         payload = ConfigGroupAssociatePayload(devices=devices)
-        return self.endpoint.disassociate(config_group_id=cg_id, payload=payload)
+        return self._endpoints.disassociate(config_group_id=cg_id, payload=payload)
 
     def edit(
         self, cg_id: str, name: str, description: str, solution: Solution, profile_ids: list
@@ -111,16 +111,24 @@ class ConfigGroupAPI:
             profiles.append(ProfileId(id=profile_id))
         payload = ConfigGroupEditPayload(name=name, description=description, solution=solution, profiles=profiles)
 
-        return self.endpoint.edit_config_group(config_group_id=cg_id, payload=payload)
+        return self._endpoints.edit_config_group(config_group_id=cg_id, payload=payload)
 
-    def get(self, group_id: Optional[UUID] = None) -> Union[DataSequence[ConfigGroup], ConfigGroup, None]:
+    @overload
+    def get(self) -> DataSequence[ConfigGroup]:
+        ...
+
+    @overload
+    def get(self, group_id: UUID) -> ConfigGroup:
+        ...
+
+    def get(self, group_id: Optional[UUID] = None) -> Any:
         """
         Gets list of existing config-groups or single config-group with given ID
-         If given ID is not correct return None
+        If given ID is not correct return None
         """
         if group_id is None:
-            return self.endpoint.get()
-        return self.endpoint.get().filter(id=group_id).single_or_default()
+            return self._endpoints.get()
+        return self._endpoints.get().filter(id=group_id).single_or_default()
 
     def update_variables(self, cg_id: str, solution: Solution, device_variables: list) -> None:
         """
@@ -128,4 +136,4 @@ class ConfigGroupAPI:
         """
         payload = ConfigGroupVariablesEditPayload(solution=solution, devices=device_variables)
 
-        self.endpoint.update_variables(config_group_id=cg_id, payload=payload)
+        self._endpoints.update_variables(config_group_id=cg_id, payload=payload)
