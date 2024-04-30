@@ -1,7 +1,7 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from enum import Enum
-from typing import Any, Dict, Generic, Literal, Optional, Tuple, TypeVar, get_origin
+from typing import Any, Dict, Generic, List, Literal, Optional, Tuple, TypeVar, get_origin
 
 from pydantic import (
     AliasPath,
@@ -129,7 +129,7 @@ class Default(ParcelAttribute, Generic[T]):
     option_type: OptionType = Field(
         default=OptionType.DEFAULT, serialization_alias="optionType", validation_alias="optionType"
     )
-    value: Optional[Any] = None
+    value: Optional[T] = None
 
 
 def as_global(value: Any, generic_alias: Any = None):
@@ -143,10 +143,14 @@ def as_global(value: Any, generic_alias: Any = None):
         Global[Any]: global option type object
     """
     if generic_alias is None:
+        if isinstance(value, list):
+            if len(value) == 0:
+                return Global[List](value=list())  # type: ignore
+            return Global[List[type(value[0])]](value=value)  # type: ignore
         return Global[type(value)](value=value)  # type: ignore
     elif get_origin(generic_alias) is Literal:
         return Global[generic_alias](value=value)  # type: ignore
-    TypeError("Inappropriate type for argument generic_alias")
+    raise TypeError("Inappropriate type for argument generic_alias")
 
 
 def as_variable(value: str):
@@ -172,7 +176,11 @@ def as_default(value: Any, generic_alias: Any = None):
         Default[Any]: default option type object
     """
     if generic_alias is None:
+        if isinstance(value, list):
+            if len(value) == 0:
+                return Default[List](value=list())  # type: ignore
+            return Default[List[type(value[0])]](value=value)  # type: ignore
         return Default[type(value)](value=value)  # type: ignore
     elif get_origin(generic_alias) is Literal:
         return Default[generic_alias](value=value)  # type: ignore
-    TypeError("Inappropriate type for argument generic_alias")
+    raise TypeError("Inappropriate type for argument generic_alias")

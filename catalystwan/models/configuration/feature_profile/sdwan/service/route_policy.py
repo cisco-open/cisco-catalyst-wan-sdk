@@ -227,7 +227,7 @@ class RoutePolicySequence(BaseModel):
         ..., serialization_alias="sequenceName", validation_alias="sequenceName", description="Sequence Name"
     )
     base_action: Union[Global[BaseAction], Default[BaseAction]] = Field(
-        default=as_default("Reject", BaseAction),
+        default=as_default("reject", BaseAction),
         serialization_alias="baseAction",
         validation_alias="baseAction",
         description="Base Action",

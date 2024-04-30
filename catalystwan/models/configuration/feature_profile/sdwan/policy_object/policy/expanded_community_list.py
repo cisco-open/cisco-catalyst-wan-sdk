@@ -1,17 +1,17 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from typing import Literal
+from typing import List, Literal
 
 from pydantic import AliasPath, ConfigDict, Field, field_validator
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase
 
 
 class ExpandedCommunityParcel(_ParcelBase):
     type_: Literal["expanded-community"] = Field(default="expanded-community", exclude=True)
     model_config = ConfigDict(populate_by_name=True)
-    expanded_community_list: Global[list] = Field(
-        default=as_global([]),
+    expanded_community_list: Global[List[str]] = Field(
+        default=Global[List[str]](value=list()),
         serialization_alias="expandedCommunityList",
         validation_alias=AliasPath("data", "expandedCommunityList"),
     )
