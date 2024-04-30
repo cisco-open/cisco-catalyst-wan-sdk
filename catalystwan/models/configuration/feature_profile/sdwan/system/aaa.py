@@ -37,7 +37,7 @@ class UserItem(BaseModel):
         )
     )
     privilege: Union[Global[str], Variable, Default[str], None] = Field(
-        None, description="Set Privilege Level for this user"
+        default=None, description="Set Privilege Level for this user"
     )
     pubkey_chain: Optional[List[PubkeyChainItem]] = Field(
         default=None,
