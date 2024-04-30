@@ -35,6 +35,7 @@ from .ospf import OspfTemplateConverter
 from .ospfv3 import Ospfv3TemplateConverter
 from .security import SecurityTemplateConverter
 from .svi import InterfaceSviTemplateConverter
+from .t1e1serial import T1E1SerialTemplateConverter
 from .thousandeyes import ThousandEyesTemplateConverter
 from .ucse import UcseTemplateConverter
 from .vpn import VpnTemplateConverter
@@ -69,6 +70,7 @@ available_converters = [
     PimToMulticastTemplateConverter,
     IgmpToMulticastTemplateConverter,
     WirelessLanTemplateConverter,
+    T1E1SerialTemplateConverter,
 ]
 
 
