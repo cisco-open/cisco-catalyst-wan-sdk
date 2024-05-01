@@ -17,7 +17,7 @@ class TestMonitoringSecurityPolicy(unittest.TestCase):
             "urlf_down": ["3.3.3.3"],
             "urlf_up": ["1.1.1.1", "2.2.2.2"],
             "zbfw_down": [],
-            "zbfw_up": ["1.1.1.1", "2.2.2.2", "3.3.3.3"]
+            "zbfw_up": ["1.1.1.1", "2.2.2.2", "3.3.3.3"],
         }
 
     @patch("catalystwan.session.ManagerSession")
