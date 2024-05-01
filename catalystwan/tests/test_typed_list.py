@@ -365,6 +365,38 @@ class TestDataSequence(TestCase):
         with self.assertRaises(AttributeError):
             self.data_sequence.filter(does_not="exists")
 
+    def test_find(self):
+        # Arrange
+        expected = self.data_sequence.filter(username="User3").single_or_default()
+        # Act
+        observed = self.data_sequence.find(username="User3")
+
+        # Assert
+        self.assertEqual(observed, expected)
+
+    def test_find_two_attributes(self):
+        # Arrange
+        additional_user = User(username="User1", description="ThisOne")
+        users = copy.deepcopy(self.data_sequence)
+        users.append(additional_user)
+        correct_output = additional_user
+
+        # Act
+        output = users.find(username="User1", description="ThisOne")
+
+        # Assert
+        self.assertEqual(output, correct_output)
+
+    def test_find_wrong_arg(self):
+        # Arrange, Act, Assert
+        with self.assertRaises(AttributeError):
+            self.data_sequence.find(does_not="exists")
+
+    def test_find_no_match(self):
+        # Arrange, Act, Assert
+        with self.assertRaises(InvalidOperationError):
+            self.data_sequence.find(username="NonExistingUser")
+
 
 if __name__ == "__main__":
     unittest.main()
