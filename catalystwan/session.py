@@ -153,7 +153,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         port: Optional[int] = None,
         subdomain: Optional[str] = None,
         auth: Optional[AuthBase] = None,
-        validate_response: bool = True,
+        validate_responses: bool = True,
     ):
         self.url = url
         self.port = port
@@ -178,7 +178,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self._state: ManagerSessionState = ManagerSessionState.OPERATIVE
         self.restart_timeout: int = 1200
         self.polling_requests_timeout: int = 10
-        self._validate_response = validate_response
+        self._validate_responses = validate_responses
 
     @property
     def state(self) -> ManagerSessionState:
@@ -483,12 +483,12 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         return self._api_version
 
     @property
-    def validate_response(self) -> bool:
-        return self._validate_response
+    def validate_responses(self) -> bool:
+        return self._validate_responses
 
-    @validate_response.setter
-    def validate_response(self, value: bool):
-        self._validate_response = value
+    @validate_responses.setter
+    def validate_responses(self, value: bool):
+        self._validate_responses = value
 
     def __str__(self) -> str:
         return f"{self.username}@{self.base_url}"

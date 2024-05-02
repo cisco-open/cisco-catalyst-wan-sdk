@@ -568,11 +568,11 @@ class request(APIEndpointsDecorator):
                         return response.dataseq(
                             cls=self.return_spec.payload_type,
                             sourcekey=self.resp_json_key,
-                            validate=_self._client.validate_response,
+                            validate=_self._client.validate_responses,
                         )
                     else:
                         return response.dataobj(
-                            self.return_spec.payload_type, self.resp_json_key, validate=_self._client.validate_response
+                            self.return_spec.payload_type, self.resp_json_key, validate=_self._client.validate_responses
                         )
                 elif issubclass(self.return_spec.payload_type, str):
                     return response.text
