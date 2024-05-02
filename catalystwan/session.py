@@ -153,6 +153,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         port: Optional[int] = None,
         subdomain: Optional[str] = None,
         auth: Optional[AuthBase] = None,
+        validate_response: bool = True,
     ):
         self.url = url
         self.port = port
@@ -177,6 +178,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self._state: ManagerSessionState = ManagerSessionState.OPERATIVE
         self.restart_timeout: int = 1200
         self.polling_requests_timeout: int = 10
+        self._validate_response = validate_response
 
     @property
     def state(self) -> ManagerSessionState:
@@ -236,7 +238,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         try:
             server_info = self.server()
         except DefaultPasswordError:
-            server_info = ServerInfo.model_validate({})
+            server_info = ServerInfo.model_construct(**{})
 
         self.server_name = server_info.server
 
@@ -404,7 +406,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         Returns:
             Tenant UUID.
         """
-        tenants = self.get("dataservice/tenant").dataseq(Tenant)
+        tenants = self.get("dataservice/tenant").dataseq(Tenant, validate=False)
         tenant = tenants.filter(subdomain=self.subdomain).single_or_default()
 
         if not tenant or not tenant.tenant_id:
@@ -468,6 +470,14 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
     @property
     def api_version(self) -> Version:
         return self._api_version
+
+    @property
+    def validate_response(self) -> bool:
+        return self._validate_response
+
+    @validate_response.setter
+    def validate_response(self, value: bool):
+        self._validate_response = value
 
     def __str__(self) -> str:
         return f"{self.username}@{self.base_url}"
