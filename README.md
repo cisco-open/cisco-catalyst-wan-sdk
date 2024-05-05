@@ -182,6 +182,7 @@ alarms_from_n_hours = session.api.alarms.get(from_time=n)
 To get all critical alarms from past `n` hours:
 
 ```python
+from catalystwan.utils.alarm_status import Severity
 n = 48
 critical_alarms = session.api.alarms.get(from_time=n).filter(severity=Severity.CRITICAL)
 ```
