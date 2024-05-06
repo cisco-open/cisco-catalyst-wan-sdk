@@ -1,8 +1,11 @@
 from ipaddress import IPv4Address, IPv6Address
+from typing import Literal
 from uuid import UUID
 
-from catalystwan.api.configuration_groups.parcel import as_global
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
+from catalystwan.models.common import EncapType
+from catalystwan.models.configuration.feature_profile.common import Prefix as CommonPrefix
 from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1controller import (
     E1,
     T1,
@@ -37,7 +40,16 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import
     SubnetMask,
     TransportVpnParcel,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.t1e1serial import T1E1SerialParcel
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.t1e1serial import (
+    Advanced,
+    AllowService,
+    CoreRegion,
+    Encapsulation,
+    MultiRegionFabric,
+    SecondaryRegion,
+    T1E1SerialParcel,
+    Tunnel,
+)
 
 
 class TestTransportFeatureProfileModels(TestFeatureProfileModels):
@@ -247,13 +259,88 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
     def test_when_fully_specified_t1e1serial_interface_parcel_expect_successfull_post(self):
         # Arrange
         t1e1serial = T1E1SerialParcel(
-            parcel_name="FullySpecifiedT1E1SerialParcel",
-            description="Description",
-            interface_name=as_global("Serial3"),
+            parcel_name="T1E1FullySpecifiedParcel",
+            parcel_description="Description",
+            interface_name=Global[str](value="Serial3"),
+            address_v4=CommonPrefix(address=Global[str](value="1.1.1.1"), mask=Variable(value="{{NQokHq}}")),
+            address_v6=Variable(value="{{i4i}}"),
+            advanced=Advanced(
+                ip_mtu=Global[int](value=1500),
+                mtu=Global[int](value=1500),
+                tcp_mss_adjust=Variable(value="{{f}}"),
+                tloc_extension=Global[str](value="322"),
+            ),
+            allow_service=AllowService(
+                bfd=Variable(value="{{GfwsBdVoSy7O8ABos}}"),
+                bgp=Global[bool](value=True),
+                dhcp=Global[bool](value=False),
+                dns=Variable(value="{{3so}}"),
+                https=Global[bool](value=True),
+                icmp=Variable(value="{{n2Qz.wW}}"),
+                netconf=Variable(value="{{0}}"),
+                ntp=Global[bool](value=True),
+                ospf=Global[bool](value=True),
+                snmp=Global[bool](value=False),
+                sshd=Variable(value="{{56lx}}"),
+                stun=Global[bool](value=True),
+            ),
+            bandwidth=Variable(value="{{w}}"),
+            bandwidth_downstream=Global[int](value=34),
+            clock_rate=Variable(value="{{9_h.ePd}}"),
+            encapsulation=[
+                Encapsulation(
+                    encap=Global[EncapType](value="gre"),
+                    preference=Variable(value="{{I9]LwyD45eQIry]Z}}"),
+                    weight=Global[int](value=32),
+                ),
+                Encapsulation(
+                    encap=Global[EncapType](value="ipsec"),
+                    preference=Variable(value="{{I9]LwyD45eQIry]Z}}"),
+                    weight=Global[int](value=2),
+                ),
+                Encapsulation(
+                    encap=Global[EncapType](value="gre"),
+                    preference=Default[None](value=None),
+                    weight=Global[int](value=112),
+                ),
+            ],
+            encapsulation_serial=Variable(value="{{A8/8w4Qr}}"),
+            multi_region_fabric=MultiRegionFabric(
+                core_region=Global[CoreRegion](value="core-shared"),
+                enable_core_region=Global[bool](value=False),
+                enable_secondary_region=Global[bool](value=True),
+                secondary_region=Global[SecondaryRegion](value="secondary-shared"),
+            ),
+            shutdown=Global[bool](value=True),
+            tunnel=Tunnel(
+                bind=Global[str](value="3123"),
+                border=Variable(value="{{k0Ci4g}}"),
+                carrier=Variable(value="{{SyMR13Poi}}"),
+                clear_dont_fragment=Global[bool](value=False),
+                color=Variable(value="{{ivc}}"),
+                exclude_controller_group_list=Variable(value="{{z][Ih}}"),
+                group=Variable(value="{{WlfX}}"),
+                hello_interval=Global[int](value=1000),
+                hello_tolerance=Global[int](value=123),
+                last_resort_circuit=Global[bool](value=True),
+                low_bandwidth_link=Global[bool](value=True),
+                max_control_connections=Global[int](value=0),
+                mode=Global[Literal["spoke"]](value="spoke"),
+                nat_refresh_interval=Global[int](value=3),
+                network_broadcast=Global[bool](value=True),
+                per_tunnel_qos=Global[bool](value=True),
+                per_tunnel_qos_aggregator=Global[bool](value=True),
+                port_hop=Global[bool](value=True),
+                restrict=Global[bool](value=True),
+                vbond_as_stun_server=Global[bool](value=True),
+                vmanage_connection_preference=Global[int](value=3),
+            ),
+            tunnel_interface=Global[bool](value=True),
         )
         # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, t1e1serial, self.wan_uuid).id
         # Assert
-        assert t1e1serial
+        assert parcel_id
 
     @classmethod
     def tearDownClass(cls) -> None:

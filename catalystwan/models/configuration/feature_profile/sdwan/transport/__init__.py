@@ -10,8 +10,10 @@ from .cellular_controller import CellularControllerParcel
 from .t1e1controller import T1E1ControllerParcel
 from .vpn import ManagementVpnParcel, TransportVpnParcel
 
+AnyTransportVpnSubParcel = Annotated[Union[T1E1ControllerParcel, BGPParcel], Field(discriminator="type_")]
+
 AnyTransportParcel = Annotated[
-    Union[BGPParcel, CellularControllerParcel, ManagementVpnParcel, TransportVpnParcel, T1E1ControllerParcel],
+    Union[CellularControllerParcel, ManagementVpnParcel, TransportVpnParcel, AnyTransportVpnSubParcel],
     Field(discriminator="type_"),
 ]
 
@@ -21,6 +23,7 @@ __all__ = [
     "ManagementVpnParcel",
     "TransportVpnParcel",
     "AnyTransportParcel",
+    "AnyTransportVpnSubParcel",
     "T1E1ControllerParcel",
 ]
 

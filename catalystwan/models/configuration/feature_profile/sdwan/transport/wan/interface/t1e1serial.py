@@ -1,9 +1,10 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 from __future__ import annotations
 
+from ipaddress import IPv6Interface
 from typing import List, Literal, Optional, Union
 
-from pydantic import AliasPath, BaseModel, Field
+from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
 from catalystwan.models.common import Carrier, EncapType, TLOCColor
@@ -50,6 +51,10 @@ EncapsulationSerial = Literal[
 
 
 class Tunnel(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
     bind: Optional[Union[Global[str], Variable, Default[None]]] = Field(default=None)
     border: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
     carrier: Optional[Union[Global[Carrier], Variable, Default[Literal["default"]]]] = Field(default=None)
@@ -105,6 +110,10 @@ class Tunnel(BaseModel):
 
 
 class AllowService(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
     all: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
     bfd: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
     bgp: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
@@ -121,6 +130,10 @@ class AllowService(BaseModel):
 
 
 class Encapsulation(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
     encap: Optional[Global[EncapType]] = Field(default=None)
     preference: Optional[Union[Global[int], Variable, Default[None]]] = Field(default=None)
     weight: Optional[Union[Global[int], Variable, Default[int]]] = Field(default=None)
@@ -139,6 +152,10 @@ SecondaryRegion = Literal[
 
 
 class MultiRegionFabric(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
     core_region: Optional[Union[Global[CoreRegion], Default[Literal["core-shared"]]]] = Field(
         default=None, validation_alias="coreRegion", serialization_alias="coreRegion"
     )
@@ -154,6 +171,10 @@ class MultiRegionFabric(BaseModel):
 
 
 class AclQos(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
     ipv4_acl_egress: Optional[RefIdItem] = Field(
         default=None, validation_alias="ipv4AclEgress", serialization_alias="ipv4AclEgress"
     )
@@ -172,6 +193,10 @@ class AclQos(BaseModel):
 
 
 class Advanced(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
     ip_mtu: Optional[Union[Global[int], Variable, Default[int]]] = Field(
         default=None, validation_alias="ipMtu", serialization_alias="ipMtu"
     )
@@ -185,6 +210,10 @@ class Advanced(BaseModel):
 
 
 class T1E1SerialParcel(_ParcelBase):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
     type_: Literal["interface/serial"] = Field(default="interface/serial", exclude=True)
     interface_name: Union[Global[str], Variable] = Field(validation_alias=AliasPath("data", "interfaceName"))
     acl_qos: Optional[AclQos] = Field(
@@ -197,7 +226,7 @@ class T1E1SerialParcel(_ParcelBase):
         validation_alias=AliasPath("data", "addressV4"),
         description="Assign IPv4 address",
     )
-    address_v6: Optional[Union[Global[str], Variable, Default[None]]] = Field(
+    address_v6: Optional[Union[Global[IPv6Interface], Variable, Default[None]]] = Field(
         default=None,
         validation_alias=AliasPath("data", "addressV6"),
     )
