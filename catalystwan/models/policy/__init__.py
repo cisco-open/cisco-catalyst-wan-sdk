@@ -49,6 +49,7 @@ from .definition.control import ControlPolicy, ControlPolicyGetResponse
 from .definition.device_access import DeviceAccessPolicy, DeviceAccessPolicyGetResponse
 from .definition.device_access_ipv6 import DeviceAccessIPv6Policy, DeviceAccessIPv6PolicyGetResponse
 from .definition.hub_and_spoke import HubAndSpokePolicy, HubAndSpokePolicyGetResponse
+from .definition.intrusion_prevention import IntrusionPreventionPolicy, IntrusionPreventionPolicyGetResponse
 from .definition.mesh import MeshPolicy, MeshPolicyGetResponse
 from .definition.qos_map import QoSDropType, QoSMapPolicy, QoSMapPolicyGetResponse
 from .definition.rewrite import RewritePolicy, RewritePolicyGetResponse
@@ -77,6 +78,7 @@ AnyPolicyDefinition = Annotated[
         AclPolicy,
         AdvancedMalwareProtectionPolicy,
         ControlPolicy,
+        IntrusionPreventionPolicy,
         DeviceAccessIPv6Policy,
         DeviceAccessPolicy,
         HubAndSpokePolicy,
@@ -174,6 +176,7 @@ AnyPolicyDefinitionInfo = Annotated[
         ControlPolicyGetResponse,
         DeviceAccessIPv6PolicyGetResponse,
         DeviceAccessPolicyGetResponse,
+        IntrusionPreventionPolicyGetResponse,
         HubAndSpokePolicyGetResponse,
         MeshPolicyGetResponse,
         QoSMapPolicyGetResponse,
@@ -212,6 +215,7 @@ __all__ = (
     "FQDNList",
     "GeoLocationList",
     "HubAndSpokePolicy",
+    "IntrusionPreventionPolicy",
     "IPSSignatureList",
     "IPv6PrefixList",
     "LocalAppList",

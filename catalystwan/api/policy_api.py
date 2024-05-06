@@ -20,6 +20,9 @@ from catalystwan.endpoints.configuration.policy.definition.device_access_ipv6 im
     ConfigurationPolicyDeviceAccessIPv6Definition,
 )
 from catalystwan.endpoints.configuration.policy.definition.hub_and_spoke import ConfigurationPolicyHubAndSpokeDefinition
+from catalystwan.endpoints.configuration.policy.definition.intrusion_prevention import (
+    ConfigurationPolicyIntrusionPreventionDefinition,
+)
 from catalystwan.endpoints.configuration.policy.definition.mesh import ConfigurationPolicyMeshDefinition
 from catalystwan.endpoints.configuration.policy.definition.qos_map import ConfigurationPolicyQoSMapDefinition
 from catalystwan.endpoints.configuration.policy.definition.rewrite import ConfigurationPolicyRewriteRuleDefinition
@@ -131,6 +134,10 @@ from catalystwan.models.policy.definition.device_access_ipv6 import (
     DeviceAccessIPv6PolicyGetResponse,
 )
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy, HubAndSpokePolicyGetResponse
+from catalystwan.models.policy.definition.intrusion_prevention import (
+    IntrusionPreventionPolicy,
+    IntrusionPreventionPolicyGetResponse,
+)
 from catalystwan.models.policy.definition.mesh import MeshPolicy, MeshPolicyGetResponse
 from catalystwan.models.policy.definition.qos_map import QoSMapPolicy, QoSMapPolicyGetResponse
 from catalystwan.models.policy.definition.rewrite import RewritePolicy, RewritePolicyGetResponse
@@ -225,6 +232,7 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     DeviceAccessPolicy: ConfigurationPolicyDeviceAccessDefinition,
     DeviceAccessIPv6Policy: ConfigurationPolicyDeviceAccessIPv6Definition,
     AdvancedMalwareProtectionPolicy: ConfigurationPolicyAMPDefinition,
+    IntrusionPreventionPolicy: ConfigurationPolicyIntrusionPreventionDefinition,
 }
 
 
@@ -649,6 +657,10 @@ class PolicyDefinitionsAPI:
         endpoints.delete_policy_definition(id=id)
 
     @overload
+    def get(self, type: Type[IntrusionPreventionPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[TrafficDataPolicy]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
@@ -709,6 +721,9 @@ class PolicyDefinitionsAPI:
         ...
 
     # get by id
+    @overload
+    def get(self, type: Type[IntrusionPreventionPolicy], id: UUID) -> IntrusionPreventionPolicyGetResponse:
+        ...
 
     @overload
     def get(self, type: Type[TrafficDataPolicy], id: UUID) -> TrafficDataPolicyGetResponse:
