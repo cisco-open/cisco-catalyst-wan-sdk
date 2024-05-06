@@ -12,12 +12,14 @@ from catalystwan.api.templates.feature_template import FeatureTemplate, FeatureT
 
 class Oid(FeatureTemplateValidator):
     id: str = Field(description="The OID (Object Identifier) to include or exclude in the view")
-    exclude: Optional[BoolStr] = Field(description="Indicates whether the OID should be excluded from the view")
+    exclude: Optional[BoolStr] = Field(
+        default=None, description="Indicates whether the OID should be excluded from the view"
+    )
 
 
 class View(FeatureTemplateValidator):
     name: str = Field(description="The name of the SNMP view")
-    oid: Optional[List[Oid]] = Field(description="List of OIDs to include or exclude in the view")
+    oid: Optional[List[Oid]] = Field(default=None, description="List of OIDs to include or exclude in the view")
 
 
 class Authorization(str, Enum):
@@ -54,13 +56,13 @@ class Priv(str, Enum):
 
 class User(FeatureTemplateValidator):
     name: str = Field(description="The name of the SNMP user")
-    auth: Optional[Auth] = Field(description="The authentication protocol used")
+    auth: Optional[Auth] = Field(default=None, description="The authentication protocol used")
     auth_password: Optional[str] = Field(
-        description="The password for authentication", json_schema_extra={"vmanage_key": "auth-password"}
+        default=None, description="The password for authentication", json_schema_extra={"vmanage_key": "auth-password"}
     )
     priv: Optional[Priv] = Field(description="The privacy (encryption) protocol used")
     priv_password: Optional[str] = Field(
-        description="The password for privacy", json_schema_extra={"vmanage_key": "priv-password"}
+        default=None, description="The password for privacy", json_schema_extra={"vmanage_key": "priv-password"}
     )
     group: str = Field(description="The group to which the user belongs")
     model_config = ConfigDict(populate_by_name=True)
@@ -73,11 +75,15 @@ class Target(FeatureTemplateValidator):
     ip: str = Field(description="The IP address of the SNMP target")
     port: int = Field(description="The port number for the SNMP target")
     community_name: Optional[str] = Field(
-        description="The community name for the SNMP target", json_schema_extra={"vmanage_key": "community-name"}
+        default=None,
+        description="The community name for the SNMP target",
+        json_schema_extra={"vmanage_key": "community-name"},
     )
-    user: Optional[str] = Field(description="The user name for the SNMP target")
+    user: Optional[str] = Field(default=None, description="The user name for the SNMP target")
     source_interface: Optional[str] = Field(
-        description="The source interface for sending SNMP traps", json_schema_extra={"vmanage_key": "source-interface"}
+        default=None,
+        description="The source interface for sending SNMP traps",
+        json_schema_extra={"vmanage_key": "source-interface"},
     )
     model_config = ConfigDict(populate_by_name=True)
 
@@ -89,8 +95,8 @@ class CiscoSNMPModel(FeatureTemplate):
     shutdown: Optional[BoolStr] = Field(
         default=True, description="Indicates whether SNMP is administratively shut down"
     )
-    contact: Optional[str] = Field(description="The contact information for the SNMP administrator")
-    location: Optional[str] = Field(description="The physical location information for the SNMP agent")
+    contact: Optional[str] = Field(default=None, description="The contact information for the SNMP administrator")
+    location: Optional[str] = Field(default=None, description="The physical location information for the SNMP agent")
     view: Optional[List[View]] = Field(default=None, description="List of SNMP views for controlling access to OIDs")
     community: Optional[List[Community]] = Field(
         default=None, description="List of SNMP communities for different access rights"

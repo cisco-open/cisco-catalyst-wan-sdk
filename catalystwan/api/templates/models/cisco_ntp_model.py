@@ -13,15 +13,15 @@ class Server(FeatureTemplateValidator):
     model_config = ConfigDict(populate_by_name=True)
 
     name: str = Field(description="The hostname or IP address of the NTP server")
-    key: Optional[int] = Field(description="The identifier for the authentication key")
-    vpn: Optional[int] = Field(description="The VPN ID associated with the NTP server")
-    version: Optional[int] = Field(description="The NTP version used")
+    key: Optional[int] = Field(default=None, description="The identifier for the authentication key")
+    vpn: Optional[int] = Field(default=None, description="The VPN ID associated with the NTP server")
+    version: Optional[int] = Field(default=None, description="The NTP version used")
     source_interface: Optional[str] = Field(
         default=None,
         json_schema_extra={"vmanage_key": "source-interface"},
         description="The source interface for NTP messages",
     )
-    prefer: Optional[BoolStr] = Field(description="Whether this server is preferred over others")
+    prefer: Optional[BoolStr] = Field(default=None, description="Whether this server is preferred over others")
 
 
 class Authentication(FeatureTemplateValidator):

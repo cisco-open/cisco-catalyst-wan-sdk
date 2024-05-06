@@ -84,12 +84,14 @@ class CiscoOMPModel(FeatureTemplate):
         json_schema_extra={"vmanage_key": "overlay-as"},
     )
     send_path_limit: Optional[int] = Field(
-        DEFAULT_OMP_SENDPATH_LIMIT,
+        default=DEFAULT_OMP_SENDPATH_LIMIT,
+        ge=1,
+        le=32,
         description="The maximum number of paths that can be sent for each prefix.",
         json_schema_extra={"vmanage_key": "send-path-limit"},
     )
     ecmp_limit: Optional[int] = Field(
-        DEFAULT_OMP_ECMP_LIMIT,
+        default=DEFAULT_OMP_ECMP_LIMIT,
         description="The maximum number of equal-cost multi-path routes.",
         json_schema_extra={"vmanage_key": "ecmp-limit"},
     )
@@ -105,22 +107,22 @@ class CiscoOMPModel(FeatureTemplate):
         json_schema_extra={"vmanage_key": "omp-admin-distance-ipv6"},
     )
     advertisement_interval: Optional[int] = Field(
-        DEFAULT_OMP_ADVERTISEMENT_INTERVAL,
+        default=DEFAULT_OMP_ADVERTISEMENT_INTERVAL,
         description="The interval between sending unsolicited OMP route advertisements.",
         json_schema_extra={"vmanage_key": "advertisement-interval", "data_path": ["timers"]},
     )
     graceful_restart_timer: Optional[int] = Field(
-        DEFAULT_OMP_GRACEFUL_RESTART_TIMER,
+        default=DEFAULT_OMP_GRACEFUL_RESTART_TIMER,
         description="The timer for graceful restart, specifying the period during which peerings are preserved.",
         json_schema_extra={"vmanage_key": "graceful-restart-timer", "data_path": ["timers"]},
     )
     eor_timer: Optional[int] = Field(
-        DEFAULT_OMP_EOR_TIMER,
+        default=DEFAULT_OMP_EOR_TIMER,
         description="End-of-RIB (EOR) timer which indicates stability of the route table.",
         json_schema_extra={"vmanage_key": "eor-timer", "data_path": ["timers"]},
     )
     holdtime: Optional[int] = Field(
-        DEFAULT_OMP_HOLDTIME,
+        default=DEFAULT_OMP_HOLDTIME,
         description="The amount of time that the routes are preserved while the peer is unreachable.",
         json_schema_extra={"data_path": ["timers"]},
     )
