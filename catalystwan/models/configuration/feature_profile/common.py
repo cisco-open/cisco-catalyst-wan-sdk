@@ -229,3 +229,11 @@ class RefIdItem(BaseModel):
         populate_by_name=True,
     )
     ref_id: Global[str] = Field(..., serialization_alias="refId", validation_alias="refId")
+
+
+class RefIdList(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    ref_id: Global[List[str]] = Field(..., serialization_alias="refId", validation_alias="refId")

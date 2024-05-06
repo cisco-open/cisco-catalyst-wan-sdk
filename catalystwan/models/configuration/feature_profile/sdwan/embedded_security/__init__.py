@@ -5,19 +5,18 @@ from typing import List, Union
 from pydantic import Field
 from typing_extensions import Annotated
 
-from catalystwan.api.configuration_groups.parcel import _ParcelBase
-
-from .ngfirewall import PolicyParcel
+from .ngfirewall import NgfirewallParcel
+from .policy import PolicyParcel
 
 AnyEmbeddedSecurityParcel = Annotated[
     Union[
         PolicyParcel,
-        _ParcelBase,
+        NgfirewallParcel,
     ],
     Field(discriminator="type_"),
 ]
 
-__all__ = ("AnyEmbeddedSecurityParcel", "PolicyParcel")
+__all__ = ("AnyEmbeddedSecurityParcel", "PolicyParcel", "NgfirewallParcel")
 
 
 def __dir__() -> "List[str]":
