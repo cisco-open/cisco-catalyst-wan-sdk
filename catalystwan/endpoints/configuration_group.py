@@ -2,7 +2,7 @@
 
 # mypy: disable-error-code="empty-body"
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -68,9 +68,12 @@ class ConfigGroupVariablesCreatePayload(BaseModel):
     suggestions: bool = True
 
 
+VariableType = Union[str, int, bool, List[Union[str, int, bool]]]
+
+
 class VariableData(BaseModel):
     name: str
-    value: str
+    value: Optional[VariableType] = None
 
 
 class DeviceVariables(BaseModel):
