@@ -1,4 +1,5 @@
 from ipaddress import IPv4Address, IPv6Address
+from uuid import UUID
 
 from catalystwan.api.configuration_groups.parcel import as_global
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
@@ -36,6 +37,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import
     SubnetMask,
     TransportVpnParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.t1e1serial import T1E1SerialParcel
 
 
 class TestTransportFeatureProfileModels(TestFeatureProfileModels):
@@ -219,6 +221,39 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
         parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
         # Assert
         assert parcel_id
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.api.delete_profile(cls.profile_uuid)
+        super().tearDownClass()
+
+
+class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
+    wan_uuid: UUID
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.api = cls.session.api.sdwan_feature_profiles.transport
+        cls.profile_uuid = cls.api.create_profile("TestProfileService", "Description").id
+        cls.wan_uuid = cls.api.create_parcel(
+            cls.profile_uuid,
+            TransportVpnParcel(
+                parcel_name="TestTransportVpnParcel",
+                parcel_description="Description",
+            ),
+        ).id
+
+    def test_when_fully_specified_t1e1serial_interface_parcel_expect_successfull_post(self):
+        # Arrange
+        t1e1serial = T1E1SerialParcel(
+            parcel_name="FullySpecifiedT1E1SerialParcel",
+            description="Description",
+            interface_name=as_global("Serial3"),
+        )
+        # Act
+        # Assert
+        assert t1e1serial
 
     @classmethod
     def tearDownClass(cls) -> None:
