@@ -24,6 +24,7 @@ from catalystwan.api.omp_api import OmpAPI
 from catalystwan.api.packet_capture_api import PacketCaptureAPI
 from catalystwan.api.partition_manager_api import PartitionManagerAPI
 from catalystwan.api.policy_api import PolicyAPI
+from catalystwan.api.real_time_monitoring_api import RealTimeMonitoringAPI
 from catalystwan.api.resource_pool_api import ResourcePoolAPI
 from catalystwan.api.software_action_api import SoftwareActionAPI
 from catalystwan.api.speedtest_api import SpeedtestAPI
@@ -68,3 +69,4 @@ class APIContainer:
         self.sessions = SessionsAPI(session)
         self.policy = PolicyAPI(session)
         self.sd_routing_feature_profiles = SDRoutingFeatureProfilesAPI(session)
+        self.realtimeapi = RealTimeMonitoringAPI(session)
