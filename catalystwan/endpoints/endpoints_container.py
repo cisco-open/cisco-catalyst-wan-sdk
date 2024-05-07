@@ -84,6 +84,7 @@ from catalystwan.endpoints.configuration_group import ConfigurationGroup
 from catalystwan.endpoints.configuration_settings import ConfigurationSettings
 from catalystwan.endpoints.misc import MiscellaneousEndpoints
 from catalystwan.endpoints.monitoring.device_details import MonitoringDeviceDetails
+from catalystwan.endpoints.monitoring.security_policy import MonitoringSecurityPolicy
 from catalystwan.endpoints.monitoring.server_info import ServerInfo
 from catalystwan.endpoints.monitoring.status import MonitoringStatus
 from catalystwan.endpoints.url_monitoring import UrlMonitoring
@@ -200,6 +201,7 @@ class APIEndpointContainter:
         self.configuration_software_actions = ConfigurationSoftwareActions(session)
         self.configuration_disaster_recovery = ConfigurationDisasterRecovery(session)
         self.monitoring_device_details = MonitoringDeviceDetails(session)
+        self.monitoring_security_policy = MonitoringSecurityPolicy(session)
         self.monitoring_server_info = ServerInfo(session)
         self.monitoring_status = MonitoringStatus(session)
         self.sdavc_cloud_connector = SDAVCCloudConnector(session)
