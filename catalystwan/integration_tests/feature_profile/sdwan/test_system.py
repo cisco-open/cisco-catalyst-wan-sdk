@@ -31,6 +31,8 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
         # Assert
         assert parcel_id
 
+        self.api.delete_parcel(self.profile_uuid, banner_parcel, parcel_id)
+
     def test_when_fully_specified_banner_parcel_expect_successful_post(self):
         # Arrange
         banner_parcel = BannerParcel(
@@ -44,6 +46,8 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
         # Assert
         assert parcel_id
 
+        self.api.delete_parcel(self.profile_uuid, banner_parcel, parcel_id)
+
     def test_when_default_values_logging_parcel_expect_successful_post(self):
         # Arrange
         logging_parcel = LoggingParcel(
@@ -54,6 +58,8 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
         parcel_id = self.api.create_parcel(self.profile_uuid, logging_parcel).id
         # Assert
         assert parcel_id
+
+        self.api.delete_parcel(self.profile_uuid, logging_parcel, parcel_id)
 
     def test_when_fully_specified_logging_parcel_expect_successful_post(self):
         # Arrange
@@ -99,6 +105,8 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
         # Assert
         assert parcel_id
 
+        self.api.delete_parcel(self.profile_uuid, logging_parcel, parcel_id)
+
     def test_when_default_values_bfd_parcel_expect_successful_post(self):
         # Arrange
         bfd_parcel = BFDParcel(
@@ -109,6 +117,8 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
         parcel_id = self.api.create_parcel(self.profile_uuid, bfd_parcel).id
         # Assert
         assert parcel_id
+
+        self.api.delete_parcel(self.profile_uuid, bfd_parcel, parcel_id)
 
     def test_when_fully_specified_bfd_parcel_expect_successful_post(self):
         # Arrange
@@ -127,6 +137,8 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
         parcel_id = self.api.create_parcel(self.profile_uuid, bfd_parcel).id
         # Assert
         assert parcel_id
+
+        self.api.delete_parcel(self.profile_uuid, bfd_parcel, parcel_id)
 
     def test_when_default_values_basic_parcel_expect_successful_post(self):
         # Arrange

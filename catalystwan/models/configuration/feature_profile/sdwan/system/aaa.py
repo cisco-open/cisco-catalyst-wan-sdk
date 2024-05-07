@@ -7,6 +7,8 @@ from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default, as_global
 
+DEFAULT_USER_PRIVILEGE = "15"
+
 
 class PubkeyChainItem(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
@@ -37,7 +39,7 @@ class UserItem(BaseModel):
         )
     )
     privilege: Union[Global[str], Variable, Default[str], None] = Field(
-        default=None, description="Set Privilege Level for this user"
+        default=as_default(DEFAULT_USER_PRIVILEGE), description="Set Privilege Level for this user"
     )
     pubkey_chain: Optional[List[PubkeyChainItem]] = Field(
         default=None,
