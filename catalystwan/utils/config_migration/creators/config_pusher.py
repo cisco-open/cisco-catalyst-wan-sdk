@@ -72,7 +72,7 @@ class UX2ConfigPusher:
                 f"and parcels: {transformed_feature_profile.header.subelements}"
             )
             profile_type = cast(ProfileType, transformed_feature_profile.header.type)
-            if profile_type in ["policy-object", "transport"]:
+            if profile_type in ["policy-object"]:
                 # TODO: Add builders for those profiles
                 logger.debug(f"Skipping profile: {transformed_feature_profile.feature_profile.name}")
                 continue

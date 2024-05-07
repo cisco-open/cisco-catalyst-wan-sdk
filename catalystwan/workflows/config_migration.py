@@ -80,6 +80,7 @@ SUPPORTED_TEMPLATE_TYPES = [
     "cedge_igmp",
     "cedge_multicast",
     "cedge_pim",
+    "vpn-interface-t1-e1",
 ]
 
 FEATURE_PROFILE_SYSTEM = [
@@ -109,7 +110,13 @@ FEATURE_PROFILE_SYSTEM = [
     "cisco_snmp",
 ]
 
-FEATURE_PROFILE_TRANSPORT = ["dhcp", "cisco_dhcp_server", "dhcp-server", CISCO_VPN_TRANSPORT_AND_MANAGEMENT]
+FEATURE_PROFILE_TRANSPORT = [
+    "dhcp",
+    "cisco_dhcp_server",
+    "dhcp-server",
+    "vpn-interface-t1-e1",
+    CISCO_VPN_TRANSPORT_AND_MANAGEMENT,
+]
 
 FEATURE_PROFILE_OTHER = [
     "cisco_thousandeyes",
@@ -117,7 +124,6 @@ FEATURE_PROFILE_OTHER = [
 ]
 
 FEATURE_PROFILE_SERVICE = [
-    "cisco_vpn",
     "cisco_vpn_interface_gre",
     "vpn-vsmart-interface",
     "vpn-vedge-interface",
@@ -189,7 +195,7 @@ def transform(ux1: UX1Config) -> UX2Config:
         fp_transport_and_management_uuid = uuid4()
         transformed_fp_transport_and_management = TransformedFeatureProfile(
             header=TransformHeader(
-                type="transport_and_management",
+                type="transport",
                 origin=fp_transport_and_management_uuid,
             ),
             feature_profile=FeatureProfileCreationPayload(
@@ -221,7 +227,7 @@ def transform(ux1: UX1Config) -> UX2Config:
             header=TransformHeader(
                 type="config_group",
                 origin=UUID(dt.template_id),
-                subelements=set([fp_system_uuid, fp_other_uuid, fp_service_uuid]),
+                subelements=set([fp_system_uuid, fp_other_uuid, fp_service_uuid, fp_transport_and_management_uuid]),
             ),
             config_group=ConfigGroupCreationPayload(
                 name=dt.template_name,

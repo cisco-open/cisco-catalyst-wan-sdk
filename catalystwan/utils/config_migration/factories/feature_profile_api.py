@@ -5,6 +5,7 @@ from catalystwan.api.feature_profile_api import (
     PolicyObjectFeatureProfileAPI,
     ServiceFeatureProfileAPI,
     SystemFeatureProfileAPI,
+    TransportFeatureProfileAPI,
 )
 from catalystwan.models.configuration.feature_profile.common import ProfileType
 from catalystwan.session import ManagerSession
@@ -14,10 +15,15 @@ FEATURE_PROFILE_API_MAPPING: Mapping[ProfileType, Callable] = {
     "other": OtherFeatureProfileAPI,
     "policy-object": PolicyObjectFeatureProfileAPI,
     "service": ServiceFeatureProfileAPI,
+    "transport": TransportFeatureProfileAPI,
 }
 
 FeatureProfile = Union[
-    SystemFeatureProfileAPI, OtherFeatureProfileAPI, PolicyObjectFeatureProfileAPI, ServiceFeatureProfileAPI
+    SystemFeatureProfileAPI,
+    OtherFeatureProfileAPI,
+    PolicyObjectFeatureProfileAPI,
+    ServiceFeatureProfileAPI,
+    TransportFeatureProfileAPI,
 ]
 
 

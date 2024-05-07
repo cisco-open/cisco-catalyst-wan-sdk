@@ -18,7 +18,6 @@ from catalystwan.models.configuration.feature_profile.common import (
 from catalystwan.models.configuration.feature_profile.parcel import Parcel, ParcelCreationResponse, ParcelId
 from catalystwan.models.configuration.feature_profile.sdwan.transport import (
     AnyTransportParcel,
-    AnyTransportVpnSubParcel,
     CellularControllerParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import ManagementVpnParcel
@@ -60,14 +59,14 @@ class TransportFeatureProfile(APIEndpoints):
     @versions(supported_versions=(">=20.13"), raises=False)
     @post("/v1/feature-profile/sdwan/transport/{profile_id}/{parcel_type}")
     def create_transport_parcel(
-        self, profile_id: UUID, parcel_type: str, payload: AnyTransportParcel
+        self, profile_id: UUID, parcel_type: str, payload: _ParcelBase
     ) -> ParcelCreationResponse:
         ...
 
     @versions(supported_versions=(">=20.13"), raises=False)
     @post("/v1/feature-profile/sdwan/transport/{profile_id}/wan/vpn/{vpn_id}/{parcel_type}")
     def create_transport_vpn_sub_parcel(
-        self, profile_id: UUID, vpn_id: UUID, parcel_type: str, payload: AnyTransportVpnSubParcel
+        self, profile_id: UUID, vpn_id: UUID, parcel_type: str, payload: _ParcelBase
     ) -> ParcelCreationResponse:
         ...
 

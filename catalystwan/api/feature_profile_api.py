@@ -186,14 +186,14 @@ class TransportFeatureProfileAPI:
         Create Transport Parcel for selected profile_id based on payload type
         """
         if vpn_uuid is not None:
-            vpn_parcel = self._get_vpn_parcel(profile_id, vpn_uuid)
-            if vpn_parcel.payload._get_parcel_type() == TransportVpnParcel._get_parcel_type():
+            vpn_parcel = self._get_vpn_parcel(profile_id, vpn_uuid).payload
+            if vpn_parcel._get_parcel_type() == TransportVpnParcel._get_parcel_type():
                 return self.endpoint.create_transport_vpn_sub_parcel(
                     profile_id, vpn_uuid, payload._get_parcel_type(), payload
                 )
             else:
                 return self.endpoint.create_management_vpn_sub_parcel(
-                    profile_id, vpn_uuid, payload._get_parcel_type(), vpn_parcel.parcel_id, payload
+                    profile_id, vpn_uuid, payload._get_parcel_type(), payload
                 )
         return self.endpoint.create_transport_parcel(profile_id, payload._get_parcel_type(), payload)
 

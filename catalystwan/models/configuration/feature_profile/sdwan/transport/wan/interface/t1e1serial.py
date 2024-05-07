@@ -198,11 +198,14 @@ class Advanced(BaseModel):
         populate_by_name=True,
     )
     ip_mtu: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        default=None, validation_alias="ipMtu", serialization_alias="ipMtu"
+        default=None, validation_alias="ipMtu", serialization_alias="ipMtu", description="Value cannot be less than 576"
     )
     mtu: Optional[Union[Global[int], Variable, Default[int]]] = Field(default=None)
     tcp_mss_adjust: Optional[Union[Global[int], Variable, Default[None]]] = Field(
-        default=None, validation_alias="tcpMssAdjust", serialization_alias="tcpMssAdjust"
+        default=None,
+        validation_alias="tcpMssAdjust",
+        serialization_alias="tcpMssAdjust",
+        description="Value must cannot be greater then 1460",
     )
     tloc_extension: Optional[Union[Global[str], Variable, Default[None]]] = Field(
         default=None, validation_alias="tlocExtension", serialization_alias="tlocExtension"
