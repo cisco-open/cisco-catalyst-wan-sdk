@@ -56,6 +56,7 @@ from .definition.rewrite import RewritePolicy, RewritePolicyGetResponse
 from .definition.rule_set import RuleSet, RuleSetGetResponse
 from .definition.security_group import SecurityGroup, SecurityGroupGetResponse
 from .definition.traffic_data import TrafficDataPolicy, TrafficDataPolicyGetResponse
+from .definition.url_filtering import UrlFilteringPolicy, UrlFilteringPolicyGetResponse
 from .definition.vpn_membership import VPNMembershipPolicy, VPNMembershipPolicyGetResponse
 from .definition.zone_based_firewall import ZoneBasedFWPolicy, ZoneBasedFWPolicyGetResponse
 from .localized import LocalizedPolicy
@@ -88,6 +89,7 @@ AnyPolicyDefinition = Annotated[
         RuleSet,
         SecurityGroup,
         TrafficDataPolicy,
+        UrlFilteringPolicy,
         VPNMembershipPolicy,
         ZoneBasedFWPolicy,
     ],
@@ -184,6 +186,7 @@ AnyPolicyDefinitionInfo = Annotated[
         RuleSetGetResponse,
         SecurityGroupGetResponse,
         TrafficDataPolicyGetResponse,
+        UrlFilteringPolicyGetResponse,
         VPNMembershipPolicyGetResponse,
         ZoneBasedFWPolicyGetResponse,
     ],
@@ -252,6 +255,7 @@ __all__ = (
     "UnifiedSecurityPolicy",
     "URLBlockList",
     "URLAllowList",
+    "UrlFilteringPolicy",
     "VPNList",
     "VPNMembershipPolicy",
     "ZoneBasedFWPolicy",
