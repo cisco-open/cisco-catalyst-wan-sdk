@@ -5,7 +5,7 @@ from typing import List, Literal, Type, Union
 
 from pydantic import BaseModel, IPvAnyAddress
 
-from catalystwan.api.configuration_groups.parcel import Global, as_default, as_global, as_variable
+from catalystwan.api.configuration_groups.parcel import Default, Global, as_default, as_global, as_variable
 from catalystwan.models.common import SubnetMask
 from catalystwan.models.configuration.feature_profile.common import Prefix
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import (
@@ -124,14 +124,15 @@ class BaseTransportAndManagementTemplateConverter:
         dns_ipv4 = DnsIpv4()
         dns_ipv6 = DnsIpv6()
         for dns_entry in dns:
+            dns_address = dns_entry.get("dns_addr", Default[None](value=None))
             if dns_entry["role"].value == "primary":
-                dns_ipv4.primary_dns_address_ipv4 = dns_entry["dns_addr"]
+                dns_ipv4.primary_dns_address_ipv4 = dns_address
             elif dns_entry["role"].value == "secondary":
-                dns_ipv4.secondary_dns_address_ipv4 = dns_entry["dns_addr"]
+                dns_ipv4.secondary_dns_address_ipv4 = dns_address
             elif dns_entry["role"].value == "primaryv6":
-                dns_ipv6.primary_dns_address_ipv6 = dns_entry["dns_addr"]
+                dns_ipv6.primary_dns_address_ipv6 = dns_address
             elif dns_entry["role"].value == "secondaryv6":
-                dns_ipv6.secondary_dns_address_ipv6 = dns_entry["dns_addr"]
+                dns_ipv6.secondary_dns_address_ipv6 = dns_address
         values["dns_ipv4"] = dns_ipv4
         values["dns_ipv6"] = dns_ipv6
 
@@ -142,6 +143,8 @@ class BaseTransportAndManagementTemplateConverter:
         static_routes = []
         for route in routes:
             prefix = route.get("prefix")
+            if not prefix:
+                continue
             ipv4route_item = Ipv4RouteItem(
                 prefix=TransportPrefix(
                     ip_address=as_global(prefix.value.network.network_address),
@@ -150,13 +153,16 @@ class BaseTransportAndManagementTemplateConverter:
             )
             if "next_hop" in route:
                 ipv4route_item.gateway = as_global("nextHop", Gateway)
-                ipv4route_item.next_hop = [
-                    NextHopItem(
-                        address=next_hop.get("address"),
-                        distance=next_hop.get("distance", as_default(1)),
-                    )
-                    for next_hop in route["next_hop"]
-                ]
+                for next_hop in route["next_hop"]:
+                    address = next_hop.get("address")
+                    if not address:
+                        continue
+                    ipv4route_item.next_hop = [
+                        NextHopItem(
+                            address=next_hop.get("address"),
+                            distance=next_hop.get("distance", as_default(1)),
+                        )
+                    ]
             elif "dhcp" in route:
                 ipv4route_item.gateway = as_global("dhcp", Gateway)
             static_routes.append(ipv4route_item)

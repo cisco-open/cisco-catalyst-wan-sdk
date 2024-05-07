@@ -80,6 +80,7 @@ class UX1Policies(BaseModel):
 
 
 class UX1Templates(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     feature_templates: List[FeatureTemplateInformation] = Field(
         default=[],
         serialization_alias="featureTemplates",

@@ -1,10 +1,11 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 import json
 import logging
 from typing import Any, Callable, Dict, cast
 
 from catalystwan.api.template_api import FeatureTemplateInformation
 from catalystwan.exceptions import CatalystwanException
-from catalystwan.models.configuration.feature_profile.sdwan.system import AnySystemParcel
+from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
 from catalystwan.utils.config_migration.converters.feature_template.dhcp import DhcpTemplateConverter
 from catalystwan.utils.config_migration.converters.feature_template.ethernet import InterfaceEthernetTemplateConverter
 from catalystwan.utils.config_migration.converters.feature_template.snmp import SNMPTemplateConverter
@@ -100,7 +101,7 @@ def choose_parcel_converter(template_type: str) -> Callable[..., FeatureTemplate
     raise CatalystwanException(f"Template type {template_type} not supported")
 
 
-def create_parcel_from_template(template: FeatureTemplateInformation) -> AnySystemParcel:
+def create_parcel_from_template(template: FeatureTemplateInformation) -> AnyParcel:
     """
     Creates a new instance of a _ParcelBase based on the given template.
 

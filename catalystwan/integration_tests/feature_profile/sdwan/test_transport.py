@@ -1,4 +1,4 @@
-from ipaddress import IPv4Address, IPv6Address
+from ipaddress import IPv4Address, IPv6Address, IPv6Interface
 from typing import Literal
 from uuid import UUID
 
@@ -19,6 +19,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1contro
     E1Linecode,
     LengthLong,
     LineMode,
+    Long,
     T1Basic,
     T1E1ControllerParcel,
     T1Framing,
@@ -85,7 +86,7 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
             ],
             ipv6_route=[
                 Ipv6RouteItem(
-                    prefix=as_global("0::/16"),
+                    prefix=as_global(IPv6Interface("0::/16")),
                     one_of_ip_route=OneOfIpRouteNull0(),
                 )
             ],
@@ -156,7 +157,7 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
                         )
                     ),
                     cable=CableLengthLong(
-                        cable_length=as_global("long", CableLengthLong),
+                        cable_length=as_global("long", Long),
                         length_long=as_global("-15db", LengthLong),
                     ),
                     channel_group=[
@@ -202,7 +203,7 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
             ],
             ipv6_route=[
                 Ipv6RouteItem(
-                    prefix=as_global("0::/16"),
+                    prefix=as_global(IPv6Interface("0::/16")),
                     one_of_ip_route=OneOfIpRouteNull0(),
                 )
             ],
