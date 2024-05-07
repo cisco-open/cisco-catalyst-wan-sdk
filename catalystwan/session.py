@@ -236,7 +236,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         try:
             server_info = self.server()
         except DefaultPasswordError:
-            server_info = ServerInfo.parse_obj({})
+            server_info = ServerInfo.model_validate({})
 
         self.server_name = server_info.server
 

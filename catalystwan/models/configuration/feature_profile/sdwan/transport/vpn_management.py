@@ -92,7 +92,7 @@ class NewHostMappingItem(BaseModel):
     host_name: Union[Variable, Global[str]] = Field(
         ..., serialization_alias="hostName", validation_alias="hostName", description="Hostname"
     )
-    list_of_ip: Union[Variable, Global[list]] = Field(
+    list_of_ip: Union[Variable, Global[List[str]]] = Field(
         ..., serialization_alias="listOfIp", validation_alias="listOfIp", description="List of IP"
     )
 
