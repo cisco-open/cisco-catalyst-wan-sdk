@@ -3,7 +3,7 @@
 from typing import List, Literal, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from catalystwan.models.common import PolicyModeType, VpnId
 from catalystwan.models.policy.policy_definition import (
@@ -34,6 +34,13 @@ class IntrusionPreventionDefinition(BaseModel):
     custom_signature: bool = Field(
         default=False, validation_alias="customSignature", serialization_alias="customSignature"
     )
+
+    @field_validator("signature_white_list", mode="before")
+    @classmethod
+    def convert_empty_dict_to_none(cls, value):
+        if not value:
+            return None
+        return value
 
 
 class IntrusionPreventionPolicy(PolicyDefinitionBase):
