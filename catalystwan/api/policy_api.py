@@ -31,6 +31,9 @@ from catalystwan.endpoints.configuration.policy.definition.security_group import
     ConfigurationPolicySecurityGroupDefinition,
 )
 from catalystwan.endpoints.configuration.policy.definition.traffic_data import ConfigurationPolicyDataDefinition
+from catalystwan.endpoints.configuration.policy.definition.url_filtering import (
+    ConfigurationPolicyUrlFilteringDefinition,
+)
 from catalystwan.endpoints.configuration.policy.definition.vpn_membership import (
     ConfigurationPolicyVPNMembershipGroupDefinition,
 )
@@ -144,6 +147,7 @@ from catalystwan.models.policy.definition.rewrite import RewritePolicy, RewriteP
 from catalystwan.models.policy.definition.rule_set import RuleSet, RuleSetGetResponse
 from catalystwan.models.policy.definition.security_group import SecurityGroup, SecurityGroupGetResponse
 from catalystwan.models.policy.definition.traffic_data import TrafficDataPolicy, TrafficDataPolicyGetResponse
+from catalystwan.models.policy.definition.url_filtering import UrlFilteringPolicy, UrlFilteringPolicyGetResponse
 from catalystwan.models.policy.definition.vpn_membership import VPNMembershipPolicy, VPNMembershipPolicyGetResponse
 from catalystwan.models.policy.definition.zone_based_firewall import ZoneBasedFWPolicy, ZoneBasedFWPolicyGetResponse
 from catalystwan.models.policy.list.app_probe import AppProbeClassListInfo
@@ -233,6 +237,7 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     DeviceAccessIPv6Policy: ConfigurationPolicyDeviceAccessIPv6Definition,
     AdvancedMalwareProtectionPolicy: ConfigurationPolicyAMPDefinition,
     IntrusionPreventionPolicy: ConfigurationPolicyIntrusionPreventionDefinition,
+    UrlFilteringPolicy: ConfigurationPolicyUrlFilteringDefinition,
 }
 
 
@@ -665,6 +670,10 @@ class PolicyDefinitionsAPI:
         ...
 
     @overload
+    def get(self, type: Type[UrlFilteringPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[AdvancedMalwareProtectionPolicy]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
@@ -727,6 +736,10 @@ class PolicyDefinitionsAPI:
 
     @overload
     def get(self, type: Type[TrafficDataPolicy], id: UUID) -> TrafficDataPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[UrlFilteringPolicy], id: UUID) -> UrlFilteringPolicyGetResponse:
         ...
 
     @overload
