@@ -132,7 +132,7 @@ class UrlFilteringDefinition(BaseModel):
     @field_validator("url_black_list", "url_white_list", mode="before")
     @classmethod
     def convert_empty_dict_to_none(cls, value):
-        if isinstance(value, dict) and bool(value) is False:
+        if not value:
             return None
 
         return value
