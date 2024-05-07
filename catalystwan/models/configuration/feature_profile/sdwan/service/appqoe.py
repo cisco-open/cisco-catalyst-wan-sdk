@@ -223,7 +223,7 @@ class ServiceNodeInformationExternal(BaseModel):
 
     address: Default[ServiceNodeExternalAddress] = Default[ServiceNodeExternalAddress](value="192.168.2.2")
     vpg_ip: Default[ServiceNodeExternalVpgIp] = Field(
-        default=Default[ServiceNodeExternalVpgIp](value="192.168.2.1"),
+        default=Default[ServiceNodeExternalVpgIp](value="192.168.2.1/24"),
         serialization_alias="vpgIp",
         validation_alias="vpgIp",
     )
