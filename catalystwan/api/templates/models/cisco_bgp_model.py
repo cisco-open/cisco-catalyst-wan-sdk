@@ -1,8 +1,7 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-from enum import Enum
 from pathlib import Path
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List, Literal, Optional
 
 from pydantic import ConfigDict, Field
 
@@ -55,10 +54,6 @@ class MplsInterface(FeatureTemplateValidator):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class AddressFamilyType(str, Enum):
-    IPV4_UNICAST = "ipv4-unicast"
-
-
 class AggregateAddress(FeatureTemplateValidator):
     prefix: str = Field(description="IP prefix to be aggregated.")
     as_set: Optional[BoolStr] = Field(
@@ -97,14 +92,7 @@ class Ipv6Network(FeatureTemplateValidator):
     prefix: str = Field(description="IPv6 network prefix to be advertised.")
 
 
-class Protocol(str, Enum):
-    STATIC = "static"
-    CONNECTED = "connected"
-    OSPF = "ospf"
-    OSPFV3 = "ospfv3"
-    OMP = "omp"
-    EIGRP = "eigrp"
-    NAT = "nat"
+Protocol = Literal["static", "connected", "ospf", "ospfv3", "omp", "eigrp", "nat"]
 
 
 class Redistribute(FeatureTemplateValidator):
@@ -115,6 +103,9 @@ class Redistribute(FeatureTemplateValidator):
         json_schema_extra={"vmanage_key": "route-policy"},
     )
     model_config = ConfigDict(populate_by_name=True)
+
+
+AddressFamilyType = Literal["ipv4-unicast"]
 
 
 class AddressFamily(FeatureTemplateValidator):
@@ -164,15 +155,8 @@ class AddressFamily(FeatureTemplateValidator):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class NeighborFamilyType(str, Enum):
-    IPV4_UNICAST = "ipv4-unicast"
-    VPNV4_UNICAST = "vpnv4-unicast"
-    VPNV6_UNICAST = "vpnv6-unicast"
-
-
-class Direction(str, Enum):
-    IN = "in"
-    OUT = "out"
+NeighborFamilyType = Literal["ipv4-unicast", "vpnv4-unicast", "vpnv6-unicast"]
+Direction = Literal["in", "out"]
 
 
 class RoutePolicy(FeatureTemplateValidator):
@@ -301,8 +285,7 @@ class Neighbor(FeatureTemplateValidator):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class IPv6NeighborFamilyType(str, Enum):
-    IPV6_UNICAST = "ipv6-unicast"
+IPv6NeighborFamilyType = Literal["ipv6-unicast"]
 
 
 class IPv6NeighborAddressFamily(FeatureTemplateValidator):

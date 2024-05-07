@@ -1,8 +1,7 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-from enum import Enum
 from pathlib import Path
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List, Literal, Optional
 
 from pydantic import ConfigDict, Field
 
@@ -17,19 +16,10 @@ DEFAULT_OMP_SENDPATH_LIMIT = 4
 DEFAULT_OMP_ECMP_LIMIT = 4
 
 
-class IPv4AdvertiseProtocol(str, Enum):
-    BGP = "bgp"
-    OSPF = "ospf"
-    OSPFV3 = "ospfv3"
-    CONNECTED = "connected"
-    STATIC = "static"
-    EIGRP = "eigrp"
-    LISP = "lisp"
-    ISIS = "isis"
+IPv4AdvertiseProtocol = Literal["bgp", "ospf", "ospfv3", "connected", "static", "eigrp", "lisp", "isis"]
 
 
-class Route(str, Enum):
-    EXTERNAL = "external"
+Route = Literal["external"]
 
 
 class IPv4Advertise(FeatureTemplateValidator):
@@ -40,33 +30,17 @@ class IPv4Advertise(FeatureTemplateValidator):
     )
 
 
-class IPv6AdvertiseProtocol(str, Enum):
-    BGP = "bgp"
-    OSPF = "ospf"
-    CONNECTED = "connected"
-    STATIC = "static"
-    EIGRP = "eigrp"
-    LISP = "lisp"
-    ISIS = "isis"
+IPv6AdvertiseProtocol = Literal["bgp", "ospf", "connected", "static", "eigrp", "lisp", "isis"]
 
 
 class IPv6Advertise(FeatureTemplateValidator):
     protocol: IPv6AdvertiseProtocol = Field(description="The IPv6 routing protocol whose routes are to be advertised.")
 
 
-class TransportGateway(str, Enum):
-    PREFER = "prefer"
-    ECMP_WITH_DIRECT_PATH = "ecmp-with-direct-path"
+TransportGateway = Literal["prefer", "ecmp-with-direct-path"]
 
 
-class SiteTypes(str, Enum):
-    TYPE_1 = "type-1"
-    TYPE_2 = "type-2"
-    TYPE_3 = "type-3"
-    CLOUD = "cloud"
-    BRANCH = "branch"
-    BR = "br"
-    SPOKE = "spoke"
+SiteTypes = Literal["type-1", "type-2", "type-3", "cloud", "branch", "br", "spoke"]
 
 
 class CiscoOMPModel(FeatureTemplate):

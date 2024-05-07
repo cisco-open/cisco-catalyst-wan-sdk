@@ -1,9 +1,8 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 import ipaddress
-from enum import Enum
 from pathlib import Path
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List, Literal, Optional
 
 from pydantic import ConfigDict, Field
 
@@ -23,18 +22,17 @@ DEFAULT_OSPF_INITIAL_HOLD = 1000
 DEFAULT_OSPF_MAX_HOLD = 10000
 
 
-class MetricType(str, Enum):
-    TYPE1 = "type1"
-    TYPE2 = "type2"
+Protocol = Literal["static", "connected", "bgp", "omp", "nat", "eigrp"]
 
+AdType = Literal["administrative", "on-startup"]
 
-class Protocol(str, Enum):
-    STATIC = "static"
-    CONNECTED = "connected"
-    BGP = "bgp"
-    OMP = "omp"
-    NAT = "nat"
-    EIGRP = "eigrp"
+Direction = Literal["in"]
+
+Network = Literal["broadcast", "point-to-point", "non-broadcast", "point-to-multipoint"]
+
+Type = Literal["simple", "message-digest", "null"]
+
+MetricType = Literal["type1", "type2"]
 
 
 class Redistribute(FeatureTemplateValidator):
@@ -50,11 +48,6 @@ class Redistribute(FeatureTemplateValidator):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class AdType(str, Enum):
-    ADMINISTRATIVE = "administrative"
-    ON_STARTUP = "on-startup"
-
-
 class RouterLsa(FeatureTemplateValidator):
     ad_type: AdType = Field(
         description="Type of advertisement for the router LSA.", json_schema_extra={"vmanage_key": "ad-type"}
@@ -63,28 +56,11 @@ class RouterLsa(FeatureTemplateValidator):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class Direction(str, Enum):
-    IN = "in"
-
-
 class RoutePolicy(FeatureTemplateValidator):
     direction: Direction = Field(description="Direction of the route policy (e.g., 'in' for incoming).")
     pol_name: str = Field(description="Name of the route policy.", json_schema_extra={"vmanage_key": "pol-name"})
 
     model_config = ConfigDict(populate_by_name=True)
-
-
-class Network(str, Enum):
-    BROADCAST = "broadcast"
-    POINT_TO_POINT = "point-to-point"
-    NON_BROADCAST = "non-broadcast"
-    POINT_TO_MULTIPOINT = "point-to-multipoint"
-
-
-class Type(str, Enum):
-    SIMPLE = "simple"
-    MESSAGE_DIGEST = "message-digest"
-    NULL = "null"
 
 
 class Interface(FeatureTemplateValidator):
@@ -110,11 +86,11 @@ class Interface(FeatureTemplateValidator):
     priority: Optional[int] = Field(
         default=DEFAULT_OSPF_INTERFACE_PRIORITY, description="The OSPF priority of the interface."
     )
-    network: Optional[Network] = Field(
-        default=Network.BROADCAST, description="The OSPF network type for the interface."
-    )
+    network: Optional[Network] = Field(default="broadcast", description="The OSPF network type for the interface.")
     passive_interface: Optional[BoolStr] = Field(
-        default=False, description="Whether the interface is a passive OSPF interface."
+        default=False,
+        description="Whether the interface is a passive OSPF interface.",
+        json_schema_extra={"vmanage_key": "passive-interface"},
     )
     type: Optional[Type] = Field(
         default=None,

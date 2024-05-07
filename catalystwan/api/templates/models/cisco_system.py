@@ -1,8 +1,7 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-from enum import Enum
 from pathlib import Path
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List, Literal, Optional
 
 from pydantic import ConfigDict, Field
 
@@ -11,45 +10,18 @@ from catalystwan.api.templates.device_variable import DeviceVariable
 from catalystwan.api.templates.feature_template import FeatureTemplate, FeatureTemplateValidator
 from catalystwan.utils.timezone import Timezone
 
+SiteType = Literal["type-1", "type-2", "type-3", "cloud", "branch", "br", "spoke"]
+ConsoleBaudRate = Literal["1200", "2400", "4800", "9600", "19200", "38400", "57600", "115200"]
+Protocol = Literal["tcp", "udp"]
+Boolean = Literal["or", "and"]
+Type = Literal["interface", "static-route"]
+Role = Literal["edge-router", "border-router"]
+EnableMrfMigration = Literal["enabled", "enabled-from-bgp-core"]
+Epfr = Literal["disabled", "aggressive", "moderate", "conservative"]
+
 
 class MobileNumber(FeatureTemplateValidator):
     number: str = Field(description="The mobile phone number used for notification or security purposes.")
-
-
-class SiteType(str, Enum):
-    TYPE_1 = "type-1"
-    TYPE_2 = "type-2"
-    TYPE_3 = "type-3"
-    CLOUD = "cloud"
-    BRANCH = "branch"
-    BR = "br"
-    SPOKE = "spoke"
-
-
-class ConsoleBaudRate(str, Enum):
-    _1200 = "1200"
-    _2400 = "2400"
-    _4800 = "4800"
-    _9600 = "9600"
-    _19200 = "19200"
-    _38400 = "38400"
-    _57600 = "57600"
-    _115200 = "115200"
-
-
-class Protocol(str, Enum):
-    TCP = "tcp"
-    UDP = "udp"
-
-
-class Boolean(str, Enum):
-    OR = "or"
-    AND = "and"
-
-
-class Type(str, Enum):
-    INTERFACE = "interface"
-    STATIC_ROUTE = "static-route"
 
 
 class Tracker(FeatureTemplateValidator):
@@ -86,12 +58,12 @@ class Tracker(FeatureTemplateValidator):
     )
     elements: Optional[List[str]] = Field(default=None, description="A list of elements to track.")
     boolean: Optional[Boolean] = Field(
-        default=Boolean.OR, description="The boolean condition to use when evaluating multiple elements."
+        default="or", description="The boolean condition to use when evaluating multiple elements."
     )
     threshold: Optional[int] = Field(default=300, description="The threshold for triggering the tracker.")
     interval: Optional[int] = Field(default=60, description="The interval at which the tracker checks the elements.")
     multiplier: Optional[int] = Field(default=3, description="The multiplier used for determining the loss threshold.")
-    type: Optional[Type] = Field(default=Type.INTERFACE, description="The type of tracker (interface or static route).")
+    type: Optional[Type] = Field(default="interface", description="The type of tracker (interface or static route).")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -116,11 +88,6 @@ class ObjectTrack(FeatureTemplateValidator):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class Role(str, Enum):
-    EDGE_ROUTER = "edge-router"
-    BORDER_ROUTER = "border-router"
-
-
 class AffinityPerVrf(FeatureTemplateValidator):
     affinity_group_number: Optional[int] = Field(
         default=None,
@@ -135,28 +102,16 @@ class AffinityPerVrf(FeatureTemplateValidator):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class EnableMrfMigration(str, Enum):
-    ENABLE = "enabled"
-    ENABLE_FROM_BGP_CORE = "enabled-from-bgp-core"
-
-
 class Vrf(FeatureTemplateValidator):
     vrf_id: int = Field(
         description="The VRF (VPN Routing and Forwarding) instance ID.", json_schema_extra={"vmanage_key": "vrf-id"}
     )
     gateway_preference: Optional[List[int]] = Field(
         default=None,
-        description="A list of preferred gateway values for the VRF.",
+        description="List of affinity group preferences for VRF",
         json_schema_extra={"vmanage_key": "gateway-preference"},
     )
     model_config = ConfigDict(populate_by_name=True)
-
-
-class Epfr(str, Enum):
-    DISABLED = "disabled"
-    AGGRESSIVE = "aggressive"
-    MODERATE = "moderate"
-    CONSERVATIVE = "conservative"
 
 
 class CiscoSystemModel(FeatureTemplate):
@@ -166,6 +121,7 @@ class CiscoSystemModel(FeatureTemplate):
     timezone: Optional[Timezone] = Field(
         default=None, description="The timezone setting for the system.", json_schema_extra={"data_path": ["clock"]}
     )
+    description: Optional[str] = Field(default=None, description="Set a text description of the device")
     hostname: DeviceVariable = Field(
         default=DeviceVariable(name="system_host_name"),
         validate_default=True,
@@ -324,12 +280,12 @@ class CiscoSystemModel(FeatureTemplate):
     preference_auto: Optional[BoolStr] = Field(
         default=None,
         description="Enable or disable automatic preference setting for affinity groups.",
-        json_schema_extra={"vmanage_key": "preference-auto"},
+        json_schema_extra={"vmanage_key": "preference-auto", "data_path": ["affinity-group"]},
     )
     affinity_per_vrf: Optional[List[AffinityPerVrf]] = Field(
         default=None,
         description="List of affinity configurations per VRF.",
-        json_schema_extra={"vmanage_key": "affinity-per-vrf"},
+        json_schema_extra={"vmanage_key": "affinity-per-vrf", "data_path": ["affinity-group"]},
     )
     transport_gateway: Optional[BoolStr] = Field(
         default=None,

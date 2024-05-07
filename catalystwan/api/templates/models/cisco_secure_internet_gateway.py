@@ -1,9 +1,8 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 import ipaddress
-from enum import Enum
 from pathlib import Path
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List, Literal, Optional
 
 from pydantic import ConfigDict, Field
 
@@ -26,52 +25,27 @@ DEFAULT_SERVICE_IDLE_TIME = 0
 DEFAULT_SERVICE_REFRESH_TIME = 0
 
 
-class Application(str, Enum):
-    SIG = "sig"
-
-
-class TunnelSet(str, Enum):
-    SECURE_INTERNET_GATEWAY_UMBRELLA = "secure-internet-gateway-umbrella"
-    SECURE_INTERNET_GATEWAY_ZSCALER = "secure-internet-gateway-zscaler"
-
-
-class TunnelDcPreference(str, Enum):
-    PRIMARY_DC = "primary-dc"
-    SECONDARY_DC = "secondary-dc"
-
-
-class IkeCiphersuite(str, Enum):
-    AES256_CBC_SHA1 = "aes256-cbc-sha1"
-    AES256_CBC_SHA2 = "aes256-cbc-sha2"
-    AES128_CBC_SHA1 = "aes128-cbc-sha1"
-    AES128_CBC_SHA2 = "aes128-cbc-sha2"
-
-
-class IkeGroup(str, Enum):
-    TWO = "2"
-    FOURTEEN = "14"
-    FIFTEEN = "15"
-    SIXTEEN = "16"
-
-
-class IpsecCiphersuite(str, Enum):
-    AES256_CBC_SHA1 = "aes256-cbc-sha1"
-    AES256_CBC_SHA384 = "aes256-cbc-sha384"
-    AES256_CBC_SHA256 = "aes256-cbc-sha256"
-    AES256_CBC_SHA512 = "aes256-cbc-sha512"
-    AES256_GCM = "aes256-gcm"
-    NULL_SHA1 = "null-sha1"
-    NULL_SHA384 = "null-sha384"
-    NULL_SHA256 = "null-sha256"
-    NULL_SHA512 = "null-sha512"
-
-
-class PerfectForwardSecrecy(str, Enum):
-    GROUP_2 = "group-2"
-    GROUP_14 = "group-14"
-    GROUP_15 = "group-15"
-    GROUP_16 = "group-16"
-    NONE = "none"
+Application = Literal["sig"]
+TunnelSet = Literal["secure-internet-gateway-umbrella", "secure-internet-gateway-zscaler"]
+TunnelDcPreference = Literal["primary-dc", "secondary-dc"]
+IkeCiphersuite = Literal["aes256-cbc-sha1", "aes256-cbc-sha2", "aes128-cbc-sha1", "aes128-cbc-sha2"]
+IkeGroup = Literal["2", "14", "15", "16"]
+IpsecCiphersuite = Literal[
+    "aes256-cbc-sha1",
+    "aes256-cbc-sha384",
+    "aes256-cbc-sha256",
+    "aes256-cbc-sha512",
+    "aes256-gcm",
+    "null-sha1",
+    "null-sha384",
+    "null-sha256",
+    "null-sha512",
+]
+PerfectForwardSecrecy = Literal["group-2", "group-14", "group-15", "group-16", "none"]
+DisplayTimeUnit = Literal["MINUTE", "HOUR", "DAY"]
+RefreshTimeUnit = Literal["MINUTE", "HOUR", "DAY"]
+TrackerType = Literal["SIG"]
+SvcType = Literal["sig"]
 
 
 class Interface(FeatureTemplateValidator):
@@ -107,16 +81,14 @@ class Interface(FeatureTemplateValidator):
         json_schema_extra={"vmanage_key": "tunnel-destination"},
         description="The destination address for the tunnel.",
     )
-    application: Application = Field(
-        default=Application.SIG, description="Application type for the Secure Internet Gateway."
-    )
+    application: Application = Field(default="sig", description="Application type for the Secure Internet Gateway.")
     tunnel_set: TunnelSet = Field(
-        default=TunnelSet.SECURE_INTERNET_GATEWAY_UMBRELLA,
+        default="secure-internet-gateway-umbrella",
         json_schema_extra={"vmanage_key": "tunnel-set"},
         description="Tunnel set used for the Secure Internet Gateway.",
     )
     tunnel_dc_preference: TunnelDcPreference = Field(
-        default=TunnelDcPreference.PRIMARY_DC,
+        default="primary-dc",
         json_schema_extra={"vmanage_key": "tunnel-dc-preference"},
         description="Data center preference for the tunnel.",
     )
@@ -154,12 +126,12 @@ class Interface(FeatureTemplateValidator):
         description="Interval for rekeying the IKE security association.",
     )
     ike_ciphersuite: Optional[IkeCiphersuite] = Field(
-        default=IkeCiphersuite.AES256_CBC_SHA1,
+        default="aes256-cbc-sha1",
         json_schema_extra={"vmanage_key": "ike-ciphersuite"},
         description="Ciphersuite for IKE security association establishment.",
     )
     ike_group: IkeGroup = Field(
-        default=IkeGroup.FOURTEEN,
+        default="14",
         json_schema_extra={"vmanage_key": "ike-group"},
         description="Diffie-Hellman group used for IKE key exchange.",
     )
@@ -189,12 +161,12 @@ class Interface(FeatureTemplateValidator):
         description="Replay window size for IPsec security association.",
     )
     ipsec_ciphersuite: IpsecCiphersuite = Field(
-        default=IpsecCiphersuite.AES256_GCM,
+        default="aes256-gcm",
         json_schema_extra={"vmanage_key": "ipsec-ciphersuite"},
         description="Ciphersuite for IPsec security association establishment.",
     )
     perfect_forward_secrecy: PerfectForwardSecrecy = Field(
-        default=PerfectForwardSecrecy.NONE,
+        default="none",
         json_schema_extra={"vmanage_key": "perfect-forward-secrecy"},
         description="Perfect Forward Secrecy (PFS) setting for IPsec key exchange.",
     )
@@ -205,10 +177,6 @@ class Interface(FeatureTemplateValidator):
         description="Flag indicating if tracking is enabled for the interface.",
     )
     model_config: ClassVar[ConfigDict] = ConfigDict(populate_by_name=True)
-
-
-class SvcType(str, Enum):
-    SIG = "sig"
 
 
 class InterfacePair(FeatureTemplateValidator):
@@ -233,21 +201,9 @@ class InterfacePair(FeatureTemplateValidator):
     model_config: ClassVar[ConfigDict] = ConfigDict(populate_by_name=True)
 
 
-class DisplayTimeUnit(str, Enum):
-    MINUTE = "MINUTE"
-    HOUR = "HOUR"
-    DAY = "DAY"
-
-
-class RefreshTimeUnit(str, Enum):
-    MINUTE = "MINUTE"
-    HOUR = "HOUR"
-    DAY = "DAY"
-
-
 class Service(FeatureTemplateValidator):
     svc_type: SvcType = Field(
-        default=SvcType.SIG, json_schema_extra={"vmanage_key": "svc-type"}, description="Type of service configured."
+        default="sig", json_schema_extra={"vmanage_key": "svc-type"}, description="Type of service configured."
     )
     interface_pair: List[InterfacePair] = Field(
         ...,
@@ -299,7 +255,7 @@ class Service(FeatureTemplateValidator):
     )
 
     display_time_unit: Optional[DisplayTimeUnit] = Field(
-        default=DisplayTimeUnit.MINUTE,
+        default="MINUTE",
         json_schema_extra={"vmanage_key": "display-time-unit"},
         description="Unit of time used for displaying time-related settings.",
     )
@@ -314,7 +270,7 @@ class Service(FeatureTemplateValidator):
         description="Time after which the service information is refreshed.",
     )
     refresh_time_unit: Optional[RefreshTimeUnit] = Field(
-        default=RefreshTimeUnit.MINUTE,
+        default="MINUTE",
         json_schema_extra={"vmanage_key": "refresh-time-unit"},
         description="Unit of time used for the refresh time setting.",
     )
@@ -349,10 +305,6 @@ class Service(FeatureTemplateValidator):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class TrackerType(str, Enum):
-    SIG = "SIG"
-
-
 class Tracker(FeatureTemplateValidator):
     name: str = Field(..., description="Name of the tracker.")
     endpoint_api_url: str = Field(
@@ -384,6 +336,11 @@ class CiscoSecureInternetGatewayModel(FeatureTemplate):
         default=DEFAULT_SIG_VPN_ID,
         json_schema_extra={"vmanage_key": "vpn-id"},
         description="VPN ID associated with the Cisco Secure Internet Gateway service.",
+    )
+    child_org_id: str = Field(
+        default="",
+        json_schema_extra={"vmanage_key": "childOrgId"},
+        description="Child Organization Id",
     )
     interface: List[Interface] = Field(..., description="List of interface configurations associated with the service.")
     service: List[Service] = Field(

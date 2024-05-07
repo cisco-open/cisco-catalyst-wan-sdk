@@ -1,8 +1,7 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-from enum import Enum
 from pathlib import Path
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List, Literal, Optional
 
 from pydantic import ConfigDict, Field
 
@@ -16,29 +15,30 @@ DEFAULT_BFD_POLL_INTERVAL = 600000
 DEFAULT_BFD_MULTIPLIER = 6
 
 
-class ColorType(str, Enum):
-    DEFAULT = "default"
-    MPLS = "mpls"
-    METRO_ETHERNET = "metro-ethernet"
-    BIZ_INTERNET = "biz-internet"
-    PUBLIC_INTERNET = "public-internet"
-    LTE = "lte"
-    THREEG = "3g"
-    RED = "red"
-    GREEN = "green"
-    BLUE = "blue"
-    GOLD = "gold"
-    SILVER = "silver"
-    BRONZE = "bronze"
-    CUSTOM1 = "custom1"
-    CUSTOM2 = "custom2"
-    CUSTOM3 = "custom3"
-    PRIVATE1 = "private1"
-    PRIVATE2 = "private2"
-    PRIVATE3 = "private3"
-    PRIVATE4 = "private4"
-    PRIVATE5 = "private5"
-    PRIVATE6 = "private6"
+ColorType = Literal[
+    "default",
+    "mpls",
+    "metro-ethernet",
+    "biz-internet",
+    "public-internet",
+    "lte",
+    "3g",
+    "red",
+    "green",
+    "blue",
+    "gold",
+    "silver",
+    "bronze",
+    "custom1",
+    "custom2",
+    "custom3",
+    "private1",
+    "private2",
+    "private3",
+    "private4",
+    "private5",
+    "private6",
+]
 
 
 class Color(FeatureTemplateValidator):

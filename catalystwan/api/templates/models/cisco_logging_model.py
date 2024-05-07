@@ -1,29 +1,23 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-from enum import Enum
 from pathlib import Path
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List, Literal, Optional
 
 from pydantic import ConfigDict, Field
 
 from catalystwan.api.templates.bool_str import BoolStr
 from catalystwan.api.templates.feature_template import FeatureTemplate, FeatureTemplateValidator
 
-
-class Version(str, Enum):
-    TLSV11 = "TLSv1.1"
-    TLSV12 = "TLSv1.2"
+Version = Literal["TLSv1.1", "TLSv1.2"]
 
 
-class AuthType(str, Enum):
-    SERVER = "Server"
-    MUTUAL = "Mutual"
+AuthType = Literal["Server", "Mutual"]
 
 
 class TlsProfile(FeatureTemplateValidator):
     profile: str = Field(description="The name of the TLS profile")
     version: Optional[Version] = Field(
-        Version.TLSV11, json_schema_extra={"data_path": ["tls-version"]}, description="The TLS version"
+        default="TLSv1.1", json_schema_extra={"data_path": ["tls-version"]}, description="The TLS version"
     )
     auth_type: AuthType = Field(
         json_schema_extra={"vmanage_key": "auth-type"}, description="The authentication type for the TLS connection"
@@ -36,28 +30,18 @@ class TlsProfile(FeatureTemplateValidator):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class Priority(str, Enum):
-    INFORMATION = "information"
-    DEBUGGING = "debugging"
-    NOTICE = "notice"
-    WARN = "warn"
-    ERROR = "error"
-    CRITICAL = "critical"
-    ALERT = "alert"
-    EMERGENCY = "emergency"
+Priority = Literal["information", "debugging", "notice", "warn", "error", "critical", "alert", "emergency"]
 
 
 class Server(FeatureTemplateValidator):
-    name: str = Field(description="The name of the server")
+    name: str = Field(description="The hostname/IPv4 address of the server")
     vpn: Optional[int] = Field(description="The VPN ID for the server")
     source_interface: Optional[str] = Field(
         default=None,
         json_schema_extra={"vmanage_key": "source-interface"},
         description="The source interface for the server",
     )
-    priority: Optional[Priority] = Field(
-        default=Priority.INFORMATION, description="The priority level for logging messages"
-    )
+    priority: Optional[Priority] = Field(default="information", description="The priority level for logging messages")
     enable_tls: Optional[BoolStr] = Field(
         default=False,
         json_schema_extra={"data_path": ["tls"], "vmanage_key": "enable-tls"},
@@ -85,7 +69,7 @@ class Ipv6Server(FeatureTemplateValidator):
         description="The source interface for the IPv6 server",
     )
     priority: Optional[Priority] = Field(
-        default=Priority.INFORMATION, description="The priority level for logging messages to the IPv6 server"
+        default="information", description="The priority level for logging messages to the IPv6 server"
     )
     enable_tls: Optional[BoolStr] = Field(
         default=False,
