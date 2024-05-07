@@ -61,12 +61,12 @@ class OMPParcel(_ParcelBase):
     shutdown: Union[Variable, Global[bool], Default[bool]] = Field(
         default=as_default(False), validation_alias=AliasPath("data", "shutdown"), description="Variable"
     )
-    omp_admin_distance_ipv4: Union[Variable, Global[int], Default[Optional[int]]] = Field(
+    omp_admin_distance_ipv4: Union[Variable, Global[int], Default[int]] = Field(
         default=as_default(251),
         validation_alias=AliasPath("data", "ompAdminDistanceIpv4"),
         description="OMP Admin Distance IPv4",
     )
-    omp_admin_distance_ipv6: Union[Variable, Global[int], Default[Optional[int]]] = Field(
+    omp_admin_distance_ipv6: Union[Variable, Global[int], Default[int]] = Field(
         default=as_default(251),
         validation_alias=AliasPath("data", "ompAdminDistanceIpv6"),
         description="OMP Admin Distance IPv6",
