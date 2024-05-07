@@ -70,7 +70,7 @@ class TestTemplatesAPI(unittest.TestCase):
             model="vedge-cloud",
             status="normal",
         )
-        sub_tasks_data = SubTaskData.parse_obj(
+        sub_tasks_data = SubTaskData.model_validate(
             {
                 "status": "Success",
                 "statusId": "success",

@@ -15,6 +15,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1contro
     E1Linecode,
     LengthLong,
     LineMode,
+    Long,
     T1Basic,
     T1E1ControllerParcel,
     T1Framing,
@@ -138,7 +139,7 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
                         )
                     ),
                     cable=CableLengthLong(
-                        cable_length=as_global("long", CableLengthLong),
+                        cable_length=as_global("long", Long),
                         length_long=as_global("-15db", LengthLong),
                     ),
                     channel_group=[

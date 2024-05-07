@@ -35,7 +35,6 @@ class TestFeatureTemplate2(TestCase):
             Path(__file__).resolve().parents[0] / Path("definitions") / Path(f"{template.template_name}.json")
         ) as f:
             definition = json.load(f)
-
         # Act
         feature_template_payload = templates_api.generate_feature_template_payload(
             template=template, schema=schema, debug=False

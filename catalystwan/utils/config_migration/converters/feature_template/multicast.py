@@ -94,7 +94,7 @@ class PimToMulticastTemplateConverter:
         )
 
     def _set_ssm_attributes(self, values: dict) -> SsmAttributes:
-        spt_threshold = values.get("spt_threshold", as_default("infinity", as_default("0", SptThreshold)))
+        spt_threshold = values.get("spt_threshold", as_default("0", SptThreshold))
         if spt_threshold.option_type == OptionType.GLOBAL:
             spt_threshold = as_global(spt_threshold.value, SptThreshold)
 
