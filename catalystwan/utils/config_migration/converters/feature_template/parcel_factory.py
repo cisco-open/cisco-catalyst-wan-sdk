@@ -20,7 +20,6 @@ from .base import FeatureTemplateConverter
 from .basic import SystemToBasicTemplateConverter
 from .bfd import BFDTemplateConverter
 from .bgp import BGPTemplateConverter
-from .ethpppoe import InterfaceEthernetPppoeTemplateConverter
 from .global_ import GlobalTemplateConverter
 from .gre import InterfaceGRETemplateConverter
 from .ipsec import InterfaceIpsecTemplateConverter
@@ -35,6 +34,7 @@ from .ntp import NTPTemplateConverter
 from .omp import OMPTemplateConverter
 from .ospf import OspfTemplateConverter
 from .ospfv3 import Ospfv3TemplateConverter
+from .pppoe import InterfaceDslPppoeTemplateConverter, InterfaceEthernetPppoeTemplateConverter
 from .security import SecurityTemplateConverter
 from .svi import InterfaceSviTemplateConverter
 from .t1e1serial import T1E1SerialTemplateConverter
@@ -74,6 +74,7 @@ available_converters = [
     WirelessLanTemplateConverter,
     T1E1SerialTemplateConverter,
     InterfaceEthernetPppoeTemplateConverter,
+    InterfaceDslPppoeTemplateConverter,
 ]
 
 

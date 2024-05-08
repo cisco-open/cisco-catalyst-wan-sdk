@@ -151,7 +151,9 @@ class TunnelAllowService(BaseModel):
     bgp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
     dhcp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
     dns: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
-    https: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
+    https: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
+        default=None, description="Field not available for DslPPPoEParcel"
+    )
     icmp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
     netconf: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
     ntp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
@@ -297,8 +299,22 @@ class AclQos(BaseModel):
     )
 
 
-class InterfaceEthPPPoEParcel(_ParcelBase):
-    type_: Literal["interface/ethpppoe"] = Field(default="interface/ethpppoe", frozen=True, exclude=True)
+VdslMode = Literal[
+    "ADSL1",
+    "ADSL2",
+    "ADSL2+",
+    "ANSI",
+    "VDSL2",
+]
+
+
+class Vdsl(BaseModel):
+    slot: Union[Variable, Global[str]] = Field()
+    mode: Optional[Union[Variable, Global[VdslMode], Default[Literal["auto"]]]] = Field(default=None)
+    sra: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
+
+
+class InterfacePPPoEParcel(_ParcelBase):
     model_config = ConfigDict(
         extra="forbid",
         populate_by_name=True,
@@ -342,3 +358,12 @@ class InterfaceEthPPPoEParcel(_ParcelBase):
         validation_alias=AliasPath("data", "tunnelAllowService"),
         description="Tunnel Interface Attributes",
     )
+
+
+class InterfaceEthPPPoEParcel(InterfacePPPoEParcel):
+    type_: Literal["interface/ethpppoe"] = Field(default="interface/ethpppoe", frozen=True, exclude=True)
+
+
+class InterfaceDslPPPoEParcel(InterfacePPPoEParcel):
+    type_: Literal["interface/dsl-pppoe"] = Field(default="interface/dsl-pppoe", frozen=True, exclude=True)
+    vdsl: Optional[Vdsl] = Field(default=None, validation_alias=AliasPath("data", "vdsl"), description="vdsl")
