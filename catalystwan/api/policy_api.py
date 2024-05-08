@@ -11,6 +11,7 @@ from catalystwan.endpoints.configuration.policy.definition.access_control_list i
 from catalystwan.endpoints.configuration.policy.definition.access_control_list_ipv6 import (
     ConfigurationPolicyAclIPv6Definition,
 )
+from catalystwan.endpoints.configuration.policy.definition.aip import ConfigurationPolicyAIPDefinition
 from catalystwan.endpoints.configuration.policy.definition.amp import ConfigurationPolicyAMPDefinition
 from catalystwan.endpoints.configuration.policy.definition.control import ConfigurationPolicyControlDefinition
 from catalystwan.endpoints.configuration.policy.definition.device_access import (
@@ -126,6 +127,10 @@ from catalystwan.models.policy import (
 from catalystwan.models.policy.centralized import CentralizedPolicy, CentralizedPolicyEditPayload, CentralizedPolicyInfo
 from catalystwan.models.policy.definition.access_control_list import AclPolicy, AclPolicyGetResponse
 from catalystwan.models.policy.definition.access_control_list_ipv6 import AclIPv6Policy, AclIPv6PolicyGetResponse
+from catalystwan.models.policy.definition.aip import (
+    AdvancedInspectionProfilePolicy,
+    AdvancedInspectionProfilePolicyGetResponse,
+)
 from catalystwan.models.policy.definition.amp import (
     AdvancedMalwareProtectionPolicy,
     AdvancedMalwareProtectionPolicyGetResponse,
@@ -235,6 +240,7 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     AclIPv6Policy: ConfigurationPolicyAclIPv6Definition,
     DeviceAccessPolicy: ConfigurationPolicyDeviceAccessDefinition,
     DeviceAccessIPv6Policy: ConfigurationPolicyDeviceAccessIPv6Definition,
+    AdvancedInspectionProfilePolicy: ConfigurationPolicyAIPDefinition,
     AdvancedMalwareProtectionPolicy: ConfigurationPolicyAMPDefinition,
     IntrusionPreventionPolicy: ConfigurationPolicyIntrusionPreventionDefinition,
     UrlFilteringPolicy: ConfigurationPolicyUrlFilteringDefinition,
@@ -674,6 +680,10 @@ class PolicyDefinitionsAPI:
         ...
 
     @overload
+    def get(self, type: Type[AdvancedInspectionProfilePolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[AdvancedMalwareProtectionPolicy]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
@@ -740,6 +750,10 @@ class PolicyDefinitionsAPI:
 
     @overload
     def get(self, type: Type[UrlFilteringPolicy], id: UUID) -> UrlFilteringPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[AdvancedInspectionProfilePolicy], id: UUID) -> AdvancedInspectionProfilePolicyGetResponse:
         ...
 
     @overload
