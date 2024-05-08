@@ -81,6 +81,7 @@ SUPPORTED_TEMPLATE_TYPES = [
     "cedge_multicast",
     "cedge_pim",
     "vpn-interface-t1-e1",
+    "vpn-interface-ethpppoe",
 ]
 
 FEATURE_PROFILE_SYSTEM = [
@@ -115,6 +116,7 @@ FEATURE_PROFILE_TRANSPORT = [
     "cisco_dhcp_server",
     "dhcp-server",
     "vpn-interface-t1-e1",
+    "vpn-interface-ethpppoe",
     CISCO_VPN_TRANSPORT_AND_MANAGEMENT,
 ]
 

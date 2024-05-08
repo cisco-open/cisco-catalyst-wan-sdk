@@ -4,7 +4,8 @@ from uuid import UUID
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
-from catalystwan.models.common import EncapType
+from catalystwan.models.common import Carrier, CoreRegion, EncapType, SecondaryRegion, TLOCColor
+from catalystwan.models.configuration.feature_profile.common import MultiRegionFabric
 from catalystwan.models.configuration.feature_profile.common import Prefix as CommonPrefix
 from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1controller import (
     E1,
@@ -41,13 +42,33 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import
     SubnetMask,
     TransportVpnParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.ethpppoe import (
+    AclQos as AclQosEthPPPoE,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.ethpppoe import (
+    Advanced as AdvancedEthPPPoE,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.ethpppoe import (
+    Chap,
+    Ethernet,
+    InterfaceEthPPPoEParcel,
+    NatProp,
+    Pap,
+    Ppp,
+    ShapingRateDownstreamConfig,
+    ShapingRateUpstreamConfig,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.ethpppoe import (
+    Tunnel as TunnelEthPPPoE,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.ethpppoe import (
+    TunnelAdvancedOption,
+    TunnelAllowService,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.t1e1serial import (
     Advanced,
     AllowService,
-    CoreRegion,
     Encapsulation,
-    MultiRegionFabric,
-    SecondaryRegion,
     T1E1SerialParcel,
     Tunnel,
 )
@@ -340,6 +361,109 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, t1e1serial, self.wan_uuid).id
+        # Assert
+        assert parcel_id
+
+    def test_when_fully_specified_ethpppoe_interface_parcel_expect_successfull_post(self):
+        # Arrange
+        ethpppoe_parcel = InterfaceEthPPPoEParcel(
+            parcel_name="Test",
+            parcel_description="Description",
+            acl_qos=AclQosEthPPPoE(
+                adapt_period=Global[int](value=436),
+                adaptive_qo_s=Global[bool](value=True),
+                shaping_rate=Global[int](value=295),
+                shaping_rate_downstream=Global[bool](value=False),
+                shaping_rate_downstream_config=ShapingRateDownstreamConfig(
+                    default_shaping_rate_downstream=Global[int](value=500),
+                    max_shaping_rate_downstream=Global[int](value=77),
+                    min_shaping_rate_downstream=Global[int](value=328),
+                ),
+                shaping_rate_upstream=Global[bool](value=True),
+                shaping_rate_upstream_config=ShapingRateUpstreamConfig(
+                    default_shaping_rate_upstream=Global[int](value=403),
+                    max_shaping_rate_upstream=Global[int](value=82),
+                    min_shaping_rate_upstream=Global[int](value=101),
+                ),
+            ),
+            advanced=AdvancedEthPPPoE(
+                ip_directed_broadcast=Global[bool](value=True),
+                ip_mtu=Global[int](value=1500),
+                tcp_mss=Global[int](value=560),
+                tloc_extension=Global[str](value="FBVQf"),
+            ),
+            bandwidth_downstream=Global[int](value=102),
+            bandwidth_upstream=Global[int](value=267),
+            ethernet=Ethernet(
+                if_name=Global[str](value="Ethernet1"),
+                description=Global[str](value="ABAAABB"),
+                vlan_id=Global[int](value=266),
+            ),
+            multi_region_fabric=MultiRegionFabric(
+                core_region=Global[Literal["core", "core-shared"]](value="core"),
+                enable_core_region=Global[bool](value=True),
+            ),
+            nat_prop=NatProp(
+                nat=Global[bool](value=True), tcp_timeout=Global[int](value=301), udp_timeout=Global[int](value=11)
+            ),
+            ppp=Ppp(
+                dial_pool_number=Global[int](value=2),
+                method=Global[Literal["chap", "pap", "papandchap"]](value="chap"),
+                callin=Global[Literal["Bidirectional", "Unidirectional"]](value="Bidirectional"),
+                chap=Chap(hostname=Global[str](value="BBXwBBB"), ppp_auth_password=Global[str](value="BRyKDwlPkn")),
+                pap=Pap(ppp_auth_password=Global[str](value="sAZWrMiNhD"), username=Global[str](value="BAAAAOZNQI")),
+                ppp_max_payload=Global[int](value=276),
+            ),
+            service_provider=Global[str](value="MaBNDCAFdb"),
+            shutdown=Global[bool](value=True),
+            tunnel=TunnelEthPPPoE(
+                bandwidth_percent=Global[int](value=43),
+                border=Global[bool](value=False),
+                clear_dont_fragment=Global[bool](value=False),
+                color=Global[TLOCColor](value="private5"),
+                low_bandwidth_link=Global[bool](value=False),
+                max_control_connections=Global[int](value=5),
+                mode=Global[Literal["hub", "spoke"]](value="hub"),
+                network_broadcast=Global[bool](value=True),
+                per_tunnel_qos=Global[bool](value=True),
+                port_hop=Global[bool](value=False),
+                restrict=Global[bool](value=True),
+                tunnel_interface=Global[bool](value=True),
+                tunnel_tcp_mss_adjust=Global[int](value=600),
+                vbond_as_stun_server=Global[bool](value=True),
+                vmanage_connection_preference=Global[int](value=2),
+            ),
+            tunnel_advanced_option=TunnelAdvancedOption(
+                bind=Global[str](value="BAAREAA"),
+                carrier=Global[Carrier](value="carrier8"),
+                gre_encap=Global[bool](value=True),
+                gre_preference=Global[int](value=266),
+                gre_weight=Global[int](value=11),
+                hello_interval=Global[int](value=329),
+                hello_tolerance=Global[int](value=373),
+                ipsec_encap=Global[bool](value=True),
+                ipsec_preference=Global[int](value=163),
+                ipsec_weight=Global[int](value=244),
+                last_resort_circuit=Global[bool](value=False),
+                nat_refresh_interval=Global[int](value=30),
+            ),
+            tunnel_allow_service=TunnelAllowService(
+                all=Global[bool](value=False),
+                bgp=Global[bool](value=False),
+                dhcp=Global[bool](value=False),
+                dns=Global[bool](value=False),
+                https=Global[bool](value=True),
+                icmp=Global[bool](value=False),
+                netconf=Global[bool](value=True),
+                ntp=Global[bool](value=False),
+                ospf=Global[bool](value=False),
+                snmp=Global[bool](value=False),
+                sshd=Global[bool](value=False),
+                stun=Global[bool](value=False),
+            ),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, ethpppoe_parcel, self.wan_uuid).id
         # Assert
         assert parcel_id
 

@@ -8,7 +8,7 @@ from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
 from catalystwan.models.common import Carrier, EncapType, TLOCColor
-from catalystwan.models.configuration.feature_profile.common import Prefix, RefIdItem
+from catalystwan.models.configuration.feature_profile.common import MultiRegionFabric, Prefix, RefIdItem
 
 ClockRate = Literal[
     "9600",
@@ -137,37 +137,6 @@ class Encapsulation(BaseModel):
     encap: Optional[Global[EncapType]] = Field(default=None)
     preference: Optional[Union[Global[int], Variable, Default[None]]] = Field(default=None)
     weight: Optional[Union[Global[int], Variable, Default[int]]] = Field(default=None)
-
-
-CoreRegion = Literal[
-    "core",
-    "core-shared",
-]
-
-
-SecondaryRegion = Literal[
-    "secondary-only",
-    "secondary-shared",
-]
-
-
-class MultiRegionFabric(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    core_region: Optional[Union[Global[CoreRegion], Default[Literal["core-shared"]]]] = Field(
-        default=None, validation_alias="coreRegion", serialization_alias="coreRegion"
-    )
-    enable_core_region: Optional[Union[Global[bool], Default[bool]]] = Field(
-        default=None, validation_alias="enableCoreRegion", serialization_alias="enableCoreRegion"
-    )
-    enable_secondary_region: Optional[Union[Global[bool], Default[bool]]] = Field(
-        default=None, validation_alias="enableSecondaryRegion", serialization_alias="enableSecondaryRegion"
-    )
-    secondary_region: Optional[Union[Global[SecondaryRegion], Default[Literal["secondary-shared"]]]] = Field(
-        default=None, validation_alias="secondaryRegion", serialization_alias="secondaryRegion"
-    )
 
 
 class AclQos(BaseModel):

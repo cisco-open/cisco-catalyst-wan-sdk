@@ -20,6 +20,7 @@ from .base import FeatureTemplateConverter
 from .basic import SystemToBasicTemplateConverter
 from .bfd import BFDTemplateConverter
 from .bgp import BGPTemplateConverter
+from .ethpppoe import InterfaceEthernetPppoeTemplateConverter
 from .global_ import GlobalTemplateConverter
 from .gre import InterfaceGRETemplateConverter
 from .ipsec import InterfaceIpsecTemplateConverter
@@ -72,6 +73,7 @@ available_converters = [
     IgmpToMulticastTemplateConverter,
     WirelessLanTemplateConverter,
     T1E1SerialTemplateConverter,
+    InterfaceEthernetPppoeTemplateConverter,
 ]
 
 

@@ -9,11 +9,13 @@ from .bgp import WanRoutingBgpParcel as BGPParcel
 from .cellular_controller import CellularControllerParcel
 from .t1e1controller import T1E1ControllerParcel
 from .vpn import ManagementVpnParcel, TransportVpnParcel
+from .wan.interface.ethpppoe import InterfaceEthPPPoEParcel
 from .wan.interface.t1e1serial import T1E1SerialParcel
 
 AnyTransportVpnSubParcel = Annotated[
     Union[
-        T1E1SerialParcel
+        T1E1SerialParcel,
+        InterfaceEthPPPoEParcel,
         # Add wan interfaces here
     ],
     Field(discriminator="type_"),

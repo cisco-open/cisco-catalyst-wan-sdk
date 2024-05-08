@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
+from catalystwan.models.common import CoreRegion, SecondaryRegion
 from catalystwan.models.configuration.common import Solution
 
 IPV4Address = str
@@ -229,3 +230,22 @@ class RefIdItem(BaseModel):
         populate_by_name=True,
     )
     ref_id: Global[str] = Field(..., serialization_alias="refId", validation_alias="refId")
+
+
+class MultiRegionFabric(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    core_region: Optional[Union[Global[CoreRegion], Default[Literal["core-shared"]]]] = Field(
+        default=None, validation_alias="coreRegion", serialization_alias="coreRegion"
+    )
+    enable_core_region: Optional[Union[Global[bool], Default[bool]]] = Field(
+        default=None, validation_alias="enableCoreRegion", serialization_alias="enableCoreRegion"
+    )
+    enable_secondary_region: Optional[Union[Global[bool], Default[bool]]] = Field(
+        default=None, validation_alias="enableSecondaryRegion", serialization_alias="enableSecondaryRegion"
+    )
+    secondary_region: Optional[Union[Global[SecondaryRegion], Default[Literal["secondary-shared"]]]] = Field(
+        default=None, validation_alias="secondaryRegion", serialization_alias="secondaryRegion"
+    )
