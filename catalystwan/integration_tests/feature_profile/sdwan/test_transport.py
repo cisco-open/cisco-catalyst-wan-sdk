@@ -42,13 +42,15 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import
     SubnetMask,
     TransportVpnParcel,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppoe import AclQos as AclQosPPPoE
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppoe import (
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppox import AclQos as AclQosPPPoE
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppox import (
     Advanced as AdvancedPPPoE,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppoe import (
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppox import (
+    AtmInterface,
     Chap,
     Ethernet,
+    InterfaceDslPPPoAParcel,
     InterfaceDslPPPoEParcel,
     InterfaceEthPPPoEParcel,
     NatProp,
@@ -57,10 +59,12 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
     ShapingRateDownstreamConfig,
     ShapingRateUpstreamConfig,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppoe import Tunnel as TunnelPPPoE
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppoe import (
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppox import Tunnel as TunnelPPPoE
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppox import (
     TunnelAdvancedOption,
     TunnelAllowService,
+    VbrNrtConfig,
+    VbrRtConfig,
     Vdsl,
     VdslMode,
 )
@@ -570,6 +574,33 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, ethpppoe_parcel, self.wan_uuid).id
+        # Assert
+        assert parcel_id
+
+    def test_when_correct_values_dlspppoa_interface_parcel_expect_successfull_post(self):
+        """This test case don't cover all fields because the models
+        inherets from the same parent class as DslPPPoE and EthPPPoE"""
+        # Arrange
+        dslpppoa_parcel = InterfaceDslPPPoAParcel(
+            parcel_name="InterfaceDslPPPoAParcel",
+            parcel_description="Description",
+            atm_interface=AtmInterface(
+                if_name=Global[str](value="ATM123213/0/0"),
+                local_vpi_vci=Variable(value="{{[[[[}}"),
+                description=Global[str](value="mkMuCZMEWq"),
+                encapsulation=Default[Literal["AAL5MUX"]](value="AAL5MUX"),
+                vbr_nrt_config=VbrNrtConfig(
+                    burst_cell_size=Variable(value="{{GO}}"),
+                    p_c_r=Variable(value="{{JIvj5lr}}"),
+                    s_c_r=Variable(value="{{jn0LmZq8o4C}}"),
+                ),
+                vbr_rt_config=VbrRtConfig(
+                    a_c_r=Variable(value="{{x}}"), burst_cell_size=Variable(value="{{G}}"), p_c_r=Global[int](value=481)
+                ),
+            ),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, dslpppoa_parcel, self.wan_uuid).id
         # Assert
         assert parcel_id
 

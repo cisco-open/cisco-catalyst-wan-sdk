@@ -4,11 +4,14 @@ from typing import Dict, List, Optional, Tuple, Union
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, OptionType, as_global
 from catalystwan.models.common import Carrier
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppoe import (
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppox import (
     Advanced,
+    AtmEncapsulation,
+    AtmInterface,
     Callin,
     Chap,
     Ethernet,
+    InterfaceDslPPPoAParcel,
     InterfaceDslPPPoEParcel,
     InterfaceEthPPPoEParcel,
     Method,
@@ -18,6 +21,8 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
     Tunnel,
     TunnelAdvancedOption,
     TunnelAllowService,
+    VbrNrtConfig,
+    VbrRtConfig,
     Vdsl,
     VdslMode,
 )
@@ -31,7 +36,7 @@ class EncapsulationOption:
     weight: Optional[Global[int]] = None
 
 
-class InterfacePppoeTemplateConverter:
+class InterfacePppoXTemplateConverter:
     def parse_tunnel_advanced_option(self, data: dict) -> Optional[TunnelAdvancedOption]:
         tunnel = data.get("tunnel_interface", {})
         if not tunnel:
@@ -205,8 +210,33 @@ class InterfacePppoeTemplateConverter:
             return as_global(method.value, Method)
         return Default[None](value=None)
 
+    def parse_vdsl(self, data: dict) -> Optional[Vdsl]:
+        controller = data.get("controller", {}).get("vdsl", [])
 
-class InterfaceEthernetPppoeTemplateConverter(InterfacePppoeTemplateConverter):
+        if not controller:
+            return None
+
+        controller_data = controller[0]
+        sra = controller_data.get("sra", {})
+        slot = controller_data.get("name", {})
+
+        operating_mode = controller_data.get("operating", {}).get("mode", {})
+        mode = self.parse_mode(operating_mode)
+
+        return Vdsl(sra=sra, slot=slot, mode=mode)
+
+    def parse_mode(self, mode: dict) -> Optional[Global[VdslMode]]:
+        if "auto" in mode:
+            return None
+
+        mode_key = next(iter(mode.keys()), None)
+        if mode_key:
+            return as_global(mode_key.upper(), VdslMode)
+
+        return None
+
+
+class InterfaceEthernetPppoeTemplateConverter(InterfacePppoXTemplateConverter):
     supported_template_types = ("vpn-interface-ethpppoe",)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceEthPPPoEParcel:
@@ -239,7 +269,7 @@ class InterfaceEthernetPppoeTemplateConverter(InterfacePppoeTemplateConverter):
         )
 
 
-class InterfaceDslPppoeTemplateConverter(InterfacePppoeTemplateConverter):
+class InterfaceDslPppoeTemplateConverter(InterfacePppoXTemplateConverter):
     supported_template_types = ("vpn-interface-pppoe",)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceDslPPPoEParcel:
@@ -274,27 +304,83 @@ class InterfaceDslPppoeTemplateConverter(InterfacePppoeTemplateConverter):
             vdsl=vdsl,
         )
 
-    def parse_vdsl(self, data: dict) -> Optional[Vdsl]:
-        controller = data.get("controller", {}).get("vdsl", [])
 
-        if not controller:
+class InterfaceDslPppoaTemplateConverter(InterfacePppoXTemplateConverter):
+    supported_template_types = ("vpn-interface-pppoa",)
+
+    def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceDslPPPoAParcel:
+        data = deepcopy(template_values)
+        print(data)
+        tunnel_allow_service = self.parse_tunnel_allow_service(data)
+        ppp = self.parse_ppp(data)
+        nat_prop = self.parse_nat_prop(data)
+        advanced = self.parse_advanced(data)
+        bandwidth_downstream = self.parse_bandwidth_downstream(data)
+        bandwidth_upstream = self.parse_bandwidth_upstream(data)
+        service_provider = self.parse_service_provider(data)
+        shutdown = self.parse_shutdown(data)
+        tunnel = self.parse_tunnel(data)
+        tunnel_advanced_option = self.parse_tunnel_advanced_option(data)
+        vdsl = self.parse_vdsl(data)
+        atm_interface = self.parse_atm_interface(data)
+        return InterfaceDslPPPoAParcel(
+            parcel_name=name,
+            parcel_description=description,
+            ppp=ppp,
+            tunnel=tunnel,
+            bandwidth_downstream=bandwidth_downstream,
+            bandwidth_upstream=bandwidth_upstream,
+            advanced=advanced,
+            shutdown=shutdown,
+            nat_prop=nat_prop,
+            tunnel_advanced_option=tunnel_advanced_option,
+            service_provider=service_provider,
+            tunnel_allow_service=tunnel_allow_service,
+            vdsl=vdsl,
+            atm_interface=atm_interface,
+        )
+
+    def parse_atm_interface(self, data: Dict) -> Optional[AtmInterface]:
+        pvc = next(iter(data.get("pvc", [])), None)
+        if not pvc:
             return None
 
-        controller_data = controller[0]
-        sra = controller_data.get("sra", {})
-        slot = controller_data.get("name", {})
+        if_name = data.get("if_name")
+        if not if_name:
+            raise CatalystwanConverterCantConvertException("Interface name is required")
 
-        operating_mode = controller_data.get("operating", {}).get("mode", {})
-        mode = self.parse_mode(operating_mode)
+        encapsulation = self.parse_encapsulation(pvc.get("encapsulation", {}))
+        vbr_nrt_config = self.parse_vbr_nrt_config(pvc.get("vbr_nrt", {}))
+        vbr_rt_config = self.parse_vbr_rt_config(pvc.get("vbr_rt", {}))
 
-        return Vdsl(sra=sra, slot=slot, mode=mode)
+        return AtmInterface(
+            if_name=if_name,
+            local_vpi_vci=pvc.get("local_vpi_vci"),
+            encapsulation=encapsulation,
+            vbr_rt_config=vbr_rt_config,
+            vbr_nrt_config=vbr_nrt_config,
+        )
 
-    def parse_mode(self, mode: dict) -> Optional[Global[VdslMode]]:
-        if "auto" in mode:
+    def parse_encapsulation(self, encapsulation: Dict) -> Optional[Global[AtmEncapsulation]]:
+        atm_encapsulation = next(iter(encapsulation.keys()), None)
+        if not atm_encapsulation:
             return None
+        return as_global(atm_encapsulation.upper(), AtmEncapsulation)
 
-        mode_key = next(iter(mode.keys()), None)
-        if mode_key:
-            return as_global(mode_key.upper(), VdslMode)
+    def parse_vbr_nrt_config(self, vbr_nrt: Dict) -> Optional[VbrNrtConfig]:
+        if not vbr_nrt:
+            return None
+        return VbrNrtConfig(
+            p_c_r=vbr_nrt["PCR"],
+            s_c_r=vbr_nrt["SCR"],
+            burst_cell_size=vbr_nrt["MCR"],
+        )
 
-        return None
+    def parse_vbr_rt_config(self, vbr_rt: Dict) -> Optional[VbrRtConfig]:
+        if not vbr_rt:
+            return None
+        return VbrRtConfig(
+            a_c_r=vbr_rt["ACR"],
+            p_c_r=vbr_rt["PCR"],
+            burst_cell_size=vbr_rt["Burst_cell_size"],
+        )

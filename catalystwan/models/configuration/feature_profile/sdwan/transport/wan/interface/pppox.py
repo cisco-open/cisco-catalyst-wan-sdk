@@ -1,4 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
+
+# This file is named PPPoX, because it contains different Point-To-Point Protocol Interfaces.
+
 from __future__ import annotations
 
 from typing import Literal, Optional, Union
@@ -309,12 +312,66 @@ VdslMode = Literal[
 
 
 class Vdsl(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
     slot: Union[Variable, Global[str]] = Field()
     mode: Optional[Union[Variable, Global[VdslMode], Default[Literal["auto"]]]] = Field(default=None)
     sra: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
 
 
-class InterfacePPPoEParcel(_ParcelBase):
+AtmEncapsulation = Literal[
+    "AAL5MUX",
+    "AAL5NLPID",
+    "AAL5SNAP",
+]
+
+
+class VbrNrtConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    burst_cell_size: Union[Variable, Global[int]] = Field(
+        validation_alias="burstCellSize", serialization_alias="burstCellSize"
+    )
+    p_c_r: Union[Variable, Global[int]] = Field(validation_alias="pCR", serialization_alias="pCR")
+    s_c_r: Union[Variable, Global[int]] = Field(validation_alias="sCR", serialization_alias="sCR")
+
+
+class VbrRtConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    a_c_r: Union[Variable, Global[int]] = Field(validation_alias="aCR", serialization_alias="aCR")
+    burst_cell_size: Union[Variable, Global[int]] = Field(
+        validation_alias="burstCellSize", serialization_alias="burstCellSize"
+    )
+    p_c_r: Union[Variable, Global[int]] = Field(validation_alias="pCR", serialization_alias="pCR")
+
+
+class AtmInterface(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    if_name: Union[Variable, Global[str]] = Field(validation_alias="ifName", serialization_alias="ifName")
+    local_vpi_vci: Union[Variable, Global[str]] = Field(
+        validation_alias="localVpiVci", serialization_alias="localVpiVci"
+    )
+    description: Optional[Union[Variable, Global[str], Default[None]]] = Field(default=None)
+    encapsulation: Optional[Union[Default[Literal["AAL5MUX"]], Global[AtmEncapsulation]]] = Field(default=None)
+    vbr_nrt_config: Optional[VbrNrtConfig] = Field(
+        default=None, validation_alias="vbrNrtConfig", serialization_alias="vbrNrtConfig", description="VBR-NRT config"
+    )
+    vbr_rt_config: Optional[VbrRtConfig] = Field(
+        default=None, validation_alias="vbrRtConfig", serialization_alias="vbrRtConfig", description="VBR-NRT config"
+    )
+
+
+class InterfacePPPoXBase(_ParcelBase):
     model_config = ConfigDict(
         extra="forbid",
         populate_by_name=True,
@@ -328,11 +385,6 @@ class InterfacePPPoEParcel(_ParcelBase):
     )
     bandwidth_upstream: Optional[Union[Variable, Global[int], Default[None]]] = Field(
         default=None, validation_alias=AliasPath("data", "bandwidthUpstream")
-    )
-    ethernet: Optional[Ethernet] = Field(
-        default=None,
-        validation_alias=AliasPath("data", "ethernet"),
-        description="Ethernet Interface Attributes applicable for both ethppoe/ipoe",
     )
     multi_region_fabric: Optional[MultiRegionFabric] = Field(
         default=None, validation_alias=AliasPath("data", "multiRegionFabric"), description="Multi-Region Fabric"
@@ -360,10 +412,28 @@ class InterfacePPPoEParcel(_ParcelBase):
     )
 
 
-class InterfaceEthPPPoEParcel(InterfacePPPoEParcel):
+class InterfaceEthPPPoEParcel(InterfacePPPoXBase):
     type_: Literal["interface/ethpppoe"] = Field(default="interface/ethpppoe", frozen=True, exclude=True)
+    ethernet: Optional[Ethernet] = Field(
+        default=None,
+        validation_alias=AliasPath("data", "ethernet"),
+        description="Ethernet Interface Attributes applicable for both ethppoe/ipoe",
+    )
 
 
-class InterfaceDslPPPoEParcel(InterfacePPPoEParcel):
+class InterfaceDslPPPoEParcel(InterfacePPPoXBase):
     type_: Literal["interface/dsl-pppoe"] = Field(default="interface/dsl-pppoe", frozen=True, exclude=True)
+    vdsl: Optional[Vdsl] = Field(default=None, validation_alias=AliasPath("data", "vdsl"), description="vdsl")
+    ethernet: Optional[Ethernet] = Field(
+        default=None,
+        validation_alias=AliasPath("data", "ethernet"),
+        description="Ethernet Interface Attributes applicable for both ethppoe/ipoe",
+    )
+
+
+class InterfaceDslPPPoAParcel(InterfacePPPoXBase):
+    type_: Literal["interface/dsl-pppoa"] = Field(default="interface/dsl-pppoa", frozen=True, exclude=True)
+    atm_interface: Optional[AtmInterface] = Field(
+        default=None, validation_alias=AliasPath("data", "atmInterface"), description="ATM Interface attributes"
+    )
     vdsl: Optional[Vdsl] = Field(default=None, validation_alias=AliasPath("data", "vdsl"), description="vdsl")
