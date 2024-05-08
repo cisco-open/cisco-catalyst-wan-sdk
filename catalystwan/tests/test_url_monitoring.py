@@ -1,37 +1,20 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from catalystwan.typed_list import DataSequence
 
 from catalystwan.endpoints.url_monitoring import UrlMonitoring
-from catalystwan.models.url_monitoring import UrlMonitoringInfo, UrlMonitoringConfig, DeleteUrlMonitorRequest
+from catalystwan.models.url_monitoring import DeleteUrlMonitorRequest, UrlMonitoringConfig
 
 
 class TestUrlMonitoring(unittest.TestCase):
     @patch("catalystwan.session.ManagerSession")
     def setUp(self, session_mock) -> None:
         self.session = session_mock
-        self.session.api_version = None
-        self.session.session_type = None
-        self.session.password = "<>"
-        self.api = UrlMonitoring(self.session)
-        self.api._endpoints = MagicMock()
 
-        self.mock_url_monitor_info_data = {
-            "url": "/client/server/ready",
-            "threshold": 98,
-            "alarm_raised": False
-        }
+        self.mock_url_monitor_info_data = {"url": "/client/server/ready", "threshold": 98, "alarm_raised": False}
 
-        self.mock_url_monitor_config_add_data = {
-            "url": "/client/server/ready",
-            "threshold": 98
-        }
-        self.mock_url_monitor_config_update_data = {
-            "url": "/client/server/ready",
-            "threshold": 90
-        }
+        self.mock_url_monitor_config_add_data = {"url": "/client/server/ready", "threshold": 98}
+        self.mock_url_monitor_config_update_data = {"url": "/client/server/ready", "threshold": 90}
         self.mock_url_monitor_delete_url = DeleteUrlMonitorRequest(url="/client/server/ready")
-
 
     @patch("catalystwan.session.ManagerSession")
     def test_add_url_monitor(self, mock_session):
@@ -51,7 +34,6 @@ class TestUrlMonitoring(unittest.TestCase):
         # Ensure the request method was called
         mock_session_instance.request.assert_called_once()
 
-
     @patch("catalystwan.session.ManagerSession")
     @patch("catalystwan.response.ManagerResponse")
     def test_get_url_monitor(self, mock_session, mock_response):
@@ -61,9 +43,8 @@ class TestUrlMonitoring(unittest.TestCase):
         mock_session_instance.request.return_value = mock_response
         url_monitor = UrlMonitoring(mock_session_instance)
         observed_url_monitor = url_monitor.get_url_monitor()
-        #Assert
+        # Assert
         self.assertIsNotNone(observed_url_monitor)
-
 
     @patch("catalystwan.session.ManagerSession")
     def test_update_url_monitor(self, mock_session):
@@ -80,7 +61,6 @@ class TestUrlMonitoring(unittest.TestCase):
         self.assertEqual(response, None)
         # Ensure the request method was called
         mock_session_instance.request.assert_called_once()
-
 
     @patch("catalystwan.session.ManagerSession")
     def test_delete_url_monitor(self, mock_session):
