@@ -18,8 +18,8 @@ from catalystwan.api.templates.models.system_vsmart_model import SystemVsmart
 
 available_models = {
     "cisco_aaa": CiscoAAAModel,
-    "cisco_bfd": CiscoBFDModel,
     "cisco_banner": CiscoBannerModel,
+    "cisco_bfd": CiscoBFDModel,
     "cisco_ntp": CiscoNTPModel,
     "cisco_ospf": CiscoOSPFModel,
     "cisco_logging": CiscoLoggingModel,

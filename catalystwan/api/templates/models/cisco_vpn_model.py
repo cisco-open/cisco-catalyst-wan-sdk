@@ -1,24 +1,44 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-from enum import Enum
 from pathlib import Path
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List, Literal, Optional
 
 from pydantic import ConfigDict, Field, field_validator
 
 from catalystwan.api.templates.feature_template import FeatureTemplate, FeatureTemplateValidator
 
-
-class Role(str, Enum):
-    PRIMARY = "primary"
-    SECONDARY = "secondary"
+Role = Literal["primary", "secondary"]
+SvcType = Literal["FW", "IDS", "IDP", "netsvc1", "netsvc2", "netsvc3", "netsvc4", "TE", "appqoe"]
+ServiceRouteService = Literal["sig"]
+Nat = Literal["NAT64", "NAT66"]
+AdvertiseProtocol = Literal[
+    "bgp", "ospf", "ospfv3", "connected", "static", "network", "aggregate", "eigrp", "lisp", "isis"
+]
+AdvertiseProtocolSubType = Literal["external"]
+Region = Literal["core", "access"]
+Ipv6AdvertiseProtocol = Literal["bgp", "ospf", "connected", "static", "network", "aggregate"]
+Ipv6AdvertiseProtocolSubType = Literal["external"]
+LeakFromGlobalProtocol = Literal["all", "static", "mobile", "connected", "rip", "odr"]
+Direction = Literal["inside", "outside"]
+Overload = Literal["true", "false"]
+StaticNatDirection = Literal["inside", "outside"]
+Proto = Literal["tcp", "udp"]
+RouteImportProtocol = Literal["static", "connected", "bgp", "ospf"]
+RouteImportProtocolSubType = Literal["external"]
+RouteImportRedistributeProtocol = Literal["bgp", "eigrp", "ospf"]
+RouteImportFromProtocol = Literal["static", "connected", "bgp", "ospf", "eigrp"]
+RouteImportFromProtocolSubType = Literal["external"]
+RouteImportFromRedistributeProtocol = Literal["bgp", "eigrp", "ospf"]
+RouteExportProtocol = Literal["static", "connected", "bgp", "eigrp", "ospf"]
+RouteExportProtocolSubType = Literal["external"]
+RouteExportRedistributeProtocol = Literal["bgp", "ospf"]
 
 
 class Dns(FeatureTemplateValidator):
     dns_addr: Optional[str] = Field(
         default=None, json_schema_extra={"vmanage_key": "dns-addr"}, description="The IP address of the DNS server."
     )
-    role: Role = Field(default=Role.PRIMARY, description="The role of the DNS server, either 'PRIMARY' or 'SECONDARY'.")
+    role: Role = Field(default="primary", description="The role of the DNS server, either 'PRIMARY' or 'SECONDARY'.")
     model_config = ConfigDict(populate_by_name=True)
 
 
@@ -27,7 +47,7 @@ class DnsIpv6(FeatureTemplateValidator):
         default=None, json_schema_extra={"vmanage_key": "dns-addr"}, description="The IPv6 address of the DNS server."
     )
     role: Optional[Role] = Field(
-        default=Role.PRIMARY,
+        default="primary",
         description="The role of the DNS server for IPv6, optionally either 'PRIMARY' or 'SECONDARY'.",
     )
     model_config = ConfigDict(populate_by_name=True)
@@ -36,18 +56,6 @@ class DnsIpv6(FeatureTemplateValidator):
 class Host(FeatureTemplateValidator):
     hostname: str = Field(..., description="The hostname of the device.")
     ip: List[str] = Field(..., description="A list of IP addresses associated with the hostname.")
-
-
-class SvcType(str, Enum):
-    FW = "FW"
-    IDS = "IDS"
-    IDP = "IDP"
-    NETSVC1 = "netsvc1"
-    NETSVC2 = "netsvc2"
-    NETSVC3 = "netsvc3"
-    NETSVC4 = "netsvc4"
-    TE = "TE"
-    APPQOE = "appqoe"
 
 
 class Service(FeatureTemplateValidator):
@@ -69,16 +77,10 @@ class Service(FeatureTemplateValidator):
         return str(value).lower()
 
 
-class ServiceRouteService(str, Enum):
-    SIG = "sig"
-
-
 class ServiceRoute(FeatureTemplateValidator):
     prefix: str = Field(description="The network prefix for the service route.")
     vpn: int = Field(description="The VPN identifier where the service route is to be applied.")
-    service: ServiceRouteService = Field(
-        default=ServiceRouteService.SIG, description="The service associated with the route."
-    )
+    service: ServiceRouteService = Field(default="sig", description="The service associated with the route.")
 
 
 class NextHop(FeatureTemplateValidator):
@@ -144,11 +146,6 @@ class NextHopv6(FeatureTemplateValidator):
     distance: Optional[int] = Field(default=1, description="The administrative distance of the IPv6 next hop.")
 
 
-class Nat(str, Enum):
-    NAT64 = "NAT64"
-    NAT66 = "NAT66"
-
-
 class Routev6(FeatureTemplateValidator):
     prefix: str = Field(description="The IPv6 network prefix for the static route.")
     next_hop: Optional[List[NextHopv6]] = Field(
@@ -184,28 +181,6 @@ class IpsecRoute(FeatureTemplateValidator):
     )
 
 
-class AdvertiseProtocol(str, Enum):
-    BGP = "bgp"
-    OSPF = "ospf"
-    OSPFV3 = "ospfv3"
-    CONNECTED = "connected"
-    STATIC = "static"
-    NETWORK = "network"
-    AGGREGATE = "aggregate"
-    EIGRP = "eigrp"
-    LISP = "lisp"
-    ISIS = "isis"
-
-
-class AdvertiseProtocolSubType(str, Enum):
-    EXTERNAL = "external"
-
-
-class Region(str, Enum):
-    CORE = "core"
-    ACCESS = "access"
-
-
 class PrefixList(FeatureTemplateValidator):
     prefix_entry: str = Field(
         description="The network prefix entry for the prefix list.", json_schema_extra={"vmanage_key": "prefix-entry"}
@@ -239,19 +214,6 @@ class Advertise(FeatureTemplateValidator):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class Ipv6AdvertiseProtocol(str, Enum):
-    BGP = "bgp"
-    OSPF = "ospf"
-    CONNECTED = "connected"
-    STATIC = "static"
-    NETWORK = "network"
-    AGGREGATE = "aggregate"
-
-
-class Ipv6AdvertiseProtocolSubType(str, Enum):
-    EXTERNAL = "external"
-
-
 class Ipv6Advertise(FeatureTemplateValidator):
     protocol: Ipv6AdvertiseProtocol = Field(description="The IPv6 protocol used for route advertisement.")
     route_policy: Optional[str] = Field(
@@ -272,15 +234,6 @@ class Ipv6Advertise(FeatureTemplateValidator):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class LeakFromGlobalProtocol(str, Enum):
-    ALL = "all"
-    STATIC = "static"
-    MOBILE = "mobile"
-    CONNECTED = "connected"
-    RIP = "rip"
-    ODR = "odr"
-
-
 class Pool(FeatureTemplateValidator):
     name: str = Field(description="The name of the IP address pool.")
     start_address: str = Field(
@@ -296,16 +249,6 @@ class Pool(FeatureTemplateValidator):
     )
     leak_to_global: bool = Field(description="A flag indicating whether leaking to the global table is enabled.")
     model_config = ConfigDict(populate_by_name=True)
-
-
-class Direction(str, Enum):
-    INSIDE = "inside"
-    OUTSIDE = "outside"
-
-
-class Overload(str, Enum):
-    TRUE = "true"
-    FALSE = "false"
 
 
 class Natpool(FeatureTemplateValidator):
@@ -326,7 +269,7 @@ class Natpool(FeatureTemplateValidator):
         json_schema_extra={"vmanage_key": "range-end"},
     )
     overload: Overload = Field(
-        default=Overload.TRUE, description="Flag indicating whether NAT overload (PAT) is enabled for the pool."
+        default="true", description="Flag indicating whether NAT overload (PAT) is enabled for the pool."
     )
     direction: Direction = Field(description="The direction (inside or outside) associated with the NAT pool.")
     tracker_id: Optional[int] = Field(
@@ -335,11 +278,6 @@ class Natpool(FeatureTemplateValidator):
         json_schema_extra={"vmanage_key": "tracker-id"},
     )
     model_config = ConfigDict(populate_by_name=True)
-
-
-class StaticNatDirection(str, Enum):
-    INSIDE = "inside"
-    OUTSIDE = "outside"
 
 
 class Static(FeatureTemplateValidator):
@@ -395,11 +333,6 @@ class SubnetStatic(FeatureTemplateValidator):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class Proto(str, Enum):
-    TCP = "tcp"
-    UDP = "udp"
-
-
 class PortForward(FeatureTemplateValidator):
     pool_name: Optional[int] = Field(
         default=None,
@@ -424,23 +357,6 @@ class PortForward(FeatureTemplateValidator):
     )
     proto: Proto = Field(description="The protocol used in the port forwarding rule (TCP/UDP).")
     model_config = ConfigDict(populate_by_name=True)
-
-
-class RouteImportProtocol(str, Enum):
-    STATIC = "static"
-    CONNECTED = "connected"
-    BGP = "bgp"
-    OSPF = "ospf"
-
-
-class RouteImportProtocolSubType(str, Enum):
-    EXTERNAL = "external"
-
-
-class RouteImportRedistributeProtocol(str, Enum):
-    BGP = "bgp"
-    EIGRP = "eigrp"
-    OSPF = "ospf"
 
 
 class RouteImportRedistribute(FeatureTemplateValidator):
@@ -471,24 +387,6 @@ class RouteImport(FeatureTemplateValidator):
         description="A list of redistribute configurations that define how routes from other protocols are imported.",
     )
     model_config = ConfigDict(populate_by_name=True)
-
-
-class RouteImportFromProtocol(str, Enum):
-    STATIC = "static"
-    CONNECTED = "connected"
-    BGP = "bgp"
-    OSPF = "ospf"
-    EIGRP = "eigrp"
-
-
-class RouteImportFromProtocolSubType(str, Enum):
-    EXTERNAL = "external"
-
-
-class RouteImportFromRedistributeProtocol(str, Enum):
-    BGP = "bgp"
-    EIGRP = "eigrp"
-    OSPF = "ospf"
 
 
 class RouteImportFromRedistribute(FeatureTemplateValidator):
@@ -525,23 +423,6 @@ class RouteImportFrom(FeatureTemplateValidator):
         ),
     )
     model_config = ConfigDict(populate_by_name=True)
-
-
-class RouteExportProtocol(str, Enum):
-    STATIC = "static"
-    CONNECTED = "connected"
-    BGP = "bgp"
-    EIGRP = "eigrp"
-    OSPF = "ospf"
-
-
-class RouteExportProtocolSubType(str, Enum):
-    EXTERNAL = "external"
-
-
-class RouteExportRedistributeProtocol(str, Enum):
-    BGP = "bgp"
-    OSPF = "ospf"
 
 
 class RouteExportRedistribute(FeatureTemplateValidator):

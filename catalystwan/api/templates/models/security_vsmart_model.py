@@ -1,17 +1,13 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-from enum import Enum
 from pathlib import Path
-from typing import ClassVar, Optional
+from typing import ClassVar, Literal, Optional
 
 from pydantic import ConfigDict, Field
 
 from catalystwan.api.templates.feature_template import FeatureTemplate
 
-
-class Protocol(str, Enum):
-    DTLS = "dtls"
-    TLS = "tls"
+Protocol = Literal["dtls", "tls"]
 
 
 class SecurityvSmart(FeatureTemplate):

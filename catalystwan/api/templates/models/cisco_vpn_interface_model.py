@@ -1,9 +1,8 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 import ipaddress
-from enum import Enum
 from pathlib import Path
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List, Literal, Optional
 
 from pydantic import ConfigDict, Field
 
@@ -22,6 +21,47 @@ DEFAULT_IPV6_VRRP_PRIORITY = 100
 DEFAULT_IPV6_VRRP_TIMER = 1000
 
 
+Direction = Literal["in", "out"]
+NatChoice = Literal["Interface", "Pool", "Loopback"]
+StaticNatDirection = Literal["inside", "outside"]
+Proto = Literal["tcp", "udp"]
+CoreRegion = Literal["core", "core-shared"]
+SecondaryRegion = Literal["off", "secondary-only", "secondary-shared"]
+Encap = Literal["gre", "ipsec"]
+Mode = Literal["hub", "spoke"]
+Value = Literal[
+    "default",
+    "mpls",
+    "metro-ethernet",
+    "biz-internet",
+    "public-internet",
+    "lte",
+    "3g",
+    "red",
+    "green",
+    "blue",
+    "gold",
+    "silver",
+    "bronze",
+    "custom1",
+    "custom2",
+    "custom3",
+    "private1",
+    "private2",
+    "private3",
+    "private4",
+    "private5",
+    "private6",
+]
+Carrier = Literal[
+    "default", "carrier1", "carrier2", "carrier3", "carrier4", "carrier5", "carrier6", "carrier7", "carrier8"
+]
+MediaType = Literal["auto-select", "rj45", "sfp"]
+Speed = Literal["10", "100", "1000", "2500", "10000"]
+Duplex = Literal["full", "half", "auto"]
+TrackAction = Literal["Decrement", "Shutdown"]
+
+
 class SecondaryIPv4Address(FeatureTemplateValidator):
     address: Optional[ipaddress.IPv4Interface] = Field(
         default=None, description="IPv4 address with CIDR notation for the secondary interface."
@@ -32,11 +72,6 @@ class SecondaryIPv6Address(FeatureTemplateValidator):
     address: Optional[ipaddress.IPv6Interface] = Field(
         default=None, description="IPv6 address with CIDR notation for the secondary interface."
     )
-
-
-class Direction(str, Enum):
-    IN = "in"
-    OUT = "out"
 
 
 class AccessList(FeatureTemplateValidator):
@@ -50,12 +85,6 @@ class AccessList(FeatureTemplateValidator):
 class DhcpHelperV6(FeatureTemplateValidator):
     address: ipaddress.IPv6Address = Field(..., description="IPv6 address of the DHCP server or relay.")
     vpn: Optional[int] = Field(default=None, description="Optional VPN ID where the DHCP helper is configured.")
-
-
-class NatChoice(str, Enum):
-    INTERFACE = "Interface"
-    POOL = "Pool"
-    LOOPBACK = "Loopback"
 
 
 class StaticNat66(FeatureTemplateValidator):
@@ -77,11 +106,6 @@ class StaticNat66(FeatureTemplateValidator):
     model_config: ClassVar[ConfigDict] = ConfigDict(populate_by_name=True)
 
 
-class StaticNatDirection(str, Enum):
-    INSIDE = "inside"
-    OUTSIDE = "outside"
-
-
 class Static(FeatureTemplateValidator):
     source_ip: ipaddress.IPv4Address = Field(
         ..., json_schema_extra={"vmanage_key": "source-ip"}, description="IPv4 address of the source IP for static NAT."
@@ -92,7 +116,7 @@ class Static(FeatureTemplateValidator):
         description="IPv4 address used for translation in static NAT.",
     )
     static_nat_direction: StaticNatDirection = Field(
-        default=StaticNatDirection.INSIDE,
+        default="inside",
         json_schema_extra={"vmanage_key": "static-nat-direction"},
         description="Direction of static NAT mapping ('inside' or 'outside').",
     )
@@ -102,11 +126,6 @@ class Static(FeatureTemplateValidator):
         description="VPN ID associated with the source IP for static NAT.",
     )
     model_config: ClassVar[ConfigDict] = ConfigDict(populate_by_name=True)
-
-
-class Proto(str, Enum):
-    TCP = "tcp"
-    UDP = "udp"
 
 
 class StaticPortForward(FeatureTemplateValidator):
@@ -121,7 +140,7 @@ class StaticPortForward(FeatureTemplateValidator):
         description="IPv4 address used for translation in port forwarding.",
     )
     static_nat_direction: StaticNatDirection = Field(
-        default=StaticNatDirection.INSIDE,
+        default="inside",
         json_schema_extra={"vmanage_key": "static-nat-direction"},
         description="Direction of port forwarding mapping ('inside' or 'outside').",
     )
@@ -144,22 +163,6 @@ class StaticPortForward(FeatureTemplateValidator):
     model_config: ClassVar[ConfigDict] = ConfigDict(populate_by_name=True)
 
 
-class CoreRegion(str, Enum):
-    CORE = "core"
-    CORE_SHARED = "core-shared"
-
-
-class SecondaryRegion(str, Enum):
-    OFF = "off"
-    SECONDARY_ONLY = "secondary-only"
-    SECONDARY_SHARED = "secondary-shared"
-
-
-class Encap(str, Enum):
-    GRE = "gre"
-    IPSEC = "ipsec"
-
-
 class Encapsulation(FeatureTemplateValidator):
     encap: Encap = Field(..., description="Type of encapsulation used for the VPN tunnel (GRE/IPsec).")
     preference: Optional[int] = Field(
@@ -171,68 +174,6 @@ class Encapsulation(FeatureTemplateValidator):
     )
 
 
-class Mode(str, Enum):
-    HUB = "hub"
-    SPOKE = "spoke"
-
-
-class Value(str, Enum):
-    DEFAULT = "default"
-    MPLS = "mpls"
-    METRO_ETHERNET = "metro-ethernet"
-    BIZ_INTERNET = "biz-internet"
-    PUBLIC_INTERNET = "public-internet"
-    LTE = "lte"
-    THREEG = "3g"
-    RED = "red"
-    GREEN = "green"
-    BLUE = "blue"
-    GOLD = "gold"
-    SILVER = "silver"
-    BRONZE = "bronze"
-    CUSTOM1 = "custom1"
-    CUSTOM2 = "custom2"
-    CUSTOM3 = "custom3"
-    PRIVATE1 = "private1"
-    PRIVATE2 = "private2"
-    PRIVATE3 = "private3"
-    PRIVATE4 = "private4"
-    PRIVATE5 = "private5"
-    PRIVATE6 = "private6"
-
-
-class Carrier(str, Enum):
-    DEFAULT = "default"
-    CARRIER1 = "carrier1"
-    CARRIER2 = "carrier2"
-    CARRIER3 = "carrier3"
-    CARRIER4 = "carrier4"
-    CARRIER5 = "carrier5"
-    CARRIER6 = "carrier6"
-    CARRIER7 = "carrier7"
-    CARRIER8 = "carrier8"
-
-
-class MediaType(str, Enum):
-    AUTO_SELECT = "auto-select"
-    RJ45 = "rj45"
-    SFP = "sfp"
-
-
-class Speed(str, Enum):
-    TEN = "10"
-    HUNDRED = "100"
-    THOUSAND = "1000"
-    TWOANDAHALFTHOUSAND = "2500"
-    TENTHOUSAND = "10000"
-
-
-class Duplex(str, Enum):
-    FULL = "full"
-    HALF = "half"
-    AUTO = "auto"
-
-
 class Ip(FeatureTemplateValidator):
     addr: ipaddress.IPv4Address = Field(..., description="IPv4 address for the interface.")
     mac: str = Field(..., description="MAC address associated with the IPv4 address.")
@@ -242,15 +183,10 @@ class Ipv4Secondary(FeatureTemplateValidator):
     address: ipaddress.IPv4Address = Field(..., description="IPv4 address for the secondary interface.")
 
 
-class TrackAction(str, Enum):
-    DECREMENT = "Decrement"
-    SHUTDOWN = "Shutdown"
-
-
 class TrackingObject(FeatureTemplateValidator):
     name: int = Field(..., description="Unique identifier for the tracking object.")
     track_action: TrackAction = Field(
-        default=TrackAction.DECREMENT,
+        default="Decrement",
         json_schema_extra={"vmanage_key": "track-action"},
         description="Action to take when the tracked object state changes (e.g., decrement priority or shutdown).",
     )

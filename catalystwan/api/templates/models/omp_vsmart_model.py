@@ -54,14 +54,19 @@ class OMPvSmart(FeatureTemplate):
         description="The hold time interval for OMP sessions",
     )
     affinity_group_preference: Optional[BoolStr] = Field(
-        default=None,
-        json_schema_extra={"vmanage_key": "affinity-group-preference"},
-        description="Prefer routes from the same affinity group",
+        default=False,
+        json_schema_extra={"vmanage_key": "affinity-group-preference", "data_path": ["filter-route", "outbound"]},
+        description="Filter routes based on affinity preference list",
     )
     advertisement_interval: Optional[int] = Field(
         default=None,
         json_schema_extra={"vmanage_key": "advertisement-interval", "data_path": ["timers"]},
         description="Interval between sending OMP route advertisements",
+    )
+    tloc_color: Optional[BoolStr] = Field(
+        default=False,
+        json_schema_extra={"vmanage_key": "tloc-color", "data_path": ["filter-route", "outbound"]},
+        description="Filter routes based on TLOC color",
     )
 
     payload_path: ClassVar[Path] = Path(__file__).parent / "DEPRECATED"
