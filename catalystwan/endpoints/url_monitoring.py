@@ -2,8 +2,8 @@
 
 # mypy: disable-error-code="empty-body"
 
-from catalystwan.endpoints import APIEndpoints, get, post, put, delete
-from catalystwan.models.url_monitoring import UrlMonitoringConfig, UrlMonitoringInfo, DeleteUrlMonitorRequest
+from catalystwan.endpoints import APIEndpoints, delete, get, post, put
+from catalystwan.models.url_monitoring import DeleteUrlMonitorRequest, UrlMonitoringConfig, UrlMonitoringInfo
 from catalystwan.typed_list import DataSequence
 
 
