@@ -1,6 +1,6 @@
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, OptionType, as_global
 from catalystwan.models.common import Carrier
@@ -60,7 +60,7 @@ class InterfacePppoeTemplateConverter:
 
     def parse_encapsulation_options(
         self, encapsulations: List[Dict]
-    ) -> tuple[EncapsulationOption, EncapsulationOption]:
+    ) -> Tuple[EncapsulationOption, EncapsulationOption]:
         gre_option = EncapsulationOption()
         ipsec_option = EncapsulationOption()
 
@@ -211,7 +211,6 @@ class InterfaceEthernetPppoeTemplateConverter(InterfacePppoeTemplateConverter):
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceEthPPPoEParcel:
         data = deepcopy(template_values)
-        print(data)
         tunnel_allow_service = self.parse_tunnel_allow_service(data)
         ppp = self.parse_ppp(data)
         nat_prop = self.parse_nat_prop(data)
