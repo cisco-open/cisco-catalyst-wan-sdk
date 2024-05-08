@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
 from typing import Callable, Dict, List, cast
 from uuid import UUID
@@ -5,7 +6,6 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from catalystwan.endpoints.configuration_group import ProfileId
-from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.config_migration import (
     TransformedFeatureProfile,
     TransformedParcel,
@@ -39,11 +39,8 @@ class UX2ConfigPusher:
         )
 
     def push(self) -> UX2ConfigRollback:
-        try:
-            self._create_config_groups()
-        except ManagerHTTPError as e:
-            logger.error(f"Error occured during config push: {e.info}")
-        logger.debug(f"Configuration push completed successfully. Rollback configuration {self._config_rollback}")
+        self._create_config_groups()
+        logger.debug(f"Configuration push completed. Rollback configuration {self._config_rollback}")
         return self._config_rollback
 
     def _create_config_groups(self):
@@ -75,8 +72,9 @@ class UX2ConfigPusher:
                 f"and parcels: {transformed_feature_profile.header.subelements}"
             )
             profile_type = cast(ProfileType, transformed_feature_profile.header.type)
-            if profile_type == "policy-object":
-                logger.debug(f"Skipping policy-object profile: {transformed_feature_profile.feature_profile.name}")
+            if profile_type in ["policy-object"]:
+                # TODO: Add builders for those profiles
+                logger.debug(f"Skipping profile: {transformed_feature_profile.feature_profile.name}")
                 continue
             pusher = ParcelPusherFactory.get_pusher(self._session, profile_type)
             parcels = self._create_parcels_list(transformed_feature_profile)

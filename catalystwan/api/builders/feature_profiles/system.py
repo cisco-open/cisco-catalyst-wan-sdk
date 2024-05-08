@@ -1,12 +1,17 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, List
 from uuid import UUID
 
 from catalystwan.api.feature_profile_api import SystemFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
+from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.configuration.feature_profile.sdwan.system import AnySystemParcel
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from catalystwan.session import ManagerSession
@@ -64,6 +69,9 @@ class SystemFeatureProfileBuilder:
         """
 
         profile_uuid = self._endpoints.create_sdwan_system_feature_profile(self._profile).id
-        for parcel in self._independent_items:
-            self._api.create_parcel(profile_uuid, parcel)
+        try:
+            for parcel in self._independent_items:
+                self._api.create_parcel(profile_uuid, parcel)
+        except ManagerHTTPError as e:
+            logger.error(f"Error occured during building profile: {e.info}")
         return profile_uuid

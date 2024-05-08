@@ -5,18 +5,25 @@ from typing import TYPE_CHECKING, Callable, Mapping, Union
 from catalystwan.api.builders.feature_profiles.other import OtherFeatureProfileBuilder
 from catalystwan.api.builders.feature_profiles.service import ServiceFeatureProfileBuilder
 from catalystwan.api.builders.feature_profiles.system import SystemFeatureProfileBuilder
+from catalystwan.api.builders.feature_profiles.transport import TransportAndManagementProfileBuilder
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.models.configuration.feature_profile.common import ProfileType
 
 if TYPE_CHECKING:
     from catalystwan.session import ManagerSession
 
-FeatureProfileBuilder = Union[ServiceFeatureProfileBuilder, SystemFeatureProfileBuilder, OtherFeatureProfileBuilder]
+FeatureProfileBuilder = Union[
+    ServiceFeatureProfileBuilder,
+    SystemFeatureProfileBuilder,
+    OtherFeatureProfileBuilder,
+    TransportAndManagementProfileBuilder,
+]
 
 BUILDER_MAPPING: Mapping[ProfileType, Callable] = {
     "service": ServiceFeatureProfileBuilder,
     "system": SystemFeatureProfileBuilder,
     "other": OtherFeatureProfileBuilder,
+    "transport": TransportAndManagementProfileBuilder,
 }
 
 

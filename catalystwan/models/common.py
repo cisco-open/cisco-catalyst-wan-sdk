@@ -302,6 +302,18 @@ SubnetMask = Literal[
     "0.0.0.0",
 ]
 
+Carrier = Literal[
+    "carrier1",
+    "carrier2",
+    "carrier3",
+    "carrier4",
+    "carrier5",
+    "carrier6",
+    "carrier7",
+    "carrier8",
+    "default",
+]
+
 VpnId = Annotated[
     IntStr,
     Ge(0),

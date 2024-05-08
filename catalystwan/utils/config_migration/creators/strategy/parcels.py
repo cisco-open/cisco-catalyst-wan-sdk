@@ -1,12 +1,17 @@
+import logging
 from collections import defaultdict
 from typing import Dict, List, cast
 from uuid import UUID
 
+from catalystwan.api.builders.feature_profiles.transport import TransportAndManagementProfileBuilder
 from catalystwan.models.configuration.config_migration import TransformedParcel
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyAssociatoryParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
+from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import ManagementVpnParcel, TransportVpnParcel
 from catalystwan.session import ManagerSession
+
+logger = logging.getLogger(__name__)
 
 
 class ParcelPusher:
@@ -65,9 +70,11 @@ class ServiceParcelPusher(ParcelPusher):
                 self.builder.add_parcel(parcel)  # type: ignore
             else:
                 vpn_tag = self.builder.add_parcel_vpn(parcel)  # type: ignore
-                for transformed_subparcel in [
-                    all_parcels.get(element) for element in transformed_parcel.header.subelements
-                ]:
+                for element in transformed_parcel.header.subelements:
+                    transformed_subparcel = all_parcels.get(element)
+                    if transformed_subparcel is None:
+                        logger.error(f"Subparcel {element} not found in profile parcels. Skipping.")
+                        continue
                     parcel = self._resolve_parcel_naming(transformed_subparcel)  # type: ignore
                     self.builder.add_parcel_vpn_subparcel(vpn_tag, parcel)  # type: ignore
         self.builder.add_profile_name_and_description(feature_profile)
@@ -86,3 +93,30 @@ class ServiceParcelPusher(ParcelPusher):
             parcel = parcel.model_copy(deep=True)
             parcel.parcel_name += f"_{count_value}"
         return parcel
+
+
+class TransportAndManagementParcelPusher(ParcelPusher):
+    """
+    Parcel pusher for transport and management feature profiles.
+    """
+
+    builder: TransportAndManagementProfileBuilder
+
+    def push(
+        self,
+        feature_profile: FeatureProfileCreationPayload,
+        target_parcels: List[TransformedParcel],
+        all_parcels: Dict[UUID, TransformedParcel],
+    ) -> UUID:
+        for transformed_parcel in target_parcels:
+            parcel = transformed_parcel.parcel
+            if isinstance(parcel, (ManagementVpnParcel, TransportVpnParcel)):
+                vpn_tag = self.builder.add_parcel_vpn(parcel)  # type: ignore
+                for element in transformed_parcel.header.subelements:
+                    transformed_subparcel = all_parcels.get(element)
+                    if transformed_subparcel is None:
+                        logger.error(f"Subparcel {element} not found in profile parcels. Skipping.")
+                        continue
+                    self.builder.add_vpn_subparcel(transformed_subparcel.parcel, vpn_tag)  # type: ignore
+        self.builder.add_profile_name_and_description(feature_profile)
+        return self.builder.build()

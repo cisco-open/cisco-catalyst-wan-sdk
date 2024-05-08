@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
 from typing import Callable, Mapping
 
@@ -7,6 +8,7 @@ from catalystwan.utils.config_migration.creators.strategy.parcels import (
     ParcelPusher,
     ServiceParcelPusher,
     SimpleParcelPusher,
+    TransportAndManagementParcelPusher,
 )
 
 logger = logging.getLogger(__name__)
@@ -15,6 +17,7 @@ PARCEL_PUSHER_MAPPING: Mapping[ProfileType, Callable[[ManagerSession, ProfileTyp
     "other": SimpleParcelPusher,
     "system": SimpleParcelPusher,
     "service": ServiceParcelPusher,
+    "transport": TransportAndManagementParcelPusher,
 }
 
 

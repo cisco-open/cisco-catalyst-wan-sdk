@@ -1,49 +1,17 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 from __future__ import annotations
 
-from ipaddress import IPv4Address, IPv6Address
+from ipaddress import IPv4Address, IPv6Address, IPv6Interface
 from typing import List, Literal, Optional, Union
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
+from catalystwan.models.common import SubnetMask
 
 Gateway = Literal["nextHop", "dhcp", "null0"]
 Nat = Literal["NAT64", "NAT66"]
-SubnetMask = Literal[
-    "255.255.255.255",
-    "255.255.255.254",
-    "255.255.255.252",
-    "255.255.255.248",
-    "255.255.255.240",
-    "255.255.255.224",
-    "255.255.255.192",
-    "255.255.255.128",
-    "255.255.255.0",
-    "255.255.254.0",
-    "255.255.252.0",
-    "255.255.248.0",
-    "255.255.240.0",
-    "255.255.224.0",
-    "255.255.192.0",
-    "255.255.128.0",
-    "255.255.0.0",
-    "255.254.0.0",
-    "255.252.0.0",
-    "255.240.0.0",
-    "255.224.0.0",
-    "255.192.0.0",
-    "255.128.0.0",
-    "255.0.0.0",
-    "254.0.0.0",
-    "252.0.0.0",
-    "248.0.0.0",
-    "240.0.0.0",
-    "224.0.0.0",
-    "192.0.0.0",
-    "128.0.0.0",
-    "0.0.0.0",
-]
+ServiceType = Literal["TE"]
 
 
 class DnsIpv4(BaseModel):
@@ -129,7 +97,9 @@ class Ipv4RouteItem(BaseModel):
         populate_by_name=True,
     )
     prefix: Prefix = Field(..., description="Prefix")
-    gateway: Union[Global[Gateway], Default[Gateway]] = Field(as_default("nextHop", Gateway), description="Gateway")
+    gateway: Union[Global[Gateway], Default[Gateway]] = Field(
+        default=as_default("nextHop", Gateway), description="Gateway"
+    )
     next_hop: Optional[List[NextHopItem]] = Field(
         default=None,
         serialization_alias="nextHop",
@@ -141,7 +111,7 @@ class Ipv4RouteItem(BaseModel):
     )
 
 
-class NextHopItem1(BaseModel):
+class NextHopItemIpv6(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
         populate_by_name=True,
@@ -155,7 +125,7 @@ class NextHopContainer(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    next_hop: Optional[List[NextHopItem1]] = Field(
+    next_hop: Optional[List[NextHopItemIpv6]] = Field(
         default=None,
         serialization_alias="nextHop",
         validation_alias="nextHop",
@@ -196,13 +166,51 @@ class Ipv6RouteItem(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    prefix: Union[Variable, Global[str]] = Field(..., description="Prefix")
+    prefix: Union[Variable, Global[IPv6Interface]] = Field(..., description="Prefix")
     one_of_ip_route: Union[OneOfIpRouteNextHopContainer, OneOfIpRouteNull0, OneOfIpRouteNat] = Field(
         ..., serialization_alias="oneOfIpRoute", validation_alias="oneOfIpRoute"
     )
 
 
-class ManagementVpn(_ParcelBase):
+class ServiceItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    service_type: Global[ServiceType] = Field(
+        ..., serialization_alias="serviceType", validation_alias="serviceType", description="Service Type"
+    )
+
+
+class Address64V4PoolItem(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    name: Union[Variable, Global[str]] = Field(
+        ..., serialization_alias="nat64V4PoolName", validation_alias="nat64V4PoolName", description="NAT64 v4 Pool Name"
+    )
+    range_start: Union[Variable, Global[IPv4Address]] = Field(
+        ...,
+        serialization_alias="nat64V4PoolRangeStart",
+        validation_alias="nat64V4PoolRangeStart",
+        description="NAT64 Pool Range Start",
+    )
+    range_end: Union[Variable, Global[IPv4Address]] = Field(
+        ...,
+        serialization_alias="nat64V4PoolRangeEnd",
+        validation_alias="nat64V4PoolRangeEnd",
+        description="NAT64 Pool Range End",
+    )
+    overload: Union[Variable, Global[bool], Default[bool]] = Field(
+        default=as_default(False),
+        serialization_alias="nat64V4PoolOverload",
+        validation_alias="nat64V4PoolOverload",
+        description="NAT64 Overload",
+    )
+
+
+class ManagementVpnParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     type_: Literal["management/vpn"] = Field(default="management/vpn", exclude=True)
     vpn_id: Default[int] = Field(
@@ -221,4 +229,40 @@ class ManagementVpn(_ParcelBase):
     )
     ipv6_route: List[Ipv6RouteItem] = Field(
         default_factory=list, validation_alias=AliasPath("data", "ipv6Route"), description="IPv6 Static Route"
+    )
+
+
+class TransportVpnParcel(_ParcelBase):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    type_: Literal["wan/vpn"] = Field(default="wan/vpn", exclude=True)
+    vpn_id: Default[int] = Field(
+        default=as_default(0),
+        validation_alias=AliasPath("data", "vpnId"),
+        frozen=True,
+        description="Transport VPN, which will always be 0",
+    )
+    dns_ipv4: Optional[DnsIpv4] = Field(default=None, validation_alias=AliasPath("data", "dnsIpv4"))
+    dns_ipv6: Optional[DnsIpv6] = Field(default=None, validation_alias=AliasPath("data", "dnsIpv6"))
+    new_host_mapping: Optional[List[NewHostMappingItem]] = Field(
+        default=None, validation_alias=AliasPath("data", "newHostMapping")
+    )
+    ipv4_route: List[Ipv4RouteItem] = Field(
+        default_factory=list, validation_alias=AliasPath("data", "ipv4Route"), description="IPv4 Static Route"
+    )
+    ipv6_route: List[Ipv6RouteItem] = Field(
+        default_factory=list, validation_alias=AliasPath("data", "ipv6Route"), description="IPv6 Static Route"
+    )
+    enhance_ecmp_keying: Union[Variable, Global[bool], Default[bool]] = Field(
+        default=as_default(False),
+        validation_alias=AliasPath("data", "enhanceEcmpKeying"),
+        description="Enhance ECMP Keying",
+    )
+    service: Optional[List[ServiceItem]] = Field(
+        default=None, validation_alias=AliasPath("data", "service"), description="Service"
+    )
+    nat64_v4_pool: Optional[List[Address64V4PoolItem]] = Field(
+        default=None, validation_alias=AliasPath("data", "nat64V4Pool"), description="NAT64 V4 Pool"
     )

@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
 from collections import defaultdict
 from typing import Callable
@@ -21,7 +22,12 @@ from catalystwan.utils.config_migration.converters.policy.policy_lists import Po
 from catalystwan.utils.config_migration.converters.policy.policy_lists import convert as convert_policy_list
 from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigRollback
 from catalystwan.utils.config_migration.reverters.config_reverter import UX2ConfigReverter
-from catalystwan.utils.config_migration.steps.transform import merge_parcels
+from catalystwan.utils.config_migration.steps.transform import (
+    CISCO_VPN_SERVICE,
+    CISCO_VPN_TRANSPORT_AND_MANAGEMENT,
+    merge_parcels,
+    resolve_template_type,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +80,7 @@ SUPPORTED_TEMPLATE_TYPES = [
     "cedge_igmp",
     "cedge_multicast",
     "cedge_pim",
+    "vpn-interface-t1-e1",
 ]
 
 FEATURE_PROFILE_SYSTEM = [
@@ -103,7 +110,13 @@ FEATURE_PROFILE_SYSTEM = [
     "cisco_snmp",
 ]
 
-FEATURE_PROFILE_TRANSPORT = ["dhcp", "cisco_dhcp_server", "dhcp-server"]
+FEATURE_PROFILE_TRANSPORT = [
+    "dhcp",
+    "cisco_dhcp_server",
+    "dhcp-server",
+    "vpn-interface-t1-e1",
+    CISCO_VPN_TRANSPORT_AND_MANAGEMENT,
+]
 
 FEATURE_PROFILE_OTHER = [
     "cisco_thousandeyes",
@@ -111,7 +124,6 @@ FEATURE_PROFILE_OTHER = [
 ]
 
 FEATURE_PROFILE_SERVICE = [
-    "cisco_vpn",
     "cisco_vpn_interface_gre",
     "vpn-vsmart-interface",
     "vpn-vedge-interface",
@@ -132,6 +144,7 @@ FEATURE_PROFILE_SERVICE = [
     "cedge_igmp",
     "cedge_multicast",
     "cedge_pim",
+    CISCO_VPN_SERVICE,
 ]
 
 
@@ -179,9 +192,22 @@ def transform(ux1: UX1Config) -> UX2Config:
                 description="service",
             ),
         )
+        fp_transport_and_management_uuid = uuid4()
+        transformed_fp_transport_and_management = TransformedFeatureProfile(
+            header=TransformHeader(
+                type="transport",
+                origin=fp_transport_and_management_uuid,
+            ),
+            feature_profile=FeatureProfileCreationPayload(
+                name=f"{dt.template_name}_transport_and_management",
+                description="transport_and_management",
+            ),
+        )
 
         for template in templates:
             # Those feature templates IDs are real UUIDs and are used to map to the feature profiles
+            if template.templateType == "cisco_vpn":
+                resolve_template_type(template, ux1)
             template_uuid = UUID(template.templateId)
             if template.templateType in FEATURE_PROFILE_SYSTEM:
                 transformed_fp_system.header.subelements.add(template_uuid)
@@ -189,6 +215,8 @@ def transform(ux1: UX1Config) -> UX2Config:
                 transformed_fp_other.header.subelements.add(template_uuid)
             elif template.templateType in FEATURE_PROFILE_SERVICE:
                 transformed_fp_service.header.subelements.add(template_uuid)
+            elif template.templateType in FEATURE_PROFILE_TRANSPORT:
+                transformed_fp_transport_and_management.header.subelements.add(template_uuid)
             # Map subtemplates
             if len(template.subTemplates) > 0:
                 subtemplates_mapping[template_uuid] = set(
@@ -199,7 +227,7 @@ def transform(ux1: UX1Config) -> UX2Config:
             header=TransformHeader(
                 type="config_group",
                 origin=UUID(dt.template_id),
-                subelements=set([fp_system_uuid, fp_other_uuid, fp_service_uuid]),
+                subelements=set([fp_system_uuid, fp_other_uuid, fp_service_uuid, fp_transport_and_management_uuid]),
             ),
             config_group=ConfigGroupCreationPayload(
                 name=dt.template_name,
@@ -212,6 +240,7 @@ def transform(ux1: UX1Config) -> UX2Config:
         ux2.feature_profiles.append(transformed_fp_system)
         ux2.feature_profiles.append(transformed_fp_other)
         ux2.feature_profiles.append(transformed_fp_service)
+        ux2.feature_profiles.append(transformed_fp_transport_and_management)
         ux2.config_groups.append(transformed_cg)
 
     for ft in ux1.templates.feature_templates:
