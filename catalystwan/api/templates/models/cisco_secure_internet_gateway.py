@@ -176,6 +176,11 @@ class Interface(FeatureTemplateValidator):
         json_schema_extra={"vmanage_key": "track-enable"},
         description="Flag indicating if tracking is enabled for the interface.",
     )
+    tunnel_public_ip: Optional[ipaddress.IPv4Address] = Field(
+        default=None,
+        description="Public IP required to setup GRE tunnel to Zscaler",
+        json_schema_extra={"vmanage_key": "tunnel-public-ip"},
+    )
     model_config: ClassVar[ConfigDict] = ConfigDict(populate_by_name=True)
 
 
@@ -288,10 +293,15 @@ class Service(FeatureTemplateValidator):
     timeout: Optional[int] = Field(
         default=None, description="Timeout value for the service, after which the session is considered inactive."
     )
+    location_name: Optional[str] = Field(
+        default="Auto",
+        json_schema_extra={"vmanage_key": "location-name"},
+        description="Secondary data center for the service. 'Auto' for automatic selection.",
+    )
     data_center_primary: Optional[str] = Field(
         default="Auto",
         json_schema_extra={"vmanage_key": "data-center-primary"},
-        description="Alias for the primary data center setting.",
+        description="Zscaler location name (optional)",
     )
     data_center_secondary: Optional[str] = Field(
         default="Auto",
@@ -342,10 +352,8 @@ class CiscoSecureInternetGatewayModel(FeatureTemplate):
         json_schema_extra={"vmanage_key": "childOrgId"},
         description="Child Organization Id",
     )
-    interface: List[Interface] = Field(..., description="List of interface configurations associated with the service.")
-    service: List[Service] = Field(
-        ..., description="List of service configurations for the Cisco Secure Internet Gateway."
-    )
+    interface: List[Interface] = Field(description="List of interface configurations associated with the service.")
+    service: List[Service] = Field(description="List of service configurations for the Cisco Secure Internet Gateway.")
     tracker_src_ip: Optional[ipaddress.IPv4Interface] = Field(
         default=None,
         json_schema_extra={"vmanage_key": "tracker-src-ip"},

@@ -39,7 +39,7 @@ from catalystwan.api.templates.models.security_vsmart_model import SecurityvSmar
 from catalystwan.api.templates.models.system_vsmart_model import SystemVsmart
 from catalystwan.dataclasses import Device, DeviceTemplateInfo, FeatureTemplateInfo, FeatureTemplatesTypes, TemplateInfo
 from catalystwan.endpoints.configuration_device_template import FeatureToCLIPayload
-from catalystwan.exceptions import AttachedError, TemplateNotFoundError
+from catalystwan.exceptions import AttachedError, CatalystwanDeprecationWarning, TemplateNotFoundError
 from catalystwan.response import ManagerResponse
 from catalystwan.typed_list import DataSequence
 from catalystwan.utils.device_model import DeviceModel
@@ -388,6 +388,7 @@ class TemplatesAPI:
                 by_alias=True, mode="json"
             )
         else:
+            raise CatalystwanDeprecationWarning("Obsolete way to use Feature Templates!")
             payload = json.loads(template.generate_payload(self.session))
 
         response = self.session.put(f"/dataservice/template/feature/{data.id}", json=payload)
@@ -420,6 +421,7 @@ class TemplatesAPI:
             if self.is_created_by_generator(template):
                 template_id = self.create_by_generator(template, debug)
             else:
+                raise CatalystwanDeprecationWarning("Obsolete way to use Feature Templates!")
                 template_id = self._create_feature_template(template)
             template_type = FeatureTemplate.__name__
 
@@ -566,6 +568,7 @@ class TemplatesAPI:
         for field in fr_template_fields:
             value = None
             priority_order = None
+            json_dumped_value = None
             # TODO How to discover Device specific variable
             if field.key in template.device_specific_variables:
                 value = template.device_specific_variables[field.key]

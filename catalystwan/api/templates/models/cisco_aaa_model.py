@@ -37,7 +37,7 @@ class User(FeatureTemplateValidator):
     secret: Optional[str] = Field(default=None, description="The secret for the user")
     privilege: Optional[Privilage] = Field(default="15", description="The privilege level for the user")
     pubkey_chain: Optional[List[PubkeyChain]] = Field(
-        default=[],
+        default=None,
         description="List of public keys for the user",
         json_schema_extra={"vmanage_key": "pubkey-chain"},
     )

@@ -113,7 +113,12 @@ class Interface(FeatureTemplateValidator):
 class Range(FeatureTemplateValidator):
     address: ipaddress.IPv4Interface = Field(description="The IPv4 network address to be advertised as an OSPF range.")
     cost: Optional[int] = Field(default=None, description="The OSPF cost (metric) for this range.")
-    no_advertise: Optional[BoolStr] = Field(default=False, description="Whether to suppress advertising this range.")
+    no_advertise: Optional[BoolStr] = Field(
+        default=False,
+        description="Whether to suppress advertising this range.",
+        json_schema_extra={"vmanage_key": "no-advertise"},
+    )
+
     model_config = ConfigDict(populate_by_name=True)
 
 
