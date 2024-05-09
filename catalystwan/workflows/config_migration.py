@@ -83,7 +83,8 @@ SUPPORTED_TEMPLATE_TYPES = [
     "vpn-interface-t1-e1",
     "vpn-interface-ethpppoe",
     "vpn-interface-pppoe",
-    "interface/dsl-pppoa",
+    "vpn-interface-pppoa",
+    "vpn-interface-ipoe",
 ]
 
 FEATURE_PROFILE_SYSTEM = [
@@ -120,7 +121,8 @@ FEATURE_PROFILE_TRANSPORT = [
     "vpn-interface-t1-e1",
     "vpn-interface-ethpppoe",
     "vpn-interface-pppoe",
-    "interface/dsl-pppoa",
+    "vpn-interface-pppoa",
+    "vpn-interface-ipoe",
     CISCO_VPN_TRANSPORT_AND_MANAGEMENT,
 ]
 

@@ -1,23 +1,31 @@
 from copy import deepcopy
 from dataclasses import dataclass
+from ipaddress import IPv4Interface
 from typing import Dict, List, Optional, Tuple, Union
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, OptionType, as_global
 from catalystwan.models.common import Carrier
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppox import (
+from catalystwan.models.configuration.feature_profile.common import Prefix
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
     Advanced,
     AtmEncapsulation,
     AtmInterface,
     Callin,
     Chap,
+    Dynamic,
+    DynamicIntfIpAddress,
     Ethernet,
+    InterfaceDslIPoEParcel,
     InterfaceDslPPPoAParcel,
     InterfaceDslPPPoEParcel,
     InterfaceEthPPPoEParcel,
+    IPoEEthernet,
     Method,
     NatProp,
     Pap,
     Ppp,
+    Static,
+    StaticIntfIpAddress,
     Tunnel,
     TunnelAdvancedOption,
     TunnelAllowService,
@@ -36,7 +44,7 @@ class EncapsulationOption:
     weight: Optional[Global[int]] = None
 
 
-class InterfacePppoXTemplateConverter:
+class InterfaceBaseTemplateConverter:
     def parse_tunnel_advanced_option(self, data: dict) -> Optional[TunnelAdvancedOption]:
         tunnel = data.get("tunnel_interface", {})
         if not tunnel:
@@ -236,7 +244,7 @@ class InterfacePppoXTemplateConverter:
         return None
 
 
-class InterfaceEthernetPppoeTemplateConverter(InterfacePppoXTemplateConverter):
+class InterfaceEthernetPppoeTemplateConverter(InterfaceBaseTemplateConverter):
     supported_template_types = ("vpn-interface-ethpppoe",)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceEthPPPoEParcel:
@@ -269,7 +277,7 @@ class InterfaceEthernetPppoeTemplateConverter(InterfacePppoXTemplateConverter):
         )
 
 
-class InterfaceDslPppoeTemplateConverter(InterfacePppoXTemplateConverter):
+class InterfaceDslPppoeTemplateConverter(InterfaceBaseTemplateConverter):
     supported_template_types = ("vpn-interface-pppoe",)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceDslPPPoEParcel:
@@ -304,7 +312,7 @@ class InterfaceDslPppoeTemplateConverter(InterfacePppoXTemplateConverter):
         )
 
 
-class InterfaceDslPppoaTemplateConverter(InterfacePppoXTemplateConverter):
+class InterfaceDslPppoaTemplateConverter(InterfaceBaseTemplateConverter):
     supported_template_types = ("vpn-interface-pppoa",)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceDslPPPoAParcel:
@@ -381,4 +389,76 @@ class InterfaceDslPppoaTemplateConverter(InterfacePppoXTemplateConverter):
             a_c_r=vbr_rt["ACR"],
             p_c_r=vbr_rt["PCR"],
             burst_cell_size=vbr_rt["Burst_cell_size"],
+        )
+
+
+class InterfaceDslIPoETemplateConverter(InterfaceBaseTemplateConverter):
+    supported_template_types = ("vpn-interface-ipoe",)
+
+    def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceDslIPoEParcel:
+        data = deepcopy(template_values)
+        print(data)
+        tunnel_allow_service = self.parse_tunnel_allow_service(data)
+        ppp = self.parse_ppp(data)
+        nat_prop = self.parse_nat_prop(data)
+        advanced = self.parse_advanced(data)
+        bandwidth_downstream = self.parse_bandwidth_downstream(data)
+        bandwidth_upstream = self.parse_bandwidth_upstream(data)
+        service_provider = self.parse_service_provider(data)
+        shutdown = self.parse_shutdown(data)
+        tunnel = self.parse_tunnel(data)
+        tunnel_advanced_option = self.parse_tunnel_advanced_option(data)
+        vdsl = self.parse_vdsl(data)
+        ethernet = self.parse_ethernet(data)
+        return InterfaceDslIPoEParcel(
+            parcel_name=name,
+            parcel_description=description,
+            ppp=ppp,
+            tunnel=tunnel,
+            bandwidth_downstream=bandwidth_downstream,
+            bandwidth_upstream=bandwidth_upstream,
+            advanced=advanced,
+            shutdown=shutdown,
+            nat_prop=nat_prop,
+            tunnel_advanced_option=tunnel_advanced_option,
+            service_provider=service_provider,
+            tunnel_allow_service=tunnel_allow_service,
+            vdsl=vdsl,
+            ethernet=ethernet,
+        )
+
+    def parse_ethernet(self, data: dict) -> IPoEEthernet:
+        if_name = data.get("if_name")
+        if not if_name:
+            raise CatalystwanConverterCantConvertException("Interface name is required")
+
+        intf_ip_address = self.parse_intf_ip_address(data)
+        print(intf_ip_address)
+        return IPoEEthernet(
+            if_name=if_name,
+            description=data.get("description"),
+            vlan_id=data.get("vlan_id"),
+            intf_ip_address=intf_ip_address,
+        )
+
+    def parse_intf_ip_address(self, data: dict) -> Union[DynamicIntfIpAddress, StaticIntfIpAddress]:
+        if static_ip_address := data.get("ip", {}).get("address"):
+            return self.parse_static_ip_address(static_ip_address.value)
+        return self.parse_dynamic_ip_address(data)
+
+    def parse_static_ip_address(self, interface: IPv4Interface) -> StaticIntfIpAddress:
+        return StaticIntfIpAddress(
+            static=Static(
+                static_ip_v4=Prefix(
+                    address=as_global(interface.network.network_address),
+                    mask=as_global(str(interface.netmask)),
+                )
+            )
+        )
+
+    def parse_dynamic_ip_address(self, data: dict) -> DynamicIntfIpAddress:
+        if dhcp_helper := data.get("dhcp_helper"):
+            dhcp_helper = as_global(",".join(dhcp_helper.value))
+        return DynamicIntfIpAddress(
+            dynamic=Dynamic(dhcp_helper=dhcp_helper, dynamic_dhcp_distance=data.get("ip", {}).get("dhcp_distance"))
         )

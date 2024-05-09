@@ -42,25 +42,33 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import
     SubnetMask,
     TransportVpnParcel,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppox import AclQos as AclQosPPPoE
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppox import (
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
+    AclQos as AclQosPPPoE,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
     Advanced as AdvancedPPPoE,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppox import (
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
     AtmInterface,
     Chap,
+    Dynamic,
+    DynamicIntfIpAddress,
     Ethernet,
+    InterfaceDslIPoEParcel,
     InterfaceDslPPPoAParcel,
     InterfaceDslPPPoEParcel,
     InterfaceEthPPPoEParcel,
+    IPoEEthernet,
     NatProp,
     Pap,
     Ppp,
     ShapingRateDownstreamConfig,
     ShapingRateUpstreamConfig,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppox import Tunnel as TunnelPPPoE
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppox import (
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
+    Tunnel as TunnelPPPoE,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
     TunnelAdvancedOption,
     TunnelAllowService,
     VbrNrtConfig,
@@ -601,6 +609,30 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, dslpppoa_parcel, self.wan_uuid).id
+        # Assert
+        assert parcel_id
+
+    def test_when_correct_values_dlsipoe_interface_parcel_expect_successfull_post(self):
+        """This test case don't cover all fields because the models
+        inherets from the same parent class as DslPPPoE and EthPPPoE"""
+        # Arrange
+        dslipoe_parcel = InterfaceDslIPoEParcel(
+            parcel_name="InterfaceDslIPoEParcel",
+            parcel_description="Description",
+            ethernet=IPoEEthernet(
+                if_name=Global[str](value="Ethernet3"),
+                description=Global[str](value="ABAAABB"),
+                vlan_id=Global[int](value=266),
+                intf_ip_address=DynamicIntfIpAddress(
+                    dynamic=Dynamic(
+                        dhcp_helper=Global[str](value="1.1.1.1"),
+                        dynamic_dhcp_distance=Global[int](value=3),
+                    )
+                ),
+            ),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, dslipoe_parcel, self.wan_uuid).id
         # Assert
         assert parcel_id
 
