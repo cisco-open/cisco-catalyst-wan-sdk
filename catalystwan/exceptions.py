@@ -30,6 +30,17 @@ class ManagerHTTPError(HTTPError, ManagerRequestException):
         self.info = error_info
         super().__init__(request=request, response=response)
 
+    def __str__(self):
+        error_info_str = str(self.info) if self.info else "No error information"
+        request_str = (
+            f"Request: Method: {self.request.method}, URL: {self.request.url},"
+            f"Headers: {self.request.headers}, Body: {self.request.body}"
+        )
+        response_str = (
+            f"Response: {str(self.response.json())}" if self.response else "Response: No response information"
+        )
+        return f"{error_info_str}\n\n {request_str}\n\n {response_str}"
+
 
 class DefaultPasswordError(CatalystwanException):
     """Default password for SDWAN Manager user was detected and needs to be changed."""

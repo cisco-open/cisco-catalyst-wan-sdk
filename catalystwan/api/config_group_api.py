@@ -71,7 +71,7 @@ class ConfigGroupAPI:
         payload = ConfigGroupVariablesCreatePayload(deviceIds=device_ids, suggestions=suggestions)
         return self._endpoints.create_variables(config_group_id=cg_id, payload=payload)
 
-    def delete(self, cg_id: str) -> None:
+    def delete(self, cg_id: UUID) -> None:
         """
         Deletes existing config-group with given ID
         """

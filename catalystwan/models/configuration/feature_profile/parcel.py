@@ -9,6 +9,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.other import AnyOthe
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system import AnySystemParcel
+from catalystwan.models.configuration.feature_profile.sdwan.transport import AnyTransportParcel
 
 ParcelType = Literal[
     "aaa",
@@ -71,11 +72,21 @@ ParcelType = Literal[
     "unified/ssl-decryption",
     "unified/ssl-decryption-profile",
     "unified/url-filtering",
+    "management/vpn",
+    "wan/vpn",
+    "wan/vpn/interface/serial",
 ]
 
 
 AnyParcel = Annotated[
-    Union[AnySystemParcel, AnyPolicyObjectParcel, AnyServiceParcel, AnyOtherParcel, AnyEmbeddedSecurityParcel],
+    Union[
+        AnySystemParcel,
+        AnyPolicyObjectParcel,
+        AnyServiceParcel,
+        AnyOtherParcel,
+        AnyTransportParcel,
+        AnyEmbeddedSecurityParcel,
+    ],
     Field(discriminator="type_"),
 ]
 

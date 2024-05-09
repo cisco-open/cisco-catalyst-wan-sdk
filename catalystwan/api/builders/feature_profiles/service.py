@@ -10,6 +10,7 @@ from typing_extensions import Annotated
 
 from catalystwan.api.feature_profile_api import ServiceFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
+from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
     AppqoeParcel,
@@ -117,15 +118,17 @@ class ServiceFeatureProfileBuilder:
             Service feature profile UUID
         """
         profile_uuid = self._endpoints.create_sdwan_service_feature_profile(self._profile).id
+        try:
+            for parcel in self._independent_items:
+                self._api.create_parcel(profile_uuid, parcel)
 
-        for parcel in self._independent_items:
-            self._api.create_parcel(profile_uuid, parcel)
+            for vpn_tag, vpn_parcel in self._independent_items_vpns.items():
+                vpn_uuid = self._api.create_parcel(profile_uuid, vpn_parcel).id
 
-        for vpn_tag, vpn_parcel in self._independent_items_vpns.items():
-            vpn_uuid = self._api.create_parcel(profile_uuid, vpn_parcel).id
-
-            for sub_parcel in self._depended_items_on_vpns[vpn_tag]:
-                logger.debug(f"Creating subparcel parcel {sub_parcel.parcel_name} to VPN {vpn_uuid}")
-                self._api.create_parcel(profile_uuid, sub_parcel, vpn_uuid)
+                for sub_parcel in self._depended_items_on_vpns[vpn_tag]:
+                    logger.debug(f"Creating subparcel parcel {sub_parcel.parcel_name} to VPN {vpn_uuid}")
+                    self._api.create_parcel(profile_uuid, sub_parcel, vpn_uuid)
+        except ManagerHTTPError as e:
+            logger.error(f"Error occured during building profile: {e.info}")
 
         return profile_uuid

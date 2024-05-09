@@ -2,11 +2,9 @@
 
 from typing import List, Literal, Optional
 
-from annotated_types import Ge, Le
 from pydantic import BaseModel, ConfigDict, Field
-from typing_extensions import Annotated
 
-from catalystwan.models.common import IntStr
+from catalystwan.models.common import PolicyModeType, VpnId
 from catalystwan.models.policy.policy_definition import (
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
@@ -16,15 +14,8 @@ from catalystwan.models.policy.policy_definition import (
 FileReputationServer = Literal["nam", "eur", "apjc"]
 FileAnalysisServer = Literal["", "nam", "eur"]
 AlertsLogLevel = Literal["", "info", "warning", "critical"]  # hack
-AMPPolicyType = Literal["security", "unified"]
 FileAnalysisFileTypes = Literal[
     "pdf", "ms-exe", "new-office", "rtf", "mdb", "mscab", "msole2", "wri", "xlw", "flv", "swf"
-]
-
-VpnId = Annotated[
-    IntStr,
-    Ge(0),
-    Le(65530),
 ]
 
 
@@ -57,7 +48,7 @@ class AdvancedMalwareProtectionDefinition(BaseModel):
 
 class AdvancedMalwareProtectionPolicy(PolicyDefinitionBase):
     type: Literal["advancedMalwareProtection"] = "advancedMalwareProtection"
-    mode: AMPPolicyType = "security"
+    mode: PolicyModeType = "security"
     definition: AdvancedMalwareProtectionDefinition
 
 

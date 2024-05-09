@@ -4,6 +4,7 @@ from dataclasses import InitVar, dataclass, field
 from typing import Any, Dict, Iterator, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union
 from uuid import UUID
 
+from annotated_types import Ge, Le
 from packaging.specifiers import SpecifierSet  # type: ignore
 from packaging.version import Version  # type: ignore
 from pydantic import PlainSerializer, SerializationInfo, ValidationInfo
@@ -299,4 +300,34 @@ SubnetMask = Literal[
     "192.0.0.0",
     "128.0.0.0",
     "0.0.0.0",
+]
+
+Carrier = Literal[
+    "carrier1",
+    "carrier2",
+    "carrier3",
+    "carrier4",
+    "carrier5",
+    "carrier6",
+    "carrier7",
+    "carrier8",
+    "default",
+]
+
+VpnId = Annotated[
+    IntStr,
+    Ge(0),
+    Le(65530),
+]
+
+PolicyModeType = Literal["security", "unified"]
+
+CoreRegion = Literal[
+    "core",
+    "core-shared",
+]
+
+SecondaryRegion = Literal[
+    "secondary-only",
+    "secondary-shared",
 ]

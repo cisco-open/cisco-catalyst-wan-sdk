@@ -11,11 +11,18 @@ from catalystwan.endpoints.configuration.feature_profile.sdwan.other import Othe
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
+from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.feature_profile.sdwan.other import AnyOtherParcel
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.url import URLParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import MulticastParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport import AnyTransportParcel
+from catalystwan.models.configuration.feature_profile.sdwan.transport.bgp import WanRoutingBgpParcel
+from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_controller import (
+    CellularControllerParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1controller import T1E1ControllerParcel
+from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import ManagementVpnParcel, TransportVpnParcel
 from catalystwan.typed_list import DataSequence
 
 if TYPE_CHECKING:
@@ -179,12 +186,68 @@ class TransportFeatureProfileAPI:
         """
         self.endpoint.delete_transport_feature_profile(profile_id)
 
-    def create_parcel(self, profile_id: UUID, payload: AnyTransportParcel) -> ParcelCreationResponse:
+    def create_parcel(
+        self, profile_id: UUID, payload: AnyTransportParcel, vpn_uuid: Optional[UUID] = None
+    ) -> ParcelCreationResponse:
         """
         Create Transport Parcel for selected profile_id based on payload type
         """
-
+        if vpn_uuid is not None:
+            vpn_parcel = self._get_vpn_parcel(profile_id, vpn_uuid).payload
+            if vpn_parcel._get_parcel_type() == TransportVpnParcel._get_parcel_type():
+                return self.endpoint.create_transport_vpn_sub_parcel(
+                    profile_id, vpn_uuid, payload._get_parcel_type(), payload
+                )
+            else:
+                return self.endpoint.create_management_vpn_sub_parcel(
+                    profile_id, vpn_uuid, payload._get_parcel_type(), payload
+                )
         return self.endpoint.create_transport_parcel(profile_id, payload._get_parcel_type(), payload)
+
+    def _get_vpn_parcel(
+        self, profile_id: UUID, vpn_uuid: UUID
+    ) -> Union[Parcel[TransportVpnParcel], Parcel[ManagementVpnParcel]]:
+        """Resolve the VPN parcel type based on the VPN UUID."""
+        try:
+            return self.endpoint.get_transport_parcel(profile_id, TransportVpnParcel._get_parcel_type(), vpn_uuid)
+        except ManagerHTTPError:
+            return self.endpoint.get_transport_parcel(profile_id, ManagementVpnParcel._get_parcel_type(), vpn_uuid)
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[CellularControllerParcel], parcel_id: UUID
+    ) -> Parcel[CellularControllerParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[T1E1ControllerParcel], parcel_id: UUID
+    ) -> Parcel[T1E1ControllerParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[WanRoutingBgpParcel], parcel_id: UUID
+    ) -> Parcel[WanRoutingBgpParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[TransportVpnParcel], parcel_id: UUID
+    ) -> Parcel[TransportVpnParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[ManagementVpnParcel], parcel_id: UUID
+    ) -> Parcel[ManagementVpnParcel]:
+        ...
+
+    def get_parcel(self, profile_id: UUID, parcel_type: Type[AnyTransportParcel], parcel_id: UUID) -> Parcel:
+        """
+        Get one Transport Parcel given profile id, parcel type and parcel id
+        """
+        return self.endpoint.get_transport_parcel(profile_id, parcel_type._get_parcel_type(), parcel_id)
 
 
 class OtherFeatureProfileAPI:

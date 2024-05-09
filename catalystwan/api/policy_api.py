@@ -11,6 +11,7 @@ from catalystwan.endpoints.configuration.policy.definition.access_control_list i
 from catalystwan.endpoints.configuration.policy.definition.access_control_list_ipv6 import (
     ConfigurationPolicyAclIPv6Definition,
 )
+from catalystwan.endpoints.configuration.policy.definition.aip import ConfigurationPolicyAIPDefinition
 from catalystwan.endpoints.configuration.policy.definition.amp import ConfigurationPolicyAMPDefinition
 from catalystwan.endpoints.configuration.policy.definition.control import ConfigurationPolicyControlDefinition
 from catalystwan.endpoints.configuration.policy.definition.device_access import (
@@ -20,6 +21,9 @@ from catalystwan.endpoints.configuration.policy.definition.device_access_ipv6 im
     ConfigurationPolicyDeviceAccessIPv6Definition,
 )
 from catalystwan.endpoints.configuration.policy.definition.hub_and_spoke import ConfigurationPolicyHubAndSpokeDefinition
+from catalystwan.endpoints.configuration.policy.definition.intrusion_prevention import (
+    ConfigurationPolicyIntrusionPreventionDefinition,
+)
 from catalystwan.endpoints.configuration.policy.definition.mesh import ConfigurationPolicyMeshDefinition
 from catalystwan.endpoints.configuration.policy.definition.qos_map import ConfigurationPolicyQoSMapDefinition
 from catalystwan.endpoints.configuration.policy.definition.rewrite import ConfigurationPolicyRewriteRuleDefinition
@@ -28,6 +32,9 @@ from catalystwan.endpoints.configuration.policy.definition.security_group import
     ConfigurationPolicySecurityGroupDefinition,
 )
 from catalystwan.endpoints.configuration.policy.definition.traffic_data import ConfigurationPolicyDataDefinition
+from catalystwan.endpoints.configuration.policy.definition.url_filtering import (
+    ConfigurationPolicyUrlFilteringDefinition,
+)
 from catalystwan.endpoints.configuration.policy.definition.vpn_membership import (
     ConfigurationPolicyVPNMembershipGroupDefinition,
 )
@@ -120,6 +127,10 @@ from catalystwan.models.policy import (
 from catalystwan.models.policy.centralized import CentralizedPolicy, CentralizedPolicyEditPayload, CentralizedPolicyInfo
 from catalystwan.models.policy.definition.access_control_list import AclPolicy, AclPolicyGetResponse
 from catalystwan.models.policy.definition.access_control_list_ipv6 import AclIPv6Policy, AclIPv6PolicyGetResponse
+from catalystwan.models.policy.definition.aip import (
+    AdvancedInspectionProfilePolicy,
+    AdvancedInspectionProfilePolicyGetResponse,
+)
 from catalystwan.models.policy.definition.amp import (
     AdvancedMalwareProtectionPolicy,
     AdvancedMalwareProtectionPolicyGetResponse,
@@ -131,12 +142,17 @@ from catalystwan.models.policy.definition.device_access_ipv6 import (
     DeviceAccessIPv6PolicyGetResponse,
 )
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy, HubAndSpokePolicyGetResponse
+from catalystwan.models.policy.definition.intrusion_prevention import (
+    IntrusionPreventionPolicy,
+    IntrusionPreventionPolicyGetResponse,
+)
 from catalystwan.models.policy.definition.mesh import MeshPolicy, MeshPolicyGetResponse
 from catalystwan.models.policy.definition.qos_map import QoSMapPolicy, QoSMapPolicyGetResponse
 from catalystwan.models.policy.definition.rewrite import RewritePolicy, RewritePolicyGetResponse
 from catalystwan.models.policy.definition.rule_set import RuleSet, RuleSetGetResponse
 from catalystwan.models.policy.definition.security_group import SecurityGroup, SecurityGroupGetResponse
 from catalystwan.models.policy.definition.traffic_data import TrafficDataPolicy, TrafficDataPolicyGetResponse
+from catalystwan.models.policy.definition.url_filtering import UrlFilteringPolicy, UrlFilteringPolicyGetResponse
 from catalystwan.models.policy.definition.vpn_membership import VPNMembershipPolicy, VPNMembershipPolicyGetResponse
 from catalystwan.models.policy.definition.zone_based_firewall import ZoneBasedFWPolicy, ZoneBasedFWPolicyGetResponse
 from catalystwan.models.policy.list.app_probe import AppProbeClassListInfo
@@ -224,7 +240,10 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     AclIPv6Policy: ConfigurationPolicyAclIPv6Definition,
     DeviceAccessPolicy: ConfigurationPolicyDeviceAccessDefinition,
     DeviceAccessIPv6Policy: ConfigurationPolicyDeviceAccessIPv6Definition,
+    AdvancedInspectionProfilePolicy: ConfigurationPolicyAIPDefinition,
     AdvancedMalwareProtectionPolicy: ConfigurationPolicyAMPDefinition,
+    IntrusionPreventionPolicy: ConfigurationPolicyIntrusionPreventionDefinition,
+    UrlFilteringPolicy: ConfigurationPolicyUrlFilteringDefinition,
 }
 
 
@@ -649,7 +668,19 @@ class PolicyDefinitionsAPI:
         endpoints.delete_policy_definition(id=id)
 
     @overload
+    def get(self, type: Type[IntrusionPreventionPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[TrafficDataPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
+    def get(self, type: Type[UrlFilteringPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
+    def get(self, type: Type[AdvancedInspectionProfilePolicy]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
     @overload
@@ -709,9 +740,20 @@ class PolicyDefinitionsAPI:
         ...
 
     # get by id
+    @overload
+    def get(self, type: Type[IntrusionPreventionPolicy], id: UUID) -> IntrusionPreventionPolicyGetResponse:
+        ...
 
     @overload
     def get(self, type: Type[TrafficDataPolicy], id: UUID) -> TrafficDataPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[UrlFilteringPolicy], id: UUID) -> UrlFilteringPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[AdvancedInspectionProfilePolicy], id: UUID) -> AdvancedInspectionProfilePolicyGetResponse:
         ...
 
     @overload

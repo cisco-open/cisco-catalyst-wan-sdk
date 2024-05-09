@@ -2,7 +2,7 @@
 
 # mypy: disable-error-code="empty-body"
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -88,9 +88,12 @@ class ConfigGroupVariablesCreatePayload(BaseModel):
     suggestions: bool = True
 
 
+VariableType = Union[str, int, bool, List[Union[str, int, bool]]]
+
+
 class VariableData(BaseModel):
     name: str
-    value: str
+    value: Optional[VariableType] = None
 
 
 class DeviceVariables(BaseModel):
@@ -163,7 +166,7 @@ class ConfigurationGroup(APIEndpoints):
 
     @versions(supported_versions=(">=20.9"), raises=False)
     @delete("/v1/config-group/{config_group_id}")
-    def delete_config_group(self, config_group_id: str) -> None:
+    def delete_config_group(self, config_group_id: UUID) -> None:
         ...
 
     @versions(supported_versions=(">=20.9"), raises=False)

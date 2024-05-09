@@ -44,17 +44,20 @@ from catalystwan.models.policy.list.zone import ZoneList, ZoneListInfo
 from .centralized import CentralizedPolicy, TrafficDataDirection
 from .definition.access_control_list import AclPolicy, AclPolicyGetResponse
 from .definition.access_control_list_ipv6 import AclIPv6Policy, AclIPv6PolicyGetResponse
+from .definition.aip import AdvancedInspectionProfilePolicy, AdvancedInspectionProfilePolicyGetResponse
 from .definition.amp import AdvancedMalwareProtectionPolicy, AdvancedMalwareProtectionPolicyGetResponse
 from .definition.control import ControlPolicy, ControlPolicyGetResponse
 from .definition.device_access import DeviceAccessPolicy, DeviceAccessPolicyGetResponse
 from .definition.device_access_ipv6 import DeviceAccessIPv6Policy, DeviceAccessIPv6PolicyGetResponse
 from .definition.hub_and_spoke import HubAndSpokePolicy, HubAndSpokePolicyGetResponse
+from .definition.intrusion_prevention import IntrusionPreventionPolicy, IntrusionPreventionPolicyGetResponse
 from .definition.mesh import MeshPolicy, MeshPolicyGetResponse
 from .definition.qos_map import QoSDropType, QoSMapPolicy, QoSMapPolicyGetResponse
 from .definition.rewrite import RewritePolicy, RewritePolicyGetResponse
 from .definition.rule_set import RuleSet, RuleSetGetResponse
 from .definition.security_group import SecurityGroup, SecurityGroupGetResponse
 from .definition.traffic_data import TrafficDataPolicy, TrafficDataPolicyGetResponse
+from .definition.url_filtering import UrlFilteringPolicy, UrlFilteringPolicyGetResponse
 from .definition.vpn_membership import VPNMembershipPolicy, VPNMembershipPolicyGetResponse
 from .definition.zone_based_firewall import ZoneBasedFWPolicy, ZoneBasedFWPolicyGetResponse
 from .localized import LocalizedPolicy
@@ -75,8 +78,10 @@ AnyPolicyDefinition = Annotated[
     Union[
         AclIPv6Policy,
         AclPolicy,
+        AdvancedInspectionProfilePolicy,
         AdvancedMalwareProtectionPolicy,
         ControlPolicy,
+        IntrusionPreventionPolicy,
         DeviceAccessIPv6Policy,
         DeviceAccessPolicy,
         HubAndSpokePolicy,
@@ -86,6 +91,7 @@ AnyPolicyDefinition = Annotated[
         RuleSet,
         SecurityGroup,
         TrafficDataPolicy,
+        UrlFilteringPolicy,
         VPNMembershipPolicy,
         ZoneBasedFWPolicy,
     ],
@@ -168,12 +174,14 @@ AnyPolicyListInfo = Annotated[
 
 AnyPolicyDefinitionInfo = Annotated[
     Union[
+        AdvancedInspectionProfilePolicyGetResponse,
         AdvancedMalwareProtectionPolicyGetResponse,
         AclIPv6PolicyGetResponse,
         AclPolicyGetResponse,
         ControlPolicyGetResponse,
         DeviceAccessIPv6PolicyGetResponse,
         DeviceAccessPolicyGetResponse,
+        IntrusionPreventionPolicyGetResponse,
         HubAndSpokePolicyGetResponse,
         MeshPolicyGetResponse,
         QoSMapPolicyGetResponse,
@@ -181,6 +189,7 @@ AnyPolicyDefinitionInfo = Annotated[
         RuleSetGetResponse,
         SecurityGroupGetResponse,
         TrafficDataPolicyGetResponse,
+        UrlFilteringPolicyGetResponse,
         VPNMembershipPolicyGetResponse,
         ZoneBasedFWPolicyGetResponse,
     ],
@@ -191,6 +200,7 @@ AnyPolicyDefinitionInfo = Annotated[
 __all__ = (
     "AclIPv6Policy",
     "AclPolicy",
+    "AdvancedInspectionProfilePolicy",
     "AdvancedMalwareProtectionPolicy",
     "AnyPolicyList",
     "AnyPolicyDefinitionInfo",
@@ -212,6 +222,7 @@ __all__ = (
     "FQDNList",
     "GeoLocationList",
     "HubAndSpokePolicy",
+    "IntrusionPreventionPolicy",
     "IPSSignatureList",
     "IPv6PrefixList",
     "LocalAppList",
@@ -248,6 +259,7 @@ __all__ = (
     "UnifiedSecurityPolicy",
     "URLBlockList",
     "URLAllowList",
+    "UrlFilteringPolicy",
     "VPNList",
     "VPNMembershipPolicy",
     "ZoneBasedFWPolicy",
