@@ -274,7 +274,6 @@ class InterfaceDslPppoeTemplateConverter(InterfacePppoXTemplateConverter):
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceDslPPPoEParcel:
         data = deepcopy(template_values)
-        print(data)
         tunnel_allow_service = self.parse_tunnel_allow_service(data)
         ppp = self.parse_ppp(data)
         nat_prop = self.parse_nat_prop(data)
@@ -310,7 +309,6 @@ class InterfaceDslPppoaTemplateConverter(InterfacePppoXTemplateConverter):
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceDslPPPoAParcel:
         data = deepcopy(template_values)
-        print(data)
         tunnel_allow_service = self.parse_tunnel_allow_service(data)
         ppp = self.parse_ppp(data)
         nat_prop = self.parse_nat_prop(data)
