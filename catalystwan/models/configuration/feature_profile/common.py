@@ -232,6 +232,10 @@ class RefIdItem(BaseModel):
     ref_id: Global[str] = Field(..., serialization_alias="refId", validation_alias="refId")
 
 
+class RefIdList(BaseModel):
+    ref_id: Global[List[str]] = Field(..., serialization_alias="refId", validation_alias="refId")
+
+
 class MultiRegionFabric(BaseModel):
     model_config = ConfigDict(
         extra="forbid",

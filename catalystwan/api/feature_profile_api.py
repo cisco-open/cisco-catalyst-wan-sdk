@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from catalystwan.session import ManagerSession
 
 from catalystwan.api.parcel_api import SDRoutingFullConfigParcelAPI
+from catalystwan.endpoints.configuration.feature_profile.sdwan.embedded_security import EmbeddedSecurityFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.policy_object import PolicyObjectFeatureProfile
 from catalystwan.endpoints.configuration_feature_profile import SDRoutingConfigurationFeatureProfile
 from catalystwan.models.configuration.feature_profile.common import (
@@ -41,6 +42,11 @@ from catalystwan.models.configuration.feature_profile.parcel import (
     Parcel,
     ParcelAssociationPayload,
     ParcelCreationResponse,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import (
+    AnyEmbeddedSecurityParcel,
+    NgfirewallParcel,
+    PolicyParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import (
     AnyPolicyObjectParcel,
@@ -95,6 +101,7 @@ class SDWANFeatureProfilesAPI:
         self.other = OtherFeatureProfileAPI(session=session)
         self.service = ServiceFeatureProfileAPI(session=session)
         self.transport = TransportFeatureProfileAPI(session=session)
+        self.embedded_security = EmbeddedSecurityFeatureProfileAPI(session=session)
 
 
 class FeatureProfileAPI(Protocol):
@@ -1100,3 +1107,113 @@ class PolicyObjectFeatureProfileAPI:
         return self.endpoint.delete(
             profile_id=profile_id, policy_object_list_type=policy_object_list_type, list_object_id=list_object_id
         )
+
+
+class EmbeddedSecurityFeatureProfileAPI:
+    """
+    SDWAN Feature Profile Embedded Security APIs
+    """
+
+    def __init__(self, session: ManagerSession):
+        self.session = session
+        self.endpoint = EmbeddedSecurityFeatureProfile(session)
+
+    def get_profiles(
+        self, limit: Optional[int] = None, offset: Optional[int] = None
+    ) -> DataSequence[FeatureProfileInfo]:
+        """
+        Get all Embedded Security Feature Profiles
+        """
+        payload = GetFeatureProfilesPayload(limit=limit if limit else None, offset=offset if offset else None)
+
+        return self.endpoint.get_embedded_security_feature_profiles(payload)
+
+    def create_profile(self, name: str, description: str) -> FeatureProfileCreationResponse:
+        """
+        Create Embedded Security Feature Profile
+        """
+        payload = FeatureProfileCreationPayload(name=name, description=description)
+        return self.endpoint.create_embedded_security_feature_profile(payload)
+
+    def delete_profile(self, profile_id: UUID) -> None:
+        """
+        Delete Embedded Security Feature Profile
+        """
+        self.endpoint.delete_embedded_security_feature_profile(profile_id)
+
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[NgfirewallParcel],
+    ) -> DataSequence[Parcel[NgfirewallParcel]]:
+        ...
+
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[PolicyParcel],
+    ) -> DataSequence[Parcel[PolicyParcel]]:
+        ...
+
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[AnyEmbeddedSecurityParcel],
+    ) -> DataSequence:
+        """
+        Get all Embedded Security Parcels given profile id and parcel type
+        """
+        return self.endpoint.get_all(profile_id, parcel_type._get_parcel_type())
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[NgfirewallParcel],
+        parcel_id: UUID,
+    ) -> Parcel[NgfirewallParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[PolicyParcel],
+        parcel_id: UUID,
+    ) -> Parcel[PolicyParcel]:
+        ...
+
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[AnyEmbeddedSecurityParcel],
+        parcel_id: UUID,
+    ) -> Parcel:
+        """
+        Get one Embedded Security Parcel given profile id, parcel type and parcel id
+        """
+        return self.endpoint.get_by_id(profile_id, parcel_type._get_parcel_type(), parcel_id)
+
+    def create_parcel(self, profile_id: UUID, payload: AnyEmbeddedSecurityParcel) -> ParcelCreationResponse:
+        """
+        Create Embedded Security Parcel for selected profile_id based on payload type
+        """
+
+        return self.endpoint.create(profile_id, payload._get_parcel_type(), payload)
+
+    def update_parcel(
+        self, profile_id: UUID, payload: AnyEmbeddedSecurityParcel, parcel_id: UUID
+    ) -> ParcelCreationResponse:
+        """
+        Update Embedded Security Parcel for selected profile_id based on payload type
+        """
+
+        return self.endpoint.update(profile_id, payload._get_parcel_type(), parcel_id, payload)
+
+    def delete_parcel(self, profile_id: UUID, parcel_type: Type[AnyEmbeddedSecurityParcel], parcel_id: UUID) -> None:
+        """
+        Delete Embedded Security Parcel for selected profile_id based on payload type
+        """
+        return self.endpoint.delete(profile_id, parcel_type._get_parcel_type(), parcel_id)
