@@ -10,7 +10,7 @@ from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
 from catalystwan.models.common import Carrier, TLOCColor
-from catalystwan.models.configuration.feature_profile.common import MultiRegionFabric, RefIdItem
+from catalystwan.models.configuration.feature_profile.common import MultiRegionFabric, Prefix, RefIdItem
 
 
 class NatProp(BaseModel):
@@ -371,7 +371,51 @@ class AtmInterface(BaseModel):
     )
 
 
-class InterfacePPPoXBase(_ParcelBase):
+class Dynamic(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    dhcp_helper: Optional[Union[Variable, Global[str], Default[None]]] = Field(
+        default=None, validation_alias="dhcpHelper", serialization_alias="dhcpHelper"
+    )
+    dynamic_dhcp_distance: Optional[Union[Variable, Default[int], Global[int]]] = Field(
+        default=None, validation_alias="dynamicDhcpDistance", serialization_alias="dynamicDhcpDistance"
+    )
+
+
+class Static(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    static_ip_v4: Optional[Prefix] = Field(
+        default=None,
+        validation_alias="staticIpV4AddressPrimary",
+        serialization_alias="staticIpV4AddressPrimary",
+        description="Static IpV4Address Primary",
+    )
+
+
+class DynamicIntfIpAddress(BaseModel):
+    dynamic: Dynamic = Field()
+
+
+class StaticIntfIpAddress(BaseModel):
+    static: Static = Field()
+
+
+class IPoEEthernet(Ethernet):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    intf_ip_address: Union[DynamicIntfIpAddress, StaticIntfIpAddress] = Field(
+        validation_alias="intfIpAddress", serialization_alias="intfIpAddress"
+    )
+
+
+class InterfaceBase(_ParcelBase):
     model_config = ConfigDict(
         extra="forbid",
         populate_by_name=True,
@@ -412,7 +456,7 @@ class InterfacePPPoXBase(_ParcelBase):
     )
 
 
-class InterfaceEthPPPoEParcel(InterfacePPPoXBase):
+class InterfaceEthPPPoEParcel(InterfaceBase):
     type_: Literal["interface/ethpppoe"] = Field(default="interface/ethpppoe", frozen=True, exclude=True)
     ethernet: Optional[Ethernet] = Field(
         default=None,
@@ -421,7 +465,7 @@ class InterfaceEthPPPoEParcel(InterfacePPPoXBase):
     )
 
 
-class InterfaceDslPPPoEParcel(InterfacePPPoXBase):
+class InterfaceDslPPPoEParcel(InterfaceBase):
     type_: Literal["interface/dsl-pppoe"] = Field(default="interface/dsl-pppoe", frozen=True, exclude=True)
     vdsl: Optional[Vdsl] = Field(default=None, validation_alias=AliasPath("data", "vdsl"), description="vdsl")
     ethernet: Optional[Ethernet] = Field(
@@ -431,9 +475,23 @@ class InterfaceDslPPPoEParcel(InterfacePPPoXBase):
     )
 
 
-class InterfaceDslPPPoAParcel(InterfacePPPoXBase):
+class InterfaceDslPPPoAParcel(InterfaceBase):
     type_: Literal["interface/dsl-pppoa"] = Field(default="interface/dsl-pppoa", frozen=True, exclude=True)
     atm_interface: Optional[AtmInterface] = Field(
         default=None, validation_alias=AliasPath("data", "atmInterface"), description="ATM Interface attributes"
     )
     vdsl: Optional[Vdsl] = Field(default=None, validation_alias=AliasPath("data", "vdsl"), description="vdsl")
+
+
+class InterfaceDslIPoEParcel(InterfaceBase):
+    type_: Literal["interface/dsl-ipoe"] = Field(default="interface/dsl-ipoe", frozen=True, exclude=True)
+    ethernet: Optional[IPoEEthernet] = Field(
+        default=None,
+        validation_alias=AliasPath("data", "ethernet"),
+        description="Ethernet Interface Attributes for ipoe",
+    )
+    vdsl: Optional[Vdsl] = Field(
+        default=None,
+        validation_alias=AliasPath("data", "vdsl"),
+        description="vdsl",
+    )

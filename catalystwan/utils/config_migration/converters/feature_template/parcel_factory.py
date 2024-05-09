@@ -34,7 +34,8 @@ from .ntp import NTPTemplateConverter
 from .omp import OMPTemplateConverter
 from .ospf import OspfTemplateConverter
 from .ospfv3 import Ospfv3TemplateConverter
-from .pppox import (
+from .protocol_over import (
+    InterfaceDslIPoETemplateConverter,
     InterfaceDslPppoaTemplateConverter,
     InterfaceDslPppoeTemplateConverter,
     InterfaceEthernetPppoeTemplateConverter,
@@ -80,6 +81,7 @@ available_converters = [
     InterfaceEthernetPppoeTemplateConverter,
     InterfaceDslPppoeTemplateConverter,
     InterfaceDslPppoaTemplateConverter,
+    InterfaceDslIPoETemplateConverter,
 ]
 
 
