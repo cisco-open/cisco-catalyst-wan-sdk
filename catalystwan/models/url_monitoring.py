@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from pydantic import BaseModel, Field, conint
+from pydantic import BaseModel, Field
 
 
 class UrlMonitoringInfo(BaseModel):
@@ -15,7 +15,9 @@ class UrlMonitoringInfo(BaseModel):
 
 class UrlMonitoringConfig(BaseModel):
     url: str = Field(..., example="/client/server/ready", description="URL registered for monitoring requests.")
-    threshold: conint(ge=10, le=100) = Field(
+    threshold: int = Field(
+        ge=10,
+        le=100,
         title="Threshold",
         description="vManage alarm is raised after reaching the threshold. "
         "Threshold should be within a range of 10 and 100 inclusive.",
