@@ -14,7 +14,7 @@ class UrlMonitoringInfo(BaseModel):
 
 
 class UrlMonitoringConfig(BaseModel):
-    url: str = Field(..., example="/client/server/ready", description="URL registered for monitoring requests.")
+    url: str = Field(..., examples=["/client/server/ready"], description="URL registered for monitoring requests.")
     threshold: int = Field(
         ge=10,
         le=100,
@@ -25,4 +25,4 @@ class UrlMonitoringConfig(BaseModel):
 
 
 class DeleteUrlMonitorRequest(BaseModel):
-    url: str = Field(..., example="/client/server/ready", description="URL registered for monitoring requests.")
+    url: str = Field(..., examples=["/client/server/ready"], description="URL registered for monitoring requests.")
