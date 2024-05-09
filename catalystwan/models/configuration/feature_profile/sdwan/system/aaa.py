@@ -263,6 +263,7 @@ class AuthorizationRuleItem(BaseModel):
 class AAAParcel(_ParcelBase):
     type_: Literal["aaa"] = Field(default="aaa", exclude=True)
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
     authentication_group: Union[Variable, Global[bool], Default[bool]] = Field(
         default=as_default(False),
         validation_alias=AliasPath("data", "authenticationGroup"),
@@ -273,8 +274,8 @@ class AAAParcel(_ParcelBase):
         validation_alias=AliasPath("data", "accountingGroup"),
         description="Accounting configurations parameters",
     )
-    # local, radius, tacacs
     server_auth_order: Global[List[str]] = Field(
+        # local, radius, tacacs
         validation_alias=AliasPath("data", "serverAuthOrder"),
         min_length=1,
         max_length=4,
@@ -307,6 +308,48 @@ class AAAParcel(_ParcelBase):
         validation_alias=AliasPath("data", "authorizationRule"),
         description="Configure the Authorization Rules",
     )
+
+    @classmethod
+    def new(
+        cls,
+        parcel_name: str,
+        server_auth_order: List[str],
+        *,
+        parcel_description: Optional[str] = None,
+        accounting_group: bool = False,
+        authorization_console: bool = False,
+        authorization_config_commands: bool = False
+    ) -> "AAAParcel":
+        return cls(
+            parcel_name=parcel_name,
+            parcel_description=parcel_description,
+            server_auth_order=as_global(server_auth_order),
+            accounting_group=as_global(accounting_group),
+            authorization_console=as_global(authorization_console),
+            authorization_config_commands=as_global(authorization_config_commands),
+        )
+
+    def add_user(
+        self,
+        name: str,
+        password: str,
+        *,
+        privilege: str = DEFAULT_USER_PRIVILEGE,
+        pubkey_chain: Optional[List[PubkeyChainItem]] = None
+    ) -> UserItem:
+        user = UserItem(
+            name=as_global(name),
+            password=as_global(password),
+            privilege=as_global(privilege),
+            pubkey_chain=pubkey_chain,
+        )
+        if self.user is None:
+            self.user = []
+        self.user.append(user)
+        return user
+
+    def set_server_auth_order(self, server_auth_order: List[str]) -> None:
+        self.server_auth_order = as_global(server_auth_order)
 
     def add_authorization_rule(
         self, rule_id: str, method: str, level: str, group: List[str], if_authenticated: bool

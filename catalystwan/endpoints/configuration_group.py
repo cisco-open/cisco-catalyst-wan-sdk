@@ -166,7 +166,7 @@ class ConfigurationGroup(APIEndpoints):
 
     @versions(supported_versions=(">=20.9"), raises=False)
     @delete("/v1/config-group/{config_group_id}")
-    def delete_config_group(self, config_group_id: str) -> None:
+    def delete_config_group(self, config_group_id: UUID) -> None:
         ...
 
     @versions(supported_versions=(">=20.9"), raises=False)
