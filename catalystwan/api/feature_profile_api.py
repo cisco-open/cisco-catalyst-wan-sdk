@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import Json
 
+from catalystwan.endpoints.configuration.feature_profile.sdwan.cli import CliFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.other import OtherFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
@@ -43,6 +44,7 @@ from catalystwan.models.configuration.feature_profile.parcel import (
     ParcelAssociationPayload,
     ParcelCreationResponse,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.cli import ConfigParcel
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import (
     AnyEmbeddedSecurityParcel,
     NgfirewallParcel,
@@ -102,6 +104,7 @@ class SDWANFeatureProfilesAPI:
         self.service = ServiceFeatureProfileAPI(session=session)
         self.transport = TransportFeatureProfileAPI(session=session)
         self.embedded_security = EmbeddedSecurityFeatureProfileAPI(session=session)
+        self.cli = CliFeatureProfileAPI(session=session)
 
 
 class FeatureProfileAPI(Protocol):
@@ -1217,3 +1220,64 @@ class EmbeddedSecurityFeatureProfileAPI:
         Delete Embedded Security Parcel for selected profile_id based on payload type
         """
         return self.endpoint.delete(profile_id, parcel_type._get_parcel_type(), parcel_id)
+
+
+class CliFeatureProfileAPI:
+    """
+    SDWAN Feature Profile CLI APIs
+    """
+
+    def __init__(self, session: ManagerSession):
+        self.session = session
+        self.endpoint = CliFeatureProfile(session)
+
+    def get_profiles(
+        self, limit: Optional[int] = None, offset: Optional[int] = None
+    ) -> DataSequence[FeatureProfileInfo]:
+        """
+        Get all CLI Feature Profiles
+        """
+        payload = GetFeatureProfilesPayload(limit=limit if limit else None, offset=offset if offset else None)
+
+        return self.endpoint.get_profiles(payload)
+
+    def create_profile(self, name: str, description: str = "") -> FeatureProfileCreationResponse:
+        """
+        Create CLI Feature Profile
+        """
+        payload = FeatureProfileCreationPayload(name=name, description=description)
+        return self.endpoint.create_profile(payload)
+
+    def delete_profile(self, profile_id: UUID) -> None:
+        """
+        Delete CLI Feature Profile
+        """
+        self.endpoint.delete_profile(profile_id)
+
+    def get_parcel_by_id(
+        self,
+        profile_id: UUID,
+        parcel_id: UUID,
+    ) -> DataSequence[Parcel[Any]]:
+        """
+        Get all CLI Parcels for selected profile_id and selected type or get one CLI Parcel given parcel id
+        """
+        return self.endpoint.get_by_id(profile_id, parcel_id)
+
+    def create_parcel(self, profile_id: UUID, config: ConfigParcel) -> ParcelCreationResponse:
+        """
+        Create CLI Parcel for selected profile_id
+        """
+        return self.endpoint.create(profile_id, config)
+
+    def update_parcel(self, profile_id: UUID, parcel_id: UUID, config: ConfigParcel) -> ParcelCreationResponse:
+        """
+        Update CLI Parcel for selected profile_id
+        """
+        return self.endpoint.update(profile_id, parcel_id, config)
+
+    def delete_parcel(self, profile_id: UUID, parcel_id: UUID) -> None:
+        """
+        Delete CLI Parcel for selected profile_id
+        """
+        return self.endpoint.delete(profile_id, parcel_id)
