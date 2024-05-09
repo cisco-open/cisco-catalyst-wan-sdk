@@ -191,8 +191,6 @@ class ManagerResponse(Response, APIEndpointClientResponse):
 
         if isinstance(data, Sequence):
             sequence = data
-        elif data is None:
-            sequence = []
         else:
             sequence = [cast(dict, data)]
 
