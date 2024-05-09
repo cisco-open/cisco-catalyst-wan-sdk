@@ -321,3 +321,13 @@ VpnId = Annotated[
 ]
 
 PolicyModeType = Literal["security", "unified"]
+
+CoreRegion = Literal[
+    "core",
+    "core-shared",
+]
+
+SecondaryRegion = Literal[
+    "secondary-only",
+    "secondary-shared",
+]

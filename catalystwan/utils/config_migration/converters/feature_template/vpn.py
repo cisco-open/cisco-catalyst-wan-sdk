@@ -214,7 +214,6 @@ class ManagementVpnTemplateConverter(BaseTransportAndManagementTemplateConverter
             VPN: The created ManagementVpnParcel.
         """
         values = deepcopy(template_values)
-        print(values)
         self.configure_dns(values)
         self.configure_new_host_mapping(values)
         self.configure_route_ipv4(values)
@@ -237,7 +236,6 @@ class TransportVpnTemplateConverter(BaseTransportAndManagementTemplateConverter)
             VPN: The created TransportVpnParcel.
         """
         values = deepcopy(template_values)
-        print(values)
         self.configure_dns(values)
         self.configure_new_host_mapping(values)
         self.configure_enhance_ecmp_keying(values)

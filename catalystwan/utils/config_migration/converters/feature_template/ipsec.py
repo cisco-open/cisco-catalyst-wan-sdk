@@ -26,7 +26,6 @@ class InterfaceIpsecTemplateConverter:
     )
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceIpsecParcel:
-        print(template_values)
         values = deepcopy(template_values)
         self.configure_interface_name(values)
         self.configure_description(values)
