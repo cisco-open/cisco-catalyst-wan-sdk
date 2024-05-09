@@ -397,7 +397,6 @@ class InterfaceDslIPoETemplateConverter(InterfaceBaseTemplateConverter):
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceDslIPoEParcel:
         data = deepcopy(template_values)
-        print(data)
         tunnel_allow_service = self.parse_tunnel_allow_service(data)
         ppp = self.parse_ppp(data)
         nat_prop = self.parse_nat_prop(data)
@@ -433,7 +432,6 @@ class InterfaceDslIPoETemplateConverter(InterfaceBaseTemplateConverter):
             raise CatalystwanConverterCantConvertException("Interface name is required")
 
         intf_ip_address = self.parse_intf_ip_address(data)
-        print(intf_ip_address)
         return IPoEEthernet(
             if_name=if_name,
             description=data.get("description"),

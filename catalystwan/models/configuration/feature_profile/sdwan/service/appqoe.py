@@ -80,8 +80,8 @@ class VirtualApplication(BaseModel):
         serialization_alias="applicationType",
         validation_alias="applicationType",
     )
-    resource_profile: Union[Global[ResourceProfile], Default[str]] = Field(
-        default=Global[ResourceProfile](value="default"),
+    resource_profile: Union[Global[ResourceProfile], Default[ResourceProfile]] = Field(
+        default=Default[ResourceProfile](value="default"),
         serialization_alias="resourceProfile",
         validation_alias="resourceProfile",
     )
@@ -145,8 +145,8 @@ class ForwarderAppnavControllerGroup(BaseModel):
 class ForwarderNodeGroup(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    name: Union[Global[str], Default[ServiceNodeGroupName]]
-    internal: Default[bool] = Default[bool](value=False)
+    name: Union[Global[str], Default[ServiceNodeGroupName]] = Default[ServiceNodeGroupName](value="SNG-APPQOE")
+    internal: Union[Default[bool], Global[bool]] = Default[bool](value=False)
     service_node: List[ServiceNodeInformation] = Field(
         serialization_alias="serviceNode", validation_alias="serviceNode"
     )
