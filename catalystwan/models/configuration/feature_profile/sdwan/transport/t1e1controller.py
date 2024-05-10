@@ -3,6 +3,7 @@ from typing import List, Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_global
+from catalystwan.models.configuration.feature_profile.common import ChannelGroup
 
 ControllerType = Literal[
     "e1",
@@ -124,12 +125,6 @@ LineMode = Literal[
     "primary",
     "secondary",
 ]
-
-
-class ChannelGroup(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    number: Union[Global[int], Variable] = Field()
-    timeslots: Union[Global[str], Variable] = Field()
 
 
 class ControllerTxExList(BaseModel):

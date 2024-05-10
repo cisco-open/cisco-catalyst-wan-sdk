@@ -5,6 +5,8 @@ from typing import List, Union
 from pydantic import Field
 from typing_extensions import Annotated
 
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.multilink import MultilinkParcel
+
 from .bgp import WanRoutingBgpParcel as BGPParcel
 from .cellular_controller import CellularControllerParcel
 from .cellular_profile import CellularProfileParcel
@@ -30,6 +32,8 @@ AnyTransportVpnSubParcel = Annotated[
         InterfaceDslIPoEParcel,
         InterfaceGreParcel,
         InterfaceIpsecParcel,
+        MultilinkParcel,
+        # Add wan interfaces here
     ],
     Field(discriminator="type_"),
 ]

@@ -19,6 +19,7 @@ from catalystwan.models.configuration.feature_profile.common import AddressWithM
 from catalystwan.models.configuration.feature_profile.common import (
     AdvancedGre,
     AllowService,
+    ChannelGroup,
     MultiRegionFabric,
     ShapingRateDownstreamConfig,
     ShapingRateUpstreamConfig,
@@ -41,7 +42,6 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1contro
     E1,
     T1,
     CableLengthLong,
-    ChannelGroup,
     ClockSource,
     ControllerTxExList,
     ControllerType,

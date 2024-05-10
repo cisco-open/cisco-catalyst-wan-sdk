@@ -1,5 +1,8 @@
 from ipaddress import AddressValueError, IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
-from typing import List, Optional, Union, get_args
+from typing import Any, Dict, List, Literal, Optional, Union, get_args, get_origin
+
+from pydantic import BaseModel
+from pydantic.fields import FieldInfo
 
 from catalystwan.api.configuration_groups.parcel import Global, as_global
 from catalystwan.models.common import (
@@ -159,3 +162,83 @@ def transform_dict(d: dict) -> dict:
 def template_definition_normalization(template_definition: dict) -> dict:
     """Normalizes a template definition by changing keys to snake_case and casting all leafs values to global types."""
     return transform_dict(template_definition)
+
+
+def normalize_to_model_definition(d: dict, model_fields: Dict[str, FieldInfo]) -> dict:
+    """Attempts to cast fields into types given in model definition."""
+
+    def get_global(field_info: FieldInfo):
+        def extract_from_annotation(annotation):
+            if get_origin(annotation) is Union:
+                for nested_annotation in get_args(annotation):
+                    extracted_value = extract_from_annotation(nested_annotation)
+                    if issubclass(extracted_value, Global):
+                        return extracted_value
+            return annotation
+
+        annotation = field_info.annotation
+        return extract_from_annotation(annotation)
+
+    def transform_value(value: Union[dict, list, str, int], field_info: FieldInfo) -> Any:
+        if value is None:
+            return value
+        elif isinstance(value, dict):
+            return value
+        elif isinstance(value, list):
+            if get_origin(field_info.annotation) is not List:
+                return value
+            annotation = get_args(field_info.annotation)[0]
+            if issubclass(get_args(annotation)[0], BaseModel):
+                return value
+            return [transform_value(item, field_info) for item in value]
+
+        global_type = get_global(field_info)
+        cast_type = global_type.model_fields["value"].annotation
+        if isinstance(value, Global):
+            value = value.value
+        try:
+            if get_origin(cast_type) is Literal:
+                literal_args = get_args(cast_type)
+                if all(isinstance(v, str) for v in literal_args):
+                    return global_type(value=str(value))  # type: ignore
+                if all(isinstance(v, int) for v in literal_args):
+                    return global_type(value=int(value))  # type: ignore
+                return global_type(value=value)
+            elif cast_type is bool:
+                return global_type(value=True)
+            else:
+                return global_type(value=cast_type(value))
+        except ValueError:
+            return value
+
+    result = {}
+    for key, val in d.items():
+        try:
+            result[to_snake_case(key)] = transform_value(val, model_fields[to_snake_case(key)])
+        except KeyError:
+            pass
+    return result
+
+
+def flatten_datapaths(original_dict: dict) -> dict:
+    """
+    Flattens datapaths. Conflicting leaf names within the same level need to be resolved manually beforehand.
+    Does not attempt to traverse list values, since they're usually nested models.
+    """
+
+    def get_flattened_dict(
+        original_dict: dict,
+        flattened_dict: Optional[dict] = None,
+    ):
+        if flattened_dict is None:
+            flattened_dict = {}
+        for key, value in original_dict.items():
+            if isinstance(value, dict):
+                get_flattened_dict(value, flattened_dict)
+            else:
+                flattened_dict[key] = value
+        return flattened_dict
+
+    flattened_dict: dict = {}
+    get_flattened_dict(original_dict, flattened_dict)
+    return flattened_dict

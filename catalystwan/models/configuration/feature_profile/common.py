@@ -434,3 +434,9 @@ class AllowService(BaseModel):
     ssh: Optional[Union[Default[bool], Global[bool], Variable]] = Field(
         default=None, description="Field available only for InterfaceCellularParcel"
     )
+
+
+class ChannelGroup(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+    number: Union[Global[int], Variable] = Field()
+    timeslots: Union[Global[str], Variable] = Field()

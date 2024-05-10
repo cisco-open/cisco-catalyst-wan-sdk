@@ -53,6 +53,7 @@ from .wan.protocol_over import (
 )
 from .wan.t1e1serial import T1E1SerialTemplateConverter
 from .wireless_lan import WirelessLanTemplateConverter
+from .multilink import MultilinkTemplateConverter
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +98,7 @@ available_converters = [
     CellularControllerTemplateConverter,
     CellularProfileTemplateConverter,
     CliTemplateConverter,
+    MultilinkTemplateConverter,
 ]
 
 
