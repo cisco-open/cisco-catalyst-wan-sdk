@@ -2,11 +2,11 @@
 
 from typing import List
 
-from .dns import DnsParcel
+from .dns import DnsParcel, TargetVpns
 
 AnyDnsSecurityParcel = DnsParcel
 
-__all__ = ("AnyDnsSecurityParcel", "DnsParcel")
+__all__ = ("AnyDnsSecurityParcel", "DnsParcel", "TargetVpns")
 
 
 def __dir__() -> "List[str]":

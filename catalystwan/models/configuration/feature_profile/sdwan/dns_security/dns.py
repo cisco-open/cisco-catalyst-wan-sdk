@@ -1,7 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 from typing import List, Literal, Optional
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, model_validator
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase
 from catalystwan.models.configuration.feature_profile.sdwan.transport.bgp import RefIdItem
@@ -47,3 +47,11 @@ class DnsParcel(_ParcelBase):
     umbrella_default: Optional[Global[bool]] = Field(
         default=None, validation_alias=AliasPath("data", "umbrellaDefault")
     )
+
+    @model_validator(mode="after")
+    def check_target_vpns(self):
+        if self.match_all_vpn == Global[bool](value=True) and self.target_vpns is not None:
+            raise ValueError("if match_all_vpn is true field target_vpns should not be in payload")
+        elif self.match_all_vpn == Global[bool](value=False) and self.target_vpns is None:
+            raise ValueError("if match_all_vpn is false field target_vpns should be in payload")
+        return self
