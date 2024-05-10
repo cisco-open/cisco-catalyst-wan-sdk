@@ -5,6 +5,7 @@ from uuid import UUID
 
 from catalystwan.api.feature_profile_api import (
     CliFeatureProfileAPI,
+    DnsSecurityFeatureProfileAPI,
     OtherFeatureProfileAPI,
     ServiceFeatureProfileAPI,
     SystemFeatureProfileAPI,
@@ -22,6 +23,7 @@ class TestFeatureProfileModels(unittest.TestCase):
         OtherFeatureProfileAPI,
         TransportFeatureProfileAPI,
         CliFeatureProfileAPI,
+        DnsSecurityFeatureProfileAPI,
     ]
 
     @classmethod
