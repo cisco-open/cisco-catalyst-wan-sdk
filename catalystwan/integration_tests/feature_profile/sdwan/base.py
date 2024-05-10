@@ -4,6 +4,7 @@ from typing import Union
 from uuid import UUID
 
 from catalystwan.api.feature_profile_api import (
+    CliFeatureProfileAPI,
     OtherFeatureProfileAPI,
     ServiceFeatureProfileAPI,
     SystemFeatureProfileAPI,
@@ -15,7 +16,13 @@ from catalystwan.session import ManagerSession, create_manager_session
 class TestFeatureProfileModels(unittest.TestCase):
     session: ManagerSession
     profile_uuid: UUID
-    api: Union[SystemFeatureProfileAPI, ServiceFeatureProfileAPI, OtherFeatureProfileAPI, TransportFeatureProfileAPI]
+    api: Union[
+        SystemFeatureProfileAPI,
+        ServiceFeatureProfileAPI,
+        OtherFeatureProfileAPI,
+        TransportFeatureProfileAPI,
+        CliFeatureProfileAPI,
+    ]
 
     @classmethod
     def setUpClass(cls) -> None:

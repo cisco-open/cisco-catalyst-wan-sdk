@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing_extensions import Annotated
 
+from catalystwan.models.configuration.feature_profile.sdwan.cli import AnyCliParcel
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import AnyEmbeddedSecurityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.other import AnyOtherParcel
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
@@ -75,6 +76,7 @@ ParcelType = Literal[
     "management/vpn",
     "wan/vpn",
     "wan/vpn/interface/serial",
+    "config",
 ]
 
 
@@ -86,6 +88,7 @@ AnyParcel = Annotated[
         AnyOtherParcel,
         AnyTransportParcel,
         AnyEmbeddedSecurityParcel,
+        AnyCliParcel,
     ],
     Field(discriminator="type_"),
 ]
