@@ -6,13 +6,13 @@ from typing import Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+from catalystwan.models.configuration.feature_profile.common import TunnelApplication
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import (
     IkeCiphersuite,
     IkeGroup,
     IkeMode,
     IpsecCiphersuite,
     PfsGroup,
-    TunnelApplication,
 )
 
 IpsecTunnelMode = Literal[
@@ -30,7 +30,7 @@ class IpsecAddress(BaseModel):
 
 
 class InterfaceIpsecParcel(_ParcelBase):
-    type_: Literal["interface/ipsec"] = Field(default="interface/ipsec", exclude=True)
+    type_: Literal["lan/vpn/interface/ipsec"] = Field(default="lan/vpn/interface/ipsec", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     interface_name: Union[Global[str], Variable] = Field(validation_alias=AliasPath("data", "ifName"))

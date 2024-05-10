@@ -144,7 +144,7 @@ class AclQos(BaseModel):
 
 
 class InterfaceSviParcel(_ParcelBase):
-    type_: Literal["interface/svi"] = Field(default="interface/svi", exclude=True)
+    type_: Literal["lan/vpn/interface/svi"] = Field(default="lan/vpn/interface/svi", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     shutdown: Union[Global[bool], Variable, Default[bool]] = Field(

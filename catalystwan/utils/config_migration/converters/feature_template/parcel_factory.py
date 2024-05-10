@@ -6,11 +6,6 @@ from typing import Any, Callable, Dict, cast
 from catalystwan.api.template_api import FeatureTemplateInformation
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
-from catalystwan.utils.config_migration.converters.feature_template.dhcp import DhcpTemplateConverter
-from catalystwan.utils.config_migration.converters.feature_template.ethernet import InterfaceEthernetTemplateConverter
-from catalystwan.utils.config_migration.converters.feature_template.snmp import SNMPTemplateConverter
-from catalystwan.utils.config_migration.converters.feature_template.switchport import SwitchportTemplateConverter
-from catalystwan.utils.config_migration.converters.feature_template.wireless_lan import WirelessLanTemplateConverter
 from catalystwan.utils.feature_template.find_template_values import find_template_values
 
 from .aaa import AAATemplateConverter
@@ -20,9 +15,12 @@ from .base import FeatureTemplateConverter
 from .basic import SystemToBasicTemplateConverter
 from .bfd import BFDTemplateConverter
 from .bgp import BGPTemplateConverter
+from .dhcp import DhcpTemplateConverter
 from .global_ import GlobalTemplateConverter
-from .gre import InterfaceGRETemplateConverter
-from .ipsec import InterfaceIpsecTemplateConverter
+from .lan.ethernet import InterfaceEthernetTemplateConverter
+from .lan.gre import LanInterfaceGreTemplateConverter
+from .lan.ipsec import InterfaceIpsecTemplateConverter
+from .lan.svi import InterfaceSviTemplateConverter
 from .logging_ import LoggingTemplateConverter
 from .multicast import (
     IgmpToMulticastTemplateConverter,
@@ -34,18 +32,21 @@ from .ntp import NTPTemplateConverter
 from .omp import OMPTemplateConverter
 from .ospf import OspfTemplateConverter
 from .ospfv3 import Ospfv3TemplateConverter
-from .protocol_over import (
+from .security import SecurityTemplateConverter
+from .snmp import SNMPTemplateConverter
+from .switchport import SwitchportTemplateConverter
+from .thousandeyes import ThousandEyesTemplateConverter
+from .ucse import UcseTemplateConverter
+from .vpn import VpnTemplateConverter
+from .wan.gre import WanInterfaceGreTemplateConverter
+from .wan.protocol_over import (
     InterfaceDslIPoETemplateConverter,
     InterfaceDslPppoaTemplateConverter,
     InterfaceDslPppoeTemplateConverter,
     InterfaceEthernetPppoeTemplateConverter,
 )
-from .security import SecurityTemplateConverter
-from .svi import InterfaceSviTemplateConverter
-from .t1e1serial import T1E1SerialTemplateConverter
-from .thousandeyes import ThousandEyesTemplateConverter
-from .ucse import UcseTemplateConverter
-from .vpn import VpnTemplateConverter
+from .wan.t1e1serial import T1E1SerialTemplateConverter
+from .wireless_lan import WirelessLanTemplateConverter
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +67,7 @@ available_converters = [
     SNMPTemplateConverter,
     AppqoeTemplateConverter,
     VpnTemplateConverter,
-    InterfaceGRETemplateConverter,
+    LanInterfaceGreTemplateConverter,
     InterfaceSviTemplateConverter,
     InterfaceEthernetTemplateConverter,
     InterfaceIpsecTemplateConverter,
@@ -82,6 +83,8 @@ available_converters = [
     InterfaceDslPppoeTemplateConverter,
     InterfaceDslPppoaTemplateConverter,
     InterfaceDslIPoETemplateConverter,
+    LanInterfaceGreTemplateConverter,
+    WanInterfaceGreTemplateConverter,
 ]
 
 

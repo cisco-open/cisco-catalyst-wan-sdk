@@ -6,37 +6,19 @@ from typing import Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+from catalystwan.models.configuration.feature_profile.common import AdvancedGre, Prefix, TunnelSourceType
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import (
     IkeCiphersuite,
     IkeGroup,
     IkeMode,
     IpsecCiphersuite,
     PfsGroup,
-    TunnelApplication,
 )
 
 GreTunnelMode = Literal[
     "ipv4",
     "ipv6",
 ]
-
-
-class GreAddress(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    address: Union[Variable, Global[str]]
-    mask: Union[Variable, Global[str]]
-
-
-class TunnelSourceIP(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    tunnel_source: Union[Global[str], Variable] = Field(
-        serialization_alias="tunnelSource", validation_alias="tunnelSource"
-    )
-    tunnel_route_via: Optional[Union[Global[str], Variable, Default[None]]] = Field(
-        serialization_alias="tunnelRouteVia", validation_alias="tunnelRouteVia", default=None
-    )
 
 
 class TunnelSourceIPv6(BaseModel):
@@ -47,39 +29,6 @@ class TunnelSourceIPv6(BaseModel):
     )
     tunnel_route_via: Optional[Union[Global[str], Variable, Default[None]]] = Field(
         serialization_alias="tunnelRouteVia", validation_alias="tunnelRouteVia", default=None
-    )
-
-
-class TunnelSourceInterface(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    tunnel_source_interface: Union[Global[str], Variable] = Field(
-        serialization_alias="tunnelSourceInterface", validation_alias="tunnelSourceInterface"
-    )
-    tunnel_route_via: Optional[Union[Global[str], Variable, Default[None]]] = Field(
-        serialization_alias="tunnelRouteVia", validation_alias="tunnelRouteVia", default=None
-    )
-
-
-class GreSourceIp(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    source_ip: TunnelSourceIP = Field(serialization_alias="sourceIp", validation_alias="sourceIp")
-
-
-class GreSourceNotLoopback(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    source_not_loopback: TunnelSourceInterface = Field(
-        serialization_alias="sourceNotLoopback", validation_alias="sourceNotLoopback"
-    )
-
-
-class GreSourceLoopback(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    source_loopback: TunnelSourceInterface = Field(
-        serialization_alias="sourceLoopback", validation_alias="sourceLoopback"
     )
 
 
@@ -96,7 +45,7 @@ class BasicGre(BaseModel):
         serialization_alias="ifName", validation_alias="ifName", description="Minimum length of the value should be 4."
     )
     description: Union[Global[str], Variable, Default[None]] = Field(default=Default[None](value=None))
-    address: Optional[GreAddress] = None
+    address: Optional[Prefix] = None
     ipv6_address: Optional[Union[Global[str], Global[IPv6Interface], Variable, Default[None]]] = Field(
         serialization_alias="ipv6Address", validation_alias="ipv6Address", default=None
     )
@@ -109,7 +58,7 @@ class BasicGre(BaseModel):
         serialization_alias="tunnelMode",
         validation_alias="tunnelMode",
     )
-    tunnel_source_type: Optional[Union[GreSourceIp, GreSourceNotLoopback, GreSourceLoopback, GreSourceIPv6]] = Field(
+    tunnel_source_type: Optional[Union[TunnelSourceType, GreSourceIPv6]] = Field(
         serialization_alias="tunnelSourceType", validation_alias="tunnelSourceType", default=None
     )
     tunnel_destination: Union[Global[str], Global[IPv4Address], Variable] = Field(
@@ -185,14 +134,8 @@ class BasicGre(BaseModel):
     )
 
 
-class AdvancedGre(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    application: Optional[Union[Global[TunnelApplication], Variable]] = None
-
-
 class InterfaceGreParcel(_ParcelBase):
-    type_: Literal["interface/gre"] = Field(default="interface/gre", exclude=True)
+    type_: Literal["lan/vpn/interface/gre"] = Field(default="lan/vpn/interface/gre", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     basic: BasicGre = Field(validation_alias=AliasPath("data", "basic"))

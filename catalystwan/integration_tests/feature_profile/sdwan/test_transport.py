@@ -5,8 +5,9 @@ from uuid import UUID
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
 from catalystwan.models.common import Carrier, CoreRegion, EncapType, SecondaryRegion, TLOCColor
-from catalystwan.models.configuration.feature_profile.common import MultiRegionFabric
+from catalystwan.models.configuration.feature_profile.common import AdvancedGre, MultiRegionFabric
 from catalystwan.models.configuration.feature_profile.common import Prefix as CommonPrefix
+from catalystwan.models.configuration.feature_profile.common import SourceLoopback, TunnelSourceType
 from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1controller import (
     E1,
     T1,
@@ -42,6 +43,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import
     SubnetMask,
     TransportVpnParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.gre import Basic, InterfaceGreParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
     AclQos as AclQosPPPoE,
 )
@@ -633,6 +635,37 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, dslipoe_parcel, self.wan_uuid).id
+        # Assert
+        assert parcel_id
+
+    def test_when_fully_specified_gre_interface_parcel_expect_successful_post(self):
+        # Arrange
+        gre_parcel = InterfaceGreParcel(
+            parcel_name="InterfaceGreParcel",
+            parcel_description="Description",
+            basic=Basic(
+                address=CommonPrefix(
+                    address=Global[IPv4Address](value=IPv4Address("39.5.0.97")),
+                    mask=Variable(value="{{QPg11165441vY1}}"),
+                ),
+                if_name=Global[str](value="gre23"),
+                tunnel_destination=Global[IPv4Address](value=IPv4Address("3.3.3.3")),
+                clear_dont_fragment=Global[bool](value=True),
+                description=Global[str](value="QsLBBBBBCF"),
+                mtu=Global[int](value=1500),
+                shutdown=Global[bool](value=True),
+                tcp_mss_adjust=Global[int](value=600),
+                tunnel_source_type=TunnelSourceType(
+                    source_loopback=SourceLoopback(
+                        tunnel_route_via=Global[str](value="xSVIxuF"),
+                        tunnel_source_interface=Global[str](value="YnBabgxBUm"),
+                    )
+                ),
+            ),
+            advanced=AdvancedGre(application=Global[Literal["none", "sig"]](value="sig")),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, gre_parcel, self.wan_uuid).id
         # Assert
         assert parcel_id
 

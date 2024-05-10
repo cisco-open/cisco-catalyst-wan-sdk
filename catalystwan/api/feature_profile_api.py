@@ -194,14 +194,14 @@ class TransportFeatureProfileAPI:
         """
         if vpn_uuid is not None:
             vpn_parcel = self._get_vpn_parcel(profile_id, vpn_uuid).payload
+            # All interface parcels start with prefix wan/vpn to diffrentiate between
+            # transport and service parcels, but the actual endpoint does not require
+            # the prefix, so we remove it here.
+            parcel_type = payload._get_parcel_type().replace("wan/vpn/", "")
             if vpn_parcel._get_parcel_type() == TransportVpnParcel._get_parcel_type():
-                return self.endpoint.create_transport_vpn_sub_parcel(
-                    profile_id, vpn_uuid, payload._get_parcel_type(), payload
-                )
+                return self.endpoint.create_transport_vpn_sub_parcel(profile_id, vpn_uuid, parcel_type, payload)
             else:
-                return self.endpoint.create_management_vpn_sub_parcel(
-                    profile_id, vpn_uuid, payload._get_parcel_type(), payload
-                )
+                return self.endpoint.create_management_vpn_sub_parcel(profile_id, vpn_uuid, parcel_type, payload)
         return self.endpoint.create_transport_parcel(profile_id, payload._get_parcel_type(), payload)
 
     def _get_vpn_parcel(
@@ -362,9 +362,8 @@ class ServiceFeatureProfileAPI:
                     profile_uuid, vpn_uuid, payload._get_parcel_type(), ParcelAssociationPayload(parcel_id=response.id)
                 )
             else:
-                return self.endpoint.create_lan_vpn_sub_parcel(
-                    profile_uuid, vpn_uuid, payload._get_parcel_type(), payload
-                )
+                parcel_type = payload._get_parcel_type().replace("lan/vpn/", "")
+                return self.endpoint.create_lan_vpn_sub_parcel(profile_uuid, vpn_uuid, parcel_type, payload)
         return self.endpoint.create_service_parcel(profile_uuid, payload._get_parcel_type(), payload)
 
     def delete_parcel(self, profile_uuid: UUID, parcel_type: Type[AnyServiceParcel], parcel_uuid: UUID) -> None:

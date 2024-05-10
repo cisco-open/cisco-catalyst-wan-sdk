@@ -22,12 +22,13 @@ from catalystwan.utils.config_migration.converters.policy.policy_lists import Po
 from catalystwan.utils.config_migration.converters.policy.policy_lists import convert as convert_policy_list
 from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigRollback
 from catalystwan.utils.config_migration.reverters.config_reverter import UX2ConfigReverter
-from catalystwan.utils.config_migration.steps.transform import (
+from catalystwan.utils.config_migration.steps.constants import (
     CISCO_VPN_SERVICE,
     CISCO_VPN_TRANSPORT_AND_MANAGEMENT,
-    merge_parcels,
-    resolve_template_type,
+    LAN_VPN_GRE,
+    WAN_VPN_GRE,
 )
+from catalystwan.utils.config_migration.steps.transform import merge_parcels, resolve_template_type
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,6 @@ SUPPORTED_TEMPLATE_TYPES = [
     "dhcp",
     "cisco_dhcp_server",
     "cisco_vpn",
-    "cisco_vpn_interface_gre",
     "vpn-vsmart-interface",
     "vpn-vedge-interface",
     "vpn-vmanage-interface",
@@ -85,6 +85,8 @@ SUPPORTED_TEMPLATE_TYPES = [
     "vpn-interface-pppoe",
     "vpn-interface-pppoa",
     "vpn-interface-ipoe",
+    WAN_VPN_GRE,
+    LAN_VPN_GRE,
 ]
 
 FEATURE_PROFILE_SYSTEM = [

@@ -457,7 +457,9 @@ class InterfaceBase(_ParcelBase):
 
 
 class InterfaceEthPPPoEParcel(InterfaceBase):
-    type_: Literal["interface/ethpppoe"] = Field(default="interface/ethpppoe", frozen=True, exclude=True)
+    type_: Literal["wan/vpn/interface/ethpppoe"] = Field(
+        default="wan/vpn/interface/ethpppoe", frozen=True, exclude=True
+    )
     ethernet: Optional[Ethernet] = Field(
         default=None,
         validation_alias=AliasPath("data", "ethernet"),
@@ -466,7 +468,9 @@ class InterfaceEthPPPoEParcel(InterfaceBase):
 
 
 class InterfaceDslPPPoEParcel(InterfaceBase):
-    type_: Literal["interface/dsl-pppoe"] = Field(default="interface/dsl-pppoe", frozen=True, exclude=True)
+    type_: Literal["wan/vpn/interface/dsl-pppoe"] = Field(
+        default="wan/vpn/interface/dsl-pppoe", frozen=True, exclude=True
+    )
     vdsl: Optional[Vdsl] = Field(default=None, validation_alias=AliasPath("data", "vdsl"), description="vdsl")
     ethernet: Optional[Ethernet] = Field(
         default=None,
@@ -476,7 +480,9 @@ class InterfaceDslPPPoEParcel(InterfaceBase):
 
 
 class InterfaceDslPPPoAParcel(InterfaceBase):
-    type_: Literal["interface/dsl-pppoa"] = Field(default="interface/dsl-pppoa", frozen=True, exclude=True)
+    type_: Literal["wan/vpn/interface/dsl-pppoa"] = Field(
+        default="wan/vpn/interface/dsl-pppoa", frozen=True, exclude=True
+    )
     atm_interface: Optional[AtmInterface] = Field(
         default=None, validation_alias=AliasPath("data", "atmInterface"), description="ATM Interface attributes"
     )
@@ -484,7 +490,9 @@ class InterfaceDslPPPoAParcel(InterfaceBase):
 
 
 class InterfaceDslIPoEParcel(InterfaceBase):
-    type_: Literal["interface/dsl-ipoe"] = Field(default="interface/dsl-ipoe", frozen=True, exclude=True)
+    type_: Literal["wan/vpn/interface/dsl-ipoe"] = Field(
+        default="wan/vpn/interface/dsl-ipoe", frozen=True, exclude=True
+    )
     ethernet: Optional[IPoEEthernet] = Field(
         default=None,
         validation_alias=AliasPath("data", "ethernet"),

@@ -57,10 +57,6 @@ PfsGroup = Literal[
     "none",
 ]
 
-TunnelApplication = Literal[
-    "none",
-    "sig",
-]
 
 VrrpTrackerAction = Literal[
     "Decrement",
