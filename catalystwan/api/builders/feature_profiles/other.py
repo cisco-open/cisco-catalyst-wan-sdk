@@ -4,9 +4,10 @@ import logging
 from typing import TYPE_CHECKING, List
 from uuid import UUID
 
+from catalystwan.api.builders.feature_profiles.handler import handle_build_rapport
 from catalystwan.api.feature_profile_api import OtherFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.other import OtherFeatureProfile
-from catalystwan.exceptions import ManagerHTTPError
+from catalystwan.models.builders import FeatureProfileBuildRapport
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.configuration.feature_profile.sdwan.other import AnyOtherParcel
 
@@ -59,17 +60,20 @@ class OtherFeatureProfileBuilder:
         """
         self._independent_items.append(parcel)
 
-    def build(self) -> UUID:
+    def build(self) -> FeatureProfileBuildRapport:
         """
         Builds the feature profile.
 
         Returns:
             UUID: The UUID of the created feature profile.
         """
-        try:
-            profile_uuid = self._endpoints.create_sdwan_other_feature_profile(self._profile).id
-            for parcel in self._independent_items:
-                self._api.create_parcel(profile_uuid, parcel)
-        except ManagerHTTPError as e:
-            logger.error(f"Error occured during building profile: {e.info}")
-        return profile_uuid
+
+        profile_uuid = self._endpoints.create_sdwan_other_feature_profile(self._profile).id
+        self.build_rapport = FeatureProfileBuildRapport(profile_uuid=profile_uuid, profile_name=self._profile.name)
+        for parcel in self._independent_items:
+            self._create_parcel(profile_uuid, parcel)
+        return self.build_rapport
+
+    @handle_build_rapport
+    def _create_parcel(self, profile_uuid: UUID, parcel: AnyOtherParcel) -> UUID:
+        return self._api.create_parcel(profile_uuid, parcel).id

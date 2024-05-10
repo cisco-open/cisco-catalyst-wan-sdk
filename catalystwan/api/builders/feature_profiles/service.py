@@ -2,17 +2,19 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import TYPE_CHECKING, Dict, List, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 from uuid import UUID, uuid4
 
 from pydantic import Field
 from typing_extensions import Annotated
 
+from catalystwan.api.builders.feature_profiles.handler import handle_build_rapport
 from catalystwan.api.feature_profile_api import ServiceFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
-from catalystwan.exceptions import ManagerHTTPError
+from catalystwan.models.builders import FeatureProfileBuildRapport
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
+    AnyServiceParcel,
     AppqoeParcel,
     InterfaceEthernetParcel,
     InterfaceGreParcel,
@@ -109,7 +111,7 @@ class ServiceFeatureProfileBuilder:
         logger.debug(f"Adding subparcel parcel {parcel.parcel_name} to VPN {vpn_tag}")
         self._depended_items_on_vpns[vpn_tag].append(parcel)
 
-    def build(self) -> UUID:
+    def build(self) -> FeatureProfileBuildRapport:
         """
         Builds the feature profile by creating parcels for independent items,
         VPNs, and sub-parcels dependent on VPNs.
@@ -118,17 +120,29 @@ class ServiceFeatureProfileBuilder:
             Service feature profile UUID
         """
         profile_uuid = self._endpoints.create_sdwan_service_feature_profile(self._profile).id
-        try:
-            for parcel in self._independent_items:
-                self._api.create_parcel(profile_uuid, parcel)
-
-            for vpn_tag, vpn_parcel in self._independent_items_vpns.items():
-                vpn_uuid = self._api.create_parcel(profile_uuid, vpn_parcel).id
-
+        self.build_rapport = FeatureProfileBuildRapport(profile_uuid=profile_uuid, profile_name=self._profile.name)
+        for parcel in self._independent_items:
+            self._create_parcel(profile_uuid, parcel)
+        for vpn_tag, vpn_parcel in self._independent_items_vpns.items():
+            vpn_uuid = self._create_parcel(profile_uuid, vpn_parcel)
+            if vpn_uuid is None:
                 for sub_parcel in self._depended_items_on_vpns[vpn_tag]:
-                    logger.debug(f"Creating subparcel parcel {sub_parcel.parcel_name} to VPN {vpn_uuid}")
-                    self._api.create_parcel(profile_uuid, sub_parcel, vpn_uuid)
-        except ManagerHTTPError as e:
-            logger.error(f"Error occured during building profile: {e.info}")
+                    subparcel_fail_message = (
+                        f"Parent parcel: {vpn_parcel.parcel_name} failed to create. This subparcel is dependent on it."
+                    )
+                    self.build_rapport.add_failed_parcel(
+                        sub_parcel.parcel_name,
+                        sub_parcel._get_parcel_type(),  # type: ignore
+                        subparcel_fail_message
+                        # incompatible type "str"; expected ParcelType, we will fix _get_parcel_type()
+                        # to return ParcelType but for now it gives circular import
+                    )
+            else:
+                for sub_parcel in self._depended_items_on_vpns[vpn_tag]:
+                    self._create_parcel(profile_uuid, sub_parcel, vpn_uuid)
 
-        return profile_uuid
+        return self.build_rapport
+
+    @handle_build_rapport
+    def _create_parcel(self, profile_uuid: UUID, parcel: AnyServiceParcel, vpn_uuid: Optional[None] = None) -> UUID:
+        return self._api.create_parcel(profile_uuid, parcel, vpn_uuid).id

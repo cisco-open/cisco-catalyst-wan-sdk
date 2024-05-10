@@ -4,6 +4,7 @@ from typing import Dict, List, cast
 from uuid import UUID
 
 from catalystwan.api.builders.feature_profiles.transport import TransportAndManagementProfileBuilder
+from catalystwan.models.builders import FeatureProfileBuildRapport
 from catalystwan.models.configuration.config_migration import TransformedParcel
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyAssociatoryParcel
@@ -27,7 +28,7 @@ class ParcelPusher:
         feature_profile: FeatureProfileCreationPayload,
         target_parcels: List[TransformedParcel],
         all_parcels: Dict[UUID, TransformedParcel],
-    ) -> UUID:
+    ) -> FeatureProfileBuildRapport:
         raise NotImplementedError
 
 
@@ -42,7 +43,7 @@ class SimpleParcelPusher(ParcelPusher):
         feature_profile: FeatureProfileCreationPayload,
         target_parcels: List[TransformedParcel],
         all_parcels: Dict[UUID, TransformedParcel],
-    ) -> UUID:
+    ) -> FeatureProfileBuildRapport:
         for transformed_parcel in target_parcels:
             self.builder.add_parcel(transformed_parcel.parcel)  # type: ignore
         self.builder.add_profile_name_and_description(feature_profile)
@@ -63,7 +64,7 @@ class ServiceParcelPusher(ParcelPusher):
         feature_profile: FeatureProfileCreationPayload,
         target_parcels: List[TransformedParcel],
         all_parcels: Dict[UUID, TransformedParcel],
-    ) -> UUID:
+    ) -> FeatureProfileBuildRapport:
         for transformed_parcel in target_parcels:
             parcel = transformed_parcel.parcel
             if not isinstance(parcel, LanVpnParcel):
@@ -107,7 +108,7 @@ class TransportAndManagementParcelPusher(ParcelPusher):
         feature_profile: FeatureProfileCreationPayload,
         target_parcels: List[TransformedParcel],
         all_parcels: Dict[UUID, TransformedParcel],
-    ) -> UUID:
+    ) -> FeatureProfileBuildRapport:
         for transformed_parcel in target_parcels:
             parcel = transformed_parcel.parcel
             if isinstance(parcel, (ManagementVpnParcel, TransportVpnParcel)):

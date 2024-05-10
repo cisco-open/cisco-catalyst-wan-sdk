@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from catalystwan.api.templates.device_template.device_template import DeviceTemplate, GeneralTemplate
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
+from catalystwan.models.builders import FailedParcel, FeatureProfileBuildRapport
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
 from catalystwan.models.configuration.topology_group import TopologyGroup
@@ -30,7 +31,7 @@ class DeviceTemplateWithInfo(DeviceTemplate):
             template_id=info.id,
             factory_default=info.factory_default,
             devices_attached=info.devices_attached,
-            **info_dict
+            **info_dict,
         )
 
     def get_flattened_general_templates(self) -> List[GeneralTemplate]:
@@ -168,6 +169,63 @@ class UX2Config(BaseModel):
         return values
 
 
+class ConfigGroupRapport(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+    name: str = Field(
+        serialization_alias="ConfigGroupName",
+        validation_alias="ConfigGroupName",
+        description="Name of the Config Group created from Device Template",
+    )
+    uuid: UUID = Field(
+        serialization_alias="ConfigGroupUuid",
+        validation_alias="ConfigGroupUuid",
+        description="UUID of the Config Group created from Device Template",
+    )
+    feature_profiles: List[FeatureProfileBuildRapport] = Field(
+        default=[],
+        serialization_alias="FeatureProfiles",
+        validation_alias="FeatureProfiles",
+        description="List of Feature Profiles created from Device Template and attached to the Config Group",
+    )
+
+
+class UX2ConfigPushRapport(BaseModel):
+    config_groups: List[ConfigGroupRapport] = Field(
+        default_factory=list, serialization_alias="ConfigGroups", validation_alias="ConfigGroups"
+    )
+    success_rate_message: str = Field(
+        default="", serialization_alias="SuccessRateMessage", validation_alias="SuccessRateMessage"
+    )
+    failed_parcels: List[FailedParcel] = Field(
+        default_factory=list, serialization_alias="FailedParcels", validation_alias="FailedParcels"
+    )
+
+    def add_rapport(self, name: str, uuid: UUID, feature_profiles: List[FeatureProfileBuildRapport]) -> None:
+        self.config_groups.append(ConfigGroupRapport(name=name, uuid=uuid, feature_profiles=feature_profiles))
+
+    def set_success_rate(self):
+        created_parcels = 0
+        failed_parcels = 0
+        for config_group in self.config_groups:
+            for feature_profile in config_group.feature_profiles:
+                created_parcels += len(feature_profile.created_parcels)
+                failed_parcels += len(feature_profile.failed_parcels)
+        all_parcels = created_parcels + failed_parcels
+        self.success_rate_message = (
+            f"{created_parcels}/{all_parcels} "
+            f"({int((created_parcels / all_parcels) * 100)}%)"
+            " parcels created successfully."
+        )
+
+    def set_flatlist_of_failed_parcels(self):
+        failed_parcels = []
+        for config_group in self.config_groups:
+            for feature_profile in config_group.feature_profiles:
+                for failed_parcel in feature_profile.failed_parcels:
+                    failed_parcels.append(failed_parcel)
+        self.failed_parcels = failed_parcels
+
+
 class UX2ConfigRollback(BaseModel):
     config_group_ids: List[UUID] = Field(
         default_factory=list,
@@ -178,6 +236,12 @@ class UX2ConfigRollback(BaseModel):
         default_factory=list,
         serialization_alias="FeatureProfileIds",
         validation_alias="FeatureProfileIds",
+    )
+
+    rapport: UX2ConfigPushRapport = Field(
+        default=UX2ConfigPushRapport(),
+        serialization_alias="ConfigPushRapport",
+        validation_alias="ConfigPushRapport",
     )
 
     def add_config_group(self, config_group_id: UUID) -> None:
