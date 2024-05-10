@@ -1,6 +1,5 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-# mypy: disable-error-code="empty-body"
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Optional, Protocol, Type, Union, overload
@@ -1324,7 +1323,7 @@ class DnsSecurityFeatureProfileAPI:
         profile_id: UUID,
         parcel_type: Type[DnsParcel],
     ) -> DataSequence[Parcel[DnsParcel]]:
-        ...
+        return self.endpoint.get_all(profile_id, parcel_type._get_parcel_type())
 
     def get_parcel(
         self,
@@ -1332,7 +1331,7 @@ class DnsSecurityFeatureProfileAPI:
         parcel_type: Type[DnsParcel],
         parcel_id: UUID,
     ) -> Parcel[DnsParcel]:
-        ...
+        return self.endpoint.get_by_id(profile_id, parcel_type._get_parcel_type(), parcel_id)
 
     def create_parcel(self, profile_id: UUID, payload: AnyDnsSecurityParcel) -> ParcelCreationResponse:
         """
