@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from catalystwan.endpoints.configuration_group import ProfileId
-from catalystwan.models.builders import FeatureProfileBuildRapport
+from catalystwan.models.builders import FeatureProfileBuildRaport
 from catalystwan.models.configuration.config_migration import (
     TransformedFeatureProfile,
     TransformedParcel,
@@ -35,6 +35,8 @@ class UX2ConfigPusher:
         self._ux2_config = ux2_config
         self._progress = progress
 
+        self._config_rollback.raport.failed_converion_parcels = ux2_config.failed_conversion_parcels
+
     def _create_config_map(self, ux2_config: UX2Config) -> ConfigurationMapping:
         return ConfigurationMapping(
             feature_profile_map={item.header.origin: item for item in ux2_config.feature_profiles},
@@ -43,8 +45,8 @@ class UX2ConfigPusher:
 
     def push(self) -> UX2ConfigRollback:
         self._create_config_groups()
-        self._config_rollback.rapport.set_flatlist_of_failed_parcels()
-        self._config_rollback.rapport.set_success_rate()
+        self._config_rollback.raport.set_failed_push_parcels_flat_list()
+        self._config_rollback.raport.set_push_success_rate()
         logger.debug(f"Configuration push completed. Rollback configuration {self._config_rollback}")
         return self._config_rollback
 
@@ -63,14 +65,14 @@ class UX2ConfigPusher:
             config_group_payload.profiles = [ProfileId(id=profile.profile_uuid) for profile in created_profiles]
             cg_id = self._session.endpoints.configuration_group.create_config_group(config_group_payload).id
             self._config_rollback.add_config_group(cg_id)
-            self._config_rollback.rapport.add_rapport(
+            self._config_rollback.raport.add_rapport(
                 name=transformed_config_group.config_group.name,
                 uuid=cg_id,
                 feature_profiles=created_profiles,
             )
 
-    def _create_feature_profile_and_parcels(self, feature_profiles_ids: List[UUID]) -> List[FeatureProfileBuildRapport]:
-        feature_profiles: List[FeatureProfileBuildRapport] = []
+    def _create_feature_profile_and_parcels(self, feature_profiles_ids: List[UUID]) -> List[FeatureProfileBuildRaport]:
+        feature_profiles: List[FeatureProfileBuildRaport] = []
         feature_profile_length = len(feature_profiles_ids)
         for i, feature_profile_id in enumerate(feature_profiles_ids):
             self._progress("Creating Feature Profile", i + 1, feature_profile_length)
