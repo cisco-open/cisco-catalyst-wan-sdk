@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Final, List
 from jinja2 import DebugUndefined, Environment, FileSystemLoader, meta  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from catalystwan.utils.device_model import DeviceModel
+from catalystwan.models.common import DeviceModel
 
 if TYPE_CHECKING:
     from catalystwan.session import ManagerSession

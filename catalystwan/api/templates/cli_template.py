@@ -13,7 +13,7 @@ from requests.exceptions import HTTPError
 
 from catalystwan.dataclasses import Device
 from catalystwan.exceptions import TemplateTypeError
-from catalystwan.utils.device_model import DeviceModel
+from catalystwan.models.common import DeviceModel
 from catalystwan.utils.template_type import TemplateType
 
 logger = logging.getLogger(__name__)
@@ -67,16 +67,16 @@ class CLITemplate:
         payload = {
             "templateName": self.template_name,
             "templateDescription": self.template_description,
-            "deviceType": self.device_model.value,
+            "deviceType": self.device_model,
             "templateConfiguration": config_str,
             "factoryDefault": False,
             "configType": "file",
         }
         if self.device_model not in [
-            DeviceModel.VEDGE,
-            DeviceModel.VSMART,
-            DeviceModel.VMANAGE,
-            DeviceModel.VBOND,
+            "vedge",
+            "vsmart",
+            "vmanage",
+            "vedge-cloud",
         ]:
             payload["cliType"] = "device"
             payload["draftMode"] = False
@@ -100,7 +100,7 @@ class CLITemplate:
             "templateId": id,
             "templateName": self.template_name,
             "templateDescription": self.template_description,
-            "deviceType": self.device_model.value,
+            "deviceType": self.device_model,
             "templateConfiguration": config_str,
             "factoryDefault": False,
             "configType": "file",

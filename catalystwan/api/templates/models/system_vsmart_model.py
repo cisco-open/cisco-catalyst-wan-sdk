@@ -6,43 +6,18 @@ from typing import ClassVar, Literal, Optional
 from pydantic import ConfigDict, Field
 
 from catalystwan.api.templates.feature_template import FeatureTemplate, FeatureTemplateValidator
-from catalystwan.utils.timezone import Timezone
+from catalystwan.models.common import Timezone, TLOCColor
 
 Toology = Literal["Hub and Spoke"]
 
-TlocColor = Literal[
-    "default",
-    "mpls",
-    "metro-ethernet",
-    "biz-internet",
-    "public-internet",
-    "lte",
-    "3g",
-    "red",
-    "green",
-    "blue",
-    "gold",
-    "silver",
-    "bronze",
-    "custom1",
-    "custom2",
-    "custom3",
-    "private1",
-    "private2",
-    "private3",
-    "private4",
-    "private5",
-    "private6",
-]
-
 
 class TlocColorComparison(FeatureTemplateValidator):
-    color_1: Optional[TlocColor] = Field(
+    color_1: Optional[TLOCColor] = Field(
         default=None,
         description="First TLOC color in comparsion",
         json_schema_extra={"vmanage_key": "color-1"},
     )
-    color_2: Optional[TlocColor] = Field(
+    color_2: Optional[TLOCColor] = Field(
         default=None,
         description="Second TLOC color in comparsion",
         json_schema_extra={"vmanage_key": "color-2"},

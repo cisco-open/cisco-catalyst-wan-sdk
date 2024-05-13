@@ -1,0 +1,577 @@
+{
+    "name": "cisco_logging",
+    "xmlPath": [
+        "system"
+    ],
+    "xmlRootTag": "logging",
+    "nameSpace": "http://viptela.com/system",
+    "fields": [
+        {
+            "key": "enable",
+            "description": "Enable Disk",
+            "details": "Enable logging to local disk",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "boolean",
+                "default": "true"
+            },
+            "dataPath": [
+                "disk"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "size",
+            "description": "Maximum File Size (MB)",
+            "details": "Set maximum size of file before it is rotated",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "number",
+                "min": 1,
+                "max": 20,
+                "default": 10
+            },
+            "dataPath": [
+                "disk",
+                "file"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "rotate",
+            "description": "Rotations",
+            "details": "Set number of syslog files to create before discarding oldest files",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "number",
+                "min": 1,
+                "max": 10,
+                "default": 10
+            },
+            "dataPath": [
+                "disk",
+                "file"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "tls-profile",
+            "description": "Configure a TLS profile",
+            "details": "Configure a TLS profile",
+            "optionType": [
+                "constant",
+                "variable"
+            ],
+            "defaultOption": "constant",
+            "dataPath": [],
+            "objectType": "tree",
+            "primaryKeys": [
+                "profile"
+            ],
+            "children": [
+                {
+                    "key": "profile",
+                    "description": "Profile Name",
+                    "details": "Specify the name of the TLS profile",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "string"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "version",
+                    "description": "TLS Version",
+                    "details": "TLS Version",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "TLSv1.1",
+                                "value": "TLSv1.1"
+                            },
+                            {
+                                "key": "TLSv1.2",
+                                "value": "TLSv1.2"
+                            }
+                        ],
+                        "default": "TLSv1.1"
+                    },
+                    "dataPath": [
+                        "tls-version"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "auth-type",
+                    "description": "Authentication Type",
+                    "details": "Authentication Type",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "Server",
+                                "value": "Server"
+                            },
+                            {
+                                "key": "Mutual",
+                                "value": "Mutual"
+                            }
+                        ]
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "ciphersuite-list",
+                    "description": "Ciphersuites",
+                    "details": "Syslog secure server ciphersuites",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataPath": [
+                        "ciphersuite"
+                    ],
+                    "dataType": {
+                        "type": "enumList",
+                        "values": [
+                            {
+                                "key": "aes-128-cbc-sha",
+                                "value": "aes-128-cbc-sha"
+                            },
+                            {
+                                "key": "aes-256-cbc-sha",
+                                "value": "aes-256-cbc-sha"
+                            },
+                            {
+                                "key": "dhe-aes-cbc-sha2",
+                                "value": "dhe-aes-cbc-sha2"
+                            },
+                            {
+                                "key": "dhe-aes-gcm-sha2",
+                                "value": "dhe-aes-gcm-sha2"
+                            },
+                            {
+                                "key": "ecdhe-ecdsa-aes-gcm-sha2",
+                                "value": "ecdhe-ecdsa-aes-gcm-sha2"
+                            },
+                            {
+                                "key": "ecdhe-rsa-aes-cbc-sha2",
+                                "value": "ecdhe-rsa-aes-cbc-sha2"
+                            },
+                            {
+                                "key": "ecdhe-rsa-aes-gcm-sha2",
+                                "value": "ecdhe-rsa-aes-gcm-sha2"
+                            },
+                            {
+                                "key": "rsa-aes-cbc-sha2",
+                                "value": "rsa-aes-cbc-sha2"
+                            },
+                            {
+                                "key": "rsa-aes-gcm-sha2",
+                                "value": "rsa-aes-gcm-sha2"
+                            }
+                        ]
+                    },
+                    "objectType": "object"
+                }
+            ]
+        },
+        {
+            "key": "server",
+            "description": "Remote host",
+            "details": "Enable logging to remote server",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataPath": [],
+            "objectType": "tree",
+            "primaryKeys": [
+                "name"
+            ],
+            "minChildren": "0",
+            "maxChildren": "7",
+            "children": [
+                {
+                    "key": "name",
+                    "description": "Hostname/IPv4 Address",
+                    "details": "Set hostname or IPv4 address of server",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "string"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "vpn",
+                    "description": "VPN ID",
+                    "details": "Set VPN in which syslog server is located",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 0,
+                        "max": 65530,
+                        "default": 0
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "source-interface",
+                    "description": "Source Interface",
+                    "details": "Set interface to use to reach syslog server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string",
+                        "minLength": 0,
+                        "maxLength": 32
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "priority",
+                    "description": "Priority",
+                    "details": "Set logging level for messages logged to server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "information",
+                                "value": "Informational: Informational messages"
+                            },
+                            {
+                                "key": "debugging",
+                                "value": "Debugging: Debug messages"
+                            },
+                            {
+                                "key": "notice",
+                                "value": "Notifications: Normal but significant conditions"
+                            },
+                            {
+                                "key": "warn",
+                                "value": "Warnings: Warning conditions"
+                            },
+                            {
+                                "key": "error",
+                                "value": "Errors: Error conditions"
+                            },
+                            {
+                                "key": "critical",
+                                "value": "Critical: Critical conditions"
+                            },
+                            {
+                                "key": "alert",
+                                "value": "Alerts: Immediate action needed"
+                            },
+                            {
+                                "key": "emergency",
+                                "value": "Emergencies: System is unusable"
+                            }
+                        ],
+                        "default": "information"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "enable-tls",
+                    "description": "TLS",
+                    "details": "Enable TLS",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "dataPath": [
+                        "tls"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "custom-profile",
+                    "description": "Custom Profile",
+                    "details": "Define custom profile",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "dataPath": [
+                        "tls",
+                        "tls-properties"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "profile",
+                    "description": "TLS Profile",
+                    "details": "Configure a TLS profile",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string"
+                    },
+                    "dataPath": [
+                        "tls",
+                        "tls-properties"
+                    ],
+                    "objectType": "object"
+                }
+            ]
+        },
+        {
+            "key": "ipv6-server",
+            "description": "Remote IPv6 host",
+            "details": "Enable logging to remote IPv6 server",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataPath": [],
+            "objectType": "tree",
+            "primaryKeys": [
+                "name"
+            ],
+            "minChildren": "0",
+            "maxChildren": "7",
+            "children": [
+                {
+                    "key": "name",
+                    "description": "IPv6 Hostname/IPv6 Address",
+                    "details": "Set IPv6 hostname or IPv6 address of server",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "string"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "vpn",
+                    "description": "VPN ID",
+                    "details": "Set VPN in which syslog server is located",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 0,
+                        "max": 65530,
+                        "default": 0
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "source-interface",
+                    "description": "Source Interface",
+                    "details": "Set interface to use to reach syslog server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string",
+                        "minLength": 0,
+                        "maxLength": 32
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "priority",
+                    "description": "Priority",
+                    "details": "Set logging level for messages logged to server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "information",
+                                "value": "Informational: Informational messages"
+                            },
+                            {
+                                "key": "debugging",
+                                "value": "Debugging: Debug messages"
+                            },
+                            {
+                                "key": "notification",
+                                "value": "Notifications: Normal but significant conditions"
+                            },
+                            {
+                                "key": "warn",
+                                "value": "Warnings: Warning conditions"
+                            },
+                            {
+                                "key": "error",
+                                "value": "Errors: Error conditions"
+                            },
+                            {
+                                "key": "critical",
+                                "value": "Critical: Critical conditions"
+                            },
+                            {
+                                "key": "alert",
+                                "value": "Alerts: Immediate action needed"
+                            },
+                            {
+                                "key": "emergency",
+                                "value": "Emergencies: System is unusable"
+                            }
+                        ],
+                        "default": "information"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "enable-tls",
+                    "description": "TLS",
+                    "details": "Enable TLS",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "dataPath": [
+                        "tls"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "custom-profile",
+                    "description": "Custom Profile",
+                    "details": "Define custom profile",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "dataPath": [
+                        "tls",
+                        "tls-properties"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "profile",
+                    "description": "TLS Profile",
+                    "details": "Configure a TLS profile",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string"
+                    },
+                    "dataPath": [
+                        "tls",
+                        "tls-properties"
+                    ],
+                    "objectType": "object"
+                }
+            ]
+        }
+    ]
+}

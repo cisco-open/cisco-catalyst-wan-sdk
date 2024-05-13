@@ -9,12 +9,11 @@ from catalystwan.api.templates.models.cisco_ospf import (
     RoutePolicy,
     RouterLsa,
 )
-from catalystwan.utils.device_model import DeviceModel
 
-cisco_ospf = CiscoOSPFModel(
-    template_name="CiscoOSPFeatureTemplate",
-    template_description="Comprehensive OSPF Configuration",
-    device_models=[DeviceModel.VEDGE_C8000V],
+cisco_ospf_complex = CiscoOSPFModel(
+    template_name="cisco_ospf_complex",
+    template_description="cisco_ospf_complex",
+    device_models=["vedge-C8000V"],
     router_id="1.1.1.1",
     reference_bandwidth=10000,
     rfc1583=False,

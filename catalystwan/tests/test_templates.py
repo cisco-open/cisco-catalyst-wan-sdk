@@ -15,7 +15,6 @@ from catalystwan.api.templates.payloads.aaa.aaa_model import AAAModel, Authentic
 from catalystwan.dataclasses import Device, FeatureTemplateInfo, TemplateInfo
 from catalystwan.typed_list import DataSequence
 from catalystwan.utils.creation_tools import create_dataclass
-from catalystwan.utils.device_model import DeviceModel
 from catalystwan.utils.personality import Personality
 from catalystwan.utils.reachability import Reachability
 
@@ -130,14 +129,14 @@ class TestTemplatesAPI(unittest.TestCase):
                 DeviceTemplate(  # type: ignore
                     template_name="test_device_template",
                     template_description="test_device_template_description",
-                    device_type=DeviceModel.VEDGE_2000,
+                    device_type="vedge-2000",
                     general_templates=[],
                 ),
                 "device_template_id",
             ),
             (
                 CLITemplate(  # type: ignore
-                    template_name="test", template_description="test", device_model=DeviceModel.VEDGE
+                    template_name="test", template_description="test", device_model="vedge-100"
                 ),
                 "cli_id",
             ),
@@ -193,13 +192,13 @@ class TestTemplatesAPI(unittest.TestCase):
                     DeviceTemplate(  # type: ignore
                         template_name="test_device_template",
                         template_description="test_device_template_description",
-                        device_type=DeviceModel.VEDGE_2000,
+                        device_type="vedge-2000",
                         general_templates=[],
                     ),
                     CLITemplate(  # type: ignore
                         template_name="test_cli_template",
                         template_description="test_cli_description",
-                        device_model=DeviceModel.VBOND,
+                        device_model="vedge-cloud",
                     ),
                     CiscoAAAModel(  # type: ignore
                         template_name="test_aaa_model",

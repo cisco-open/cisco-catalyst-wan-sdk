@@ -8,6 +8,7 @@ from pydantic import ConfigDict, Field
 
 from catalystwan.api.templates.bool_str import BoolStr
 from catalystwan.api.templates.feature_template import FeatureTemplate, FeatureTemplateValidator
+from catalystwan.models.common import Protocol, StaticNatDirection, TLOCColor
 
 DEFAULT_STATIC_NAT64_SOURCE_VPN_ID = 0
 DEFAULT_STATIC_NAT_SOURCE_VPN_ID = 0
@@ -23,36 +24,10 @@ DEFAULT_IPV6_VRRP_TIMER = 1000
 
 Direction = Literal["in", "out"]
 NatChoice = Literal["Interface", "Pool", "Loopback"]
-StaticNatDirection = Literal["inside", "outside"]
-Proto = Literal["tcp", "udp"]
 CoreRegion = Literal["core", "core-shared"]
 SecondaryRegion = Literal["off", "secondary-only", "secondary-shared"]
 Encap = Literal["gre", "ipsec"]
 Mode = Literal["hub", "spoke"]
-Value = Literal[
-    "default",
-    "mpls",
-    "metro-ethernet",
-    "biz-internet",
-    "public-internet",
-    "lte",
-    "3g",
-    "red",
-    "green",
-    "blue",
-    "gold",
-    "silver",
-    "bronze",
-    "custom1",
-    "custom2",
-    "custom3",
-    "private1",
-    "private2",
-    "private3",
-    "private4",
-    "private5",
-    "private6",
-]
 Carrier = Literal[
     "default", "carrier1", "carrier2", "carrier3", "carrier4", "carrier5", "carrier6", "carrier7", "carrier8"
 ]
@@ -154,7 +129,7 @@ class StaticPortForward(FeatureTemplateValidator):
         json_schema_extra={"vmanage_key": "translate-port"},
         description="Translated port number for port forwarding.",
     )
-    proto: Proto = Field(..., description="Protocol used for port forwarding (TCP/UDP).")
+    proto: Protocol = Field(..., description="Protocol used for port forwarding (TCP/UDP).")
     source_vpn: int = Field(
         default=DEFAULT_STATIC_PORT_FORWARD_SOURCE_VPN,
         json_schema_extra={"vmanage_key": "source-vpn"},
@@ -479,7 +454,7 @@ class CiscoVpnInterfaceModel(FeatureTemplate):
         json_schema_extra={"data_path": ["tunnel-interface"]},
         description="Identifies the group or groups the interface belongs to.",
     )
-    value: Optional[Value] = Field(
+    value: Optional[TLOCColor] = Field(
         default=None,
         json_schema_extra={"data_path": ["tunnel-interface", "color"]},
         description=(

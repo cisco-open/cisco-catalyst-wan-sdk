@@ -1,30 +1,20 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 import ipaddress
-from enum import Enum
 from pathlib import Path
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List, Literal, Optional
 
 from pydantic import ConfigDict, Field
 
 from catalystwan.api.templates.bool_str import BoolStr
 from catalystwan.api.templates.feature_template import FeatureTemplate, FeatureTemplateValidator
 
-
-class MetricType(str, Enum):
-    TYPE1 = "type1"
-    TYPE2 = "type2"
-
-
-class Protocol(str, Enum):
-    BGP = "bgp"
-    CONNECTED = "connected"
-    EIGRP = "eigrp"
-    ISIS = "isis"
-    LISP = "lisp"
-    NAT_ROUTE = "nat-route"
-    OMP = "omp"
-    STATIC = "static"
+MetricType = Literal["type1", "type2"]
+Protocol = Literal["bgp", "connected", "eigrp", "isis", "lisp", "nat-route", "omp", "static"]
+AdType = Literal["on-startup"]
+Translate = Literal["always"]
+Network = Literal["broadcast", "point-to-point", "non-broadcast", "point-to-multipoint"]
+Type = Literal["md5", "sha1"]
 
 
 class Redistribute(FeatureTemplateValidator):
@@ -40,32 +30,12 @@ class Redistribute(FeatureTemplateValidator):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class AdType(str, Enum):
-    ON_STARTUP = "on-startup"
-
-
 class RouterLsa(FeatureTemplateValidator):
     ad_type: AdType = Field(
         json_schema_extra={"vmanage_key": "ad-type"}, description="Advertisement type for the router LSA"
     )
     time: int = Field(description="Time configuration for the router LSA advertisement")
     model_config = ConfigDict(populate_by_name=True)
-
-
-class Translate(str, Enum):
-    ALWAYS = "always"
-
-
-class Network(str, Enum):
-    BROADCAST = "broadcast"
-    POINT_TO_POINT = "point-to-point"
-    NON_BROADCAST = "non-broadcast"
-    POINT_TO_MULTIPOINT = "point-to-multipoint"
-
-
-class Type(str, Enum):
-    MD5 = "md5"
-    SHA1 = "sha1"
 
 
 class Interface(FeatureTemplateValidator):
@@ -86,7 +56,7 @@ class Interface(FeatureTemplateValidator):
         description="The interval between LSA retransmissions",
     )
     cost: Optional[int] = Field(description="The cost metric for the interface")
-    network: Optional[Network] = Field(default=Network.BROADCAST, description="The network type for the OSPF interface")
+    network: Optional[Network] = Field(default="broadcast", description="The network type for the OSPF interface")
     passive_interface: Optional[bool] = Field(
         default=False,
         json_schema_extra={"vmanage_key": "passive-interface"},
@@ -109,7 +79,7 @@ class Interface(FeatureTemplateValidator):
 
 
 class Range(FeatureTemplateValidator):
-    address: ipaddress.IPv4Interface = Field(description="The IPv4 interface address and subnet")
+    address: ipaddress.IPv4Interface = Field(..., description="The IPv4 interface address and subnet")
     cost: Optional[int] = Field(default=None, description="The cost metric for the address range")
     no_advertise: Optional[bool] = Field(
         default=False,
@@ -172,9 +142,7 @@ class InterfaceV6(FeatureTemplateValidator):
         description="The interval between LSA retransmissions for IPv6",
     )
     cost: Optional[int] = Field(description="The cost metric for the IPv6 interface")
-    network: Optional[Network] = Field(
-        default=Network.BROADCAST, description="The network type for the OSPFv3 interface"
-    )
+    network: Optional[Network] = Field(default="broadcast", description="The network type for the OSPFv3 interface")
     passive_interface: Optional[bool] = Field(
         default=False,
         json_schema_extra={"vmanage_key": "passive-interface"},
@@ -196,7 +164,7 @@ class InterfaceV6(FeatureTemplateValidator):
 
 
 class RangeV6(FeatureTemplateValidator):
-    address: ipaddress.IPv6Interface = Field(description="The IPv6 interface address and subnet")
+    address: ipaddress.IPv6Interface = Field(..., description="The IPv6 interface address and subnet")
     cost: Optional[int] = Field(default=None, description="The cost metric for the IPv6 address range")
     no_advertise: Optional[bool] = Field(
         default=False,

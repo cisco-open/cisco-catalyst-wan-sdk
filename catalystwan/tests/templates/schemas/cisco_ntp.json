@@ -1,0 +1,265 @@
+{
+    "name": "cisco_ntp",
+    "xmlPath": [
+        "system"
+    ],
+    "xmlRootTag": "ntp",
+    "nameSpace": "http://viptela.com/system",
+    "fields": [
+        {
+            "key": "server",
+            "description": "NTP Server (up to 4)",
+            "details": "Configure NTP servers",
+            "optionType": [
+                "constant",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataPath": [],
+            "objectType": "tree",
+            "primaryKeys": [
+                "name"
+            ],
+            "children": [
+                {
+                    "key": "name",
+                    "description": "Hostname/IP Address",
+                    "details": "Set hostname or IP address of server",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "string"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "key",
+                    "description": "Authentication Key ID",
+                    "details": "Set authentication key for the server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 1,
+                        "max": 4294967295
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "vpn",
+                    "description": "VPN ID",
+                    "details": "Set VPN in which NTP server is located",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 0,
+                        "max": 65530,
+                        "default": 0
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "version",
+                    "description": "Version",
+                    "details": "Set NTP version",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 1,
+                        "max": 4,
+                        "default": 4
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "source-interface",
+                    "description": "Source Interface",
+                    "details": "Set interface to use to reach NTP server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string",
+                        "minLength": 0,
+                        "maxLength": 32
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "prefer",
+                    "description": "Prefer",
+                    "details": "Prefer this NTP server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                }
+            ]
+        },
+        {
+            "key": "authentication",
+            "description": "Authentication",
+            "details": "Set MD5 authentication key",
+            "optionType": [
+                "constant",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataPath": [
+                "keys"
+            ],
+            "objectType": "tree",
+            "primaryKeys": [
+                "number"
+            ],
+            "children": [
+                {
+                    "key": "number",
+                    "description": "Authentication Key ID",
+                    "details": "MD5 authentication key ID",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "number",
+                        "min": 1,
+                        "max": 4294967295
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "md5",
+                    "description": "Authentication Value",
+                    "details": "Enter cleartext or AES-encrypted MD5 authentication key",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "passphrase",
+                        "minLength": 1,
+                        "maxLength": 32
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                }
+            ]
+        },
+        {
+            "key": "trusted",
+            "description": "Trusted Keys",
+            "details": "Designate authentication key as trustworthy",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "number",
+                "min": 1,
+                "max": 65535
+            },
+            "dataPath": [
+                "keys"
+            ],
+            "objectType": "list"
+        },
+        {
+            "key": "enable",
+            "description": "Master",
+            "details": "Configure device as NTP master",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "boolean",
+                "default": "false"
+            },
+            "dataPath": [
+                "master"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "stratum",
+            "description": "Stratum",
+            "details": "Master Stratum <1..15>",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "number",
+                "min": 1,
+                "max": 15
+            },
+            "dataPath": [
+                "master"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "source",
+            "description": "Source",
+            "details": "Set interface for NTP Master",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 32
+            },
+            "dataPath": [
+                "master"
+            ],
+            "objectType": "object"
+        }
+    ]
+}

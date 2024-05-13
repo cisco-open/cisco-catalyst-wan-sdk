@@ -17,8 +17,9 @@ DEFAULT_OMP_ECMP_LIMIT = 4
 
 
 IPv4AdvertiseProtocol = Literal["bgp", "ospf", "ospfv3", "connected", "static", "eigrp", "lisp", "isis"]
-
-
+IPv6AdvertiseProtocol = Literal["bgp", "ospf", "connected", "static", "eigrp", "lisp", "isis"]
+TransportGateway = Literal["prefer", "ecmp-with-direct-path"]
+SiteTypes = Literal["type-1", "type-2", "type-3", "cloud", "branch", "br", "spoke"]
 Route = Literal["external"]
 
 
@@ -30,17 +31,8 @@ class IPv4Advertise(FeatureTemplateValidator):
     )
 
 
-IPv6AdvertiseProtocol = Literal["bgp", "ospf", "connected", "static", "eigrp", "lisp", "isis"]
-
-
 class IPv6Advertise(FeatureTemplateValidator):
     protocol: IPv6AdvertiseProtocol = Field(description="The IPv6 routing protocol whose routes are to be advertised.")
-
-
-TransportGateway = Literal["prefer", "ecmp-with-direct-path"]
-
-
-SiteTypes = Literal["type-1", "type-2", "type-3", "cloud", "branch", "br", "spoke"]
 
 
 class CiscoOMPModel(FeatureTemplate):

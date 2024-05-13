@@ -1,12 +1,13 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from pathlib import Path
-from typing import ClassVar, List, Literal, Optional
+from typing import ClassVar, List, Optional
 
 from pydantic import ConfigDict, Field
 
 from catalystwan.api.templates.bool_str import BoolStr
 from catalystwan.api.templates.feature_template import FeatureTemplate, FeatureTemplateValidator
+from catalystwan.models.common import TLOCColor
 
 DEFAULT_BFD_COLOR_MULTIPLIER = 7
 DEFAULT_BFD_DSCP = 48
@@ -15,36 +16,10 @@ DEFAULT_BFD_POLL_INTERVAL = 600000
 DEFAULT_BFD_MULTIPLIER = 6
 
 
-ColorType = Literal[
-    "default",
-    "mpls",
-    "metro-ethernet",
-    "biz-internet",
-    "public-internet",
-    "lte",
-    "3g",
-    "red",
-    "green",
-    "blue",
-    "gold",
-    "silver",
-    "bronze",
-    "custom1",
-    "custom2",
-    "custom3",
-    "private1",
-    "private2",
-    "private3",
-    "private4",
-    "private5",
-    "private6",
-]
-
-
 class Color(FeatureTemplateValidator):
     model_config = ConfigDict(populate_by_name=True)
 
-    color: ColorType = Field(description="The color of the BFD session, representing various transport types")
+    color: TLOCColor = Field(description="The color of the BFD session, representing various transport types")
     hello_interval: Optional[int] = Field(
         default=DEFAULT_BFD_HELLO_INTERVAL,
         json_schema_extra={"vmanage_key": "hello-interval"},

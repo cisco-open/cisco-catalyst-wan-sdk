@@ -23,9 +23,6 @@ available_models = {
     "cisco_ntp": CiscoNTPModel,
     "cisco_ospf": CiscoOSPFModel,
     "cisco_logging": CiscoLoggingModel,
-    "omp_vsmart": OMPvSmart,
-    "security_vsmart": SecurityvSmart,
-    "system_vsmart": SystemVsmart,
     "cisco_vpn_interface": CiscoVpnInterfaceModel,
     "cisco_system": CiscoSystemModel,
     "cisco_vpn": CiscoVPNModel,
@@ -33,4 +30,7 @@ available_models = {
     "cisco_system": CiscoSystemModel,
     "cisco_secure_internet_gateway": CiscoSecureInternetGatewayModel,
     "cisco_omp": CiscoOMPModel,
+    "omp_vsmart": OMPvSmart,
+    "security_vsmart": SecurityvSmart,
+    "system_vsmart": SystemVsmart,
 }

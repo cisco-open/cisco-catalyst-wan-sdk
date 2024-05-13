@@ -14,7 +14,6 @@ from catalystwan.api.templates.models.cisco_aaa_model import (
     TacacsServer,
     User,
 )
-from catalystwan.utils.device_model import DeviceModel
 
 users = [
     User(name="admin", password="str", secret="zyx", privilege="15"),  # pragma: allowlist secret
@@ -26,7 +25,7 @@ users = [
 cisco_aaa = CiscoAAAModel(
     template_name="cisco_aaa",
     template_description="zyx",
-    device_models=[DeviceModel.VEDGE_C8000V],
+    device_models=["vedge-C8000V"],
     user=users,
     authentication_group=True,
     accounting_group=False,
@@ -54,7 +53,7 @@ users = [
 cisco_aaa_complex = CiscoAAAModel(
     template_name="cisco_aaa_complex",
     template_description="cisco_aaa_complex",
-    device_models=[DeviceModel.VEDGE_C8000V],
+    device_models=["vedge-C8000V"],
     user=[
         User(
             name="example_user",

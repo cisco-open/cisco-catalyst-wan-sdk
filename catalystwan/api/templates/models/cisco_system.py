@@ -8,11 +8,10 @@ from pydantic import ConfigDict, Field
 from catalystwan.api.templates.bool_str import BoolStr
 from catalystwan.api.templates.device_variable import DeviceVariable
 from catalystwan.api.templates.feature_template import FeatureTemplate, FeatureTemplateValidator
-from catalystwan.utils.timezone import Timezone
+from catalystwan.models.common import Protocol, Timezone
 
 SiteType = Literal["type-1", "type-2", "type-3", "cloud", "branch", "br", "spoke"]
 ConsoleBaudRate = Literal["1200", "2400", "4800", "9600", "19200", "38400", "57600", "115200"]
-Protocol = Literal["tcp", "udp"]
 Boolean = Literal["or", "and"]
 Type = Literal["interface", "static-route"]
 Role = Literal["edge-router", "border-router"]

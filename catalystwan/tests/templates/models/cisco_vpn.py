@@ -4,63 +4,42 @@
 
 from catalystwan.api.templates.models.cisco_vpn_model import (
     Advertise,
-    AdvertiseProtocol,
-    AdvertiseProtocolSubType,
     CiscoVPNModel,
-    Direction,
     Dns,
     DnsIpv6,
     GreRoute,
     Host,
     IpsecRoute,
     Ipv6Advertise,
-    Ipv6AdvertiseProtocol,
-    Ipv6AdvertiseProtocolSubType,
-    LeakFromGlobalProtocol,
     Natpool,
     NextHop,
     NextHopv6,
-    Overload,
     Pool,
     PortForward,
     PrefixList,
-    Proto,
-    Region,
     RouteExport,
-    RouteExportProtocol,
-    RouteExportProtocolSubType,
     RouteExportRedistribute,
-    RouteExportRedistributeProtocol,
     RouteImport,
     RouteImportFrom,
-    RouteImportFromProtocol,
-    RouteImportFromProtocolSubType,
     RouteImportFromRedistribute,
-    RouteImportFromRedistributeProtocol,
-    RouteImportProtocol,
-    RouteImportProtocolSubType,
     RouteImportRedistribute,
-    RouteImportRedistributeProtocol,
     Routev4,
     Routev6,
     Service,
     ServiceRoute,
     Static,
-    StaticNatDirection,
     SubnetStatic,
-    SvcType,
 )
-from catalystwan.utils.device_model import DeviceModel
 
-basic_cisco_vpn = CiscoVPNModel(
-    template_name="Basic_Cisco_VPN_Model", template_description="Primitive", device_models=[DeviceModel.VEDGE_C8000V]
+cisco_vpn_basic = CiscoVPNModel(
+    template_name="cisco_vpn_basic", template_description="Primitive", device_models=["vedge-C8000V"]
 )  # type: ignore
 
 
-complex_vpn_model = CiscoVPNModel(
-    template_name="complex_cisco_vpn",
-    template_description="NA",
-    device_models=[DeviceModel.VEDGE],
+cisco_vpn_complex = CiscoVPNModel(
+    template_name="cisco_vpn_complex",
+    template_description="cisco_vpn_complex",
+    device_models=["vedge-cloud"],
     vpn_name="test_vpn_name",
     omp_admin_distance_ipv4=10,
     omp_admin_distance_ipv6=100,
@@ -71,19 +50,19 @@ complex_vpn_model = CiscoVPNModel(
     host=[Host(hostname="test_hostname", ip=["1.1.1.1"])],
     service=[
         Service(
-            svc_type=SvcType.APPQOE,
+            svc_type="appqoe",
             address=["1.1.1.1"],
             interface="Gig0/0/1",
             track_enable=False,
         ),
         Service(
-            svc_type=SvcType.FW,
+            svc_type="FW",
             address=["1.1.122.1", "2.2.2.2"],
             interface="Gig0/0/2",
             track_enable=True,
         ),
         Service(
-            svc_type=SvcType.IDP,
+            svc_type="IDP",
             address=["1.1.122.2", "3.2.2.2"],
             interface="Gig0/0/3",
             track_enable=False,
@@ -103,40 +82,40 @@ complex_vpn_model = CiscoVPNModel(
     ],
     advertise=[
         Advertise(
-            protocol=AdvertiseProtocol.AGGREGATE,
+            protocol="aggregate",
             route_policy="route-policy",
-            protocol_sub_type=[AdvertiseProtocolSubType.EXTERNAL],
+            protocol_sub_type=["external"],
             prefix_list=[
                 PrefixList(
                     prefix_entry="prefix_entry",
                     aggregate_only=True,
-                    region=Region.ACCESS,
+                    region="access",
                 )
             ],
         )
     ],
     ipv6_advertise=[
         Ipv6Advertise(
-            protocol=Ipv6AdvertiseProtocol.AGGREGATE,
+            protocol="aggregate",
             route_policy="route-policyv6",
-            protocol_sub_type=[Ipv6AdvertiseProtocolSubType.EXTERNAL],
+            protocol_sub_type=["external"],
             prefix_list=[
                 PrefixList(
                     prefix_entry="prefix_entryv6",
                     aggregate_only=False,
-                    region=Region.CORE,
+                    region="core",
                 )
             ],
         ),
         Ipv6Advertise(
-            protocol=Ipv6AdvertiseProtocol.CONNECTED,
+            protocol="connected",
             route_policy="route-policyv6-connected",
-            protocol_sub_type=[Ipv6AdvertiseProtocolSubType.EXTERNAL],
+            protocol_sub_type=["external"],
             prefix_list=[
                 PrefixList(
                     prefix_entry="prefix_entryv6-connected",
                     aggregate_only=True,
-                    region=Region.ACCESS,
+                    region="access",
                 )
             ],
         ),
@@ -148,7 +127,7 @@ complex_vpn_model = CiscoVPNModel(
             end_address="10.10.10.10",
             overload=False,
             leak_from_global=True,
-            leak_from_global_protocol=LeakFromGlobalProtocol.CONNECTED,
+            leak_from_global_protocol="connected",
             leak_to_global=False,
         )
     ],
@@ -158,32 +137,25 @@ complex_vpn_model = CiscoVPNModel(
             prefix_length=24,
             range_start="10",
             range_end="100",
-            overload=Overload.FALSE,
-            direction=Direction.INSIDE,
+            overload="false",
+            direction="inside",
             tracker_id=10,
         ),
-        Natpool(
-            name=2,
-            prefix_length=24,
-            range_start="10",
-            range_end="100",
-            overload=Overload.TRUE,
-            direction=Direction.OUTSIDE,
-        ),
+        Natpool(name=2, prefix_length=24, range_start="10", range_end="100", overload="true", direction="outside"),
     ],
     static=[
         Static(
             pool_name=1,
             source_ip="1.1.1.1",
             translate_ip="1.1.1.2",
-            static_nat_direction=StaticNatDirection.INSIDE,
+            static_nat_direction="inside",
             tracker_id=1,
         ),
         Static(
             pool_name=2,
             source_ip="2.1.1.1",
             translate_ip="2.1.1.2",
-            static_nat_direction=StaticNatDirection.OUTSIDE,
+            static_nat_direction="inside",
         ),
     ],
     subnet_static=[
@@ -191,13 +163,13 @@ complex_vpn_model = CiscoVPNModel(
             source_ip_subnet="1.1.1.1",
             translate_ip_subnet="2.2.2.2",
             prefix_length=24,
-            static_nat_direction=StaticNatDirection.OUTSIDE,
+            static_nat_direction="outside",
         ),
         SubnetStatic(
             source_ip_subnet="1.1.2.1",
             translate_ip_subnet="2.3.2.2",
             prefix_length=24,
-            static_nat_direction=StaticNatDirection.INSIDE,
+            static_nat_direction="inside",
             tracker_id=10,
         ),
     ],
@@ -208,7 +180,7 @@ complex_vpn_model = CiscoVPNModel(
             translate_port=2000,
             source_ip="1.1.1.1",
             translate_ip="2.2.2.2",
-            proto=Proto.TCP,
+            proto="tcp",
         ),
         PortForward(
             pool_name=2,
@@ -216,17 +188,17 @@ complex_vpn_model = CiscoVPNModel(
             translate_port=2000,
             source_ip="1.1.4.1",
             translate_ip="2.2.3.2",
-            proto=Proto.UDP,
+            proto="udp",
         ),
     ],
     route_import=[
         RouteImport(
-            protocol=RouteImportProtocol.BGP,
-            protocol_sub_type=[RouteImportProtocolSubType.EXTERNAL],
+            protocol="bgp",
+            protocol_sub_type=["external"],
             route_policy="test_route_policy",
             redistribute=[
                 RouteImportRedistribute(
-                    protocol=RouteImportRedistributeProtocol.EIGRP,
+                    protocol="eigrp",
                     route_policy="test_route_policy",
                 )
             ],
@@ -235,19 +207,19 @@ complex_vpn_model = CiscoVPNModel(
     route_import_from=[
         RouteImportFrom(
             source_vpn=1,
-            protocol=RouteImportFromProtocol.CONNECTED,
-            protocol_sub_type=[RouteImportFromProtocolSubType.EXTERNAL],
+            protocol="connected",
+            protocol_sub_type=["external"],
             route_policy="test_route_policy",
-            redistribute=[RouteImportFromRedistribute(protocol=RouteImportFromRedistributeProtocol.BGP)],
+            redistribute=[RouteImportFromRedistribute(protocol="bgp")],
         ),
         RouteImportFrom(
             source_vpn=100,
-            protocol=RouteImportFromProtocol.BGP,
-            protocol_sub_type=[RouteImportFromProtocolSubType.EXTERNAL],
+            protocol="bgp",
+            protocol_sub_type=["external"],
             route_policy="test_route_policy",
             redistribute=[
                 RouteImportFromRedistribute(
-                    protocol=RouteImportFromRedistributeProtocol.EIGRP,
+                    protocol="eigrp",
                     route_policy="test_route_policy",
                 )
             ],
@@ -255,11 +227,11 @@ complex_vpn_model = CiscoVPNModel(
     ],
     route_export=[
         RouteExport(
-            protocol=RouteExportProtocol.STATIC,
-            protocol_sub_type=[RouteExportProtocolSubType.EXTERNAL],
+            protocol="static",
+            protocol_sub_type=["external"],
             redistribute=[
                 RouteExportRedistribute(
-                    protocol=RouteExportRedistributeProtocol.OSPF,
+                    protocol="ospf",
                     route_policy="test_route_policy",
                 )
             ],

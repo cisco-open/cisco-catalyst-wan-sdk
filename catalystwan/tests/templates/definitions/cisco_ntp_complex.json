@@ -1,0 +1,143 @@
+{
+    "templateName": "cisco_ntp_complex",
+    "templateDescription": "cisco_ntp_complex",
+    "templateType": "cisco_ntp",
+    "deviceType": [],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "server": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "0.pool.ntp.org"
+                    },
+                    "key": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 1
+                    },
+                    "vpn": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 10
+                    },
+                    "version": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 4
+                    },
+                    "source-interface": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "GigabitEthernet0/0"
+                    },
+                    "prefer": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "true"
+                    }
+                },
+                {
+                    "name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "1.pool.ntp.org"
+                    },
+                    "key": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 2
+                    },
+                    "vpn": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 20
+                    },
+                    "version": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 4
+                    },
+                    "source-interface": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "GigabitEthernet0/1"
+                    },
+                    "prefer": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "false"
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "name"
+            ]
+        },
+        "keys": {
+            "authentication": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "number": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 1
+                        },
+                        "md5": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "md5key1"
+                        }
+                    },
+                    {
+                        "number": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 2
+                        },
+                        "md5": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "md5key2"
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "number"
+                ]
+            },
+            "trusted": {
+                "vipObjectType": "list",
+                "vipType": "constant",
+                "vipValue": [
+                    1,
+                    2
+                ]
+            }
+        },
+        "master": {
+            "enable": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "true"
+            },
+            "stratum": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 2
+            },
+            "source": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "Loopback0"
+            }
+        }
+    }
+}

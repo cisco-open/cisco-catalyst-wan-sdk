@@ -5,7 +5,9 @@ from typing import ClassVar, List, Literal, Optional
 
 from pydantic import ConfigDict, Field, field_validator
 
+from catalystwan.api.templates.bool_str import BoolStr
 from catalystwan.api.templates.feature_template import FeatureTemplate, FeatureTemplateValidator
+from catalystwan.models.common import Protocol, StaticNatDirection
 
 Role = Literal["primary", "secondary"]
 SvcType = Literal["FW", "IDS", "IDP", "netsvc1", "netsvc2", "netsvc3", "netsvc4", "TE", "appqoe"]
@@ -19,10 +21,7 @@ Region = Literal["core", "access"]
 Ipv6AdvertiseProtocol = Literal["bgp", "ospf", "connected", "static", "network", "aggregate"]
 Ipv6AdvertiseProtocolSubType = Literal["external"]
 LeakFromGlobalProtocol = Literal["all", "static", "mobile", "connected", "rip", "odr"]
-Direction = Literal["inside", "outside"]
 Overload = Literal["true", "false"]
-StaticNatDirection = Literal["inside", "outside"]
-Proto = Literal["tcp", "udp"]
 RouteImportProtocol = Literal["static", "connected", "bgp", "ospf"]
 RouteImportProtocolSubType = Literal["external"]
 RouteImportRedistributeProtocol = Literal["bgp", "eigrp", "ospf"]
@@ -64,7 +63,7 @@ class Service(FeatureTemplateValidator):
     )
     address: Optional[List[str]] = Field(default=None, description="A list of IP addresses for the service.")
     interface: Optional[str] = Field(default=None, description="The interface associated with the service.")
-    track_enable: bool = Field(
+    track_enable: BoolStr = Field(
         default=True,
         description="Indicates whether tracking is enabled for the service.",
         json_schema_extra={"vmanage_key": "track-enable"},
@@ -127,14 +126,14 @@ class Routev4(FeatureTemplateValidator):
         description="The interface configuration for the IPv4 static route.",
         json_schema_extra={"vmanage_key": "route-interface"},
     )
-    null0: Optional[bool] = Field(
+    null0: Optional[BoolStr] = Field(
         default=None, description="A flag indicating whether to route traffic to null0 for this static route."
     )
     distance: Optional[int] = Field(default=None, description="The administrative distance for the static route.")
     vpn: Optional[int] = Field(
         default=None, description="The VPN instance identifier associated with the static route."
     )
-    dhcp: Optional[bool] = Field(
+    dhcp: Optional[BoolStr] = Field(
         default=None, description="A flag indicating whether DHCP is used for this static route."
     )
 
@@ -153,7 +152,7 @@ class Routev6(FeatureTemplateValidator):
         description="A list of IPv6 next hops for the route.",
         json_schema_extra={"vmanage_key": "next-hop"},
     )
-    null0: Optional[bool] = Field(
+    null0: Optional[BoolStr] = Field(
         default=None, description="A flag indicating whether to route IPv6 traffic to null0 for this static route."
     )
     vpn: Optional[int] = Field(
@@ -185,7 +184,7 @@ class PrefixList(FeatureTemplateValidator):
     prefix_entry: str = Field(
         description="The network prefix entry for the prefix list.", json_schema_extra={"vmanage_key": "prefix-entry"}
     )
-    aggregate_only: Optional[bool] = Field(
+    aggregate_only: Optional[BoolStr] = Field(
         default=None,
         description="A flag indicating if only aggregate routes should be considered.",
         json_schema_extra={"vmanage_key": "aggregate-only"},
@@ -242,12 +241,14 @@ class Pool(FeatureTemplateValidator):
     end_address: str = Field(
         description="The ending IP address of the pool.", json_schema_extra={"vmanage_key": "end-address"}
     )
-    overload: Optional[bool] = Field(default=None, description="A flag indicating whether address overload is allowed.")
-    leak_from_global: bool = Field(description="A flag indicating whether leaking from the global table is enabled.")
+    overload: Optional[BoolStr] = Field(
+        default=None, description="A flag indicating whether address overload is allowed."
+    )
+    leak_from_global: BoolStr = Field(description="A flag indicating whether leaking from the global table is enabled.")
     leak_from_global_protocol: LeakFromGlobalProtocol = Field(
         description="The protocol used for leaking from the global routing table."
     )
-    leak_to_global: bool = Field(description="A flag indicating whether leaking to the global table is enabled.")
+    leak_to_global: BoolStr = Field(description="A flag indicating whether leaking to the global table is enabled.")
     model_config = ConfigDict(populate_by_name=True)
 
 
@@ -271,7 +272,7 @@ class Natpool(FeatureTemplateValidator):
     overload: Overload = Field(
         default="true", description="Flag indicating whether NAT overload (PAT) is enabled for the pool."
     )
-    direction: Direction = Field(description="The direction (inside or outside) associated with the NAT pool.")
+    direction: StaticNatDirection = Field(description="The direction (inside or outside) associated with the NAT pool.")
     tracker_id: Optional[int] = Field(
         default=None,
         description="The tracker identifier associated with the NAT pool.",
@@ -355,7 +356,7 @@ class PortForward(FeatureTemplateValidator):
         description="The destination IP address to which the source IP is translated.",
         json_schema_extra={"vmanage_key": "translate-ip"},
     )
-    proto: Proto = Field(description="The protocol used in the port forwarding rule (TCP/UDP).")
+    proto: Protocol = Field(description="The protocol used in the port forwarding rule (TCP/UDP).")
     model_config = ConfigDict(populate_by_name=True)
 
 
@@ -498,7 +499,7 @@ class CiscoVPNModel(FeatureTemplate):
         description="A list of DNS configurations for IPv6 within the VPN instance.",
         json_schema_extra={"vmanage_key": "dns-ipv6"},
     )
-    layer4: Optional[bool] = Field(
+    layer4: Optional[BoolStr] = Field(
         default=None,
         description="A flag indicating whether Layer 4 information is included in the ECMP hash key.",
         json_schema_extra={"data_path": ["ecmp-hash-key"]},

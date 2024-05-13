@@ -8,6 +8,12 @@ from pydantic import ConfigDict, Field
 from catalystwan.api.templates.bool_str import BoolStr
 from catalystwan.api.templates.feature_template import FeatureTemplate, FeatureTemplateValidator
 
+NeighborFamilyType = Literal["ipv4-unicast", "vpnv4-unicast", "vpnv6-unicast"]
+Direction = Literal["in", "out"]
+Protocol = Literal["static", "connected", "ospf", "ospfv3", "omp", "eigrp", "nat"]
+AddressFamilyType = Literal["ipv4-unicast"]
+IPv6NeighborFamilyType = Literal["ipv6-unicast"]
+
 
 class Export(FeatureTemplateValidator):
     asn_ip: str = Field(
@@ -92,9 +98,6 @@ class Ipv6Network(FeatureTemplateValidator):
     prefix: str = Field(description="IPv6 network prefix to be advertised.")
 
 
-Protocol = Literal["static", "connected", "ospf", "ospfv3", "omp", "eigrp", "nat"]
-
-
 class Redistribute(FeatureTemplateValidator):
     protocol: Protocol = Field(description="Routing protocol from which routes are to be redistributed.")
     route_policy: Optional[str] = Field(
@@ -103,9 +106,6 @@ class Redistribute(FeatureTemplateValidator):
         json_schema_extra={"vmanage_key": "route-policy"},
     )
     model_config = ConfigDict(populate_by_name=True)
-
-
-AddressFamilyType = Literal["ipv4-unicast"]
 
 
 class AddressFamily(FeatureTemplateValidator):
@@ -153,10 +153,6 @@ class AddressFamily(FeatureTemplateValidator):
         default=None, description="List of routing protocols and their respective redistribution configurations."
     )
     model_config = ConfigDict(populate_by_name=True)
-
-
-NeighborFamilyType = Literal["ipv4-unicast", "vpnv4-unicast", "vpnv6-unicast"]
-Direction = Literal["in", "out"]
 
 
 class RoutePolicy(FeatureTemplateValidator):
@@ -283,9 +279,6 @@ class Neighbor(FeatureTemplateValidator):
         json_schema_extra={"vmanage_key": "address-family"},
     )
     model_config = ConfigDict(populate_by_name=True)
-
-
-IPv6NeighborFamilyType = Literal["ipv6-unicast"]
 
 
 class IPv6NeighborAddressFamily(FeatureTemplateValidator):

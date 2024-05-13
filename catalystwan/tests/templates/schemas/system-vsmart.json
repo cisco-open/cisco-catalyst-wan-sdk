@@ -1,5 +1,5 @@
 {
-    "name": "cisco_system",
+    "name": "System",
     "xmlPath": [],
     "xmlRootTag": "system",
     "nameSpace": "http://viptela.com/system",
@@ -1706,6 +1706,22 @@
             "objectType": "object"
         },
         {
+            "key": "ipv6-strict-control",
+            "description": "Dual Stack IPv6 Default",
+            "details": "Enable Dual Stack IPv6 Default",
+            "optionType": [
+                "constant",
+                "variable"
+            ],
+            "defaultOption": "variable",
+            "dataType": {
+                "type": "boolean",
+                "default": "false"
+            },
+            "dataPath": [],
+            "objectType": "object"
+        },
+        {
             "key": "description",
             "description": "Description",
             "details": "Set a text description of the device",
@@ -1737,6 +1753,25 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 128
+            },
+            "dataPath": [],
+            "objectType": "object"
+        },
+        {
+            "key": "system-tunnel-mtu",
+            "description": "MTU Of DTLS Tunnel",
+            "details": "Set MTU of system\u2019s internal DTLS tunnel",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "number",
+                "min": 500,
+                "max": 2000,
+                "default": 1024
             },
             "dataPath": [],
             "objectType": "object"
@@ -1782,132 +1817,8 @@
             "objectType": "object"
         },
         {
-            "key": "enable",
-            "description": "Geo Fencing Enable",
-            "details": "Enable Geo fencing",
-            "optionType": [
-                "constant",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "boolean",
-                "default": "false",
-                "label": {
-                    "on": "Yes",
-                    "off": "No"
-                }
-            },
-            "dataPath": [
-                "gps-location",
-                "geo-fencing"
-            ],
-            "objectType": "object"
-        },
-        {
-            "key": "range",
-            "description": "Geo Fencing Range in meters",
-            "details": "Set the device\u2019s geo fencing range",
-            "optionType": [
-                "constant",
-                "variable",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "number",
-                "min": 100,
-                "max": 10000,
-                "default": 100
-            },
-            "dataPath": [
-                "gps-location",
-                "geo-fencing"
-            ],
-            "objectType": "object"
-        },
-        {
-            "key": "enable",
-            "description": "Enable SMS",
-            "details": "Enable device\u2019s geo fencing SMS",
-            "optionType": [
-                "constant",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "boolean",
-                "default": "false",
-                "label": {
-                    "on": "Yes",
-                    "off": "No"
-                }
-            },
-            "dataPath": [
-                "gps-location",
-                "geo-fencing",
-                "sms"
-            ],
-            "objectType": "object"
-        },
-        {
-            "key": "mobile-number",
-            "description": "Geo fencing SMS phone number",
-            "details": "Set device\u2019s geo fencing SMS phone number",
-            "optionType": [
-                "constant",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataPath": [
-                "gps-location",
-                "geo-fencing",
-                "sms"
-            ],
-            "objectType": "tree",
-            "maxElements": 4,
-            "primaryKeys": [
-                "number"
-            ],
-            "children": [
-                {
-                    "key": "number",
-                    "description": "Mobile number",
-                    "details": "Mobile number, ex: +1231234414",
-                    "optionType": [
-                        "constant",
-                        "variable"
-                    ],
-                    "defaultOption": "constant",
-                    "dataType": {
-                        "type": "string",
-                        "minLength": 7,
-                        "maxLength": 20
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                }
-            ]
-        },
-        {
             "key": "device-groups",
             "description": "Device Groups",
-            "details": "Device groups (Use comma(,) for multiple groups)",
-            "optionType": [
-                "constant",
-                "variable",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "string"
-            },
-            "dataPath": [],
-            "objectType": "list"
-        },
-        {
-            "key": "controller-group-list",
-            "description": "Controller Groups",
             "details": "Configure a list of comma-separated device groups",
             "optionType": [
                 "constant",
@@ -1916,9 +1827,7 @@
             ],
             "defaultOption": "ignore",
             "dataType": {
-                "type": "number",
-                "min": 1,
-                "max": 100
+                "type": "string"
             },
             "dataPath": [],
             "objectType": "list"
@@ -1933,6 +1842,22 @@
             "defaultOption": "variable",
             "dataType": {
                 "type": "string"
+            },
+            "dataPath": [],
+            "objectType": "object"
+        },
+        {
+            "key": "site-id",
+            "description": "Site ID",
+            "details": "Set the site ID",
+            "optionType": [
+                "variable"
+            ],
+            "defaultOption": "variable",
+            "dataType": {
+                "type": "number",
+                "min": 1,
+                "max": 4294967295
             },
             "dataPath": [],
             "objectType": "object"
@@ -1957,62 +1882,21 @@
             "objectType": "object"
         },
         {
-            "key": "site-id",
-            "description": "Site ID",
-            "details": "Set the site identifier",
+            "key": "topology",
+            "description": "Topology",
+            "details": "Set the topology",
             "optionType": [
                 "constant",
-                "variable"
-            ],
-            "defaultOption": "variable",
-            "dataType": {
-                "type": "number",
-                "min": 1,
-                "max": 4294967295
-            },
-            "dataPath": [],
-            "objectType": "object"
-        },
-        {
-            "key": "site-type",
-            "description": "Site Type",
-            "details": "Configure site type",
-            "optionType": [
-                "constant",
-                "ignore",
-                "variable"
+                "variable",
+                "ignore"
             ],
             "defaultOption": "ignore",
             "dataType": {
                 "type": "enum",
                 "values": [
                     {
-                        "key": "type-1",
-                        "value": "type-1"
-                    },
-                    {
-                        "key": "type-2",
-                        "value": "type-2"
-                    },
-                    {
-                        "key": "type-3",
-                        "value": "type-3"
-                    },
-                    {
-                        "key": "cloud",
-                        "value": "cloud"
-                    },
-                    {
-                        "key": "branch",
-                        "value": "branch"
-                    },
-                    {
-                        "key": "br",
-                        "value": "br"
-                    },
-                    {
-                        "key": "spoke",
-                        "value": "spoke"
+                        "key": "hub-and-spoke",
+                        "value": "Hub and Spoke"
                     }
                 ]
             },
@@ -2032,7 +1916,7 @@
             "dataType": {
                 "type": "number",
                 "min": 0,
-                "max": 19,
+                "max": 20,
                 "default": 0
             },
             "dataPath": [],
@@ -2075,6 +1959,25 @@
             "objectType": "object"
         },
         {
+            "key": "controller-group-id",
+            "description": "Controller Group ID",
+            "details": "Controller group id",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "number",
+                "min": 0,
+                "max": 100,
+                "default": 0
+            },
+            "dataPath": [],
+            "objectType": "object"
+        },
+        {
             "key": "track-transport",
             "description": "Track Transport",
             "details": "Configure tracking of transport",
@@ -2092,9 +1995,9 @@
             "objectType": "object"
         },
         {
-            "key": "track-interface-tag",
-            "description": "Track Interface",
-            "details": "OMP Tag attached to routes based on interface tracking",
+            "key": "dns-cache-timeout",
+            "description": "DNS Cache Timeout (minutes)",
+            "details": "Set when to time out vBond addresses cached by device",
             "optionType": [
                 "constant",
                 "variable",
@@ -2104,101 +2007,35 @@
             "dataType": {
                 "type": "number",
                 "min": 1,
-                "max": 4294967295
+                "max": 30,
+                "default": 2
             },
-            "dataPath": [],
-            "objectType": "object"
-        },
-        {
-            "key": "console-baud-rate",
-            "description": "Console Baud Rate (bps)",
-            "details": "Set the console baud rate",
-            "optionType": [
-                "constant",
-                "variable",
-                "notIgnore"
+            "dataPath": [
+                "timer"
             ],
-            "defaultOption": "constant",
-            "dataType": {
-                "type": "enum",
-                "values": [
-                    {
-                        "key": "1200",
-                        "value": "1200"
-                    },
-                    {
-                        "key": "2400",
-                        "value": "2400"
-                    },
-                    {
-                        "key": "4800",
-                        "value": "4800"
-                    },
-                    {
-                        "key": "9600",
-                        "value": "9600"
-                    },
-                    {
-                        "key": "19200",
-                        "value": "19200"
-                    },
-                    {
-                        "key": "38400",
-                        "value": "38400"
-                    },
-                    {
-                        "key": "57600",
-                        "value": "57600"
-                    },
-                    {
-                        "key": "115200",
-                        "value": "115200"
-                    }
-                ],
-                "default": "9600"
-            },
-            "dataPath": [],
             "objectType": "object"
-        },
-        {
-            "key": "max-omp-sessions",
-            "description": "Maximum OMP Sessions",
-            "details": "Set the maximum number of OMP sessions <1..100> the device can have",
-            "optionType": [
-                "constant",
-                "variable",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "number",
-                "min": 1,
-                "max": 100
-            },
-            "dataPath": [],
-            "objectType": "object"
-        },
-        {
-            "key": "multi-tenant",
-            "description": "Multi Tenant",
-            "details": "Device is multi-tenant",
-            "optionType": [
-                "constant",
-                "variable",
-                "notIgnore"
-            ],
-            "defaultOption": "notIgnore",
-            "dataType": {
-                "type": "boolean",
-                "default": "false"
-            },
-            "dataPath": [],
-            "objectType": "node-only"
         },
         {
             "key": "track-default-gateway",
             "description": "Gateway Tracking",
             "details": "Enable or disable default gateway tracking",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "boolean",
+                "default": "true"
+            },
+            "dataPath": [],
+            "objectType": "object"
+        },
+        {
+            "key": "iptables-enable",
+            "description": "IP Tables",
+            "details": "Enable IP tables for all WAN interfaces",
             "optionType": [
                 "constant",
                 "variable",
@@ -2248,737 +2085,33 @@
             "objectType": "object"
         },
         {
-            "key": "tracker",
-            "description": "Tracker",
-            "details": "Tracker configuration",
+            "key": "region-id-list",
+            "description": "Region ID List",
+            "details": "Configure a list of region ID",
             "optionType": [
                 "constant",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataPath": [],
-            "objectType": "tree",
-            "primaryKeys": [
-                "name"
-            ],
-            "children": [
-                {
-                    "key": "name",
-                    "description": "Name",
-                    "details": "Tracker name",
-                    "optionType": [
-                        "constant",
-                        "variable"
-                    ],
-                    "defaultOption": "constant",
-                    "dataType": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 128
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                },
-                {
-                    "key": "endpoint-ip",
-                    "description": "Endpoint IP",
-                    "details": "IP address of endpoint",
-                    "optionType": [
-                        "constant",
-                        "variable"
-                    ],
-                    "defaultOption": "constant",
-                    "dataType": {
-                        "type": "ipv4"
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                },
-                {
-                    "key": "endpoint-ip",
-                    "description": "Endpoint IP",
-                    "details": "IP address of endpoint",
-                    "optionType": [
-                        "constant",
-                        "variable"
-                    ],
-                    "defaultOption": "constant",
-                    "dataType": {
-                        "type": "ipv4"
-                    },
-                    "dataPath": [
-                        "endpoint-ip-transport-port"
-                    ],
-                    "objectType": "object"
-                },
-                {
-                    "key": "protocol",
-                    "description": "transport protocol: TCP/UDP",
-                    "details": "transport protocol: TCP/UDP",
-                    "optionType": [
-                        "constant",
-                        "variable"
-                    ],
-                    "defaultOption": "constant",
-                    "dataType": {
-                        "type": "enum",
-                        "values": [
-                            {
-                                "key": "tcp",
-                                "value": "tcp"
-                            },
-                            {
-                                "key": "udp",
-                                "value": "udp"
-                            }
-                        ]
-                    },
-                    "dataPath": [
-                        "endpoint-ip-transport-port"
-                    ],
-                    "objectType": "object"
-                },
-                {
-                    "key": "port",
-                    "description": "Endpoint port",
-                    "details": "TCP/UDP port pf endpoint",
-                    "optionType": [
-                        "constant",
-                        "variable"
-                    ],
-                    "defaultOption": "constant",
-                    "dataType": {
-                        "type": "number",
-                        "min": 1,
-                        "max": 65535
-                    },
-                    "dataPath": [
-                        "endpoint-ip-transport-port"
-                    ],
-                    "objectType": "object"
-                },
-                {
-                    "key": "endpoint-dns-name",
-                    "description": "Endpoint DNS Name",
-                    "details": "DNS name of endpoint",
-                    "optionType": [
-                        "constant",
-                        "variable"
-                    ],
-                    "defaultOption": "constant",
-                    "dataType": {
-                        "type": "string",
-                        "minLength": 0,
-                        "maxLength": 63
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                },
-                {
-                    "key": "endpoint-api-url",
-                    "description": "API url of endpoint",
-                    "details": "API url of endpoint",
-                    "optionType": [
-                        "constant",
-                        "variable"
-                    ],
-                    "defaultOption": "constant",
-                    "dataType": {
-                        "type": "string",
-                        "minLength": 0,
-                        "maxLength": 512
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                },
-                {
-                    "key": "elements",
-                    "description": "Tracker Elements",
-                    "details": "Tracker member names separated by space",
-                    "optionType": [
-                        "constant",
-                        "variable"
-                    ],
-                    "defaultOption": "constant",
-                    "dataType": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 257
-                    },
-                    "minElements": 2,
-                    "maxElements": 2,
-                    "dataPath": [],
-                    "objectType": "list"
-                },
-                {
-                    "key": "boolean",
-                    "description": "Tracker Boolean",
-                    "details": "Type of grouping to be performed for tracker group",
-                    "optionType": [
-                        "constant",
-                        "variable",
-                        "ignore"
-                    ],
-                    "defaultOption": "ignore",
-                    "dataType": {
-                        "type": "radioButtonList",
-                        "values": [
-                            {
-                                "label": "or",
-                                "value": "or"
-                            },
-                            {
-                                "label": "and",
-                                "value": "and"
-                            }
-                        ],
-                        "default": "or"
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                },
-                {
-                    "key": "threshold",
-                    "description": "Threshold",
-                    "details": "Probe Timeout threshold <100..1000> milliseconds",
-                    "optionType": [
-                        "constant",
-                        "variable",
-                        "ignore"
-                    ],
-                    "defaultOption": "ignore",
-                    "dataType": {
-                        "type": "number",
-                        "min": 100,
-                        "max": 1000,
-                        "default": 300
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                },
-                {
-                    "key": "interval",
-                    "description": "Interval",
-                    "details": "Probe interval <10..600> seconds",
-                    "optionType": [
-                        "constant",
-                        "variable",
-                        "ignore"
-                    ],
-                    "defaultOption": "ignore",
-                    "dataType": {
-                        "type": "number",
-                        "min": 20,
-                        "max": 600,
-                        "default": 60
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                },
-                {
-                    "key": "multiplier",
-                    "description": "Multiplier",
-                    "details": "Probe failure multiplier <1..10> failed attempts",
-                    "optionType": [
-                        "constant",
-                        "variable",
-                        "ignore"
-                    ],
-                    "defaultOption": "ignore",
-                    "dataType": {
-                        "type": "number",
-                        "min": 1,
-                        "max": 10,
-                        "default": 3
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                },
-                {
-                    "key": "type",
-                    "description": "Tracker Type",
-                    "details": "Default(Interface)",
-                    "optionType": [
-                        "constant",
-                        "variable",
-                        "ignore"
-                    ],
-                    "defaultOption": "ignore",
-                    "dataType": {
-                        "type": "enum",
-                        "values": [
-                            {
-                                "key": "interface",
-                                "value": "interface"
-                            },
-                            {
-                                "key": "static-route",
-                                "value": "static-route"
-                            }
-                        ],
-                        "default": "interface"
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                }
-            ]
-        },
-        {
-            "key": "object-track",
-            "description": "Object Track",
-            "details": "Object Track configuration",
-            "optionType": [
-                "constant",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataPath": [],
-            "objectType": "tree",
-            "primaryKeys": [
-                "object-number"
-            ],
-            "children": [
-                {
-                    "key": "object-number",
-                    "description": "Object ID",
-                    "details": "Object tracker ID",
-                    "optionType": [
-                        "constant",
-                        "variable"
-                    ],
-                    "defaultOption": "constant",
-                    "dataType": {
-                        "type": "number",
-                        "min": 1,
-                        "max": 1000
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                },
-                {
-                    "key": "interface",
-                    "description": "Interface",
-                    "details": "interface name",
-                    "optionType": [
-                        "constant",
-                        "variable"
-                    ],
-                    "defaultOption": "constant",
-                    "dataType": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 32
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                },
-                {
-                    "key": "sig",
-                    "description": "SIG",
-                    "details": "service sig",
-                    "optionType": [
-                        "constant",
-                        "variable"
-                    ],
-                    "defaultOption": "constant",
-                    "dataType": {
-                        "type": "string"
-                    },
-                    "default": "global",
-                    "dataPath": [],
-                    "objectType": "object"
-                },
-                {
-                    "key": "ip",
-                    "description": "Route IP",
-                    "details": "IP address of route",
-                    "optionType": [
-                        "constant",
-                        "variable"
-                    ],
-                    "defaultOption": "constant",
-                    "dataType": {
-                        "type": "ipv4"
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                },
-                {
-                    "key": "mask",
-                    "description": "Route Ip Mask",
-                    "details": "Route Ip Mask",
-                    "optionType": [
-                        "constant",
-                        "variable",
-                        "ignore"
-                    ],
-                    "defaultOption": "ignore",
-                    "dataType": {
-                        "type": "ipv4",
-                        "default": "0.0.0.0"
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                },
-                {
-                    "key": "vpn",
-                    "description": "VPN",
-                    "details": "VPN",
-                    "optionType": [
-                        "constant"
-                    ],
-                    "defaultOption": "constant",
-                    "dataType": {
-                        "type": "number",
-                        "min": 0,
-                        "max": 65527,
-                        "default": 0
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                },
-                {
-                    "key": "object",
-                    "description": "Group Tracks ID",
-                    "details": "Tracks id in group configuration",
-                    "optionType": [
-                        "constant",
-                        "variable"
-                    ],
-                    "defaultOption": "constant",
-                    "dataPath": [],
-                    "objectType": "tree",
-                    "primaryKeys": [
-                        "number"
-                    ],
-                    "children": [
-                        {
-                            "key": "number",
-                            "description": "Track ID",
-                            "details": "Track id",
-                            "optionType": [
-                                "constant",
-                                "variable"
-                            ],
-                            "defaultOption": "constant",
-                            "dataType": {
-                                "type": "number",
-                                "min": 1,
-                                "max": 1000
-                            },
-                            "dataPath": [],
-                            "objectType": "object"
-                        }
-                    ]
-                },
-                {
-                    "key": "boolean",
-                    "description": "Criteria",
-                    "details": "Type of grouping to be performed for tracker group",
-                    "optionType": [
-                        "constant",
-                        "variable"
-                    ],
-                    "defaultOption": "constant",
-                    "dataType": {
-                        "type": "radioButtonList",
-                        "values": [
-                            {
-                                "label": "and",
-                                "value": "and"
-                            },
-                            {
-                                "label": "or",
-                                "value": "or"
-                            }
-                        ]
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                }
-            ]
-        },
-        {
-            "key": "enable",
-            "description": "On-demand Tunnel",
-            "details": "Enable or disable On-demand Tunnel",
-            "optionType": [
-                "constant",
-                "variable",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "boolean",
-                "default": "false"
-            },
-            "dataPath": [
-                "on-demand"
-            ],
-            "objectType": "object"
-        },
-        {
-            "key": "idle-timeout",
-            "description": "On-demand Tunnel Idle Timeout(min)",
-            "details": "Set the idle timeout for on-demand tunnels",
-            "optionType": [
-                "constant",
-                "variable",
-                "ignore"
+                "ignore",
+                "variable"
             ],
             "defaultOption": "ignore",
             "dataType": {
                 "type": "number",
-                "min": 1,
-                "max": 65535,
-                "default": 10
-            },
-            "dataPath": [
-                "on-demand"
-            ],
-            "objectType": "object"
-        },
-        {
-            "key": "region-id",
-            "description": "Region ID",
-            "details": "Set region ID",
-            "optionType": [
-                "constant",
-                "variable",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "number",
-                "min": 1,
-                "max": 63
-            },
-            "dataPath": [],
-            "objectType": "object"
-        },
-        {
-            "key": "secondary-region",
-            "description": "Secondary Region ID",
-            "details": "Set secondary region ID",
-            "optionType": [
-                "constant",
-                "variable",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "number",
-                "min": 1,
-                "max": 63
-            },
-            "dataPath": [],
-            "objectType": "object"
-        },
-        {
-            "key": "role",
-            "description": "Role",
-            "details": "Set the role for router",
-            "optionType": [
-                "constant",
-                "variable",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "enum",
-                "values": [
-                    {
-                        "key": "edge-router",
-                        "value": "Edge Router"
-                    },
-                    {
-                        "key": "border-router",
-                        "value": "Border Router"
-                    }
-                ]
-            },
-            "dataPath": [],
-            "objectType": "object"
-        },
-        {
-            "key": "affinity-group-number",
-            "description": "Affinity Group Number",
-            "details": "Set the affinity group number for router",
-            "optionType": [
-                "constant",
-                "variable",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "number",
-                "min": 1,
+                "min": 0,
                 "max": 63
             },
             "dataPath": [
-                "affinity-group"
-            ],
-            "objectType": "object"
-        },
-        {
-            "key": "preference",
-            "description": "Affinity Group Preference",
-            "details": "Set the affinity group preference",
-            "optionType": [
-                "constant",
-                "variable",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "number",
-                "min": 1,
-                "max": 63
-            },
-            "dataPath": [
-                "affinity-group"
+                "region"
             ],
             "objectType": "list"
         },
         {
-            "key": "preference-auto",
-            "description": "Affinity Group Preference Auto",
-            "details": "Enable affinity preference auto flag",
-            "optionType": [
-                "constant",
-                "variable",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "boolean",
-                "default": "false"
-            },
-            "dataPath": [
-                "affinity-group"
-            ],
-            "objectType": "object"
-        },
-        {
-            "key": "affinity-per-vrf",
-            "description": "Affinity Group Number for VRFs",
-            "details": "Set Affinity per VRF",
-            "optionType": [
-                "constant",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "primaryKeys": [
-                "affinity-group-number"
-            ],
-            "children": [
-                {
-                    "key": "affinity-group-number",
-                    "description": "Affinity Group Number",
-                    "details": "Router affinity group number",
-                    "optionType": [
-                        "constant",
-                        "ignore"
-                    ],
-                    "defaultOption": "ignore",
-                    "dataType": {
-                        "type": "number",
-                        "min": 1,
-                        "max": 63
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                },
-                {
-                    "key": "vrf-range",
-                    "description": "VRFs",
-                    "details": "Range of VRFs",
-                    "optionType": [
-                        "constant",
-                        "ignore"
-                    ],
-                    "defaultOption": "ignore",
-                    "dataType": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 11
-                    },
-                    "dataPath": [],
-                    "objectType": "object"
-                }
-            ],
-            "dataPath": [
-                "affinity-group"
-            ],
-            "objectType": "tree"
-        },
-        {
-            "key": "transport-gateway",
-            "description": "Transport Gateway",
-            "details": "Enable transport gateway",
-            "optionType": [
-                "constant",
-                "variable",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "boolean",
-                "default": "false"
-            },
-            "dataPath": [],
-            "objectType": "object"
-        },
-        {
-            "key": "enable-mrf-migration",
-            "description": "Enable Migration Mode to Multi-Region Fabric",
-            "details": "Enable migration mode to Multi-Region Fabric",
-            "optionType": [
-                "constant",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "enum",
-                "values": [
-                    {
-                        "key": "enabled",
-                        "value": "Enable"
-                    },
-                    {
-                        "key": "enabled-from-bgp-core",
-                        "value": "Enable from BGP Core"
-                    }
-                ]
-            },
-            "dataPath": [],
-            "objectType": "object"
-        },
-        {
-            "key": "migration-bgp-community",
-            "description": "Migration BGP Community",
-            "details": "Set BGP community during migration from BGP-core based network",
-            "optionType": [
-                "constant",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "number",
-                "min": 1,
-                "max": 4294967295
-            },
-            "dataPath": [],
-            "objectType": "object"
-        },
-        {
-            "key": "enable-management-region",
+            "key": "management-region",
             "description": "Management Region",
-            "details": "Enable Management Region",
+            "details": "Management region",
             "optionType": [
                 "constant",
-                "ignore",
-                "variable"
+                "variable",
+                "ignore"
             ],
             "defaultOption": "ignore",
             "dataType": {
@@ -2989,111 +2122,464 @@
             "objectType": "object"
         },
         {
-            "key": "vrf",
-            "description": "VRF Name",
-            "details": "VRF Name for Management Region",
+            "key": "compatible",
+            "description": "Compatible TLOC Color",
+            "details": "Configure compatible TLOC color",
             "optionType": [
                 "constant",
                 "ignore"
             ],
             "defaultOption": "ignore",
             "dataPath": [
-                "management-region"
+                "tloc-color-compatibility"
             ],
             "objectType": "tree",
-            "maxElements": 1,
             "primaryKeys": [
-                "vrf-id"
+                "color-1",
+                "color-2"
             ],
             "children": [
                 {
-                    "key": "vrf-id",
-                    "description": "VRF ID",
-                    "details": "VRF ID for management region",
+                    "key": "color-1",
+                    "description": "First TLOC color in comparsion",
+                    "details": "First TLOC color in comparsion",
                     "optionType": [
                         "constant",
-                        "variable"
+                        "ignore"
                     ],
-                    "defaultOption": "constant",
+                    "defaultOption": "ignore",
                     "dataType": {
-                        "type": "number",
-                        "min": 0,
-                        "max": 65531
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "default",
+                                "value": "default"
+                            },
+                            {
+                                "key": "mpls",
+                                "value": "mpls"
+                            },
+                            {
+                                "key": "metro-ethernet",
+                                "value": "metro-ethernet"
+                            },
+                            {
+                                "key": "biz-internet",
+                                "value": "biz-internet"
+                            },
+                            {
+                                "key": "public-internet",
+                                "value": "public-internet"
+                            },
+                            {
+                                "key": "lte",
+                                "value": "lte"
+                            },
+                            {
+                                "key": "3g",
+                                "value": "3g"
+                            },
+                            {
+                                "key": "red",
+                                "value": "red"
+                            },
+                            {
+                                "key": "green",
+                                "value": "green"
+                            },
+                            {
+                                "key": "blue",
+                                "value": "blue"
+                            },
+                            {
+                                "key": "gold",
+                                "value": "gold"
+                            },
+                            {
+                                "key": "silver",
+                                "value": "silver"
+                            },
+                            {
+                                "key": "bronze",
+                                "value": "bronze"
+                            },
+                            {
+                                "key": "custom1",
+                                "value": "custom1"
+                            },
+                            {
+                                "key": "custom2",
+                                "value": "custom2"
+                            },
+                            {
+                                "key": "custom3",
+                                "value": "custom3"
+                            },
+                            {
+                                "key": "private1",
+                                "value": "private1"
+                            },
+                            {
+                                "key": "private2",
+                                "value": "private2"
+                            },
+                            {
+                                "key": "private3",
+                                "value": "private3"
+                            },
+                            {
+                                "key": "private4",
+                                "value": "private4"
+                            },
+                            {
+                                "key": "private5",
+                                "value": "private5"
+                            },
+                            {
+                                "key": "private6",
+                                "value": "private6"
+                            }
+                        ]
                     },
                     "dataPath": [],
                     "objectType": "object"
                 },
                 {
-                    "key": "gateway-preference",
-                    "description": "List of affinity group preferences for VRF",
-                    "details": "List of affinity group preferences for VRF",
+                    "key": "color-2",
+                    "description": "Second TLOC color in comparsion",
+                    "details": "Second TLOC color in comparsion",
                     "optionType": [
                         "constant",
-                        "variable",
                         "ignore"
                     ],
                     "defaultOption": "ignore",
                     "dataType": {
-                        "type": "number",
-                        "min": 1,
-                        "max": 63
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "default",
+                                "value": "default"
+                            },
+                            {
+                                "key": "mpls",
+                                "value": "mpls"
+                            },
+                            {
+                                "key": "metro-ethernet",
+                                "value": "metro-ethernet"
+                            },
+                            {
+                                "key": "biz-internet",
+                                "value": "biz-internet"
+                            },
+                            {
+                                "key": "public-internet",
+                                "value": "public-internet"
+                            },
+                            {
+                                "key": "lte",
+                                "value": "lte"
+                            },
+                            {
+                                "key": "3g",
+                                "value": "3g"
+                            },
+                            {
+                                "key": "red",
+                                "value": "red"
+                            },
+                            {
+                                "key": "green",
+                                "value": "green"
+                            },
+                            {
+                                "key": "blue",
+                                "value": "blue"
+                            },
+                            {
+                                "key": "gold",
+                                "value": "gold"
+                            },
+                            {
+                                "key": "silver",
+                                "value": "silver"
+                            },
+                            {
+                                "key": "bronze",
+                                "value": "bronze"
+                            },
+                            {
+                                "key": "custom1",
+                                "value": "custom1"
+                            },
+                            {
+                                "key": "custom2",
+                                "value": "custom2"
+                            },
+                            {
+                                "key": "custom3",
+                                "value": "custom3"
+                            },
+                            {
+                                "key": "private1",
+                                "value": "private1"
+                            },
+                            {
+                                "key": "private2",
+                                "value": "private2"
+                            },
+                            {
+                                "key": "private3",
+                                "value": "private3"
+                            },
+                            {
+                                "key": "private4",
+                                "value": "private4"
+                            },
+                            {
+                                "key": "private5",
+                                "value": "private5"
+                            },
+                            {
+                                "key": "private6",
+                                "value": "private6"
+                            }
+                        ]
                     },
                     "dataPath": [],
-                    "objectType": "list"
+                    "objectType": "object"
                 }
             ]
         },
         {
-            "key": "management-gateway",
-            "description": "Management Gateway",
-            "details": "Enable Management Gateway",
+            "key": "incompatible",
+            "description": "Incompatible TLOC Color",
+            "details": "Configure incompatible TLOC color",
             "optionType": [
                 "constant",
-                "ignore",
-                "variable"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "boolean",
-                "default": "false"
-            },
-            "dataPath": [],
-            "objectType": "object"
-        },
-        {
-            "key": "epfr",
-            "description": "Enhanced App-Aware Routing",
-            "details": "Enable SLA Dampening and Enhanced App-Aware Routing.",
-            "optionType": [
-                "constant",
-                "variable",
                 "ignore"
             ],
             "defaultOption": "ignore",
-            "dataType": {
-                "type": "enum",
-                "values": [
-                    {
-                        "key": "disabled",
-                        "value": "Disabled"
+            "dataPath": [
+                "tloc-color-compatibility"
+            ],
+            "objectType": "tree",
+            "primaryKeys": [
+                "color-1",
+                "color-2"
+            ],
+            "children": [
+                {
+                    "key": "color-1",
+                    "description": "First TLOC color in comparsion",
+                    "details": "First TLOC color in comparsion",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "default",
+                                "value": "default"
+                            },
+                            {
+                                "key": "mpls",
+                                "value": "mpls"
+                            },
+                            {
+                                "key": "metro-ethernet",
+                                "value": "metro-ethernet"
+                            },
+                            {
+                                "key": "biz-internet",
+                                "value": "biz-internet"
+                            },
+                            {
+                                "key": "public-internet",
+                                "value": "public-internet"
+                            },
+                            {
+                                "key": "lte",
+                                "value": "lte"
+                            },
+                            {
+                                "key": "3g",
+                                "value": "3g"
+                            },
+                            {
+                                "key": "red",
+                                "value": "red"
+                            },
+                            {
+                                "key": "green",
+                                "value": "green"
+                            },
+                            {
+                                "key": "blue",
+                                "value": "blue"
+                            },
+                            {
+                                "key": "gold",
+                                "value": "gold"
+                            },
+                            {
+                                "key": "silver",
+                                "value": "silver"
+                            },
+                            {
+                                "key": "bronze",
+                                "value": "bronze"
+                            },
+                            {
+                                "key": "custom1",
+                                "value": "custom1"
+                            },
+                            {
+                                "key": "custom2",
+                                "value": "custom2"
+                            },
+                            {
+                                "key": "custom3",
+                                "value": "custom3"
+                            },
+                            {
+                                "key": "private1",
+                                "value": "private1"
+                            },
+                            {
+                                "key": "private2",
+                                "value": "private2"
+                            },
+                            {
+                                "key": "private3",
+                                "value": "private3"
+                            },
+                            {
+                                "key": "private4",
+                                "value": "private4"
+                            },
+                            {
+                                "key": "private5",
+                                "value": "private5"
+                            },
+                            {
+                                "key": "private6",
+                                "value": "private6"
+                            }
+                        ]
                     },
-                    {
-                        "key": "aggressive",
-                        "value": "Aggressive"
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "color-2",
+                    "description": "Second TLOC color in comparsion",
+                    "details": "Second TLOC color in comparsion",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "default",
+                                "value": "default"
+                            },
+                            {
+                                "key": "mpls",
+                                "value": "mpls"
+                            },
+                            {
+                                "key": "metro-ethernet",
+                                "value": "metro-ethernet"
+                            },
+                            {
+                                "key": "biz-internet",
+                                "value": "biz-internet"
+                            },
+                            {
+                                "key": "public-internet",
+                                "value": "public-internet"
+                            },
+                            {
+                                "key": "lte",
+                                "value": "lte"
+                            },
+                            {
+                                "key": "3g",
+                                "value": "3g"
+                            },
+                            {
+                                "key": "red",
+                                "value": "red"
+                            },
+                            {
+                                "key": "green",
+                                "value": "green"
+                            },
+                            {
+                                "key": "blue",
+                                "value": "blue"
+                            },
+                            {
+                                "key": "gold",
+                                "value": "gold"
+                            },
+                            {
+                                "key": "silver",
+                                "value": "silver"
+                            },
+                            {
+                                "key": "bronze",
+                                "value": "bronze"
+                            },
+                            {
+                                "key": "custom1",
+                                "value": "custom1"
+                            },
+                            {
+                                "key": "custom2",
+                                "value": "custom2"
+                            },
+                            {
+                                "key": "custom3",
+                                "value": "custom3"
+                            },
+                            {
+                                "key": "private1",
+                                "value": "private1"
+                            },
+                            {
+                                "key": "private2",
+                                "value": "private2"
+                            },
+                            {
+                                "key": "private3",
+                                "value": "private3"
+                            },
+                            {
+                                "key": "private4",
+                                "value": "private4"
+                            },
+                            {
+                                "key": "private5",
+                                "value": "private5"
+                            },
+                            {
+                                "key": "private6",
+                                "value": "private6"
+                            }
+                        ]
                     },
-                    {
-                        "key": "moderate",
-                        "value": "Moderate"
-                    },
-                    {
-                        "key": "conservative",
-                        "value": "Conservative"
-                    }
-                ],
-                "default": "disabled"
-            },
-            "dataPath": [],
-            "objectType": "object"
+                    "dataPath": [],
+                    "objectType": "object"
+                }
+            ]
         }
     ]
 }

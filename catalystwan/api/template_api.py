@@ -8,6 +8,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional, Type, overload
 
 from ciscoconfparse import CiscoConfParse  # type: ignore
+from typing_extensions import deprecated
 
 from catalystwan.api.task_status_api import Task
 from catalystwan.api.templates.cli_template import CLITemplate
@@ -40,9 +41,9 @@ from catalystwan.api.templates.models.system_vsmart_model import SystemVsmart
 from catalystwan.dataclasses import Device, DeviceTemplateInfo, FeatureTemplateInfo, FeatureTemplatesTypes, TemplateInfo
 from catalystwan.endpoints.configuration_device_template import FeatureToCLIPayload
 from catalystwan.exceptions import AttachedError, CatalystwanDeprecationWarning, TemplateNotFoundError
+from catalystwan.models.common import DeviceModel
 from catalystwan.response import ManagerResponse
 from catalystwan.typed_list import DataSequence
-from catalystwan.utils.device_model import DeviceModel
 from catalystwan.utils.dict import merge
 from catalystwan.utils.pydantic_field import get_extra_field
 from catalystwan.utils.template_type import TemplateType
@@ -388,7 +389,6 @@ class TemplatesAPI:
                 by_alias=True, mode="json"
             )
         else:
-            raise CatalystwanDeprecationWarning("Obsolete way to use Feature Templates!")
             payload = json.loads(template.generate_payload(self.session))
 
         response = self.session.put(f"/dataservice/template/feature/{data.id}", json=payload)
@@ -421,7 +421,6 @@ class TemplatesAPI:
             if self.is_created_by_generator(template):
                 template_id = self.create_by_generator(template, debug)
             else:
-                raise CatalystwanDeprecationWarning("Obsolete way to use Feature Templates!")
                 template_id = self._create_feature_template(template)
             template_type = FeatureTemplate.__name__
 
@@ -439,6 +438,9 @@ class TemplatesAPI:
         logger.info(f"Template {template.template_name} ({template_type}) was created successfully ({template_id}).")
         return template_id
 
+    @deprecated(
+        "Obsolete way to use Feature Templates - only Feature Templates", category=CatalystwanDeprecationWarning
+    )
     def _create_feature_template(self, template: FeatureTemplate) -> str:
         payload = template.generate_payload(self.session)
         response = self.session.post("/dataservice/template/feature", json=json.loads(payload))
@@ -558,7 +560,7 @@ class TemplatesAPI:
             name=template.template_name,
             description=template.template_description,
             template_type=template.type,
-            device_types=[device_model.value for device_model in template.device_models],
+            device_types=[device_model for device_model in template.device_models],
             definition={},
         )  # type: ignore
 
@@ -606,7 +608,7 @@ class TemplatesAPI:
         available_devices_for_template = [device["name"] for device in template_type.device_models]
 
         provided_device_models = [
-            dev_mod.value if type(dev_mod) is DeviceModel else dev_mod for dev_mod in template.device_models
+            dev_mod if type(dev_mod) is DeviceModel else dev_mod for dev_mod in template.device_models
         ]
 
         if not all(dev in available_devices_for_template for dev in provided_device_models):

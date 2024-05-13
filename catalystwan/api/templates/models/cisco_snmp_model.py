@@ -1,13 +1,17 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-from enum import Enum
 from pathlib import Path
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List, Literal, Optional
 
 from pydantic import ConfigDict, Field
 
 from catalystwan.api.templates.bool_str import BoolStr
 from catalystwan.api.templates.feature_template import FeatureTemplate, FeatureTemplateValidator
+
+Authorization = Literal["read-only"]
+SecurityLevel = Literal["no-auth-no-priv", "auth-no-priv", "auth-priv"]
+Auth = Literal["md5", "sha"]
+Priv = Literal["aes-cfb-128", "aes-256-cfb-128"]
 
 
 class Oid(FeatureTemplateValidator):
@@ -22,36 +26,19 @@ class View(FeatureTemplateValidator):
     oid: Optional[List[Oid]] = Field(default=None, description="List of OIDs to include or exclude in the view")
 
 
-class Authorization(str, Enum):
-    READ_ONLY = "read-only"
-
-
 class Community(FeatureTemplateValidator):
     name: str = Field(description="The name of the SNMP community")
     view: str = Field(description="The SNMP view associated with the community")
     authorization: Authorization = Field(description="The authorization level of the community")
 
 
-class SecurityLevel(str, Enum):
-    NOAUTHNOPRIV = "no-auth-no-priv"
-    AUTHNOPRIV = "auth-no-priv"
-    AUTHPRIV = "auth-priv"
-
-
 class Group(FeatureTemplateValidator):
     name: str = Field(description="The name of the SNMP group")
-    security_level: SecurityLevel = Field(description="The security level associated with the group")
+    security_level: SecurityLevel = Field(
+        description="The security level associated with the group", json_schema_extra={"vmanage_key": "security-level"}
+    )
     view: str = Field(description="The SNMP view associated with the group")
     model_config = ConfigDict(populate_by_name=True)
-
-
-class Auth(str, Enum):
-    MD5 = "md5"
-    SHA = "sha"
-
-
-class Priv(str, Enum):
-    AES_CFB_128 = "aes-cfb-128"
 
 
 class User(FeatureTemplateValidator):
@@ -60,7 +47,7 @@ class User(FeatureTemplateValidator):
     auth_password: Optional[str] = Field(
         default=None, description="The password for authentication", json_schema_extra={"vmanage_key": "auth-password"}
     )
-    priv: Optional[Priv] = Field(description="The privacy (encryption) protocol used")
+    priv: Optional[Priv] = Field(default=None, description="The privacy (encryption) protocol used")
     priv_password: Optional[str] = Field(
         default=None, description="The password for privacy", json_schema_extra={"vmanage_key": "priv-password"}
     )
