@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 from catalystwan.api.policy_api import POLICY_LIST_ENDPOINTS_MAP
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
 from catalystwan.models.configuration.config_migration import (
+    ConfigTransformResult,
     DeviceTemplateWithInfo,
     TransformedConfigGroup,
     TransformedFeatureProfile,
@@ -154,7 +155,8 @@ def log_progress(task: str, completed: int, total: int) -> None:
     logger.info(f"{task} {completed}/{total}")
 
 
-def transform(ux1: UX1Config) -> UX2Config:
+def transform(ux1: UX1Config) -> ConfigTransformResult:
+    transform_result = ConfigTransformResult()
     ux2 = UX2Config()
     subtemplates_mapping = defaultdict(set)
     # Create Feature Profiles and Config Group
@@ -263,14 +265,14 @@ def transform(ux1: UX1Config) -> UX2Config:
             except CatalystwanConverterCantConvertException as e:
                 exception_message = f"Feature Template ({ft.name}) missing data during conversion: {e}."
                 logger.warning(exception_message)
-                ux2.add_failed_conversion_parcel(
+                transform_result.add_failed_conversion_parcel(
                     exception_message=exception_message,
                     feature_template=ft,
                 )
             except Exception as e:
                 exception_message = f"Feature Template ({ft.name}) unexpected error during converion: {e}."
                 logger.warning(exception_message)
-                ux2.add_failed_conversion_parcel(
+                transform_result.add_failed_conversion_parcel(
                     exception_message=exception_message,
                     feature_template=ft,
                 )
@@ -285,7 +287,8 @@ def transform(ux1: UX1Config) -> UX2Config:
             logger.warning(f"{policy_list.type} {policy_list.list_id} {policy_list.name} was not converted: {e}")
 
     ux2 = merge_parcels(ux2)
-    return ux2
+    transform_result.ux2_config = ux2
+    return transform_result
 
 
 def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, int], None] = log_progress) -> UX1Config:
@@ -339,7 +342,7 @@ def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, in
 
 
 def push_ux2_config(
-    session: ManagerSession, config: UX2Config, progress: Callable[[str, int, int], None] = log_progress
+    session: ManagerSession, config: ConfigTransformResult, progress: Callable[[str, int, int], None] = log_progress
 ) -> UX2ConfigRollback:
     config_pusher = UX2ConfigPusher(session, config, progress)
     rollback = config_pusher.push()

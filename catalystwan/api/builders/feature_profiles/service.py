@@ -11,7 +11,7 @@ from typing_extensions import Annotated
 from catalystwan.api.builders.feature_profiles.handler import handle_build_raport
 from catalystwan.api.feature_profile_api import ServiceFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
-from catalystwan.models.builders import FeatureProfileBuildRaport
+from catalystwan.models.builders import FeatureProfileBuildReport
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
     AnyServiceParcel,
@@ -111,7 +111,7 @@ class ServiceFeatureProfileBuilder:
         logger.debug(f"Adding subparcel parcel {parcel.parcel_name} to VPN {vpn_tag}")
         self._depended_items_on_vpns[vpn_tag].append(parcel)
 
-    def build(self) -> FeatureProfileBuildRaport:
+    def build(self) -> FeatureProfileBuildReport:
         """
         Builds the feature profile by creating parcels for independent items,
         VPNs, and sub-parcels dependent on VPNs.
@@ -120,7 +120,7 @@ class ServiceFeatureProfileBuilder:
             Service feature profile UUID
         """
         profile_uuid = self._endpoints.create_sdwan_service_feature_profile(self._profile).id
-        self.build_raport = FeatureProfileBuildRaport(profile_uuid=profile_uuid, profile_name=self._profile.name)
+        self.build_raport = FeatureProfileBuildReport(profile_uuid=profile_uuid, profile_name=self._profile.name)
         for parcel in self._independent_items:
             self._create_parcel(profile_uuid, parcel)
         for vpn_tag, vpn_parcel in self._independent_items_vpns.items():

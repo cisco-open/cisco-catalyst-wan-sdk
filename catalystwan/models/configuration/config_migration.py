@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from catalystwan.api.templates.device_template.device_template import DeviceTemplate, GeneralTemplate
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
-from catalystwan.models.builders import FailedParcel, FeatureProfileBuildRaport
+from catalystwan.models.builders import FailedParcel, FeatureProfileBuildReport
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
 from catalystwan.models.configuration.topology_group import TopologyGroup
@@ -129,7 +129,7 @@ class TransformedParcel(BaseModel):
     parcel: AnyParcel
 
 
-class FailedConversionParcel(BaseModel):
+class FailedConversionItem(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     feature_template: Optional[FeatureTemplateInformation] = Field(
         default=None, serialization_alias="featureTemplate", validation_alias="featureTemplate"
@@ -172,9 +172,6 @@ class UX2Config(BaseModel):
         serialization_alias="profileParcels",
         validation_alias="profileParcels",
     )
-    failed_conversion_parcels: List[FailedConversionParcel] = Field(
-        default_factory=list, serialization_alias="failedConversionParcels", validation_alias="failedConversionParcels"
-    )
 
     @model_validator(mode="before")
     @classmethod
@@ -187,6 +184,15 @@ class UX2Config(BaseModel):
                 break
             profile_parcel["parcel"]["type_"] = profile_parcel["header"]["type"]
         return values
+
+
+class ConfigTransformResult(BaseModel):
+    ux2_config: UX2Config = Field(
+        default_factory=lambda: UX2Config(), serialization_alias="ux2Config", validation_alias="ux2Config"
+    )
+    failed_items: List[FailedConversionItem] = Field(
+        default_factory=list, serialization_alias="failedConversionItems", validation_alias="failedConversionItems"
+    )
 
     def add_failed_conversion_parcel(
         self,
@@ -202,8 +208,8 @@ class UX2Config(BaseModel):
             ]
         ] = None,
     ):
-        self.failed_conversion_parcels.append(
-            FailedConversionParcel(
+        self.failed_items.append(
+            FailedConversionItem(
                 feature_template=feature_template,
                 policy=policy,
                 exception_message=exception_message,
@@ -211,7 +217,7 @@ class UX2Config(BaseModel):
         )
 
 
-class ConfigGroupRaport(BaseModel):
+class ConfigGroupReport(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     name: str = Field(
         serialization_alias="ConfigGroupName",
@@ -223,7 +229,7 @@ class ConfigGroupRaport(BaseModel):
         validation_alias="ConfigGroupUuid",
         description="UUID of the Config Group created from Device Template",
     )
-    feature_profiles: List[FeatureProfileBuildRaport] = Field(
+    feature_profiles: List[FeatureProfileBuildReport] = Field(
         default=[],
         serialization_alias="FeatureProfiles",
         validation_alias="FeatureProfiles",
@@ -231,9 +237,9 @@ class ConfigGroupRaport(BaseModel):
     )
 
 
-class UX2ConfigPushRaport(BaseModel):
+class UX2ConfigPushReport(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    config_groups: List[ConfigGroupRaport] = Field(
+    config_groups: List[ConfigGroupReport] = Field(
         default_factory=list, serialization_alias="ConfigGroups", validation_alias="ConfigGroups"
     )
     success_rate_message: str = Field(
@@ -242,14 +248,14 @@ class UX2ConfigPushRaport(BaseModel):
     failed_push_parcels: List[FailedParcel] = Field(
         default_factory=list, serialization_alias="FailedPushParcels", validation_alias="FailedPushParcels"
     )
-    failed_converion_parcels: List[FailedConversionParcel] = Field(
-        default_factory=list, serialization_alias="FailedConversionParcels", validation_alias="FailedConversionParcels"
+    failed_conversion_items: List[FailedConversionItem] = Field(
+        default_factory=list, serialization_alias="FailedConversionItems", validation_alias="FailedConversionItems"
     )
     created_parcels: int = Field(default=0, serialization_alias="CreatedParcels", validation_alias="CreatedParcels")
     failed_parcels: int = Field(default=0, serialization_alias="FailedParcels", validation_alias="FailedParcels")
 
-    def add_raport(self, name: str, uuid: UUID, feature_profiles: List[FeatureProfileBuildRaport]) -> None:
-        self.config_groups.append(ConfigGroupRaport(name=name, uuid=uuid, feature_profiles=feature_profiles))
+    def add_report(self, name: str, uuid: UUID, feature_profiles: List[FeatureProfileBuildReport]) -> None:
+        self.config_groups.append(ConfigGroupReport(name=name, uuid=uuid, feature_profiles=feature_profiles))
 
     def set_push_success_rate(self):
         for config_group in self.config_groups:
@@ -284,10 +290,10 @@ class UX2ConfigRollback(BaseModel):
         validation_alias="FeatureProfileIds",
     )
 
-    raport: UX2ConfigPushRaport = Field(
-        default=UX2ConfigPushRaport(),
-        serialization_alias="ConfigPushRaport",
-        validation_alias="ConfigPushRaport",
+    report: UX2ConfigPushReport = Field(
+        default=UX2ConfigPushReport(),
+        serialization_alias="ConfigPushReport",
+        validation_alias="ConfigPushReport",
     )
 
     def add_config_group(self, config_group_id: UUID) -> None:

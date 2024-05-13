@@ -308,7 +308,7 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
         )
     )
     # Act
-    ux2_config = transform(ux1_config)
+    ux2_config = transform(ux1_config).ux2_config
     # There must be feature profiles named DeviceTemplate_service and DeviceTemplate_transport_and_management
     service_profile = None
     transport_and_management_profile = None
@@ -359,6 +359,7 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
     )
 
     # Assert
+<<<<<<< HEAD
 
     # Assert Feature Profiles have correct VPNs
     assert service_profile is not None
@@ -371,3 +372,81 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
     assert service_gre is not None
     assert service_ethernet is not None
     assert service_ethernet_ipsec is not None
+=======
+    assert service_profile.header.subelements == set([vpn_1_uuid])
+    assert transport_and_management_profile.header.subelements == set([vpn_0_uuid, vpn_512_uuid])
+
+
+def test_when_one_feature_template_with_invalid_payload_expect_one_failed_item_in_conversion_result():
+    invalid_ft_uuid = uuid4()
+    invalid_ft = FeatureTemplateInformation(
+        last_updated_by="",
+        id=str(invalid_ft_uuid),
+        factory_default=True,
+        name="Invalid",
+        devices_attached=0,
+        description="",
+        last_updated_on=datetime.now(),
+        resource_group="global",
+        template_type="cisco_logging",
+        device_type=[""],
+        version="15.0.0",
+        template_definiton="rasrewrwqerqwer",
+    )
+    correct_ft_uuid = uuid4()
+    correct_ft = FeatureTemplateInformation(
+        last_updated_by="",
+        id=str(correct_ft_uuid),
+        factory_default=True,
+        name="Factory_Default_Cisco_VPN_0_Template",
+        devices_attached=0,
+        description="Default Cisco Transport VPN template settings",
+        last_updated_on=datetime.now(),
+        resource_group="global",
+        template_type="cisco_vpn",
+        device_type=[""],
+        version="15.0.0",
+        template_definiton='{"vpn-id":{"vipObjectType":"object","vipType":"constant","vipValue":0},'
+        '"name":{"vipObjectType":"object","vipType":"constant","vipValue":"Transport VPN"},'
+        '"ecmp-hash-key":{"layer4":{"vipObjectType":"object","vipType":"ignore","vipValue":"false"}},'
+        '"host":{"vipType":"ignore","vipValue":[],"vipObjectType":"tree","vipPrimaryKey":["hostname"]}}',
+    )
+    ux1_config = UX1Config(
+        templates=UX1Templates(
+            feature_templates=[invalid_ft, correct_ft],
+            device_templates=[
+                DeviceTemplateWithInfo(
+                    template_id=str(uuid4()),
+                    factory_default=False,
+                    devices_attached=2,
+                    template_name="DeviceTemplate",
+                    template_description="DT-example",
+                    device_role="None",
+                    device_type="None",
+                    security_policy_id="None",
+                    policy_id="None",
+                    generalTemplates=[
+                        GeneralTemplate(
+                            name="Invalid",
+                            templateId=str(invalid_ft_uuid),
+                            templateType="cisco_logging",
+                            subTemplates=[],
+                        ),
+                        GeneralTemplate(
+                            name="Factory_Default_Cisco_VPN_0_Template",
+                            templateId=str(correct_ft_uuid),
+                            templateType="cisco_vpn",
+                            subTemplates=[],
+                        ),
+                    ],
+                )
+            ],
+        )
+    )
+    # Act
+    transform_result = transform(ux1_config)
+    # Assert
+    assert len(transform_result.failed_items) == 1
+    assert transform_result.failed_items[0].feature_template == invalid_ft
+    assert len(transform_result.ux2_config.profile_parcels) == 1
+>>>>>>> ebb2602b (Raport -> Report. transform now creates a ConfigTransformResult which contains ux2_config and failed_items)

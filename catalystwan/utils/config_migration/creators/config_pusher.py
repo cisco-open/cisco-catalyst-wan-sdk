@@ -6,8 +6,9 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from catalystwan.endpoints.configuration_group import ProfileId
-from catalystwan.models.builders import FeatureProfileBuildRaport
+from catalystwan.models.builders import FeatureProfileBuildReport
 from catalystwan.models.configuration.config_migration import (
+    ConfigTransformResult,
     TransformedFeatureProfile,
     TransformedParcel,
     UX2Config,
@@ -27,15 +28,18 @@ class ConfigurationMapping(BaseModel):
 
 class UX2ConfigPusher:
     def __init__(
-        self, session: ManagerSession, ux2_config: UX2Config, progress: Callable[[str, int, int], None]
+        self,
+        session: ManagerSession,
+        transform_config_result: ConfigTransformResult,
+        progress: Callable[[str, int, int], None],
     ) -> None:
         self._session = session
-        self._config_map = self._create_config_map(ux2_config)
+        self._config_map = self._create_config_map(transform_config_result.ux2_config)
         self._config_rollback = UX2ConfigRollback()
-        self._ux2_config = ux2_config
+        self._ux2_config = transform_config_result.ux2_config
         self._progress = progress
 
-        self._config_rollback.raport.failed_converion_parcels = ux2_config.failed_conversion_parcels
+        self._config_rollback.report.failed_conversion_items = transform_config_result.failed_items
 
     def _create_config_map(self, ux2_config: UX2Config) -> ConfigurationMapping:
         return ConfigurationMapping(
@@ -45,8 +49,8 @@ class UX2ConfigPusher:
 
     def push(self) -> UX2ConfigRollback:
         self._create_config_groups()
-        self._config_rollback.raport.set_failed_push_parcels_flat_list()
-        self._config_rollback.raport.set_push_success_rate()
+        self._config_rollback.report.set_failed_push_parcels_flat_list()
+        self._config_rollback.report.set_push_success_rate()
         logger.debug(f"Configuration push completed. Rollback configuration {self._config_rollback}")
         return self._config_rollback
 
@@ -65,14 +69,14 @@ class UX2ConfigPusher:
             config_group_payload.profiles = [ProfileId(id=profile.profile_uuid) for profile in created_profiles]
             cg_id = self._session.endpoints.configuration_group.create_config_group(config_group_payload).id
             self._config_rollback.add_config_group(cg_id)
-            self._config_rollback.raport.add_raport(
+            self._config_rollback.report.add_report(
                 name=transformed_config_group.config_group.name,
                 uuid=cg_id,
                 feature_profiles=created_profiles,
             )
 
-    def _create_feature_profile_and_parcels(self, feature_profiles_ids: List[UUID]) -> List[FeatureProfileBuildRaport]:
-        feature_profiles: List[FeatureProfileBuildRaport] = []
+    def _create_feature_profile_and_parcels(self, feature_profiles_ids: List[UUID]) -> List[FeatureProfileBuildReport]:
+        feature_profiles: List[FeatureProfileBuildReport] = []
         feature_profile_length = len(feature_profiles_ids)
         for i, feature_profile_id in enumerate(feature_profiles_ids):
             self._progress("Creating Feature Profile", i + 1, feature_profile_length)

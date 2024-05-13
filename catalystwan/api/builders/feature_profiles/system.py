@@ -8,7 +8,7 @@ from uuid import UUID
 from catalystwan.api.builders.feature_profiles.handler import handle_build_raport
 from catalystwan.api.feature_profile_api import SystemFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
-from catalystwan.models.builders import FeatureProfileBuildRaport
+from catalystwan.models.builders import FeatureProfileBuildReport
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.configuration.feature_profile.sdwan.system import AnySystemParcel
 
@@ -62,7 +62,7 @@ class SystemFeatureProfileBuilder:
         """
         self._independent_items.append(parcel)
 
-    def build(self) -> FeatureProfileBuildRaport:
+    def build(self) -> FeatureProfileBuildReport:
         """
         Builds the feature profile.
 
@@ -71,7 +71,7 @@ class SystemFeatureProfileBuilder:
         """
 
         profile_uuid = self._endpoints.create_sdwan_system_feature_profile(self._profile).id
-        self.build_raport = FeatureProfileBuildRaport(profile_uuid=profile_uuid, profile_name=self._profile.name)
+        self.build_raport = FeatureProfileBuildReport(profile_uuid=profile_uuid, profile_name=self._profile.name)
         for parcel in self._independent_items:
             self._create_parcels(profile_uuid, parcel)
         return self.build_raport

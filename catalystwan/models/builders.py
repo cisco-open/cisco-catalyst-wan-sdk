@@ -26,7 +26,7 @@ class FailedParcel(BaseModel):
     )
 
 
-class FeatureProfileBuildRaport(BaseModel):
+class FeatureProfileBuildReport(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     profile_name: str = Field(serialization_alias="profileName", validation_alias="profileName")
     profile_uuid: UUID = Field(serialization_alias="profileUuid", validation_alias="profileUuid")
