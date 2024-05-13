@@ -6,7 +6,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from catalystwan.api.builders.feature_profiles.handler import handle_build_rapport
+from catalystwan.api.builders.feature_profiles.handler import handle_build_raport
 from catalystwan.api.feature_profile_api import TransportFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
 from catalystwan.models.builders import FeatureProfileBuildRaport
@@ -105,7 +105,7 @@ class TransportAndManagementProfileBuilder:
         """
 
         profile_uuid = self._endpoints.create_transport_feature_profile(self._profile).id
-        self.build_rapport = FeatureProfileBuildRaport(profile_uuid=profile_uuid, profile_name=self._profile.name)
+        self.build_raport = FeatureProfileBuildRaport(profile_uuid=profile_uuid, profile_name=self._profile.name)
         for parcel in self._independent_items:
             self._create_parcel(profile_uuid, parcel)
         for vpn_tag, vpn_parcel in self._independent_items_vpns.items():
@@ -113,8 +113,8 @@ class TransportAndManagementProfileBuilder:
             vpn_uuid = self._create_parcel(profile_uuid, vpn_parcel)
             for subparcel in self._dependent_items_on_vpns[vpn_tag]:
                 self._create_parcel(profile_uuid, subparcel, vpn_uuid)
-        return self.build_rapport
+        return self.build_raport
 
-    @handle_build_rapport
+    @handle_build_raport
     def _create_parcel(self, profile_uuid: UUID, parcel: AnyTransportParcel, vpn_uuid: Optional[None] = None) -> UUID:
         return self._api.create_parcel(profile_uuid, parcel, vpn_uuid).id

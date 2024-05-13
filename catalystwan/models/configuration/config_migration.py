@@ -248,7 +248,7 @@ class UX2ConfigPushRaport(BaseModel):
     created_parcels: int = Field(default=0, serialization_alias="CreatedParcels", validation_alias="CreatedParcels")
     failed_parcels: int = Field(default=0, serialization_alias="FailedParcels", validation_alias="FailedParcels")
 
-    def add_rapport(self, name: str, uuid: UUID, feature_profiles: List[FeatureProfileBuildRaport]) -> None:
+    def add_raport(self, name: str, uuid: UUID, feature_profiles: List[FeatureProfileBuildRaport]) -> None:
         self.config_groups.append(ConfigGroupRaport(name=name, uuid=uuid, feature_profiles=feature_profiles))
 
     def set_push_success_rate(self):

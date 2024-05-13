@@ -65,7 +65,7 @@ class UX2ConfigPusher:
             config_group_payload.profiles = [ProfileId(id=profile.profile_uuid) for profile in created_profiles]
             cg_id = self._session.endpoints.configuration_group.create_config_group(config_group_payload).id
             self._config_rollback.add_config_group(cg_id)
-            self._config_rollback.raport.add_rapport(
+            self._config_rollback.raport.add_raport(
                 name=transformed_config_group.config_group.name,
                 uuid=cg_id,
                 feature_profiles=created_profiles,
