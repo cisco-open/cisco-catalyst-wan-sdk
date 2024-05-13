@@ -473,3 +473,77 @@ VrrpTrackerAction = Literal[
     "Decrement",
     "Shutdown",
 ]
+
+ClockRate = Literal[
+    "1000000",
+    "115200",
+    "1200",
+    "125000",
+    "14400",
+    "148000",
+    "19200",
+    "192000",
+    "2000000",
+    "2400",
+    "250000",
+    "256000",
+    "28800",
+    "32000",
+    "38400",
+    "384000",
+    "4000000",
+    "4800",
+    "48000",
+    "500000",
+    "512000",
+    "5300000",
+    "56000",
+    "57600",
+    "64000",
+    "72000",
+    "768000",
+    "800000",
+    "8000000",
+    "9600",
+]
+
+LineMode = Literal[
+    "primary",
+    "secondary",
+]
+
+T1Framing = Literal[
+    "esf",
+    "sf",
+]
+
+T1Linecode = Literal[
+    "ami",
+    "b8zs",
+]
+
+E1Framing = Literal[
+    "crc4",
+    "no-crc4",
+]
+
+E1Linecode = Literal[
+    "ami",
+    "hdb3",
+]
+
+CableLengthShortValue = Literal[
+    "110ft",
+    "220ft",
+    "330ft",
+    "440ft",
+    "550ft",
+    "660ft",
+]
+
+CableLengthLongValue = Literal[
+    "-15db",
+    "-22.5db",
+    "-7.5db",
+    "0db",
+]

@@ -1,12 +1,12 @@
 from copy import deepcopy
 
 from catalystwan.api.configuration_groups.parcel import as_global
-from catalystwan.models.common import Carrier, EncapType
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask, Encapsulation
+from catalystwan.models.common import Carrier, ClockRate, EncapType
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.t1e1serial import (
     Advanced,
     AllowService,
-    ClockRate,
+    Encapsulation,
     EncapsulationSerial,
     T1E1SerialParcel,
     Tunnel,

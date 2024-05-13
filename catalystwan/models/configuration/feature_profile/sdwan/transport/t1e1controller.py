@@ -3,6 +3,15 @@ from typing import List, Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_global
+from catalystwan.models.common import (
+    CableLengthLongValue,
+    CableLengthShortValue,
+    E1Framing,
+    E1Linecode,
+    LineMode,
+    T1Framing,
+    T1Linecode,
+)
 from catalystwan.models.configuration.feature_profile.common import ChannelGroup
 
 ControllerType = Literal[
@@ -10,16 +19,6 @@ ControllerType = Literal[
     "t1",
 ]
 
-
-T1Framing = Literal[
-    "esf",
-    "sf",
-]
-
-T1Linecode = Literal[
-    "ami",
-    "b8zs",
-]
 
 T1Name = Literal[
     "T1",
@@ -38,16 +37,6 @@ class T1Basic(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     t1: T1 = Field(validation_alias="T1", serialization_alias="T1")
 
-
-E1Framing = Literal[
-    "crc4",
-    "no-crc4",
-]
-
-E1Linecode = Literal[
-    "ami",
-    "hdb3",
-]
 
 E1Name = Literal[
     "E1",
@@ -74,34 +63,17 @@ class CableLength(BaseModel):
     )
 
 
-LengthShort = Literal[
-    "110ft",
-    "220ft",
-    "330ft",
-    "440ft",
-    "550ft",
-    "660ft",
-]
-
-
 class CableLengthShort(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     cable_length: Optional[Global[Literal["short"]]] = Field(
         default=None, validation_alias="cableLength", serialization_alias="cableLength"
     )
-    length_short: Optional[Union[Global[LengthShort], Variable]] = Field(
+    length_short: Optional[Union[Global[CableLengthShortValue], Variable]] = Field(
         default=None, validation_alias="lengthShort", serialization_alias="lengthShort"
     )
 
 
 Long = Literal["long"]
-
-LengthLong = Literal[
-    "-15db",
-    "-22.5db",
-    "-7.5db",
-    "0db",
-]
 
 
 class CableLengthLong(BaseModel):
@@ -109,7 +81,7 @@ class CableLengthLong(BaseModel):
     cable_length: Optional[Global[Long]] = Field(
         default=as_global("long", Long), validation_alias="cableLength", serialization_alias="cableLength"
     )
-    length_long: Optional[Union[Global[LengthLong], Variable]] = Field(
+    length_long: Optional[Union[Global[CableLengthLongValue], Variable]] = Field(
         default=None, validation_alias="lengthLong", serialization_alias="lengthLong"
     )
 
@@ -119,11 +91,6 @@ ClockSource = Literal[
     "line",
     "loop-timed",
     "network",
-]
-
-LineMode = Literal[
-    "primary",
-    "secondary",
 ]
 
 

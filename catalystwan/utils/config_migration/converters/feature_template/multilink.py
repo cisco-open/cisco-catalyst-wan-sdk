@@ -1,4 +1,3 @@
-from ipaddress import IPv4Interface
 from typing import List, Optional
 
 from catalystwan.api.configuration_groups.parcel import Global
@@ -6,8 +5,8 @@ from catalystwan.models.configuration.feature_profile.common import ChannelGroup
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.multilink import (
     AuthenticationType,
     ControllerTxExList,
+    InterfaceMultilinkParcel,
     Method,
-    MultilinkParcel,
     NimList,
 )
 from catalystwan.utils.config_migration.converters.feature_template.normalizer import (
@@ -19,7 +18,7 @@ from catalystwan.utils.config_migration.converters.feature_template.normalizer i
 class MultilinkTemplateConverter:
     supported_template_types = ("vpn-cedge-interface-multilink-controller",)
 
-    def create_parcel(self, name: str, description: str, template_values: dict) -> MultilinkParcel:
+    def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceMultilinkParcel:
         groups = self.parse_groups(template_values)
         addresses = self.parse_address(template_values)
         tunnel = self.get_tunnel(template_values)
@@ -31,11 +30,11 @@ class MultilinkTemplateConverter:
         encapsulation = self.parse_encapsulation(flattened_values)
         authentication_type = self.get_authentication_type(flattened_values)
         method = self.get_method(flattened_values)
-        normalized_values = normalize_to_model_definition(flattened_values, MultilinkParcel.model_fields)
+        normalized_values = normalize_to_model_definition(flattened_values, InterfaceMultilinkParcel.model_fields)
 
         controller_tx_ex_list = self.parse_controller_tx_ex_list(normalized_values.get("controller_tx_ex_list"))
         nim_list = self.parse_nim_list(normalized_values.get("nim_list"))
-        return MultilinkParcel(
+        return InterfaceMultilinkParcel(
             parcel_name=name,
             parcel_description=description,
             group_number=groups.get("group_number"),  # type: ignore
@@ -174,29 +173,21 @@ class MultilinkTemplateConverter:
         return nim_list
 
     def parse_address(self, template_values: dict) -> dict:
-        try:
-            interface_ipv4: IPv4Interface = template_values["ip"]["address"].value
-            address_ipv4 = str(interface_ipv4.ip)
-            mask_ipv4 = str(interface_ipv4.network.netmask)
-        except KeyError:
-            address_ipv4 = None
-            mask_ipv4 = None
-        try:
-            address_ipv6 = template_values["ipv6"]["address"].value
-        except KeyError:
-            address_ipv6 = None
+        interface_ipv4 = template_values.get("ip", {}).get("address")
+        address_ipv6 = template_values.get("ipv6", {}).get("address")
+
         addresses = {
-            "address_ipv4": address_ipv4,
-            "address_ipv6": address_ipv6,
-            "mask_ipv4": mask_ipv4,
+            "address_ipv4": str(interface_ipv4.value.ip) if interface_ipv4 is not None else None,
+            "mask_ipv4": str(interface_ipv4.value.network.netmask) if interface_ipv4 is not None else None,
+            "address_ipv6": str(address_ipv6.value) if address_ipv6 is not None else None,
         }
-        return normalize_to_model_definition(addresses, MultilinkParcel.model_fields)
+        return normalize_to_model_definition(addresses, InterfaceMultilinkParcel.model_fields)
 
     def parse_groups(self, template_values: dict) -> dict:
         groups = {}
         groups["group_number"] = template_values["ppp"]["multilink"].get("group")
         groups["groups"] = template_values.get("group", None)
-        return normalize_to_model_definition(groups, MultilinkParcel.model_fields)
+        return normalize_to_model_definition(groups, InterfaceMultilinkParcel.model_fields)
 
     def parse_multi_region_fabric(self, flattened_values: dict) -> Optional[MultiRegionFabric]:
         multi_region_fabric = {}
@@ -232,7 +223,7 @@ class MultilinkTemplateConverter:
                 if encap_value is not None:
                     encapsulation_dict[f"{mapped_key}_{encap_key}"] = encap_value
 
-        return normalize_to_model_definition(encapsulation_dict, MultilinkParcel.model_fields)
+        return normalize_to_model_definition(encapsulation_dict, InterfaceMultilinkParcel.model_fields)
 
     def get_tunnel(self, template_values: dict) -> dict:
         tunnel_interface: dict = template_values.get("tunnel_interface", {})
@@ -240,7 +231,7 @@ class MultilinkTemplateConverter:
             "tunnel_interface": True if tunnel_interface else None,
             "clear_dont_fragment_sdwan_tunnel": tunnel_interface.get("clear_dont_fragment"),
         }
-        return normalize_to_model_definition(tunnel, MultilinkParcel.model_fields)
+        return normalize_to_model_definition(tunnel, InterfaceMultilinkParcel.model_fields)
 
     def get_authentication_type(self, flattened_values: dict) -> Optional[Global[AuthenticationType]]:
         callin: Optional[Global[str]] = flattened_values.get("callin")
@@ -268,25 +259,25 @@ class MultilinkTemplateConverter:
         return None
 
     def get_passwords(self, template_values: dict) -> dict:
-        try:
-            chap_password = template_values["ppp"]["chap"]["password"]["ppp_auth_password"]
-        except KeyError:
-            chap_password = None
-        try:
-            pap_password = template_values["ppp"]["pap"]["sent-username"]["username"]["ppp_auth_password"]
-        except KeyError:
-            pap_password = None
+        chap_password = template_values.get("ppp", {}).get("chap", {}).get("password", {}).get("ppp_auth_password")
+        pap_password = (
+            template_values.get("ppp", {})
+            .get("pap", {})
+            .get("sent-username", {})
+            .get("username", {})
+            .get("ppp_auth_password")
+        )
 
         return normalize_to_model_definition(
             {
                 "password": pap_password,
                 "ppp_auth_password": chap_password,
             },
-            MultilinkParcel.model_fields,
+            InterfaceMultilinkParcel.model_fields,
         )
 
     def get_exclude_controller_group_list(self, flattened_values: dict) -> Optional[Global[str]]:
         exclude_controller_group_list = flattened_values.get("exclude_controller_group_list")
         if exclude_controller_group_list is None:
             return None
-        return Global[str](value=",".join(list(map(str, exclude_controller_group_list.value))))
+        return Global[str](value=" ".join(list(map(str, exclude_controller_group_list.value))))

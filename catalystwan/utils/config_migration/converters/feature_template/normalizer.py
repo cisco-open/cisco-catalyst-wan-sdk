@@ -216,7 +216,7 @@ def normalize_to_model_definition(d: dict, model_fields: Dict[str, FieldInfo]) -
         try:
             result[to_snake_case(key)] = transform_value(val, model_fields[to_snake_case(key)])
         except KeyError:
-            pass
+            result[to_snake_case(key)] = val
     return result
 
 

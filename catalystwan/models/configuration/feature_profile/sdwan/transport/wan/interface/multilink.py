@@ -4,42 +4,20 @@ from typing import List, Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+from catalystwan.models.common import (
+    CableLengthLongValue,
+    CableLengthShortValue,
+    Carrier,
+    ClockRate,
+    E1Framing,
+    E1Linecode,
+    LineMode,
+    SubnetMask,
+    T1Framing,
+    T1Linecode,
+    TLOCColor,
+)
 from catalystwan.models.configuration.feature_profile.common import ChannelGroup, MultiRegionFabric, RefIdItem
-
-MaskIpv4 = Literal[
-    "0.0.0.0",
-    "128.0.0.0",
-    "192.0.0.0",
-    "224.0.0.0",
-    "240.0.0.0",
-    "248.0.0.0",
-    "252.0.0.0",
-    "254.0.0.0",
-    "255.0.0.0",
-    "255.128.0.0",
-    "255.192.0.0",
-    "255.224.0.0",
-    "255.240.0.0",
-    "255.252.0.0",
-    "255.254.0.0",
-    "255.255.0.0",
-    "255.255.128.0",
-    "255.255.192.0",
-    "255.255.224.0",
-    "255.255.240.0",
-    "255.255.248.0",
-    "255.255.252.0",
-    "255.255.254.0",
-    "255.255.255.0",
-    "255.255.255.128",
-    "255.255.255.192",
-    "255.255.255.224",
-    "255.255.255.240",
-    "255.255.255.248",
-    "255.255.255.252",
-    "255.255.255.254",
-    "255.255.255.255",
-]
 
 Method = Literal[
     "CHAP",
@@ -52,45 +30,6 @@ AuthenticationType = Literal[
     "unidirectional",
 ]
 
-
-Value = Literal[
-    "3g",
-    "biz-internet",
-    "blue",
-    "bronze",
-    "custom1",
-    "custom2",
-    "custom3",
-    "default",
-    "gold",
-    "green",
-    "lte",
-    "metro-ethernet",
-    "mpls",
-    "private1",
-    "private2",
-    "private3",
-    "private4",
-    "private5",
-    "private6",
-    "public-internet",
-    "red",
-    "silver",
-]
-
-
-Carrier = Literal[
-    "carrier1",
-    "carrier2",
-    "carrier3",
-    "carrier4",
-    "carrier5",
-    "carrier6",
-    "carrier7",
-    "carrier8",
-    "default",
-]
-
 ControllerType = Literal[
     "A/S Serial",
     "T1/E1",
@@ -101,51 +40,10 @@ Name = Literal[
     "T1",
 ]
 
-T1Framing = Literal[
-    "esf",
-    "sf",
-]
-
-E1Framing = Literal[
-    "crc4",
-    "no-crc4",
-]
-
-LineMode = Literal[
-    "primary",
-    "secondary",
-]
-
 ClockSource = Literal[
     "internal",
     "line",
     "loop-timed",
-]
-
-T1Linecode = Literal[
-    "ami",
-    "b8zs",
-]
-
-E1Linecode = Literal[
-    "ami",
-    "hdb3",
-]
-
-Long = Literal[
-    "-15db",
-    "-22.5db",
-    "-7.5db",
-    "0db",
-]
-
-Short = Literal[
-    "110ft",
-    "220ft",
-    "330ft",
-    "440ft",
-    "550ft",
-    "660ft",
 ]
 
 
@@ -175,49 +73,15 @@ class ControllerTxExList(BaseModel):
     line_mode: Optional[Union[Variable, Default[None], Global[LineMode]]] = Field(
         default=None, validation_alias="lineMode", serialization_alias="lineMode"
     )
-    long: Optional[Union[Variable, Global[Long], Default[None]]] = Field(default=None)
+    long: Optional[Union[Variable, Global[CableLengthLongValue], Default[None]]] = Field(default=None)
     name: Optional[Global[Name]] = Field(default=None)
-    short: Optional[Union[Variable, Global[Short], Default[None]]] = Field(default=None)
+    short: Optional[Union[Variable, Global[CableLengthShortValue], Default[None]]] = Field(default=None)
     t1_framing: Optional[Union[Variable, Global[T1Framing], Default[None]]] = Field(
         default=None, validation_alias="t1Framing", serialization_alias="t1Framing"
     )
     t1_linecode: Optional[Union[Variable, Default[None], Global[T1Linecode]]] = Field(
         default=None, validation_alias="t1Linecode", serialization_alias="t1Linecode"
     )
-
-
-ClockRate = Literal[
-    "1000000",
-    "115200",
-    "1200",
-    "125000",
-    "14400",
-    "148000",
-    "19200",
-    "192000",
-    "2000000",
-    "2400",
-    "250000",
-    "256000",
-    "28800",
-    "32000",
-    "38400",
-    "384000",
-    "4000000",
-    "4800",
-    "48000",
-    "500000",
-    "512000",
-    "5300000",
-    "56000",
-    "57600",
-    "64000",
-    "72000",
-    "768000",
-    "800000",
-    "8000000",
-    "9600",
-]
 
 
 class NimList(BaseModel):
@@ -234,19 +98,7 @@ class NimList(BaseModel):
     description: Optional[Union[Variable, Global[str], Default[None]]] = Field(default=None)
 
 
-CoreRegion = Literal[
-    "core",
-    "core-shared",
-]
-
-
-SecondaryRegion = Literal[
-    "secondary-only",
-    "secondary-shared",
-]
-
-
-class MultilinkParcel(_ParcelBase):
+class InterfaceMultilinkParcel(_ParcelBase):
     model_config = ConfigDict(
         extra="forbid",
         populate_by_name=True,
@@ -363,7 +215,7 @@ class MultilinkParcel(_ParcelBase):
     low_bandwidth_link: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
         default=None, validation_alias=AliasPath("data", "lowBandwidthLink")
     )
-    mask_ipv4: Optional[Union[Variable, Global[MaskIpv4], Default[None]]] = Field(
+    mask_ipv4: Optional[Union[Variable, Global[SubnetMask], Default[None]]] = Field(
         default=None, validation_alias=AliasPath("data", "maskIpv4")
     )
     max_control_connections: Optional[Union[Variable, Global[int], Default[None]]] = Field(
@@ -433,7 +285,7 @@ class MultilinkParcel(_ParcelBase):
     username_string: Optional[Union[Variable, Global[str]]] = Field(
         default=None, validation_alias=AliasPath("data", "usernameString")
     )
-    value: Optional[Union[Variable, Default[Literal["default"]], Global[Value]]] = Field(
+    value: Optional[Union[Variable, Default[Literal["default"]], Global[TLOCColor]]] = Field(
         default=None, validation_alias=AliasPath("data", "value")
     )
     vbond_as_stun_server: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
