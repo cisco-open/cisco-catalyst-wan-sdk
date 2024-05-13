@@ -389,6 +389,25 @@ migrate_task.wait_for_completed()
 ```
 </details>
 
+<details>
+    <summary> <b>Feature Templates</b> <i>(click to expand)</i></summary>
+
+```python
+from catalystwan.api.templates.models.omp_vsmart_model import OMPvSmart
+
+omp_vsmart = OMPvSmart(
+    name="my_first_template",
+    description="NA",
+    device_models=["vsmart"]
+    
+)
+
+session.api.templates.create(omp_vsmart)
+```
+
+More details about how to use and how to add new: [Feature Templates README.md](https://github.com/cisco-open/cisco-catalyst-wan-sdk/blob/main/catalystwan/api/templates/README.md)
+</details>
+
 ### Note:
 To remove `InsecureRequestWarning`, you can include in your scripts (warning is suppressed when `catalystwan_devel` environment variable is set):
 ```Python
