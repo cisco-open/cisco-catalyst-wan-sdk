@@ -7,7 +7,7 @@ from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
 
 
 def handle_build_report(func):
-    """Wrapper to make creating raport simple and keep it DRY."""
+    """Wrapper to make creating report simple and keep it DRY."""
 
     @functools.wraps(func)
     def wrapper(self, profile_uuid: UUID, parcel: AnyParcel, *args, **kwargs) -> Optional[UUID]:
