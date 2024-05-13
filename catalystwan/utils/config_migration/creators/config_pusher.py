@@ -8,7 +8,6 @@ from pydantic import BaseModel
 from catalystwan.endpoints.configuration_group import ProfileId
 from catalystwan.models.builders import FeatureProfileBuildReport
 from catalystwan.models.configuration.config_migration import (
-    ConfigTransformResult,
     TransformedFeatureProfile,
     TransformedParcel,
     UX2Config,
@@ -30,16 +29,14 @@ class UX2ConfigPusher:
     def __init__(
         self,
         session: ManagerSession,
-        transform_config_result: ConfigTransformResult,
+        ux2_config: UX2Config,
         progress: Callable[[str, int, int], None],
     ) -> None:
         self._session = session
-        self._config_map = self._create_config_map(transform_config_result.ux2_config)
+        self._config_map = self._create_config_map(ux2_config)
         self._config_rollback = UX2ConfigRollback()
-        self._ux2_config = transform_config_result.ux2_config
+        self._ux2_config = ux2_config
         self._progress = progress
-
-        self._config_rollback.report.failed_conversion_items = transform_config_result.failed_items
 
     def _create_config_map(self, ux2_config: UX2Config) -> ConfigurationMapping:
         return ConfigurationMapping(
@@ -50,7 +47,6 @@ class UX2ConfigPusher:
     def push(self) -> UX2ConfigRollback:
         self._create_config_groups()
         self._config_rollback.report.set_failed_push_parcels_flat_list()
-        self._config_rollback.report.set_push_success_rate()
         logger.debug(f"Configuration push completed. Rollback configuration {self._config_rollback}")
         return self._config_rollback
 

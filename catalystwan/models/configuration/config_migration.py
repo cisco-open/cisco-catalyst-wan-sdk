@@ -242,32 +242,12 @@ class UX2ConfigPushReport(BaseModel):
     config_groups: List[ConfigGroupReport] = Field(
         default_factory=list, serialization_alias="ConfigGroups", validation_alias="ConfigGroups"
     )
-    success_rate_message: str = Field(
-        default="", serialization_alias="SuccessRateMessage", validation_alias="SuccessRateMessage"
-    )
     failed_push_parcels: List[FailedParcel] = Field(
         default_factory=list, serialization_alias="FailedPushParcels", validation_alias="FailedPushParcels"
     )
-    failed_conversion_items: List[FailedConversionItem] = Field(
-        default_factory=list, serialization_alias="FailedConversionItems", validation_alias="FailedConversionItems"
-    )
-    created_parcels: int = Field(default=0, serialization_alias="CreatedParcels", validation_alias="CreatedParcels")
-    failed_parcels: int = Field(default=0, serialization_alias="FailedParcels", validation_alias="FailedParcels")
 
     def add_report(self, name: str, uuid: UUID, feature_profiles: List[FeatureProfileBuildReport]) -> None:
         self.config_groups.append(ConfigGroupReport(name=name, uuid=uuid, feature_profiles=feature_profiles))
-
-    def set_push_success_rate(self):
-        for config_group in self.config_groups:
-            for feature_profile in config_group.feature_profiles:
-                self.created_parcels += len(feature_profile.created_parcels)
-                self.failed_parcels += len(feature_profile.failed_parcels)
-        all_parcels = self.created_parcels + self.failed_parcels
-        self.success_rate_message = (
-            f"{self.created_parcels}/{all_parcels} "
-            f"({int((self.created_parcels / all_parcels) * 100)}%)"
-            " parcels created successfully."
-        )
 
     def set_failed_push_parcels_flat_list(self):
         failed_parcels = []
@@ -276,6 +256,22 @@ class UX2ConfigPushReport(BaseModel):
                 for failed_parcel in feature_profile.failed_parcels:
                     failed_parcels.append(failed_parcel)
         self.failed_push_parcels = failed_parcels
+
+    @property
+    def get_summary(self) -> str:
+        created_parcels = 0
+        failed_parcels = 0
+        for config_group in self.config_groups:
+            for feature_profile in config_group.feature_profiles:
+                created_parcels += len(feature_profile.created_parcels)
+                failed_parcels += len(feature_profile.failed_parcels)
+        all_parcels = created_parcels + failed_parcels
+        success_rate_message = (
+            f"{created_parcels}/{all_parcels} "
+            f"({int((created_parcels / all_parcels) * 100)}%)"
+            " parcels created successfully."
+        )
+        return success_rate_message
 
 
 class UX2ConfigRollback(BaseModel):
