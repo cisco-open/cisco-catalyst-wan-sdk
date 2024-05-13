@@ -37,6 +37,7 @@ from catalystwan.models.policy.list.sla import SLAClassList, SLAClassListInfo
 from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList, ThreatGridApiKeyListInfo
 from catalystwan.models.policy.list.tloc import TLOCList, TLOCListInfo
 from catalystwan.models.policy.list.trunkgroup import TrunkGroupList, TrunkGroupListInfo
+from catalystwan.models.policy.list.umbrella_data import UmbrellaDataList, UmbrellaDataListInfo
 from catalystwan.models.policy.list.url import URLAllowList, URLAllowListInfo, URLBlockList, URLBlockListInfo
 from catalystwan.models.policy.list.vpn import VPNList, VPNListInfo
 from catalystwan.models.policy.list.zone import ZoneList, ZoneListInfo
@@ -49,6 +50,7 @@ from .definition.amp import AdvancedMalwareProtectionPolicy, AdvancedMalwareProt
 from .definition.control import ControlPolicy, ControlPolicyGetResponse
 from .definition.device_access import DeviceAccessPolicy, DeviceAccessPolicyGetResponse
 from .definition.device_access_ipv6 import DeviceAccessIPv6Policy, DeviceAccessIPv6PolicyGetResponse
+from .definition.dns_security import DnsSecurityPolicy, DnsSecurityPolicyGetResponse
 from .definition.hub_and_spoke import HubAndSpokePolicy, HubAndSpokePolicyGetResponse
 from .definition.intrusion_prevention import IntrusionPreventionPolicy, IntrusionPreventionPolicyGetResponse
 from .definition.mesh import MeshPolicy, MeshPolicyGetResponse
@@ -88,6 +90,7 @@ AnyPolicyDefinition = Annotated[
         IntrusionPreventionPolicy,
         DeviceAccessIPv6Policy,
         DeviceAccessPolicy,
+        DnsSecurityPolicy,
         HubAndSpokePolicy,
         MeshPolicy,
         QoSMapPolicy,
@@ -132,6 +135,7 @@ AnyPolicyList = Annotated[
         ThreatGridApiKeyList,
         TLOCList,
         TrunkGroupList,
+        UmbrellaDataList,
         URLBlockList,
         URLAllowList,
         VPNList,
@@ -169,6 +173,7 @@ AnyPolicyListInfo = Annotated[
         ThreatGridApiKeyListInfo,
         TLOCListInfo,
         TrunkGroupListInfo,
+        UmbrellaDataListInfo,
         URLAllowListInfo,
         URLBlockListInfo,
         VPNListInfo,
@@ -186,6 +191,7 @@ AnyPolicyDefinitionInfo = Annotated[
         ControlPolicyGetResponse,
         DeviceAccessIPv6PolicyGetResponse,
         DeviceAccessPolicyGetResponse,
+        DnsSecurityPolicyGetResponse,
         IntrusionPreventionPolicyGetResponse,
         HubAndSpokePolicyGetResponse,
         MeshPolicyGetResponse,
@@ -223,6 +229,7 @@ __all__ = (
     "DataPrefixList",
     "DeviceAccessIPv6Policy",
     "DeviceAccessPolicy",
+    "DnsSecurityPolicy",
     "DNSTypeEntryType",
     "ExpandedCommunityList",
     "FQDNList",
@@ -261,6 +268,7 @@ __all__ = (
     "TLOCActionType",
     "TLOCList",
     "TrunkGroupList",
+    "UmbrellaDataList",
     "TrafficDataDirection",
     "TrafficDataPolicy",
     "UnifiedSecurityPolicy",

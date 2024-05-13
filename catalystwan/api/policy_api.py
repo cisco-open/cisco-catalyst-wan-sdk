@@ -20,6 +20,7 @@ from catalystwan.endpoints.configuration.policy.definition.device_access import 
 from catalystwan.endpoints.configuration.policy.definition.device_access_ipv6 import (
     ConfigurationPolicyDeviceAccessIPv6Definition,
 )
+from catalystwan.endpoints.configuration.policy.definition.dns_security import ConfigurationPolicyDnsSecurityDefinition
 from catalystwan.endpoints.configuration.policy.definition.hub_and_spoke import ConfigurationPolicyHubAndSpokeDefinition
 from catalystwan.endpoints.configuration.policy.definition.intrusion_prevention import (
     ConfigurationPolicyIntrusionPreventionDefinition,
@@ -77,6 +78,7 @@ from catalystwan.endpoints.configuration.policy.list.sla import ConfigurationPol
 from catalystwan.endpoints.configuration.policy.list.threat_grid_api_key import ConfigurationPolicyThreatGridApiKeyList
 from catalystwan.endpoints.configuration.policy.list.tloc import ConfigurationPolicyTLOCList, TLOCListInfo
 from catalystwan.endpoints.configuration.policy.list.trunkgroup import ConfigurationPolicyTrunkGroupList
+from catalystwan.endpoints.configuration.policy.list.umbrella_data import ConfigurationPolicyUmbrellaDataList
 from catalystwan.endpoints.configuration.policy.list.url_allow_list import (
     ConfigurationPolicyURLAllowList,
     URLAllowListInfo,
@@ -144,6 +146,7 @@ from catalystwan.models.policy.definition.device_access_ipv6 import (
     DeviceAccessIPv6Policy,
     DeviceAccessIPv6PolicyGetResponse,
 )
+from catalystwan.models.policy.definition.dns_security import DnsSecurityPolicy, DnsSecurityPolicyGetResponse
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy, HubAndSpokePolicyGetResponse
 from catalystwan.models.policy.definition.intrusion_prevention import (
     IntrusionPreventionPolicy,
@@ -173,6 +176,7 @@ from catalystwan.models.policy.list.ipv6_prefix import IPv6PrefixListInfo
 from catalystwan.models.policy.list.local_domain import LocalDomainListInfo
 from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList, ThreatGridApiKeyListInfo
 from catalystwan.models.policy.list.trunkgroup import TrunkGroupList, TrunkGroupListInfo
+from catalystwan.models.policy.list.umbrella_data import UmbrellaDataList, UmbrellaDataListInfo
 from catalystwan.models.policy.localized import (
     LocalizedPolicy,
     LocalizedPolicyDeviceInfo,
@@ -226,6 +230,7 @@ POLICY_LIST_ENDPOINTS_MAP: Mapping[type, type] = {
     ThreatGridApiKeyList: ConfigurationPolicyThreatGridApiKeyList,
     TLOCList: ConfigurationPolicyTLOCList,
     TrunkGroupList: ConfigurationPolicyTrunkGroupList,
+    UmbrellaDataList: ConfigurationPolicyUmbrellaDataList,
     URLBlockList: ConfigurationPolicyURLBlockList,
     URLAllowList: ConfigurationPolicyURLAllowList,
     VPNList: ConfigurationPolicyVPNList,
@@ -252,6 +257,7 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     IntrusionPreventionPolicy: ConfigurationPolicyIntrusionPreventionDefinition,
     SslDecryptionUtdProfilePolicy: ConfigurationSslDecryptionUtdProfileDefinition,
     UrlFilteringPolicy: ConfigurationPolicyUrlFilteringDefinition,
+    DnsSecurityPolicy: ConfigurationPolicyDnsSecurityDefinition,
 }
 
 
@@ -499,6 +505,10 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[UmbrellaDataList]) -> DataSequence[UmbrellaDataListInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[URLBlockList]) -> DataSequence[URLBlockListInfo]:
         ...
 
@@ -625,6 +635,10 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[UmbrellaDataList], id: UUID) -> UmbrellaDataListInfo:
+        ...
+
+    @overload
     def get(self, type: Type[URLBlockList], id: UUID) -> URLBlockListInfo:
         ...
 
@@ -693,6 +707,10 @@ class PolicyDefinitionsAPI:
 
     @overload
     def get(self, type: Type[AdvancedMalwareProtectionPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
+    def get(self, type: Type[DnsSecurityPolicy]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
     @overload
@@ -770,6 +788,10 @@ class PolicyDefinitionsAPI:
 
     @overload
     def get(self, type: Type[AdvancedMalwareProtectionPolicy], id: UUID) -> AdvancedMalwareProtectionPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[DnsSecurityPolicy], id: UUID) -> DnsSecurityPolicyGetResponse:
         ...
 
     @overload
