@@ -17,8 +17,6 @@ from pydantic import (
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.models.common import VersionedField
 
-# from catalystwan.models.configuration.feature_profile.parcel import ParcelType
-
 T = TypeVar("T")
 
 
