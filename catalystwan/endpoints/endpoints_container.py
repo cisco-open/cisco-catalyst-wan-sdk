@@ -93,6 +93,7 @@ from catalystwan.endpoints.tenant_backup_restore import TenantBackupRestore
 from catalystwan.endpoints.tenant_management import TenantManagement
 from catalystwan.endpoints.tenant_migration import TenantMigration
 from catalystwan.endpoints.troubleshooting_tools.device_connectivity import TroubleshootingToolsDeviceConnectivity
+from catalystwan.endpoints.url_monitoring import UrlMonitoring
 
 if TYPE_CHECKING:
     from catalystwan.session import ManagerSession
@@ -215,3 +216,4 @@ class APIEndpointContainter:
         self.misc = MiscellaneousEndpoints(session)
         self.real_time_monitoring = RealTimeMonitoringContainer(session)
         self.certificate_management_device = CertificateManagementDevice(session)
+        self.url_monitoring = UrlMonitoring(session)
