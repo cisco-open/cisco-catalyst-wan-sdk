@@ -6,7 +6,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from catalystwan.api.builders.feature_profiles.handler import handle_build_raport
+from catalystwan.api.builders.feature_profiles.handler import handle_build_report
 from catalystwan.api.feature_profile_api import TransportFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
 from catalystwan.models.builders import FeatureProfileBuildReport
@@ -115,6 +115,6 @@ class TransportAndManagementProfileBuilder:
                 self._create_parcel(profile_uuid, subparcel, vpn_uuid)
         return self.build_raport
 
-    @handle_build_raport
+    @handle_build_report
     def _create_parcel(self, profile_uuid: UUID, parcel: AnyTransportParcel, vpn_uuid: Optional[None] = None) -> UUID:
         return self._api.create_parcel(profile_uuid, parcel, vpn_uuid).id

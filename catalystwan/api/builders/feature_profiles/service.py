@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 from pydantic import Field
 from typing_extensions import Annotated
 
-from catalystwan.api.builders.feature_profiles.handler import handle_build_raport
+from catalystwan.api.builders.feature_profiles.handler import handle_build_report
 from catalystwan.api.feature_profile_api import ServiceFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
 from catalystwan.models.builders import FeatureProfileBuildReport
@@ -143,6 +143,6 @@ class ServiceFeatureProfileBuilder:
 
         return self.build_raport
 
-    @handle_build_raport
+    @handle_build_report
     def _create_parcel(self, profile_uuid: UUID, parcel: AnyServiceParcel, vpn_uuid: Optional[None] = None) -> UUID:
         return self._api.create_parcel(profile_uuid, parcel, vpn_uuid).id

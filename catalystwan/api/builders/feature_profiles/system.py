@@ -5,7 +5,7 @@ import logging
 from typing import TYPE_CHECKING, List
 from uuid import UUID
 
-from catalystwan.api.builders.feature_profiles.handler import handle_build_raport
+from catalystwan.api.builders.feature_profiles.handler import handle_build_report
 from catalystwan.api.feature_profile_api import SystemFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
 from catalystwan.models.builders import FeatureProfileBuildReport
@@ -76,6 +76,6 @@ class SystemFeatureProfileBuilder:
             self._create_parcels(profile_uuid, parcel)
         return self.build_raport
 
-    @handle_build_raport
+    @handle_build_report
     def _create_parcels(self, profile_uuid: UUID, parcel: AnySystemParcel) -> UUID:
         return self._api.create_parcel(profile_uuid, parcel).id

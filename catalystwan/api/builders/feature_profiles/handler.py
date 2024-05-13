@@ -6,7 +6,7 @@ from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
 
 
-def handle_build_raport(func):
+def handle_build_report(func):
     """Wrapper to make creating raport simple and keep it DRY."""
 
     @functools.wraps(func)
