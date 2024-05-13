@@ -24,7 +24,7 @@ class MobileNumber(FeatureTemplateValidator):
 
 
 class Tracker(FeatureTemplateValidator):
-    name: str
+    name: str = Field(description="Name for the Tracker")
     endpoint_ip: Optional[str] = Field(
         default=None,
         description="The IP address of the endpoint to track.",
