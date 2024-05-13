@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.configuration.feature_profile.common import Prefix
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask
 
 EigrpAuthType = Literal[
     "md5",
@@ -54,7 +54,7 @@ class TableMap(BaseModel):
 class SummaryAddress(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    prefix: Prefix
+    prefix: AddressWithMask
 
 
 class IPv4StaticRoute(BaseModel):

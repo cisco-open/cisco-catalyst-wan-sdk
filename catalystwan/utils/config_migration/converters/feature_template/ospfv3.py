@@ -2,7 +2,7 @@ from copy import deepcopy
 from typing import List, Optional, Tuple, Type, Union, cast, get_args
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, as_global
-from catalystwan.models.configuration.feature_profile.common import Prefix
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask
 from catalystwan.models.configuration.feature_profile.sdwan.service import Ospfv3IPv4Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 import (
     AdvancedOspfv3Attributes,
@@ -218,7 +218,7 @@ class Ospfv3Ipv4TemplateSubconverter(BaseOspfv3TemplateSubconverter):
 
     def _set_summary_prefix(self, range_: dict) -> None:
         if address := range_.pop("address"):
-            range_["network"] = Prefix(
+            range_["network"] = AddressWithMask(
                 address=as_global(str(address.value.network)), mask=as_global(str(address.value.netmask))
             )
 

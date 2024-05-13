@@ -1,15 +1,15 @@
 from copy import deepcopy
-from ipaddress import IPv4Interface, IPv6Address
+from ipaddress import IPv4Address, IPv4Interface, IPv6Address
 
 from catalystwan.api.configuration_groups.parcel import Default, as_default, as_global, as_variable
-from catalystwan.models.configuration.feature_profile.common import TunnelApplication
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import IkeGroup
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import InterfaceIpsecParcel, IpsecAddress
+from catalystwan.models.common import IkeGroup
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask, TunnelApplication
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import InterfaceIpsecParcel
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.steps.constants import LAN_VPN_IPSEC
 
 
-class InterfaceIpsecTemplateConverter:
+class LanInterfaceIpsecTemplateConverter:
     supported_template_types = (LAN_VPN_IPSEC,)
 
     # Default Values
@@ -63,7 +63,7 @@ class InterfaceIpsecTemplateConverter:
             raise CatalystwanConverterCantConvertException(
                 "Ipsec Address is required in UX2 parcel but in a Feature Template can be optional."
             )
-        values["address"] = IpsecAddress(
+        values["address"] = AddressWithMask(
             address=as_global(str(address.value.network.network_address)),
             mask=as_global(str(address.value.network.netmask)),
         )
@@ -82,17 +82,23 @@ class InterfaceIpsecTemplateConverter:
     def configure_tunnel_destination(self, values: dict) -> None:
         if tunnel_destination := values.get("tunnel_destination"):
             if isinstance(tunnel_destination.value, IPv4Interface):
-                values["tunnel_destination"] = IpsecAddress(
+                values["tunnel_destination"] = AddressWithMask(
                     address=as_global(str(tunnel_destination.value.network.network_address)),
                     mask=as_global(str(tunnel_destination.value.network.netmask)),
                 )
+            elif isinstance(tunnel_destination.value, IPv4Address):
+                values["tunnel_destination"] = AddressWithMask(
+                    address=tunnel_destination,
+                    mask=as_global("0.0.0.0"),
+                )
+
             elif isinstance(tunnel_destination.value, IPv6Address):
                 values.pop("tunnel_destination")
                 values["tunnel_destination_v6"] = tunnel_destination
 
     def configure_tunnel_source(self, values: dict) -> None:
         if tunnel_source := values.get("tunnel_source"):
-            values["tunnel_source"] = IpsecAddress(
+            values["tunnel_source"] = AddressWithMask(
                 address=as_global(str(tunnel_source.value)),
                 mask=as_global("0.0.0.0"),
             )

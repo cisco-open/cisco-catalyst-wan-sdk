@@ -14,6 +14,7 @@ from catalystwan.api.feature_profile_api import (
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask
 from catalystwan.models.configuration.feature_profile.parcel import ParcelAssociationPayload, ParcelCreationResponse
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
     AppqoeParcel,
@@ -29,7 +30,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service import (
 from catalystwan.models.configuration.feature_profile.sdwan.service.acl import Ipv4AclParcel, Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import EigrpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import BasicGre
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import IpsecAddress, IpsecTunnelMode
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import IpsecTunnelMode
 from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import MulticastParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 import Ospfv3IPv4Parcel, Ospfv3IPv6Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
@@ -180,8 +181,8 @@ service_interface_parcels = [
             tunnel_source_v6=Global[str](value="::"),
             tunnel_source_interface=as_variable("{{ipsec_ipsecSourceInterface}}"),
             ipv6_address=as_variable("{{test}}"),
-            address=IpsecAddress(address=as_global("10.0.0.1"), mask=as_global("255.255.255.0")),
-            tunnel_destination=IpsecAddress(address=as_global("10.0.0.5"), mask=as_global("255.255.255.0")),
+            address=AddressWithMask(address=as_global("10.0.0.1"), mask=as_global("255.255.255.0")),
+            tunnel_destination=AddressWithMask(address=as_global("10.0.0.5"), mask=as_global("255.255.255.0")),
             mtu_v6=as_variable("{{test}}"),
         ),
     ),

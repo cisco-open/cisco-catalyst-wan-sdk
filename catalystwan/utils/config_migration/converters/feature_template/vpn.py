@@ -7,7 +7,7 @@ from pydantic import BaseModel, IPvAnyAddress
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, as_default, as_global, as_variable
 from catalystwan.models.common import SubnetMask
-from catalystwan.models.configuration.feature_profile.common import Prefix
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import (
     DHCP,
     Direction,
@@ -677,7 +677,7 @@ class ServiceVpnTemplateConverter:
         items = []
         for route in routes:
             ipv4_interface = IPv4Interface(route.get("prefix").value)
-            service_prefix = Prefix(
+            service_prefix = AddressWithMask(
                 address=as_global(ipv4_interface.network.network_address),
                 mask=as_global(str(ipv4_interface.netmask)),
             )

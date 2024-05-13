@@ -3,30 +3,17 @@
 from ipaddress import IPv4Interface, IPv6Address, IPv6Interface
 from typing import Literal, Optional, Union
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic import AliasPath, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.configuration.feature_profile.common import TunnelApplication
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import (
-    IkeCiphersuite,
-    IkeGroup,
-    IkeMode,
-    IpsecCiphersuite,
-    PfsGroup,
-)
+from catalystwan.models.common import IkeCiphersuite, IkeGroup, IkeMode, IpsecCiphersuite, PfsGroup
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask, TunnelApplication
 
 IpsecTunnelMode = Literal[
     "ipv4",
     "ipv6",
     "ipv4-v6overlay",
 ]
-
-
-class IpsecAddress(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    address: Union[Variable, Global[str]]
-    mask: Union[Variable, Global[str]]
 
 
 class InterfaceIpsecParcel(_ParcelBase):
@@ -44,18 +31,18 @@ class InterfaceIpsecParcel(_ParcelBase):
     ipsec_description: Union[Global[str], Variable, Default[None]] = Field(
         default=Default[None](value=None), validation_alias=AliasPath("data", "description")
     )
-    address: Optional[IpsecAddress] = Field(default=None, validation_alias=AliasPath("data", "address"))
+    address: Optional[AddressWithMask] = Field(default=None, validation_alias=AliasPath("data", "address"))
     ipv6_address: Optional[Union[Global[str], Global[IPv6Interface], Variable]] = Field(
         validation_alias=AliasPath("data", "ipv6Address"), default=None
     )
-    tunnel_source: Optional[IpsecAddress] = Field(validation_alias=AliasPath("data", "tunnelSource"), default=None)
+    tunnel_source: Optional[AddressWithMask] = Field(validation_alias=AliasPath("data", "tunnelSource"), default=None)
     tunnel_source_v6: Optional[Union[Global[str], Variable]] = Field(
         validation_alias=AliasPath("data", "tunnelSourceV6"), default=None
     )
     tunnel_source_interface: Optional[Union[Global[str], Global[IPv4Interface], Variable]] = Field(
         validation_alias=AliasPath("data", "tunnelSourceInterface"), default=None
     )
-    tunnel_destination: Optional[IpsecAddress] = Field(
+    tunnel_destination: Optional[AddressWithMask] = Field(
         validation_alias=AliasPath("data", "tunnelDestination"), default=None
     )
     tunnel_destination_v6: Optional[Union[Global[str], Global[IPv6Address], Variable]] = Field(

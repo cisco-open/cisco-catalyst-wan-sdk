@@ -8,7 +8,7 @@ from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
 from catalystwan.models.common import Carrier, EncapType, TLOCColor
-from catalystwan.models.configuration.feature_profile.common import MultiRegionFabric, Prefix, RefIdItem
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask, MultiRegionFabric, RefIdItem
 
 ClockRate = Literal[
     "9600",
@@ -193,7 +193,7 @@ class T1E1SerialParcel(_ParcelBase):
         validation_alias=AliasPath("data", "aclQos"),
         description="ACL part",
     )
-    address_v4: Optional[Prefix] = Field(
+    address_v4: Optional[AddressWithMask] = Field(
         default=None,
         validation_alias=AliasPath("data", "addressV4"),
         description="Assign IPv4 address",

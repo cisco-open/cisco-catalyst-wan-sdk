@@ -2,7 +2,7 @@ from copy import deepcopy
 
 from catalystwan.api.configuration_groups.parcel import as_global
 from catalystwan.models.common import Carrier, EncapType
-from catalystwan.models.configuration.feature_profile.common import Prefix
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.t1e1serial import (
     Advanced,
     AllowService,
@@ -57,7 +57,7 @@ class T1E1SerialTemplateConverter:
         address = self.values.get("ip", {}).get("address")
         if not address:
             return
-        self.values["address_v4"] = Prefix(
+        self.values["address_v4"] = AddressWithMask(
             address=as_global(address.value.ip),
             mask=as_global(str(address.value.netmask)),
         )

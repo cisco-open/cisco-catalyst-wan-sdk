@@ -7,7 +7,7 @@ from typing import Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.configuration.feature_profile.common import AdvancedGre, Prefix, TunnelSourceType
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask, AdvancedGre, TunnelSourceType
 
 
 class Basic(BaseModel):
@@ -15,7 +15,7 @@ class Basic(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    address: Prefix = Field()
+    address: AddressWithMask = Field()
     if_name: Union[Variable, Global[str]] = Field(validation_alias="ifName", serialization_alias="ifName")
     tunnel_destination: Union[Variable, Global[IPv4Address]] = Field(
         validation_alias="tunnelDestination", serialization_alias="tunnelDestination"

@@ -4,8 +4,8 @@ from typing import Optional
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, as_global
 from catalystwan.models.configuration.feature_profile.common import (
+    AddressWithMask,
     AdvancedGre,
-    Prefix,
     SourceIp,
     SourceNotLoopback,
     TunnelApplication,
@@ -69,12 +69,12 @@ class WanInterfaceGreTemplateConverter:
             clear_dont_fragment=clear_dont_fragment,
         )
 
-    def parse_address(self, data: dict) -> Prefix:
+    def parse_address(self, data: dict) -> AddressWithMask:
         address = data.get("ip", {}).get("address", {})
         if not address:
             # TODO: Ask technitians if there can be default value for address
             raise CatalystwanConverterCantConvertException("Address is required")
-        return Prefix(
+        return AddressWithMask(
             address=as_global(address.value.network.network_address),
             mask=as_global(str(address.value.netmask)),
         )

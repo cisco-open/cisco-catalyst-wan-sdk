@@ -6,14 +6,8 @@ from typing import Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.configuration.feature_profile.common import AdvancedGre, Prefix, TunnelSourceType
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import (
-    IkeCiphersuite,
-    IkeGroup,
-    IkeMode,
-    IpsecCiphersuite,
-    PfsGroup,
-)
+from catalystwan.models.common import IkeCiphersuite, IkeGroup, IkeMode, IpsecCiphersuite, PfsGroup
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask, AdvancedGre, TunnelSourceType
 
 GreTunnelMode = Literal[
     "ipv4",
@@ -45,7 +39,7 @@ class BasicGre(BaseModel):
         serialization_alias="ifName", validation_alias="ifName", description="Minimum length of the value should be 4."
     )
     description: Union[Global[str], Variable, Default[None]] = Field(default=Default[None](value=None))
-    address: Optional[Prefix] = None
+    address: Optional[AddressWithMask] = None
     ipv6_address: Optional[Union[Global[str], Global[IPv6Interface], Variable, Default[None]]] = Field(
         serialization_alias="ipv6Address", validation_alias="ipv6Address", default=None
     )

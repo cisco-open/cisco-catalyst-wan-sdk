@@ -7,7 +7,7 @@ from uuid import UUID
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, IPvAnyAddress
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.configuration.feature_profile.common import Prefix
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask
 
 ProtocolIPv4 = Literal[
     "bgp",
@@ -141,7 +141,7 @@ class RoutePrefix(BaseModel):
 class IPv4Prefix(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    prefix: Prefix
+    prefix: AddressWithMask
     aggregate_only: Optional[Union[Global[bool], Default[bool]]] = Field(
         serialization_alias="aggregateOnly", validation_alias="aggregateOnly", default=None
     )
@@ -369,7 +369,7 @@ class Service(BaseModel):
 class ServiceRoute(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    prefix: Prefix
+    prefix: AddressWithMask
     service: Union[Variable, Global[ServiceRouteType], Default[ServiceRouteType]] = Default[ServiceRouteType](
         value="SIG"
     )
@@ -382,7 +382,7 @@ class ServiceRoute(BaseModel):
 class StaticGreRouteIPv4(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    prefix: Prefix
+    prefix: AddressWithMask
     interface: Union[Variable, Global[List[str]], Default[None]] = Default[None](value=None)
     vpn: Global[int] = Global[int](value=0)
 
@@ -390,7 +390,7 @@ class StaticGreRouteIPv4(BaseModel):
 class StaticIpsecRouteIPv4(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    prefix: Prefix
+    prefix: AddressWithMask
     interface: Union[Variable, Global[List[str]], Default[None]] = Default[None](value=None)
 
 
