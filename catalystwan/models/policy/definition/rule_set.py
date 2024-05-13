@@ -5,7 +5,6 @@ from typing import List, Literal, Optional, Union
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from typing_extensions import Annotated
 
 from catalystwan.models.common import check_fields_exclusive
 from catalystwan.models.policy.policy_definition import (
@@ -43,7 +42,7 @@ class RuleBase(BaseModel):
 
 
 class IPv4Rule(RuleBase):
-    sequence_ip_type: Literal["ipv4"] = Field(
+    sequence_ip_type: Literal[None, "ipv4"] = Field(
         default="ipv4", serialization_alias="sequenceIpType", validation_alias="sequenceIpType"
     )
     source_ip: Union[IPv4Network, VariableName, None] = Field(
@@ -150,7 +149,7 @@ class IPv6Rule(RuleBase):
         return self
 
 
-Rule = Annotated[Union[IPv4Rule, IPv6Rule], Field(discriminator="sequence_ip_type")]
+Rule = Union[IPv4Rule, IPv6Rule]
 
 
 class RuleSetDefinition(BaseModel):
