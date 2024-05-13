@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, IPvAnyAddress
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
 from catalystwan.models.configuration.feature_profile.common import Prefix
 
 ProtocolIPv4 = Literal[
@@ -583,9 +583,7 @@ class LanVpnParcel(_ParcelBase):
     type_: Literal["lan/vpn"] = Field(default="lan/vpn", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    vpn_id: Union[Variable, Global[int], Default[int]] = Field(
-        default=as_default(1), validation_alias=AliasPath("data", "vpnId")
-    )
+    vpn_id: Union[Variable, Global[int]] = Field(validation_alias=AliasPath("data", "vpnId"))
     vpn_name: Union[Variable, Global[str], Default[None]] = Field(
         default=Default[None](value=None), validation_alias=AliasPath("data", "name")
     )
