@@ -24,15 +24,11 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet
     Trustsec,
     VrrpIPv4,
 )
+from catalystwan.utils.config_migration.steps.constants import LAN_VPN_ETHERNET
 
 
 class InterfaceEthernetTemplateConverter:
-    supported_template_types = (
-        "vpn-vsmart-interface",
-        "vpn-vedge-interface",
-        "vpn-vmanage-interface",
-        "cisco_vpn_interface",
-    )
+    supported_template_types = (LAN_VPN_ETHERNET,)
 
     delete_keys = (
         "if_name",

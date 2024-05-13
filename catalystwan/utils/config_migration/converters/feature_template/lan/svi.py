@@ -15,6 +15,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.svi impo
     VrrpIPv4,
     VrrpIPv4SecondaryAddress,
 )
+from catalystwan.utils.config_migration.steps.constants import LAN_VPN_SVI
 
 
 class InterfaceSviTemplateConverter:
@@ -22,7 +23,7 @@ class InterfaceSviTemplateConverter:
     A class for converting template values into a InterfaceSviParcel object.
     """
 
-    supported_template_types = ("vpn-interface-svi",)
+    supported_template_types = (LAN_VPN_SVI,)
 
     delete_keys = (
         "if_name",

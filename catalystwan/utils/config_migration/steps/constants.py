@@ -14,6 +14,10 @@ ADDITIONAL_TEMPLATES = [
     "vpn-interface-svi",
     "cisco_vpn_interface",
     "vpn-vedge-interface-gre",
+    "vpn-vsmart-interface",
+    "vpn-vedge-interface",
+    "vpn-vmanage-interface",
+    "vpn-vedge-interface-ipsec",
 ]
 
 WAN_VPN_GRE = "wan/vpn/interface/gre"
@@ -32,14 +36,21 @@ TRANSPORT_AND_MANAGEMENT_ADDITIONAL_TEMPLATES_MAPPING = {
     "cisco_vpn_interface_ipsec": WAN_VPN_IPSEC,
     "vpn-interface-svi": WAN_VPN_SVI,
     "cisco_vpn_interface": WAN_VPN_ETHERNET,
+    "vpn-vsmart-interface": WAN_VPN_ETHERNET,
+    "vpn-vedge-interface": WAN_VPN_ETHERNET,
+    "vpn-vmanage-interface": WAN_VPN_ETHERNET,
 }
 
 SERVICE_ADDITIONAL_TEMPLATES_MAPPING = {
     "vpn-vedge-interface-gre": LAN_VPN_GRE,
     "cisco_vpn_interface": LAN_VPN_ETHERNET,
+    "vpn-vsmart-interface": LAN_VPN_ETHERNET,
+    "vpn-vedge-interface": LAN_VPN_ETHERNET,
+    "vpn-vmanage-interface": LAN_VPN_ETHERNET,
     "cisco_vpn_interface_gre": LAN_VPN_GRE,
     "cisco_vpn_interface_ipsec": LAN_VPN_IPSEC,
     "vpn-interface-svi": LAN_VPN_SVI,
+    "vpn-vedge-interface-ipsec": LAN_VPN_IPSEC,
 }
 
 CAST_TEMPLATE_TYPE = {
