@@ -69,7 +69,7 @@ class PolicyCreationPayload(BaseModel):
     policy_name: str = Field(
         serialization_alias="policyName",
         validation_alias="policyName",
-        pattern="^[a-zA-Z0-9_-]{1,127}$",
+        pattern="^[a-zA-Z0-9_-]{0,127}$",
         description="Can include only alpha-numeric characters, hyphen '-' or underscore '_'; maximum 127 characters",
     )
     policy_description: str = Field(
