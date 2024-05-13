@@ -1,11 +1,9 @@
 import unittest
-from ipaddress import IPv4Address
 from unittest.mock import Mock
 from uuid import uuid4
 
 from parameterized import parameterized  # type: ignore
 
-from catalystwan.api.configuration_groups.parcel import Global, as_global, as_variable
 from catalystwan.api.feature_profile_api import (
     ServiceFeatureProfileAPI,
     SystemFeatureProfileAPI,
@@ -14,14 +12,17 @@ from catalystwan.api.feature_profile_api import (
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
-from catalystwan.models.configuration.feature_profile.common import AddressWithMask
 from catalystwan.models.configuration.feature_profile.parcel import ParcelAssociationPayload, ParcelCreationResponse
+from catalystwan.models.configuration.feature_profile.sdwan.service import AppqoeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
-    AppqoeParcel,
-    InterfaceEthernetParcel,
-    InterfaceGreParcel,
-    InterfaceIpsecParcel,
-    InterfaceSviParcel,
+    InterfaceEthernetParcel as LanInterfaceEthernetParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.service import InterfaceGreParcel as LanInterfaceGreParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service import (
+    InterfaceIpsecParcel as LanInterfaceIpsecParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.service import InterfaceSviParcel as LanInterfaceSviParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service import (
     LanVpnDhcpServerParcel,
     LanVpnParcel,
     OspfParcel,
@@ -29,8 +30,6 @@ from catalystwan.models.configuration.feature_profile.sdwan.service import (
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.acl import Ipv4AclParcel, Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import EigrpParcel
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import BasicGre
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import IpsecTunnelMode
 from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import MulticastParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 import Ospfv3IPv4Parcel, Ospfv3IPv6Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
@@ -47,6 +46,16 @@ from catalystwan.models.configuration.feature_profile.sdwan.system import (
     OMPParcel,
     SecurityParcel,
     SNMPParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport import (
+    InterfaceDslIPoEParcel,
+    InterfaceDslPPPoAParcel,
+    InterfaceDslPPPoEParcel,
+    InterfaceEthPPPoEParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport import InterfaceGreParcel as WanInterfaceGreParcel
+from catalystwan.models.configuration.feature_profile.sdwan.transport import (
+    InterfaceIpsecParcel as WanInterfaceIpsecParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport import (
     ManagementVpnParcel,
@@ -136,56 +145,10 @@ service_endpoint_mapping = {
 }
 
 service_interface_parcels = [
-    (
-        "interface/gre",
-        InterfaceGreParcel(
-            parcel_name="TestGreParcel",
-            parcel_description="Test Gre Parcel",
-            basic=BasicGre(
-                if_name=as_global("gre1"),
-                tunnel_destination=as_global(IPv4Address("4.4.4.4")),
-            ),
-        ),
-    ),
-    (
-        "interface/svi",
-        InterfaceSviParcel(
-            parcel_name="TestSviParcel",
-            parcel_description="Test Svi Parcel",
-            interface_name=as_global("Vlan1"),
-            svi_description=as_global("Test Svi Description"),
-        ),
-    ),
-    (
-        "interface/ethernet",
-        InterfaceEthernetParcel(
-            parcel_name="TestEthernetParcel",
-            parcel_description="Test Ethernet Parcel",
-            interface_name=as_global("HundredGigE"),
-            ethernet_description=as_global("Test Ethernet Description"),
-        ),
-    ),
-    (
-        "interface/ipsec",
-        InterfaceIpsecParcel(
-            parcel_name="TestIpsecParcel",
-            parcel_description="Test Ipsec Parcel",
-            interface_name=as_global("ipsec2"),
-            ipsec_description=as_global("Test Ipsec Description"),
-            pre_shared_secret=as_global("123"),
-            ike_local_id=as_global("123"),
-            ike_remote_id=as_global("123"),
-            application=as_variable("{{ipsec_application}}"),
-            tunnel_mode=Global[IpsecTunnelMode](value="ipv6"),
-            tunnel_destination_v6=as_variable("{{ipsec_tunnelDestinationV6}}"),
-            tunnel_source_v6=Global[str](value="::"),
-            tunnel_source_interface=as_variable("{{ipsec_ipsecSourceInterface}}"),
-            ipv6_address=as_variable("{{test}}"),
-            address=AddressWithMask(address=as_global("10.0.0.1"), mask=as_global("255.255.255.0")),
-            tunnel_destination=AddressWithMask(address=as_global("10.0.0.5"), mask=as_global("255.255.255.0")),
-            mtu_v6=as_variable("{{test}}"),
-        ),
-    ),
+    ("interface/gre", LanInterfaceGreParcel),
+    ("interface/svi", LanInterfaceSviParcel),
+    ("interface/ethernet", LanInterfaceEthernetParcel),
+    ("interface/ipsec", LanInterfaceIpsecParcel),
 ]
 
 service_vpn_sub_parcels = [
@@ -251,6 +214,24 @@ transport_enpoint_mapping = {
     TransportVpnParcel: "wan/vpn",
 }
 
+transport_interface_parcels = [
+    ("interface/ipsec", WanInterfaceIpsecParcel),
+    ("interface/dsl-ipoe", InterfaceDslIPoEParcel),
+    (
+        "interface/ethpppoe",
+        InterfaceEthPPPoEParcel,
+    ),
+    (
+        "interface/dsl-pppoe",
+        InterfaceDslPPPoEParcel,
+    ),
+    (
+        "interface/dsl-pppoa",
+        InterfaceDslPPPoAParcel,
+    ),
+    ("interface/gre", WanInterfaceGreParcel),
+]
+
 
 class TestTransportFeatureProfileAPI(unittest.TestCase):
     def setUp(self):
@@ -261,6 +242,9 @@ class TestTransportFeatureProfileAPI(unittest.TestCase):
         self.mock_endpoint = Mock(spec=TransportFeatureProfile)
         self.api = TransportFeatureProfileAPI(self.mock_session)
         self.api.endpoint = self.mock_endpoint
+        parcel_mock = Mock()
+        parcel_mock.payload._get_parcel_type.return_value = "wan/vpn"
+        self.api._get_vpn_parcel = Mock(return_value=parcel_mock)
 
     @parameterized.expand(transport_enpoint_mapping.items())
     def test_post_method_parcel(self, parcel, parcel_type):
@@ -269,3 +253,13 @@ class TestTransportFeatureProfileAPI(unittest.TestCase):
 
         # Assert
         self.mock_endpoint.create_transport_parcel.assert_called_once_with(self.profile_uuid, parcel_type, parcel)
+
+    @parameterized.expand(transport_interface_parcels)
+    def test_post_method_interface_parcel(self, parcel_type, parcel):
+        # Act
+        self.api.create_parcel(self.profile_uuid, parcel, self.vpn_uuid)
+
+        # Assert
+        self.mock_endpoint.create_transport_vpn_sub_parcel.assert_called_once_with(
+            self.profile_uuid, self.vpn_uuid, parcel_type, parcel
+        )
