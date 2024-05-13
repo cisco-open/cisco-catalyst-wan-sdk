@@ -9,6 +9,7 @@ from .bgp import WanRoutingBgpParcel as BGPParcel
 from .cellular_controller import CellularControllerParcel
 from .t1e1controller import T1E1ControllerParcel
 from .vpn import ManagementVpnParcel, TransportVpnParcel
+from .wan.interface.gre import InterfaceGreParcel
 from .wan.interface.protocol_over import (
     InterfaceDslIPoEParcel,
     InterfaceDslPPPoAParcel,
@@ -24,7 +25,7 @@ AnyTransportVpnSubParcel = Annotated[
         InterfaceDslPPPoEParcel,
         InterfaceDslPPPoAParcel,
         InterfaceDslIPoEParcel,
-        # Add wan interfaces here
+        InterfaceGreParcel,
     ],
     Field(discriminator="type_"),
 ]

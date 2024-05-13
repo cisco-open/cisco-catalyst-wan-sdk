@@ -1,14 +1,14 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from datetime import datetime
-from ipaddress import IPv4Address
+from ipaddress import IPv4Address, IPv4Interface
 from typing import List, Literal, Optional, Union
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
-from catalystwan.models.common import CoreRegion, SecondaryRegion
+from catalystwan.models.common import CoreRegion, SecondaryRegion, SubnetMask, check_fields_exclusive
 from catalystwan.models.configuration.common import Solution
 
 IPV4Address = str
@@ -80,7 +80,7 @@ class FeatureProfileCreationResponse(BaseModel):
 
 class Prefix(BaseModel):
     address: Union[Variable, Global[str], Global[IPv4Address], Global[IPv6Address]]
-    mask: Union[Variable, Global[str]]
+    mask: Union[Variable, Global[str], Global[SubnetMask]]
 
 
 class SchemaTypeQuery(BaseModel):
@@ -253,3 +253,67 @@ class MultiRegionFabric(BaseModel):
     secondary_region: Optional[Union[Global[SecondaryRegion], Default[Literal["secondary-shared"]]]] = Field(
         default=None, validation_alias="secondaryRegion", serialization_alias="secondaryRegion"
     )
+
+
+class SourceIp(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    tunnel_source: Union[Variable, Global[str], Global[IPv4Address]] = Field(
+        validation_alias="tunnelSource", serialization_alias="tunnelSource"
+    )
+
+
+class SourceNotLoopback(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    tunnel_source_interface: Union[Variable, Global[str], Global[IPv4Interface]] = Field(
+        validation_alias="tunnelSourceInterface", serialization_alias="tunnelSourceInterface"
+    )
+
+
+class SourceLoopback(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    tunnel_route_via: Union[Variable, Global[str]] = Field(
+        validation_alias="tunnelRouteVia", serialization_alias="tunnelRouteVia"
+    )
+    tunnel_source_interface: Union[Variable, Global[str]] = Field(
+        validation_alias="tunnelSourceInterface", serialization_alias="tunnelSourceInterface"
+    )
+
+
+class TunnelSourceType(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    source_loopback: Optional[SourceLoopback] = Field(
+        default=None, validation_alias="sourceLoopback", serialization_alias="sourceLoopback"
+    )
+    source_ip: Optional[SourceIp] = Field(default=None, validation_alias="sourceIp", serialization_alias="sourceIp")
+    source_not_loopback: Optional[SourceNotLoopback] = Field(
+        default=None, validation_alias="sourceNotLoopback", serialization_alias="sourceNotLoopback"
+    )
+
+    @model_validator(mode="after")
+    def check_country_xor_continent(self):
+        check_fields_exclusive(self.__dict__, {"source_loopback", "source_ip", "source_not_loopback"}, True)
+        return self
+
+
+TunnelApplication = Literal[
+    "none",
+    "sig",
+]
+
+
+class AdvancedGre(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
+
+    application: Optional[Union[Global[TunnelApplication], Variable]] = None

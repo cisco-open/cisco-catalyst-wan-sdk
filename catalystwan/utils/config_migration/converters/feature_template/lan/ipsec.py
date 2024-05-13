@@ -2,13 +2,15 @@ from copy import deepcopy
 from ipaddress import IPv4Interface, IPv6Address
 
 from catalystwan.api.configuration_groups.parcel import Default, as_default, as_global, as_variable
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import IkeGroup, TunnelApplication
+from catalystwan.models.configuration.feature_profile.common import TunnelApplication
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import IkeGroup
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import InterfaceIpsecParcel, IpsecAddress
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
+from catalystwan.utils.config_migration.steps.constants import LAN_VPN_IPSEC
 
 
 class InterfaceIpsecTemplateConverter:
-    supported_template_types = ("cisco_vpn_interface_ipsec", "vpn-vedge-interface-ipsec")
+    supported_template_types = (LAN_VPN_IPSEC,)
 
     # Default Values
     pre_shared_secret = "{{vpn_if_pre_shared_secret}}"

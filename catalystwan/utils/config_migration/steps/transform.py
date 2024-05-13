@@ -10,13 +10,15 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.multicast im
     MulticastParcel,
 )
 from catalystwan.utils.config_migration.converters.feature_template.parcel_factory import create_parcel_from_template
+from catalystwan.utils.config_migration.steps.constants import (
+    ADDITIONAL_TEMPLATES,
+    CAST_TEMPLATE_TYPE,
+    CISCO_VPN_SERVICE,
+    CISCO_VPN_TRANSPORT_AND_MANAGEMENT,
+    NEW_TEMPALTE_NAME_SUFFIX,
+)
 
 logger = logging.getLogger(__name__)
-
-
-"""Artificial constants to represent the VPN template types"""
-CISCO_VPN_TRANSPORT_AND_MANAGEMENT = "cisco_vpn_transport_and_management"
-CISCO_VPN_SERVICE = "cisco_vpn_service"
 
 
 def _merge_to_multicast(ux2: UX2Config, vpn: TransformedParcel) -> None:
@@ -87,13 +89,71 @@ def merge_parcels(ux2: UX2Config) -> UX2Config:
     return ux2
 
 
-def resolve_template_type(template: GeneralTemplate, ux1_config: UX1Config):
-    for feature_template in ux1_config.templates.feature_templates:
-        if feature_template.id == template.templateId:
-            vpn_id = create_parcel_from_template(feature_template).vpn_id.value  # type: ignore
-            if vpn_id in [0, 512]:
-                template.templateType = CISCO_VPN_TRANSPORT_AND_MANAGEMENT
-            else:
-                template.templateType = CISCO_VPN_SERVICE
-            break
-        logger.debug(f"Resolved {template.name} template to type {template.templateType}")
+def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Config):
+    """
+    Resolve Cisco VPN template type and its sub-elements.
+    """
+    # Find the target feature template based on the provided template ID
+    target_feature_template = next(
+        (t for t in ux1_config.templates.feature_templates if t.id == cisco_vpn_template.templateId), None
+    )
+
+    if not target_feature_template:
+        logger.error(f"Cisco VPN template {cisco_vpn_template.templateId} not found in Feature Templates list.")
+        return
+
+    # Determine the VPN type based on the VPN ID
+    vpn_id = create_parcel_from_template(target_feature_template).vpn_id.value  # type: ignore
+    if vpn_id in [0, 512]:
+        cisco_vpn_template.templateType = CISCO_VPN_TRANSPORT_AND_MANAGEMENT
+    else:
+        cisco_vpn_template.templateType = CISCO_VPN_SERVICE
+
+    logger.debug(
+        f"Resolved Cisco VPN {target_feature_template.name} template to type {cisco_vpn_template.templateType}"
+    )
+
+    if not cisco_vpn_template.subTemplates:
+        # No additional templates on VPN, nothing to cast
+        return
+
+    # Get templates that need casting
+    subtemplates_uuids = [
+        st.templateId for st in cisco_vpn_template.subTemplates if st.templateType in ADDITIONAL_TEMPLATES
+    ]
+    feature_templates_to_differentiate = [
+        t for t in ux1_config.templates.feature_templates if t.id in subtemplates_uuids
+    ]
+
+    if not feature_templates_to_differentiate:
+        # No additional templates that can be casted
+        return
+
+    for ft in feature_templates_to_differentiate:
+        new_id = str(uuid4())
+        new_name = f"{ft.name}{NEW_TEMPALTE_NAME_SUFFIX[cisco_vpn_template.templateType]}"
+        new_type = CAST_TEMPLATE_TYPE[cisco_vpn_template.templateType][ft.template_type]
+
+        logger.debug(
+            f"Copied feature template and casted type from: {ft.name}[{ft.template_type}] to {new_name}[{new_type}]"
+        )
+
+        ft_copy = ft.model_copy(deep=True)
+        ft_copy.template_type = new_type
+        ft_copy.id = new_id
+        ft_copy.name = new_name
+
+        ux1_config.templates.feature_templates.append(ft_copy)
+        cisco_vpn_template.subTemplates.append(
+            GeneralTemplate(
+                templateId=new_id,
+                templateType=ft_copy.template_type,
+                name=new_name,
+                subTemplates=[],
+            )
+        )
+
+    # Remove old GeneralTemplates
+    cisco_vpn_template.subTemplates = [
+        st for st in cisco_vpn_template.subTemplates if st.templateType not in ADDITIONAL_TEMPLATES
+    ]

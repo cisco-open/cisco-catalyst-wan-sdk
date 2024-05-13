@@ -16,11 +16,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import
     SummaryAddress,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet import InterfaceEthernetParcel
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import (
-    BasicGre,
-    GreAddress,
-    InterfaceGreParcel,
-)
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import BasicGre, InterfaceGreParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import InterfaceIpsecParcel, IpsecAddress
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.svi import InterfaceSviParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
@@ -432,7 +428,7 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestFeatureProfileModels):
             parcel_description="Test Gre Parcel",
             basic=BasicGre(
                 if_name=as_global("gre1"),
-                address=GreAddress(
+                address=Prefix(
                     address=as_global("1.1.1.1"),
                     mask=as_global("255.255.255.0"),
                 ),
