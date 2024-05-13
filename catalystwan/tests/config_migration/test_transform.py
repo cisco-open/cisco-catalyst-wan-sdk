@@ -359,7 +359,6 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
     )
 
     # Assert
-<<<<<<< HEAD
 
     # Assert Feature Profiles have correct VPNs
     assert service_profile is not None
@@ -372,9 +371,6 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
     assert service_gre is not None
     assert service_ethernet is not None
     assert service_ethernet_ipsec is not None
-=======
-    assert service_profile.header.subelements == set([vpn_1_uuid])
-    assert transport_and_management_profile.header.subelements == set([vpn_0_uuid, vpn_512_uuid])
 
 
 def test_when_one_feature_template_with_invalid_payload_expect_one_failed_item_in_conversion_result():
@@ -449,4 +445,3 @@ def test_when_one_feature_template_with_invalid_payload_expect_one_failed_item_i
     assert len(transform_result.failed_items) == 1
     assert transform_result.failed_items[0].feature_template == invalid_ft
     assert len(transform_result.ux2_config.profile_parcels) == 1
->>>>>>> ebb2602b (Raport -> Report. transform now creates a ConfigTransformResult which contains ux2_config and failed_items)
