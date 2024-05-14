@@ -5,9 +5,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from catalystwan.api.builders.feature_profiles.report import FailedParcel, FeatureProfileBuildReport
 from catalystwan.api.templates.device_template.device_template import DeviceTemplate, GeneralTemplate
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
-from catalystwan.models.builders import FailedParcel, FeatureProfileBuildReport
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
 from catalystwan.models.configuration.topology_group import TopologyGroup

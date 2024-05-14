@@ -3,8 +3,8 @@ from collections import defaultdict
 from typing import Dict, List, cast
 from uuid import UUID
 
+from catalystwan.api.builders.feature_profiles.report import FeatureProfileBuildReport
 from catalystwan.api.builders.feature_profiles.transport import TransportAndManagementProfileBuilder
-from catalystwan.models.builders import FeatureProfileBuildReport
 from catalystwan.models.configuration.config_migration import TransformedParcel
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyAssociatoryParcel

@@ -5,8 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from catalystwan.api.builders.feature_profiles.report import FeatureProfileBuildReport
 from catalystwan.endpoints.configuration_group import ProfileId
-from catalystwan.models.builders import FeatureProfileBuildReport
 from catalystwan.models.configuration.config_migration import (
     TransformedFeatureProfile,
     TransformedParcel,

@@ -8,10 +8,9 @@ from uuid import UUID, uuid4
 from pydantic import Field
 from typing_extensions import Annotated
 
-from catalystwan.api.builders.feature_profiles.handler import handle_build_report
+from catalystwan.api.builders.feature_profiles.report import FeatureProfileBuildReport, handle_build_report
 from catalystwan.api.feature_profile_api import ServiceFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
-from catalystwan.models.builders import FeatureProfileBuildReport
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
     AnyServiceParcel,
