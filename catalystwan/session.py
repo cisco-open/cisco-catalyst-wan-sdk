@@ -313,7 +313,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
                 continue
             except RequestException as exception:
                 self.logger.debug(self.response_trace(exception.response, exception.request))
-                raise ManagerRequestException(request=exception.request, response=exception.response)
+                raise ManagerRequestException(*exception.args)
 
         raise ManagerReadyTimeout(f"Waiting for server ready took longer than {timeout} seconds.")
 
@@ -330,7 +330,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
                 self.state = ManagerSessionState.WAIT_SERVER_READY_AFTER_RESTART
                 return self.request(method, url, *args, **kwargs)
             self.logger.debug(exception)
-            raise ManagerRequestException(request=exception.request, response=exception.response)
+            raise ManagerRequestException(*exception.args)
 
         if self.enable_relogin and response.jsessionid_expired and self.state == ManagerSessionState.OPERATIVE:
             self.logger.warning("Logging to session. Reason: expired JSESSIONID detected in response headers")
@@ -345,7 +345,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         except HTTPError as error:
             self.logger.debug(error)
             error_info = response.get_error_info()
-            raise ManagerHTTPError(error_info=error_info, request=error.request, response=error.response)
+            raise ManagerHTTPError(*error.args, error_info=error_info)
         return response
 
     def get_full_url(self, url_path: str) -> str:

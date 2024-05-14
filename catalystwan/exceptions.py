@@ -1,6 +1,6 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-from typing import Any, Optional, Union
+from typing import Union
 
 from pydantic import BaseModel
 from requests import HTTPError, RequestException
@@ -19,16 +19,18 @@ class CatalystwanException(Exception):
 class ManagerRequestException(RequestException, CatalystwanException):
     """Exception raised when there is ambigous problem during sending of request to Manager"""
 
-    def __init__(self, *args, **kwargs):
-        """Initialize RequestException with `request` and `response` objects."""
-        super().__init__(*args, **kwargs)
-
 
 class ManagerHTTPError(HTTPError, ManagerRequestException):
-    def __init__(self, *, error_info: Optional[ManagerErrorInfo], request: Any, response: Any):
+    def __init__(self, *args, error_info: ManagerErrorInfo, **kwargs):
         """Initialize RequestException with `error_info`, `request` and `response` objects."""
         self.info = error_info
-        super().__init__(request=request, response=response)
+        info_str = str(self.info)
+        _args = args
+        if not _args:
+            _args = (info_str,)
+        else:
+            _args = (str(_args[0]) + "\n" + info_str,) + _args[1:]
+        super().__init__(*_args, **kwargs)
 
     def __str__(self):
         error_info_str = str(self.info) if self.info else "No error information"
