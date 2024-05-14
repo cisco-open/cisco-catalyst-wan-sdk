@@ -466,6 +466,46 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestFeatureProfileModels):
         # Assert
         assert parcel_id
 
+    def test_set_dynamic_interface_ip_address_for_ethernet_parcel(self):
+        # Arrange
+        ethernet_parcel = InterfaceEthernetParcel(
+            parcel_name="TestEthernetParcelSets",
+            interface_name=as_global("HundredGigE"),
+        )
+        ethernet_parcel.set_dynamic_interface_ip_address(dhcp_distance=123)
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
+
+        # Assert
+        assert parcel_id
+
+    def test_set_primary_static_interface_ip_address_for_ethernet_parcel(self):
+        # Arrange
+        ethernet_parcel = InterfaceEthernetParcel(
+            parcel_name="TestEthernetParcelPrimaryStaticOne",
+            interface_name=as_global("HundredGigE"),
+        )
+        ethernet_parcel.set_static_primary_interface_ip_address("1.1.1.1")
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
+
+        # Assert
+        assert parcel_id
+
+    def test_set_primary_static_with_mask_interface_ip_address_for_ethernet_parcel(self):
+        # Arrange
+        ethernet_parcel = InterfaceEthernetParcel(
+            parcel_name="TestEthernetParcelPrimaryStaticMask",
+            interface_name=as_global("HundredGigE"),
+        )
+        ethernet_parcel.set_static_primary_interface_ip_address("1.1.1.1")
+        ethernet_parcel.add_static_secondary_interface_ip_address("3.3.3.3", "255.255.255.128")
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
+
+        # Assert
+        assert parcel_id
+
     def test_when_default_values_ipsec_parcel_expect_successful_post(self):
         # Arrange
         ipsec_parcel = InterfaceIpsecParcel(
