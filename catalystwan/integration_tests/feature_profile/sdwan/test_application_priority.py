@@ -10,7 +10,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.application_priority
     QosMap,
     QosPolicyParcel,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.application_priority.qos_policy import Target
+from catalystwan.models.configuration.feature_profile.sdwan.application_priority.qos_policy import QosPolicyTarget
 
 
 class TestPolicySettingsParcel(TestFeatureProfileModels):
@@ -91,17 +91,17 @@ class TestQosPolicyParcel(TestFeatureProfileModels):
         qos_policy_parcel = QosPolicyParcel(
             name="qos_policy_test_parcel",
             qos_map=QosMap(qos_schedulers=[]),
-            target=Target(interfaces=Global[List[str]](value=["GigabitEthernet1"])),
+            target=QosPolicyTarget(interfaces=Global[List[str]](value=["GigabitEthernet1"])),
         )
         parcel_id = self.api.create_parcel(self.profile_id, qos_policy_parcel).id
         parcel = self.api.get_parcel(self.profile_id, QosPolicyParcel, parcel_id).payload
-        parcel.target = Target(interfaces=Global[List[str]](value=["GigabitEthernet2"]))
+        parcel.target = QosPolicyTarget(interfaces=Global[List[str]](value=["GigabitEthernet2"]))
         # Act
         self.api.update_parcel(self.profile_id, parcel, parcel_id)
         parcel = self.api.get_parcel(self.profile_id, QosPolicyParcel, parcel_id).payload
 
         # Assert
-        assert parcel.target == Target(interfaces=Global[List[str]](value=["GigabitEthernet2"]))
+        assert parcel.target == QosPolicyTarget(interfaces=Global[List[str]](value=["GigabitEthernet2"]))
 
     def test_delete_qos_policy_parcel(self):
         qos_policy_parcel = QosPolicyParcel(

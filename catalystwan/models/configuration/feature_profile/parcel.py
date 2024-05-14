@@ -93,7 +93,6 @@ ParcelType = Literal[
     "dns",
     "gps",
     "cellular-controller",
-    "config",
     "sig",
     "policy-settings",
     "qos-policy",
