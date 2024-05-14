@@ -62,6 +62,9 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport import (
     T1E1ControllerParcel,
     TransportVpnParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.cellular import (
+    InterfaceCellularParcel,
+)
 
 system_endpoint_mapping = {
     AAAParcel: "aaa",
@@ -230,6 +233,7 @@ transport_interface_parcels = [
         InterfaceDslPPPoAParcel,
     ),
     ("interface/gre", WanInterfaceGreParcel),
+    ("interface/cellular", InterfaceCellularParcel),
 ]
 
 

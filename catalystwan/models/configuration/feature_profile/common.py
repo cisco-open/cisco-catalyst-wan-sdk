@@ -8,7 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
-from catalystwan.models.common import CoreRegion, SecondaryRegion, SubnetMask, check_fields_exclusive
+from catalystwan.models.common import CoreRegion, EncapType, SecondaryRegion, SubnetMask, check_fields_exclusive
 from catalystwan.models.configuration.common import Solution
 
 IPV4Address = str
@@ -241,7 +241,7 @@ class MultiRegionFabric(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    core_region: Optional[Union[Global[CoreRegion], Default[Literal["core-shared"]]]] = Field(
+    core_region: Optional[Union[Global[CoreRegion], Default[CoreRegion]]] = Field(
         default=None, validation_alias="coreRegion", serialization_alias="coreRegion"
     )
     enable_core_region: Optional[Union[Global[bool], Default[bool]]] = Field(
@@ -250,7 +250,7 @@ class MultiRegionFabric(BaseModel):
     enable_secondary_region: Optional[Union[Global[bool], Default[bool]]] = Field(
         default=None, validation_alias="enableSecondaryRegion", serialization_alias="enableSecondaryRegion"
     )
-    secondary_region: Optional[Union[Global[SecondaryRegion], Default[Literal["secondary-shared"]]]] = Field(
+    secondary_region: Optional[Union[Global[SecondaryRegion], Default[SecondaryRegion]]] = Field(
         default=None, validation_alias="secondaryRegion", serialization_alias="secondaryRegion"
     )
 
@@ -317,3 +317,118 @@ class AdvancedGre(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     application: Optional[Union[Global[TunnelApplication], Variable]] = None
+
+
+class ShapingRateUpstreamConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    default_shaping_rate_upstream: Union[Variable, Global[int]] = Field(
+        validation_alias="defaultShapingRateUpstream", serialization_alias="defaultShapingRateUpstream"
+    )
+    max_shaping_rate_upstream: Union[Variable, Global[int]] = Field(
+        validation_alias="maxShapingRateUpstream", serialization_alias="maxShapingRateUpstream"
+    )
+    min_shaping_rate_upstream: Union[Variable, Global[int]] = Field(
+        validation_alias="minShapingRateUpstream", serialization_alias="minShapingRateUpstream"
+    )
+
+
+class ShapingRateDownstreamConfig(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    default_shaping_rate_downstream: Union[Variable, Global[int]] = Field(
+        validation_alias="defaultShapingRateDownstream", serialization_alias="defaultShapingRateDownstream"
+    )
+    max_shaping_rate_downstream: Union[Variable, Global[int]] = Field(
+        validation_alias="maxShapingRateDownstream", serialization_alias="maxShapingRateDownstream"
+    )
+    min_shaping_rate_downstream: Union[Variable, Global[int]] = Field(
+        validation_alias="minShapingRateDownstream", serialization_alias="minShapingRateDownstream"
+    )
+
+
+class AclQos(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    adapt_period: Optional[Union[Variable, Default[int], Global[int]]] = Field(
+        default=None, validation_alias="adaptPeriod", serialization_alias="adaptPeriod"
+    )
+    adaptive_qos: Optional[Union[Global[bool], Default[bool]]] = Field(
+        default=None, validation_alias="adaptiveQoS", serialization_alias="adaptiveQoS"
+    )
+    ipv4_acl_egress: Optional[RefIdItem] = Field(
+        default=None, validation_alias="ipv4AclEgress", serialization_alias="ipv4AclEgress"
+    )
+    ipv4_acl_ingress: Optional[RefIdItem] = Field(
+        default=None, validation_alias="ipv4AclIngress", serialization_alias="ipv4AclIngress"
+    )
+    ipv6_acl_egress: Optional[RefIdItem] = Field(
+        default=None, validation_alias="ipv6AclEgress", serialization_alias="ipv6AclEgress"
+    )
+    ipv6_acl_ingress: Optional[RefIdItem] = Field(
+        default=None, validation_alias="ipv6AclIngress", serialization_alias="ipv6AclIngress"
+    )
+    shaping_rate: Optional[Union[Variable, Global[int], Default[None]]] = Field(
+        default=None, validation_alias="shapingRate", serialization_alias="shapingRate"
+    )
+    shaping_rate_downstream: Optional[Union[Global[bool], Default[bool]]] = Field(
+        default=None, validation_alias="shapingRateDownstream", serialization_alias="shapingRateDownstream"
+    )
+    shaping_rate_downstream_config: Optional[ShapingRateDownstreamConfig] = Field(
+        default=None,
+        validation_alias="shapingRateDownstreamConfig",
+        serialization_alias="shapingRateDownstreamConfig",
+        description="adaptiveQoS Shaping Rate Downstream config",
+    )
+    shaping_rate_upstream: Optional[Union[Global[bool], Default[bool]]] = Field(
+        default=None, validation_alias="shapingRateUpstream", serialization_alias="shapingRateUpstream"
+    )
+    shaping_rate_upstream_config: Optional[ShapingRateUpstreamConfig] = Field(
+        default=None,
+        validation_alias="shapingRateUpstreamConfig",
+        serialization_alias="shapingRateUpstreamConfig",
+        description="adaptiveQoS Shaping Rate Upstream config",
+    )
+
+
+class Encapsulation(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    encap: Optional[Global[EncapType]] = Field(default=None)
+    preference: Optional[Union[Global[int], Variable, Default[None]]] = Field(default=None)
+    weight: Optional[Union[Global[int], Variable, Default[int]]] = Field(default=None)
+
+
+class AllowService(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    bfd: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
+        default=None, description="Field not available for InterfaceCellularParcel"
+    )
+    all: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
+    bgp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
+    dhcp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
+    dns: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
+    https: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
+        default=None, description="Field not available for InterfaceDslPPPoEParcel"
+    )
+    icmp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
+    netconf: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
+    ntp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
+    ospf: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
+    snmp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
+    sshd: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
+    stun: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
+    ssh: Optional[Union[Default[bool], Global[bool], Variable]] = Field(
+        default=None, description="Field available only for InterfaceCellularParcel"
+    )
