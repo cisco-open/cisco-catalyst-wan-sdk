@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from catalystwan.api.configuration_groups.parcel import Global
+from catalystwan.api.configuration_groups.parcel import Default, Global
 from catalystwan.models.configuration.feature_profile.common import ChannelGroup, MultiRegionFabric
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.multilink import (
     AuthenticationType,
@@ -9,7 +9,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
     Method,
     NimList,
 )
-from catalystwan.utils.config_migration.converters.feature_template.normalizer import (
+from catalystwan.utils.config_migration.converters.feature_template.model_definition_normalizer import (
     flatten_datapaths,
     normalize_to_model_definition,
 )
@@ -54,7 +54,7 @@ class MultilinkTemplateConverter:
             controller_tx_ex_list=controller_tx_ex_list,  # type: ignore
             delay_value=normalized_values.get("delay_value"),
             dhcp=normalized_values.get("dhcp"),
-            disable=normalized_values.get("disable"),
+            disable=normalized_values.get("disable", Default[bool](value=False)),
             dns=normalized_values.get("dns"),
             exclude_controller_group_list=exclude_controller_group_list,
             gre_encap=encapsulation.get("gre_encap"),
@@ -66,7 +66,7 @@ class MultilinkTemplateConverter:
             hostname=normalized_values.get("hostname"),
             https=normalized_values.get("https"),
             icmp=normalized_values.get("icmp"),
-            interleave=normalized_values.get("interleave"),
+            interleave=normalized_values.get("interleave", Default[bool](value=False)),
             ip_directed_broadcast=normalized_values.get("ip_directed_brodcast"),
             ipsec_encap=encapsulation.get("ipsec_encap"),
             ipsec_preference=encapsulation.get("ipsec_preference"),
@@ -75,7 +75,7 @@ class MultilinkTemplateConverter:
             low_bandwidth_link=normalized_values.get("low_bandwidth_link"),
             mask_ipv4=addresses.get("mask_ipv4"),
             max_control_connections=normalized_values.get("max_control_connections"),
-            mtu=normalized_values.get("mtu"),
+            mtu=normalized_values.get("mtu", Default[int](value=1500)),
             multi_region_fabric=multi_region_fabric,
             nat_refresh_interval=normalized_values.get("nat_refresh_interval"),
             netconf=normalized_values.get("netconf"),
@@ -88,7 +88,7 @@ class MultilinkTemplateConverter:
             ppp_auth_password=passwords.get("ppp_auth_password"),
             restrict=normalized_values.get("restrict"),
             shaping_rate=normalized_values.get("shaping_rate"),
-            shutdown=normalized_values.get("shutdown"),
+            shutdown=normalized_values.get("shutdown", Default[bool](value=False)),
             snmp=normalized_values.get("snmp"),
             sshd=normalized_values.get("sshd"),
             stun=normalized_values.get("stun"),

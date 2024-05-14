@@ -154,8 +154,8 @@ class InterfaceMultilinkParcel(_ParcelBase):
     dhcp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
         default=None, validation_alias=AliasPath("data", "dhcp")
     )
-    disable: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
-        default=None, validation_alias=AliasPath("data", "disable")
+    disable: Union[Variable, Global[bool], Default[bool]] = Field(
+        default=Default[bool](value=False), validation_alias=AliasPath("data", "disable")
     )
     dns: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
         default=None, validation_alias=AliasPath("data", "dns")
@@ -190,8 +190,8 @@ class InterfaceMultilinkParcel(_ParcelBase):
     icmp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
         default=None, validation_alias=AliasPath("data", "icmp")
     )
-    interleave: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
-        default=None, validation_alias=AliasPath("data", "interleave")
+    interleave: Union[Variable, Global[bool], Default[bool]] = Field(
+        default=Default[bool](value=False), validation_alias=AliasPath("data", "interleave")
     )
     ip_directed_broadcast: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
         default=None, validation_alias=AliasPath("data", "ipDirectedBroadcast")
@@ -221,8 +221,8 @@ class InterfaceMultilinkParcel(_ParcelBase):
     max_control_connections: Optional[Union[Variable, Global[int], Default[None]]] = Field(
         default=None, validation_alias=AliasPath("data", "maxControlConnections")
     )
-    mtu: Optional[Union[Variable, Default[int], Global[int]]] = Field(
-        default=None, validation_alias=AliasPath("data", "mtu")
+    mtu: Union[Variable, Default[int], Global[int]] = Field(
+        default=Default[int](value=1500), validation_alias=AliasPath("data", "mtu")
     )
     multi_region_fabric: Optional[MultiRegionFabric] = Field(
         default=None, validation_alias=AliasPath("data", "multiRegionFabric")
@@ -258,8 +258,8 @@ class InterfaceMultilinkParcel(_ParcelBase):
     shaping_rate: Optional[Union[Variable, Global[int], Default[None]]] = Field(
         default=None, validation_alias=AliasPath("data", "shapingRate")
     )
-    shutdown: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
-        default=None, validation_alias=AliasPath("data", "shutdown")
+    shutdown: Union[Variable, Global[bool], Default[bool]] = Field(
+        default=Default[bool](value=False), validation_alias=AliasPath("data", "shutdown")
     )
     snmp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
         default=None, validation_alias=AliasPath("data", "snmp")

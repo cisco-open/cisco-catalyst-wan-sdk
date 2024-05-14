@@ -88,17 +88,18 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
     InterfaceIpsecParcel,
     PerfectForwardSecrecy,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.multilink import AuthenticationType
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.multilink import (
+    ControllerType as MultilinkControllerType,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.multilink import (
+    InterfaceMultilinkParcel,
+    Method,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
     AclQos as AclQosPPPoE,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
-    Advanced as AdvancedPPPoE,
-)
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.multilink import (
-    InterfaceMultilinkParcel,
-)
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppox import AclQos as AclQosPPPoE
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.pppox import (
     Advanced as AdvancedPPPoE,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
@@ -930,32 +931,20 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
             type_="interface/multilink",
             group_number=Global[int](value=299),
             if_name=Global[str](value="Multilink1"),
-            method=Global[Literal["CHAP", "PAP", "PAP and CHAP"]](value="CHAP"),
+            method=Global[Literal[Method]](value="CHAP"),
             address_ipv4=Global[IPv4Address](value=IPv4Address("192.175.48.4")),
             address_ipv6=Global[IPv6Interface](value=IPv6Interface("::3e46/100")),
             all=Global[bool](value=True),
-            authentication_type=Default[Literal["bidirectional", "unidirectional"]](value="unidirectional"),
+            authentication_type=Default[Literal[AuthenticationType]](value="unidirectional"),
             bandwidth_upstream=Global[int](value=21),
             bgp=Global[bool](value=True),
             bind=Global[str](value="JmwcJz"),
             border=Global[bool](value=True),
-            carrier=Global[
-                Literal[
-                    "carrier1",
-                    "carrier2",
-                    "carrier3",
-                    "carrier4",
-                    "carrier5",
-                    "carrier6",
-                    "carrier7",
-                    "carrier8",
-                    "default",
-                ]
-            ](value="carrier8"),
+            carrier=Global[Literal[Carrier]](value="carrier8"),
             clear_dont_fragment_sdwan_tunnel=Global[bool](value=True),
             control_connections=Global[bool](value=False),
             controller_tx_ex_list=[],
-            controller_type=Global[Literal["A/S Serial", "T1/E1"]](value="T1/E1"),
+            controller_type=Global[Literal[MultilinkControllerType]](value="T1/E1"),
             delay_value=Global[int](value=99),
             dhcp=Global[bool](value=False),
             disable=Global[bool](value=True),
@@ -981,42 +970,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
             ipv6_acl_ingress=None,
             last_resort_circuit=Global[bool](value=True),
             low_bandwidth_link=Global[bool](value=False),
-            mask_ipv4=Global[
-                Literal[
-                    "0.0.0.0",
-                    "128.0.0.0",
-                    "192.0.0.0",
-                    "224.0.0.0",
-                    "240.0.0.0",
-                    "248.0.0.0",
-                    "252.0.0.0",
-                    "254.0.0.0",
-                    "255.0.0.0",
-                    "255.128.0.0",
-                    "255.192.0.0",
-                    "255.224.0.0",
-                    "255.240.0.0",
-                    "255.252.0.0",
-                    "255.254.0.0",
-                    "255.255.0.0",
-                    "255.255.128.0",
-                    "255.255.192.0",
-                    "255.255.224.0",
-                    "255.255.240.0",
-                    "255.255.248.0",
-                    "255.255.252.0",
-                    "255.255.254.0",
-                    "255.255.255.0",
-                    "255.255.255.128",
-                    "255.255.255.192",
-                    "255.255.255.224",
-                    "255.255.255.240",
-                    "255.255.255.248",
-                    "255.255.255.252",
-                    "255.255.255.254",
-                    "255.255.255.255",
-                ]
-            ](value="255.255.255.254"),
+            mask_ipv4=Global[SubnetMask](value="255.255.255.254"),
             max_control_connections=Global[int](value=50),
             mtu=Global[int](value=5266),
             multi_region_fabric=MultiRegionFabric(
@@ -1045,32 +999,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
             tunnel_interface=Global[bool](value=True),
             tunnel_tcp_mss_adjust=Global[int](value=1269),
             username_string=Global[str](value="ONBBAAB"),
-            value=Global[
-                Literal[
-                    "3g",
-                    "biz-internet",
-                    "blue",
-                    "bronze",
-                    "custom1",
-                    "custom2",
-                    "custom3",
-                    "default",
-                    "gold",
-                    "green",
-                    "lte",
-                    "metro-ethernet",
-                    "mpls",
-                    "private1",
-                    "private2",
-                    "private3",
-                    "private4",
-                    "private5",
-                    "private6",
-                    "public-internet",
-                    "red",
-                    "silver",
-                ]
-            ](value="silver"),
+            value=Global[Literal[TLOCColor]](value="silver"),
             vbond_as_stun_server=Global[bool](value=False),
             vmanage_connection_preference=Global[int](value=7),
         )
