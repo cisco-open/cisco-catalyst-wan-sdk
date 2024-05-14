@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing_extensions import Annotated
 
+from catalystwan.models.configuration.feature_profile.sdwan.application_priority import AnyApplicationPriorityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.cli import AnyCliParcel
 from catalystwan.models.configuration.feature_profile.sdwan.dns_security import AnyDnsSecurityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import AnyEmbeddedSecurityParcel
@@ -92,6 +93,7 @@ ParcelType = Literal[
     "cellular-controller",
     "config",
     "sig",
+    "policy-settings",
 ]
 
 
@@ -106,6 +108,7 @@ AnyParcel = Annotated[
         AnyCliParcel,
         AnyDnsSecurityParcel,
         AnySIGSecurityParcel,
+        AnyApplicationPriorityParcel,
     ],
     Field(discriminator="type_"),
 ]
