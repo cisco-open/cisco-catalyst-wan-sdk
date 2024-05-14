@@ -25,6 +25,7 @@ from catalystwan.models.configuration.feature_profile.common import (
     SourceLoopback,
     TunnelSourceType,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.transport.gps import GpsParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1controller import (
     E1,
     T1,
@@ -294,6 +295,23 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_fully_specifed_gps_parcel_expect_successful_post(self):
+        # Arrange
+        gps_parcel = GpsParcel(
+            parcel_name="GpsParcel",
+            parcel_description="Description",
+            destination_address=Global[IPv4Address](value=IPv4Address("66.22.1.2")),
+            destination_port=Global[int](value=266),
+            enable=Global[bool](value=True),
+            mode=Global[Literal["ms-based", "standalone"]](value="standalone"),
+            nmea=Global[bool](value=True),
+            source_address=Global[IPv4Address](value=IPv4Address("76.22.3.9")),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, gps_parcel).id
         # Assert
         assert parcel_id
 

@@ -85,6 +85,7 @@ ParcelType = Literal[
     "wan/vpn/interface/cellular",
     "config",
     "dns",
+    "gps",
 ]
 
 

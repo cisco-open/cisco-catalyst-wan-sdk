@@ -17,6 +17,7 @@ from .bfd import BFDTemplateConverter
 from .bgp import BGPTemplateConverter
 from .dhcp import DhcpTemplateConverter
 from .global_ import GlobalTemplateConverter
+from .gps import GpsTemplateConverter
 from .lan.ethernet import InterfaceEthernetTemplateConverter
 from .lan.gre import LanInterfaceGreTemplateConverter
 from .lan.ipsec import LanInterfaceIpsecTemplateConverter
@@ -89,6 +90,7 @@ available_converters = [
     WanInterfaceGreTemplateConverter,
     WanInterfaceIpsecTemplateConverter,
     InterfaceCellularTemplateConverter,
+    GpsTemplateConverter,
 ]
 
 

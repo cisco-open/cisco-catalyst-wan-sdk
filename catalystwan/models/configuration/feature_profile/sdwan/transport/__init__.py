@@ -7,6 +7,7 @@ from typing_extensions import Annotated
 
 from .bgp import WanRoutingBgpParcel as BGPParcel
 from .cellular_controller import CellularControllerParcel
+from .gps import GpsParcel
 from .t1e1controller import T1E1ControllerParcel
 from .vpn import ManagementVpnParcel, TransportVpnParcel
 from .wan.interface.gre import InterfaceGreParcel
@@ -33,7 +34,8 @@ AnyTransportVpnSubParcel = Annotated[
 ]
 AnyTransportVpnParcel = Annotated[Union[ManagementVpnParcel, TransportVpnParcel], Field(discriminator="type_")]
 AnyTransportSuperParcel = Annotated[
-    Union[T1E1ControllerParcel, CellularControllerParcel, BGPParcel, T1E1ControllerParcel], Field(discriminator="type_")
+    Union[T1E1ControllerParcel, CellularControllerParcel, BGPParcel, T1E1ControllerParcel, GpsParcel],
+    Field(discriminator="type_"),
 ]
 AnyTransportParcel = Annotated[
     Union[AnyTransportSuperParcel, AnyTransportVpnParcel, AnyTransportVpnSubParcel],
