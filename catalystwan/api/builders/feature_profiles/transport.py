@@ -3,14 +3,15 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, Dict, List, Optional
 from uuid import UUID, uuid4
 
+from catalystwan.api.builders.feature_profiles.report import FeatureProfileBuildReport, handle_build_report
 from catalystwan.api.feature_profile_api import TransportFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
-from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.configuration.feature_profile.sdwan.transport import (
+    AnyTransportParcel,
     AnyTransportSuperParcel,
     AnyTransportVpnParcel,
     AnyTransportVpnSubParcel,
@@ -94,7 +95,7 @@ class TransportAndManagementProfileBuilder:
         """
         self._dependent_items_on_vpns[vpn_tag].append(parcel)
 
-    def build(self) -> UUID:
+    def build(self) -> FeatureProfileBuildReport:
         """
         Builds the feature profile.
 
@@ -103,14 +104,16 @@ class TransportAndManagementProfileBuilder:
         """
 
         profile_uuid = self._endpoints.create_transport_feature_profile(self._profile).id
-        try:
-            for parcel in self._independent_items:
-                self._api.create_parcel(profile_uuid, parcel)
-            for vpn_tag, vpn_parcel in self._independent_items_vpns.items():
-                # TODO: Add subparcels to VPN
-                vpn_uuid = self._api.create_parcel(profile_uuid, vpn_parcel).id
-                for subparcel in self._dependent_items_on_vpns[vpn_tag]:
-                    self._api.create_parcel(profile_uuid, subparcel, vpn_uuid)
-        except ManagerHTTPError as e:
-            logger.error(f"Error occured during building profile: {e.info}")
-        return profile_uuid
+        self.build_raport = FeatureProfileBuildReport(profile_uuid=profile_uuid, profile_name=self._profile.name)
+        for parcel in self._independent_items:
+            self._create_parcel(profile_uuid, parcel)
+        for vpn_tag, vpn_parcel in self._independent_items_vpns.items():
+            # TODO: Add subparcels to VPN
+            vpn_uuid = self._create_parcel(profile_uuid, vpn_parcel)
+            for subparcel in self._dependent_items_on_vpns[vpn_tag]:
+                self._create_parcel(profile_uuid, subparcel, vpn_uuid)
+        return self.build_raport
+
+    @handle_build_report
+    def _create_parcel(self, profile_uuid: UUID, parcel: AnyTransportParcel, vpn_uuid: Optional[None] = None) -> UUID:
+        return self._api.create_parcel(profile_uuid, parcel, vpn_uuid).id
