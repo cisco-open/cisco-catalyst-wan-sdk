@@ -5,10 +5,6 @@ from typing import List, Union
 from pydantic import Field
 from typing_extensions import Annotated
 
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.multilink import (
-    InterfaceMultilinkParcel,
-)
-
 from .bgp import WanRoutingBgpParcel as BGPParcel
 from .cellular_controller import CellularControllerParcel
 from .cellular_profile import CellularProfileParcel
@@ -17,6 +13,7 @@ from .t1e1controller import T1E1ControllerParcel
 from .vpn import ManagementVpnParcel, TransportVpnParcel
 from .wan.interface.gre import InterfaceGreParcel
 from .wan.interface.ipsec import InterfaceIpsecParcel
+from .wan.interface.multilink import InterfaceMultilinkParcel
 from .wan.interface.protocol_over import (
     InterfaceDslIPoEParcel,
     InterfaceDslPPPoAParcel,
