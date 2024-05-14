@@ -38,6 +38,7 @@ from .switchport import SwitchportTemplateConverter
 from .thousandeyes import ThousandEyesTemplateConverter
 from .ucse import UcseTemplateConverter
 from .vpn import VpnTemplateConverter
+from .wan.cellular import InterfaceCellularTemplateConverter
 from .wan.gre import WanInterfaceGreTemplateConverter
 from .wan.ipsec import WanInterfaceIpsecTemplateConverter
 from .wan.protocol_over import (
@@ -87,6 +88,7 @@ available_converters = [
     LanInterfaceGreTemplateConverter,
     WanInterfaceGreTemplateConverter,
     WanInterfaceIpsecTemplateConverter,
+    InterfaceCellularTemplateConverter,
 ]
 
 

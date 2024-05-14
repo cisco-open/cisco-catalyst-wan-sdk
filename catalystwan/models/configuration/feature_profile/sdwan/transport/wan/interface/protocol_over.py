@@ -10,7 +10,12 @@ from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
 from catalystwan.models.common import Carrier, TLOCColor
-from catalystwan.models.configuration.feature_profile.common import AddressWithMask, MultiRegionFabric, RefIdItem
+from catalystwan.models.configuration.feature_profile.common import (
+    AclQos,
+    AddressWithMask,
+    AllowService,
+    MultiRegionFabric,
+)
 
 
 class NatProp(BaseModel):
@@ -145,27 +150,6 @@ class Tunnel(BaseModel):
     )
 
 
-class TunnelAllowService(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    all: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
-    bgp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
-    dhcp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
-    dns: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
-    https: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
-        default=None, description="Field not available for DslPPPoEParcel"
-    )
-    icmp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
-    netconf: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
-    ntp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
-    ospf: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
-    snmp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
-    sshd: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
-    stun: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
-
-
 class TunnelAdvancedOption(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -221,84 +205,6 @@ class Advanced(BaseModel):
     )
     tloc_extension: Optional[Union[Variable, Global[str], Default[None]]] = Field(
         default=None, validation_alias="tlocExtension", serialization_alias="tlocExtension"
-    )
-
-
-class ShapingRateUpstreamConfig(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    default_shaping_rate_upstream: Union[Variable, Global[int]] = Field(
-        validation_alias="defaultShapingRateUpstream", serialization_alias="defaultShapingRateUpstream"
-    )
-    max_shaping_rate_upstream: Union[Variable, Global[int]] = Field(
-        validation_alias="maxShapingRateUpstream", serialization_alias="maxShapingRateUpstream"
-    )
-    min_shaping_rate_upstream: Union[Variable, Global[int]] = Field(
-        validation_alias="minShapingRateUpstream", serialization_alias="minShapingRateUpstream"
-    )
-
-
-class ShapingRateDownstreamConfig(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    default_shaping_rate_downstream: Union[Variable, Global[int]] = Field(
-        validation_alias="defaultShapingRateDownstream", serialization_alias="defaultShapingRateDownstream"
-    )
-    max_shaping_rate_downstream: Union[Variable, Global[int]] = Field(
-        validation_alias="maxShapingRateDownstream", serialization_alias="maxShapingRateDownstream"
-    )
-    min_shaping_rate_downstream: Union[Variable, Global[int]] = Field(
-        validation_alias="minShapingRateDownstream", serialization_alias="minShapingRateDownstream"
-    )
-
-
-class AclQos(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    adapt_period: Optional[Union[Variable, Default[int], Global[int]]] = Field(
-        default=None, validation_alias="adaptPeriod", serialization_alias="adaptPeriod"
-    )
-    adaptive_qos: Optional[Union[Global[bool], Default[bool]]] = Field(
-        default=None, validation_alias="adaptiveQoS", serialization_alias="adaptiveQoS"
-    )
-    ipv4_acl_egress: Optional[RefIdItem] = Field(
-        default=None, validation_alias="ipv4AclEgress", serialization_alias="ipv4AclEgress"
-    )
-    ipv4_acl_ingress: Optional[RefIdItem] = Field(
-        default=None, validation_alias="ipv4AclIngress", serialization_alias="ipv4AclIngress"
-    )
-    ipv6_acl_egress: Optional[RefIdItem] = Field(
-        default=None, validation_alias="ipv6AclEgress", serialization_alias="ipv6AclEgress"
-    )
-    ipv6_acl_ingress: Optional[RefIdItem] = Field(
-        default=None, validation_alias="ipv6AclIngress", serialization_alias="ipv6AclIngress"
-    )
-    shaping_rate: Optional[Union[Variable, Global[int], Default[None]]] = Field(
-        default=None, validation_alias="shapingRate", serialization_alias="shapingRate"
-    )
-    shaping_rate_downstream: Optional[Union[Global[bool], Default[bool]]] = Field(
-        default=None, validation_alias="shapingRateDownstream", serialization_alias="shapingRateDownstream"
-    )
-    shaping_rate_downstream_config: Optional[ShapingRateDownstreamConfig] = Field(
-        default=None,
-        validation_alias="shapingRateDownstreamConfig",
-        serialization_alias="shapingRateDownstreamConfig",
-        description="adaptiveQoS Shaping Rate Downstream config",
-    )
-    shaping_rate_upstream: Optional[Union[Global[bool], Default[bool]]] = Field(
-        default=None, validation_alias="shapingRateUpstream", serialization_alias="shapingRateUpstream"
-    )
-    shaping_rate_upstream_config: Optional[ShapingRateUpstreamConfig] = Field(
-        default=None,
-        validation_alias="shapingRateUpstreamConfig",
-        serialization_alias="shapingRateUpstreamConfig",
-        description="adaptiveQoS Shaping Rate Upstream config",
     )
 
 
@@ -449,7 +355,7 @@ class InterfaceBase(_ParcelBase):
     tunnel_advanced_option: Optional[TunnelAdvancedOption] = Field(
         default=None, validation_alias=AliasPath("data", "tunnelAdvancedOption")
     )
-    tunnel_allow_service: Optional[TunnelAllowService] = Field(
+    tunnel_allow_service: Optional[AllowService] = Field(
         default=None,
         validation_alias=AliasPath("data", "tunnelAllowService"),
         description="Tunnel Interface Attributes",

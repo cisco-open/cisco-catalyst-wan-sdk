@@ -7,8 +7,14 @@ from typing import List, Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.common import Carrier, EncapType, TLOCColor
-from catalystwan.models.configuration.feature_profile.common import AddressWithMask, MultiRegionFabric, RefIdItem
+from catalystwan.models.common import Carrier, TLOCColor
+from catalystwan.models.configuration.feature_profile.common import (
+    AddressWithMask,
+    AllowService,
+    Encapsulation,
+    MultiRegionFabric,
+    RefIdItem,
+)
 
 ClockRate = Literal[
     "9600",
@@ -107,36 +113,6 @@ class Tunnel(BaseModel):
     vmanage_connection_preference: Optional[Union[Global[int], Variable, Default[int]]] = Field(
         default=None, validation_alias="vmanageConnectionPreference", serialization_alias="vmanageConnectionPreference"
     )
-
-
-class AllowService(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    all: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
-    bfd: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
-    bgp: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
-    dhcp: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
-    dns: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
-    https: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
-    icmp: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
-    netconf: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
-    ntp: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
-    ospf: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
-    snmp: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
-    sshd: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
-    stun: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
-
-
-class Encapsulation(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    encap: Optional[Global[EncapType]] = Field(default=None)
-    preference: Optional[Union[Global[int], Variable, Default[None]]] = Field(default=None)
-    weight: Optional[Union[Global[int], Variable, Default[int]]] = Field(default=None)
 
 
 class AclQos(BaseModel):

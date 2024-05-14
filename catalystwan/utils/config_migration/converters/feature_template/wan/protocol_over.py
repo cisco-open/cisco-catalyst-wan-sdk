@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, OptionType, as_global
 from catalystwan.models.common import Carrier
-from catalystwan.models.configuration.feature_profile.common import AddressWithMask
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask, AllowService
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
     Advanced,
     AtmEncapsulation,
@@ -28,7 +28,6 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
     StaticIntfIpAddress,
     Tunnel,
     TunnelAdvancedOption,
-    TunnelAllowService,
     VbrNrtConfig,
     VbrRtConfig,
     Vdsl,
@@ -163,11 +162,11 @@ class InterfaceBaseTemplateConverter:
             udp_timeout=nat_prop.get("udp_timeout"),
         )
 
-    def parse_tunnel_allow_service(self, data: dict) -> Optional[TunnelAllowService]:
+    def parse_tunnel_allow_service(self, data: dict) -> Optional[AllowService]:
         allow_service = data.get("tunnel_interface", {}).get("allow_service")
         if not allow_service:
             return None
-        return TunnelAllowService(**allow_service)
+        return AllowService(**allow_service)
 
     def parse_ppp(self, data: Dict) -> Optional[Ppp]:
         pppoe_client_data = data.get("pppoe_client")

@@ -175,6 +175,8 @@ def as_default(value: Any, generic_alias: Any = None):
     Returns:
         Default[Any]: default option type object
     """
+    if value is None:
+        return Default[None](value=None)
     if generic_alias is None:
         if isinstance(value, list):
             if len(value) == 0:
