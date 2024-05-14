@@ -94,6 +94,7 @@ ParcelType = Literal[
     "config",
     "sig",
     "policy-settings",
+    "qos-policy",
 ]
 
 

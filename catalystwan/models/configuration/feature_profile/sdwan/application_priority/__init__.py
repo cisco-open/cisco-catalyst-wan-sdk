@@ -1,20 +1,30 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from typing import List
 
-from .policy_settings import PolicySettingsParcel
+from typing import Annotated, List, Union
 
-AnyApplicationPriorityParcel = PolicySettingsParcel
+from pydantic import Field
 
-# AnyApplicationPriorityParcel = Annotated[
-#    Union[
-#        PolicySettingsParcel,
-#        PolicyParcel,
-#    ],
-#    Field(discriminator="type_"),
-# ]
+from .policy_settings import Cflowd, PolicySettingsParcel
+from .qos_policy import QosMap, QosPolicyParcel, QosSchedulers, Target
 
-__all__ = ("AnyApplicationPriorityParcel", "PolicySettignsParcel")
+AnyApplicationPriorityParcel = Annotated[
+    Union[
+        PolicySettingsParcel,
+        QosPolicyParcel,
+    ],
+    Field(discriminator="type_"),
+]
+
+__all__ = (
+    "AnyApplicationPriorityParcel",
+    "PolicySettingsParcel",
+    "QosPolicyParcel",
+    "Target",
+    "QosMap",
+    "QosSchedulers",
+    "Cflowd",
+)
 
 
 def __dir__() -> "List[str]":

@@ -17,6 +17,7 @@ from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority import (
     AnyApplicationPriorityParcel,
     PolicySettingsParcel,
+    QosPolicyParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.other import AnyOtherParcel
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.url import URLParcel
