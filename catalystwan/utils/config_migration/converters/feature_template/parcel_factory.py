@@ -31,6 +31,7 @@ from .multicast import (
     MulticastToMulticastTemplateConverter,
     PimToMulticastTemplateConverter,
 )
+from .multilink import MultilinkTemplateConverter
 from .normalizer import template_definition_normalization
 from .ntp import NtpTemplateConverter
 from .omp import OMPTemplateConverter
@@ -53,7 +54,6 @@ from .wan.protocol_over import (
 )
 from .wan.t1e1serial import T1E1SerialTemplateConverter
 from .wireless_lan import WirelessLanTemplateConverter
-from .multilink import MultilinkTemplateConverter
 
 logger = logging.getLogger(__name__)
 
