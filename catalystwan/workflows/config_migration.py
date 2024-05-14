@@ -83,6 +83,7 @@ SUPPORTED_TEMPLATE_TYPES = [
     "vpn-interface-pppoe",
     "vpn-interface-pppoa",
     "vpn-interface-ipoe",
+    "vpn-cedge-interface-multilink-controller",
     WAN_VPN_GRE,
     LAN_VPN_GRE,
     LAN_VPN_ETHERNET,
@@ -126,6 +127,7 @@ FEATURE_PROFILE_TRANSPORT = [
     "vpn-interface-pppoe",
     "vpn-interface-pppoa",
     "vpn-interface-ipoe",
+    "vpn-cedge-interface-multilink-controller",
     CISCO_VPN_TRANSPORT_AND_MANAGEMENT,
 ]
 
