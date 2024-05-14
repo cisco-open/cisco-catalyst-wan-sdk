@@ -335,32 +335,29 @@ class InterfaceEthernetParcel(_ParcelBase):
 
     def set_dynamic_interface_ip_address(self, dhcp_distance: int) -> None:
         self.interface_ip_address = InterfaceDynamicIPv4Address(
-            dynamic=DynamicDhcpDistance(dynamic_dhcp_distance=as_global(value=dhcp_distance))
+            dynamic=DynamicDhcpDistance(dynamic_dhcp_distance=Global[int](value=dhcp_distance))
         )
 
     def set_static_primary_interface_ip_address(
-        self, ip_address: Optional[Union[str, IPv4Address]], subnet_mask: Optional[str]
+        self, ip_address: Optional[Union[str, IPv4Address]], subnet_mask: Optional[str] = None
     ) -> None:
+        if subnet_mask is None:
+            primary_ip_address = StaticIPv4Address(ip_address=as_global(ip_address))
+        else:
+            primary_ip_address = StaticIPv4Address(ip_address=as_global(ip_address), subnet_mask=as_global(subnet_mask))
         self.interface_ip_address = InterfaceStaticIPv4Address(
-            static=StaticIPv4AddressConfig(
-                primary_ip_address=StaticIPv4Address(
-                    ip_address=as_global(ip_address), subnet_mask=as_global(subnet_mask)
-                )
-            )
+            static=StaticIPv4AddressConfig(primary_ip_address=primary_ip_address)
         )
 
     def add_static_secondary_interface_ip_address(
-        self, ip_address: Optional[Union[str, IPv4Address]], subnet_mask: Optional[str]
+        self, ip_address: Optional[Union[str, IPv4Address]], subnet_mask: str
     ) -> None:
+        if self.interface_ip_address is None:
+            raise ValueError("Missing static primary IP Address")
         if isinstance(self.interface_ip_address, InterfaceDynamicIPv4Address):
             raise ValueError("Interface IP Address is already dynamic")
 
-        static_ip_address = StaticIPv4Address(ip_address=as_global(ip_address), subnet_mask=as_global(subnet_mask))
-        if self.interface_ip_address is None:
-            self.interface_ip_address = InterfaceStaticIPv4Address(
-                static=StaticIPv4AddressConfig(secondary_ip_address=[static_ip_address])
-            )
-        else:
-            if self.interface_ip_address.static.secondary_ip_address is None:
-                self.interface_ip_address.static.secondary_ip_address = []
-            self.interface_ip_address.static.secondary_ip_address.append(static_ip_address)
+        secondary_ip_address = StaticIPv4Address(ip_address=as_global(ip_address), subnet_mask=as_global(subnet_mask))
+        if self.interface_ip_address.static.secondary_ip_address is None:
+            self.interface_ip_address.static.secondary_ip_address = []
+        self.interface_ip_address.static.secondary_ip_address.append(secondary_ip_address)
