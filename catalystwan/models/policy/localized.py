@@ -1,9 +1,9 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-from typing import List, Literal, Optional
+from typing import Any, List, Literal, Optional, Union
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, IPvAnyAddress, field_validator
+from pydantic import BaseModel, ConfigDict, Field, IPvAnyAddress, model_validator
 
 from catalystwan.models.policy.policy import AssemblyItemBase, PolicyCreationPayload, PolicyDefinition, PolicyInfo
 
@@ -19,6 +19,11 @@ LocalizedPolicySupportedItemType = Literal[
     "deviceAccessPolicyv6",
     "vedgeRoute",
 ]
+
+
+def assert_feature_defintion(definition: Any) -> "LocalizedPolicyDefinition":
+    assert isinstance(definition, LocalizedPolicyDefinition)
+    return definition
 
 
 class LocalizedPolicySettings(BaseModel):
@@ -68,20 +73,25 @@ class LocalizedPolicyAssemblyItem(AssemblyItemBase):
 
 
 class LocalizedPolicyDefinition(PolicyDefinition):
-    assembly: List[LocalizedPolicyAssemblyItem]
-    settings: LocalizedPolicySettings
+    assembly: List[LocalizedPolicyAssemblyItem] = []
+    settings: Optional[LocalizedPolicySettings] = None
 
 
 class LocalizedPolicy(PolicyCreationPayload):
-    policy_definition: LocalizedPolicyDefinition = Field(
+    policy_definition: Union[LocalizedPolicyDefinition, str] = Field(
         default=LocalizedPolicyDefinition(assembly=[], settings=LocalizedPolicySettings()),
         serialization_alias="policyDefinition",
         validation_alias="policyDefinition",
     )
-    policy_type: str = Field(default="feature", serialization_alias="policyType", validation_alias="policyType")
+    policy_type: Literal["feature", "cli"] = Field(
+        default="feature", serialization_alias="policyType", validation_alias="policyType"
+    )
 
-    def _add_item(self, type: LocalizedPolicySupportedItemType, id: UUID) -> None:
-        self.policy_definition.assembly.append(LocalizedPolicyAssemblyItem(type=type, definition_id=id))
+    def _add_item(self, type: LocalizedPolicySupportedItemType, id: UUID) -> LocalizedPolicyAssemblyItem:
+        policy_definition = assert_feature_defintion(self.policy_definition)
+        item = LocalizedPolicyAssemblyItem(type=type, definition_id=id)
+        policy_definition.assembly.append(item)
+        return item
 
     def add_qos_map(self, definition_id: UUID) -> None:
         self._add_item("qosMap", definition_id)
@@ -107,15 +117,18 @@ class LocalizedPolicy(PolicyCreationPayload):
     def add_route_policy(self, definition_id: UUID) -> None:
         self._add_item("vedgeRoute", definition_id)
 
-    @field_validator("policy_definition", mode="before")
+    @model_validator(mode="before")
     @classmethod
-    def try_parse(cls, policy_definition):
+    def try_parse_policy_definition_string(cls, values):
         # this is needed because GET /template/policy/vedge contains string in policyDefinition field
         # while POST /template/policy/vedge requires a regular object
         # it makes sense to reuse that model for both requests and present parsed data to the user
-        if isinstance(policy_definition, str):
-            return LocalizedPolicyDefinition.model_validate_json(policy_definition)
-        return policy_definition
+        if (policy_definition := values.get("policyDefinition")) and values.get("policyType") != "cli":
+            if isinstance(policy_definition, str):
+                values["policyDefinition"] = LocalizedPolicyDefinition.model_validate_json(policy_definition)
+        else:
+            values["policyDefinition"] = LocalizedPolicyDefinition()
+        return values
 
 
 class LocalizedPolicyInfo(PolicyInfo, LocalizedPolicy):
