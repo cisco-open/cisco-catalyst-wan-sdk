@@ -10,7 +10,7 @@ from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
 from catalystwan.models.common import Carrier, TLOCColor
-from catalystwan.models.configuration.feature_profile.common import MultiRegionFabric, Prefix, RefIdItem
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask, MultiRegionFabric, RefIdItem
 
 
 class NatProp(BaseModel):
@@ -389,7 +389,7 @@ class Static(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    static_ip_v4: Optional[Prefix] = Field(
+    static_ip_v4: Optional[AddressWithMask] = Field(
         default=None,
         validation_alias="staticIpV4AddressPrimary",
         serialization_alias="staticIpV4AddressPrimary",

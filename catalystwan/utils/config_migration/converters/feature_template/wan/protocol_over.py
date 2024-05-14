@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, OptionType, as_global
 from catalystwan.models.common import Carrier
-from catalystwan.models.configuration.feature_profile.common import Prefix
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
     Advanced,
     AtmEncapsulation,
@@ -447,7 +447,7 @@ class InterfaceDslIPoETemplateConverter(InterfaceBaseTemplateConverter):
     def parse_static_ip_address(self, interface: IPv4Interface) -> StaticIntfIpAddress:
         return StaticIntfIpAddress(
             static=Static(
-                static_ip_v4=Prefix(
+                static_ip_v4=AddressWithMask(
                     address=as_global(interface.network.network_address),
                     mask=as_global(str(interface.netmask)),
                 )

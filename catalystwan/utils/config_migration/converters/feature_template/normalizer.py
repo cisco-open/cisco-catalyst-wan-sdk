@@ -2,15 +2,17 @@ from ipaddress import AddressValueError, IPv4Address, IPv4Interface, IPv6Address
 from typing import List, Optional, Union, get_args
 
 from catalystwan.api.configuration_groups.parcel import Global, as_global
-from catalystwan.models.common import MetricType, SubnetMask, TLOCColor
-from catalystwan.models.configuration.feature_profile.common import TunnelApplication
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import (
+from catalystwan.models.common import (
     IkeCiphersuite,
     IkeMode,
     IpsecCiphersuite,
+    MetricType,
     PfsGroup,
+    SubnetMask,
+    TLOCColor,
     VrrpTrackerAction,
 )
+from catalystwan.models.configuration.feature_profile.common import TunnelApplication
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet import DuplexMode, MediaType, NatType
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import GreTunnelMode
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import IpsecTunnelMode

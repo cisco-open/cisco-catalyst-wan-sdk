@@ -4,7 +4,7 @@ from uuid import UUID
 from catalystwan.api.configuration_groups.parcel import Global, as_global, as_variable
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
 from catalystwan.models.common import SubnetMask
-from catalystwan.models.configuration.feature_profile.common import Prefix
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask
 from catalystwan.models.configuration.feature_profile.sdwan.service.acl import Ipv4AclParcel, Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import (
     AddressPool,
@@ -17,7 +17,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet import InterfaceEthernetParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import BasicGre, InterfaceGreParcel
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import InterfaceIpsecParcel, IpsecAddress
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import InterfaceIpsecParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.svi import InterfaceSviParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import (
@@ -161,7 +161,7 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
             address_family=AddressFamily(
                 network=[
                     SummaryAddress(
-                        prefix=Prefix(
+                        prefix=AddressWithMask(
                             address=as_global("10.3.2.1"),
                             mask=as_global("255.255.255.0"),
                         )
@@ -428,7 +428,7 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestFeatureProfileModels):
             parcel_description="Test Gre Parcel",
             basic=BasicGre(
                 if_name=as_global("gre1"),
-                address=Prefix(
+                address=AddressWithMask(
                     address=as_global("1.1.1.1"),
                     mask=as_global("255.255.255.0"),
                 ),
@@ -478,8 +478,8 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestFeatureProfileModels):
             ike_remote_id=as_global("123"),
             application=as_variable("{{ipsec_application}}"),
             tunnel_source_interface=as_variable("{{ipsec_ipsecSourceInterface}}"),
-            address=IpsecAddress(address=as_global("10.0.0.1"), mask=as_global("255.255.255.0")),
-            tunnel_destination=IpsecAddress(address=as_global("10.0.0.5"), mask=as_global("255.255.255.0")),
+            address=AddressWithMask(address=as_global("10.0.0.1"), mask=as_global("255.255.255.0")),
+            tunnel_destination=AddressWithMask(address=as_global("10.0.0.5"), mask=as_global("255.255.255.0")),
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, ipsec_parcel, self.vpn_parcel_uuid).id

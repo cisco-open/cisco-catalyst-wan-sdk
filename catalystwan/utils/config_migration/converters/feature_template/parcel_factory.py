@@ -19,7 +19,7 @@ from .dhcp import DhcpTemplateConverter
 from .global_ import GlobalTemplateConverter
 from .lan.ethernet import InterfaceEthernetTemplateConverter
 from .lan.gre import LanInterfaceGreTemplateConverter
-from .lan.ipsec import InterfaceIpsecTemplateConverter
+from .lan.ipsec import LanInterfaceIpsecTemplateConverter
 from .lan.svi import InterfaceSviTemplateConverter
 from .logging_ import LoggingTemplateConverter
 from .multicast import (
@@ -39,6 +39,7 @@ from .thousandeyes import ThousandEyesTemplateConverter
 from .ucse import UcseTemplateConverter
 from .vpn import VpnTemplateConverter
 from .wan.gre import WanInterfaceGreTemplateConverter
+from .wan.ipsec import WanInterfaceIpsecTemplateConverter
 from .wan.protocol_over import (
     InterfaceDslIPoETemplateConverter,
     InterfaceDslPppoaTemplateConverter,
@@ -70,7 +71,7 @@ available_converters = [
     LanInterfaceGreTemplateConverter,
     InterfaceSviTemplateConverter,
     InterfaceEthernetTemplateConverter,
-    InterfaceIpsecTemplateConverter,
+    LanInterfaceIpsecTemplateConverter,
     OspfTemplateConverter,
     Ospfv3TemplateConverter,
     SwitchportTemplateConverter,
@@ -85,6 +86,7 @@ available_converters = [
     InterfaceDslIPoETemplateConverter,
     LanInterfaceGreTemplateConverter,
     WanInterfaceGreTemplateConverter,
+    WanInterfaceIpsecTemplateConverter,
 ]
 
 

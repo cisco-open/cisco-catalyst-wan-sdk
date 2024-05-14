@@ -2,7 +2,7 @@ from copy import deepcopy
 from typing import List, Optional
 
 from catalystwan.api.configuration_groups.parcel import Default, as_default, as_global, as_variable
-from catalystwan.models.configuration.feature_profile.common import Prefix
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask
 from catalystwan.models.configuration.feature_profile.sdwan.service import EigrpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import (
     AddressFamily,
@@ -56,7 +56,7 @@ class EigrpTemplateConverter:
         if not summary_address:
             return [
                 SummaryAddress(
-                    prefix=Prefix(
+                    prefix=AddressWithMask(
                         address=as_variable(self.lan_eigrp_addr_fami_netw_1_ip),
                         mask=as_variable(self.lan_eigrp_addr_fami_netw_1_mask),
                     )
@@ -98,7 +98,7 @@ class EigrpTemplateConverter:
 
     def _set_summary_address(self, addr: dict) -> SummaryAddress:
         return SummaryAddress(
-            prefix=Prefix(
+            prefix=AddressWithMask(
                 address=as_global(addr["prefix"].value.network.network_address),
                 mask=as_global(str(addr["prefix"].value.netmask)),
             )

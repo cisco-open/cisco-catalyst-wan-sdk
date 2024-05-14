@@ -4,10 +4,23 @@ from uuid import UUID
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
-from catalystwan.models.common import Carrier, CoreRegion, EncapType, SecondaryRegion, TLOCColor
-from catalystwan.models.configuration.feature_profile.common import AdvancedGre, MultiRegionFabric
-from catalystwan.models.configuration.feature_profile.common import Prefix as CommonPrefix
-from catalystwan.models.configuration.feature_profile.common import SourceLoopback, TunnelSourceType
+from catalystwan.models.common import (
+    Carrier,
+    CoreRegion,
+    EncapType,
+    IkeCiphersuite,
+    IkeGroup,
+    IpsecCiphersuite,
+    SecondaryRegion,
+    TLOCColor,
+)
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask as CommonPrefix
+from catalystwan.models.configuration.feature_profile.common import (
+    AdvancedGre,
+    MultiRegionFabric,
+    SourceLoopback,
+    TunnelSourceType,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1controller import (
     E1,
     T1,
@@ -44,6 +57,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import
     TransportVpnParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.gre import Basic, InterfaceGreParcel
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.ipsec import (
+    InterfaceIpsecParcel,
+    PerfectForwardSecrecy,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
     AclQos as AclQosPPPoE,
 )
@@ -666,6 +683,50 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, gre_parcel, self.wan_uuid).id
+        # Assert
+        assert parcel_id
+
+    def test_when_fully_specified_ipsec_interface_parcel_expect_successful_post(self):
+        ipsec_parcel = InterfaceIpsecParcel(
+            parcel_name="InterfaceIpsecParcel",
+            parcel_description="Description",
+            address=CommonPrefix(
+                address=Global[IPv4Address](value=IPv4Address("127.211.176.149")),
+                mask=Global[SubnetMask](value="255.255.255.0"),
+            ),
+            application=Global[Literal["none", "sig"]](value="none"),
+            clear_dont_fragment=Global[bool](value=False),
+            if_description=Default[None](value=None),
+            dpd_interval=Default[int](value=10),
+            dpd_retries=Default[int](value=3),
+            if_name=Global[str](value="ipsec232"),
+            ike_ciphersuite=Global[IkeCiphersuite](value="aes256-cbc-sha1"),
+            ike_group=Global[IkeGroup](value="16"),
+            ike_local_id=Global[str](value="TZilY"),
+            ike_rekey_interval=Default[int](value=14400),
+            ike_remote_id=Default[None](value=None),
+            ike_version=Default[int](value=1),
+            ipsec_ciphersuite=Global[IpsecCiphersuite](value="aes256-gcm"),
+            ipsec_rekey_interval=Default[int](value=3600),
+            ipsec_replay_window=Default[int](value=512),
+            mtu=Default[int](value=1500),
+            perfect_forward_secrecy=Global[PerfectForwardSecrecy](value="group-16"),
+            pre_shared_secret=Global[str](value="iEKeBeVb"),
+            shutdown=Default[bool](value=True),
+            tcp_mss_adjust=Default[None](value=None),
+            tunnel_destination=CommonPrefix(
+                address=Global[IPv4Address](value=IPv4Address("192.0.0.171")), mask=Variable(value="{{Dr}}")
+            ),
+            tunnel_source=CommonPrefix(
+                address=Global[IPv4Address](value=IPv4Address("192.52.193.221")),
+                mask=Global[SubnetMask](value="255.255.254.0"),
+            ),
+            ike_mode=Global[Literal["main", "aggresive"]](value="main"),
+            tracker=Global[str](value="AFrHA"),
+            tunnel_route_via=Global[str](value="AAAfxC"),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, ipsec_parcel, self.wan_uuid).id
         # Assert
         assert parcel_id
 

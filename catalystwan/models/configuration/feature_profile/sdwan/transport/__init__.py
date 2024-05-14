@@ -10,6 +10,7 @@ from .cellular_controller import CellularControllerParcel
 from .t1e1controller import T1E1ControllerParcel
 from .vpn import ManagementVpnParcel, TransportVpnParcel
 from .wan.interface.gre import InterfaceGreParcel
+from .wan.interface.ipsec import InterfaceIpsecParcel
 from .wan.interface.protocol_over import (
     InterfaceDslIPoEParcel,
     InterfaceDslPPPoAParcel,
@@ -26,6 +27,7 @@ AnyTransportVpnSubParcel = Annotated[
         InterfaceDslPPPoAParcel,
         InterfaceDslIPoEParcel,
         InterfaceGreParcel,
+        InterfaceIpsecParcel,
     ],
     Field(discriminator="type_"),
 ]
@@ -51,6 +53,7 @@ __all__ = [
     "InterfaceDslPPPoAParcel",
     "InterfaceDslPPPoEParcel",
     "InterfaceEthPPPoEParcel",
+    "InterfaceIpsecParcel",
 ]
 
 

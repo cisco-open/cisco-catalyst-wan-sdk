@@ -419,3 +419,57 @@ WebCategory = Literal[
     "motor-vehicles",
     "military",
 ]
+
+IkeMode = Literal[
+    "main",
+    "aggresive",
+]
+
+IkeCiphersuite = Literal[
+    "aes256-cbc-sha1",
+    "aes256-cbc-sha2",
+    "aes128-cbc-sha1",
+    "aes128-cbc-sha2",
+]
+
+IkeGroup = Literal[
+    "2",
+    "14",
+    "15",
+    "16",
+    "19",
+    "20",
+    "21",
+    "24",
+]
+
+IpsecCiphersuite = Literal[
+    "aes256-cbc-sha1",
+    "aes256-cbc-sha384",
+    "aes256-cbc-sha256",
+    "aes256-cbc-sha512",
+    "aes256-gcm",
+    "null-sha1",
+    "null-sha384",
+    "null-sha256",
+    "null-sha512",
+]
+
+PfsGroup = Literal[
+    "group-1",
+    "group-2",
+    "group-5",
+    "group-14",
+    "group-15",
+    "group-16",
+    "group-19",
+    "group-20",
+    "group-21",
+    "group-24",
+    "none",
+]
+
+VrrpTrackerAction = Literal[
+    "Decrement",
+    "Shutdown",
+]

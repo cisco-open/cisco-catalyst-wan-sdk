@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, as_global
 from catalystwan.models.configuration.feature_profile.common import (
-    Prefix,
+    AddressWithMask,
     SourceIp,
     SourceNotLoopback,
     TunnelApplication,
@@ -82,11 +82,11 @@ class LanInterfaceGreTemplateConverter:
             dpd_retries=dpd_retries,
         )
 
-    def parse_address(self, data: dict) -> Optional[Prefix]:
+    def parse_address(self, data: dict) -> Optional[AddressWithMask]:
         address = data.get("ip", {}).get("address", {})
         if not address:
             return None
-        return Prefix(
+        return AddressWithMask(
             address=as_global(address.value.network.network_address),
             mask=as_global(str(address.value.netmask)),
         )

@@ -78,7 +78,7 @@ class FeatureProfileCreationResponse(BaseModel):
     id: UUID
 
 
-class Prefix(BaseModel):
+class AddressWithMask(BaseModel):
     address: Union[Variable, Global[str], Global[IPv4Address], Global[IPv6Address]]
     mask: Union[Variable, Global[str], Global[SubnetMask]]
 
