@@ -62,6 +62,9 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport import (
     T1E1ControllerParcel,
     TransportVpnParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_controller import (
+    CellularControllerParcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.transport.gps import GpsParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.cellular import (
     InterfaceCellularParcel,
@@ -215,6 +218,7 @@ class TestServiceFeatureProfileAPI(unittest.TestCase):
 transport_enpoint_mapping = {
     T1E1ControllerParcel: "t1-e1-controller",
     GpsParcel: "gps",
+    CellularControllerParcel: "cellular-controller",
     ManagementVpnParcel: "management/vpn",
     TransportVpnParcel: "wan/vpn",
 }
