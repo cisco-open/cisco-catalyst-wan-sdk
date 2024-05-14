@@ -77,7 +77,6 @@ class WanInterfaceIpsecTemplateConverter:
             tracker=tracker,
             tunnel_source_interface=tunnel_source_interface,
         )
-        pprint.pprint(payload)
 
         return InterfaceIpsecParcel(**payload)
 
