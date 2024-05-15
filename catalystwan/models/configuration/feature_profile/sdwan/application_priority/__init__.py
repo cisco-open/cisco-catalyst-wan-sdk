@@ -1,9 +1,10 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 
-from typing import Annotated, List, Union
+from typing import List, Union
 
 from pydantic import Field
+from typing_extensions import Annotated
 
 from .policy_settings import Cflowd, PolicySettingsParcel
 from .qos_policy import QosMap, QosPolicyParcel, QosSchedulers, Target
