@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING, List
 from uuid import UUID
 
@@ -10,8 +9,6 @@ from catalystwan.endpoints.configuration.feature_profile.sdwan.cli import CliFea
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.configuration.feature_profile.sdwan.cli import AnyCliParcel
 from catalystwan.models.configuration.feature_profile.sdwan.cli.config import ConfigParcel
-
-logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from catalystwan.session import ManagerSession
