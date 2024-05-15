@@ -1,101 +1,19 @@
 from ipaddress import IPv4Address, IPv6Interface
 from typing import List, Literal, Optional, Union
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic import AliasPath, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.common import (
-    CableLengthLongValue,
-    CableLengthShortValue,
-    Carrier,
-    ClockRate,
-    E1Framing,
-    E1Linecode,
-    LineMode,
-    SubnetMask,
-    T1Framing,
-    T1Linecode,
-    TLOCColor,
+from catalystwan.models.common import Carrier, SubnetMask, TLOCColor
+from catalystwan.models.configuration.feature_profile.common import (
+    MultilinkAuthenticationType,
+    MultilinkControllerTxExList,
+    MultilinkControllerType,
+    MultilinkMethod,
+    MultilinkNimList,
+    MultiRegionFabric,
+    RefIdItem,
 )
-from catalystwan.models.configuration.feature_profile.common import ChannelGroup, MultiRegionFabric, RefIdItem
-
-Method = Literal[
-    "CHAP",
-    "PAP",
-    "PAP and CHAP",
-]
-
-AuthenticationType = Literal[
-    "bidirectional",
-    "unidirectional",
-]
-
-ControllerType = Literal[
-    "A/S Serial",
-    "T1/E1",
-]
-
-Name = Literal[
-    "E1",
-    "T1",
-]
-
-ClockSource = Literal[
-    "internal",
-    "line",
-    "loop-timed",
-]
-
-
-class ControllerTxExList(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-
-    channel_group: List[ChannelGroup] = Field(
-        default=[],
-        validation_alias="channelGroup",
-        serialization_alias="channelGroup",
-        description="Channel Group List",
-    )
-    number: Union[Variable, Global[str]] = Field()
-    clock_source: Optional[Union[Global[ClockSource], Default[None]]] = Field(
-        default=None, validation_alias="clockSource", serialization_alias="clockSource"
-    )
-    description: Optional[Union[Variable, Global[str], Default[None]]] = Field(default=None)
-    e1_framing: Optional[Union[Variable, Global[E1Framing], Default[None]]] = Field(
-        default=None, validation_alias="e1Framing", serialization_alias="e1Framing"
-    )
-    e1_linecode: Optional[Union[Variable, Global[E1Linecode], Default[None]]] = Field(
-        default=None, validation_alias="e1Linecode", serialization_alias="e1Linecode"
-    )
-    line_mode: Optional[Union[Variable, Default[None], Global[LineMode]]] = Field(
-        default=None, validation_alias="lineMode", serialization_alias="lineMode"
-    )
-    long: Optional[Union[Variable, Global[CableLengthLongValue], Default[None]]] = Field(default=None)
-    name: Optional[Global[Name]] = Field(default=None)
-    short: Optional[Union[Variable, Global[CableLengthShortValue], Default[None]]] = Field(default=None)
-    t1_framing: Optional[Union[Variable, Global[T1Framing], Default[None]]] = Field(
-        default=None, validation_alias="t1Framing", serialization_alias="t1Framing"
-    )
-    t1_linecode: Optional[Union[Variable, Default[None], Global[T1Linecode]]] = Field(
-        default=None, validation_alias="t1Linecode", serialization_alias="t1Linecode"
-    )
-
-
-class NimList(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-
-    if_name: Union[Variable, Global[str]] = Field(validation_alias="ifName", serialization_alias="ifName")
-    bandwidth: Optional[Union[Variable, Global[int], Default[None]]] = Field(default=None)
-    clock_rate: Optional[Union[Variable, Global[ClockRate], Default[None]]] = Field(
-        default=None, validation_alias="clockRate", serialization_alias="clockRate"
-    )
-    description: Optional[Union[Variable, Global[str], Default[None]]] = Field(default=None)
 
 
 class InterfaceMultilinkParcel(_ParcelBase):
@@ -103,11 +21,13 @@ class InterfaceMultilinkParcel(_ParcelBase):
         extra="forbid",
         populate_by_name=True,
     )
-    type_: Literal["interface/multilink"] = Field(default="interface/multilink", frozen=True, exclude=True)
+    type_: Literal["wan/vpn/interface/multilink"] = Field(
+        default="wan/vpn/interface/multilink", frozen=True, exclude=True
+    )
 
     group_number: Union[Variable, Global[int]] = Field(validation_alias=AliasPath("data", "groupNumber"))
     if_name: Union[Variable, Global[str]] = Field(validation_alias=AliasPath("data", "ifName"))
-    method: Union[Global[Method], Default[None]] = Field(validation_alias=AliasPath("data", "method"))
+    method: Union[Global[MultilinkMethod], Default[None]] = Field(validation_alias=AliasPath("data", "method"))
     address_ipv4: Optional[Union[Variable, Global[IPv4Address], Default[None]]] = Field(
         default=None, validation_alias=AliasPath("data", "addressIpv4")
     )
@@ -117,8 +37,10 @@ class InterfaceMultilinkParcel(_ParcelBase):
     all: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
         default=None, validation_alias=AliasPath("data", "all")
     )
-    authentication_type: Union[Variable, Global[AuthenticationType], Default[AuthenticationType]] = Field(
-        default=Default[AuthenticationType](value="unidirectional"),
+    authentication_type: Union[
+        Variable, Global[MultilinkAuthenticationType], Default[MultilinkAuthenticationType]
+    ] = Field(
+        default=Default[MultilinkAuthenticationType](value="unidirectional"),
         validation_alias=AliasPath("data", "authenticationType"),
     )
     bandwidth_upstream: Optional[Union[Variable, Global[int], Default[None]]] = Field(
@@ -133,7 +55,7 @@ class InterfaceMultilinkParcel(_ParcelBase):
     border: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
         default=None, validation_alias=AliasPath("data", "border")
     )
-    carrier: Optional[Union[Variable, Default[Literal["default"]], Global[Carrier]]] = Field(
+    carrier: Optional[Union[Variable, Default[Carrier], Global[Carrier]]] = Field(
         default=None, validation_alias=AliasPath("data", "carrier")
     )
     clear_dont_fragment_sdwan_tunnel: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
@@ -142,11 +64,11 @@ class InterfaceMultilinkParcel(_ParcelBase):
     control_connections: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
         default=None, validation_alias=AliasPath("data", "controlConnections")
     )
-    controller_tx_ex_list: List[ControllerTxExList] = Field(
+    controller_tx_ex_list: List[MultilinkControllerTxExList] = Field(
         default=[], validation_alias=AliasPath("data", "controllerTxExList")
     )
-    controller_type: Global[ControllerType] = Field(
-        default=Global[ControllerType](value="T1/E1"), validation_alias=AliasPath("data", "controllerType")
+    controller_type: Global[MultilinkControllerType] = Field(
+        default=Global[MultilinkControllerType](value="T1/E1"), validation_alias=AliasPath("data", "controllerType")
     )
     delay_value: Optional[Union[Variable, Global[int], Default[None]]] = Field(
         default=None, validation_alias=AliasPath("data", "delayValue")
@@ -236,7 +158,7 @@ class InterfaceMultilinkParcel(_ParcelBase):
     network_broadcast: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
         default=None, validation_alias=AliasPath("data", "networkBroadcast")
     )
-    nim_list: Optional[List[NimList]] = Field(default=None, validation_alias=AliasPath("data", "nimList"))
+    nim_list: Optional[List[MultilinkNimList]] = Field(default=None, validation_alias=AliasPath("data", "nimList"))
     ntp: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
         default=None, validation_alias=AliasPath("data", "ntp")
     )
@@ -285,7 +207,7 @@ class InterfaceMultilinkParcel(_ParcelBase):
     username_string: Optional[Union[Variable, Global[str]]] = Field(
         default=None, validation_alias=AliasPath("data", "usernameString")
     )
-    value: Optional[Union[Variable, Default[Literal["default"]], Global[TLOCColor]]] = Field(
+    value: Optional[Union[Variable, Default[TLOCColor], Global[TLOCColor]]] = Field(
         default=None, validation_alias=AliasPath("data", "value")
     )
     vbond_as_stun_server: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(

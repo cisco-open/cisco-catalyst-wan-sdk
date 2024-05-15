@@ -10,6 +10,7 @@ from .eigrp import EigrpParcel
 from .lan.ethernet import InterfaceEthernetParcel
 from .lan.gre import InterfaceGreParcel
 from .lan.ipsec import InterfaceIpsecParcel
+from .lan.multilink import InterfaceMultilinkParcel
 from .lan.svi import InterfaceSviParcel
 from .lan.vpn import LanVpnParcel
 from .multicast import MulticastParcel
@@ -47,6 +48,7 @@ AnyLanVpnInterfaceParcel = Annotated[
         InterfaceGreParcel,
         InterfaceIpsecParcel,
         InterfaceSviParcel,
+        InterfaceMultilinkParcel,
     ],
     Field(discriminator="type_"),
 ]

@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, cast
 from catalystwan.api.template_api import FeatureTemplateInformation
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
+from catalystwan.utils.config_migration.converters.feature_template.lan.multilink import LanMultilinkTemplateConverter
 from catalystwan.utils.feature_template.find_template_values import find_template_values
 
 from .aaa import AAATemplateConverter
@@ -31,7 +32,6 @@ from .multicast import (
     MulticastToMulticastTemplateConverter,
     PimToMulticastTemplateConverter,
 )
-from .multilink import MultilinkTemplateConverter
 from .normalizer import template_definition_normalization
 from .ntp import NtpTemplateConverter
 from .omp import OMPTemplateConverter
@@ -46,6 +46,7 @@ from .vpn import VpnTemplateConverter
 from .wan.cellular import InterfaceCellularTemplateConverter
 from .wan.gre import WanInterfaceGreTemplateConverter
 from .wan.ipsec import WanInterfaceIpsecTemplateConverter
+from .wan.multilink import WanMultilinkTemplateConverter
 from .wan.protocol_over import (
     InterfaceDslIPoETemplateConverter,
     InterfaceDslPppoaTemplateConverter,
@@ -75,6 +76,7 @@ available_converters = [
     AppqoeTemplateConverter,
     VpnTemplateConverter,
     LanInterfaceGreTemplateConverter,
+    LanMultilinkTemplateConverter,
     InterfaceSviTemplateConverter,
     InterfaceEthernetTemplateConverter,
     LanInterfaceIpsecTemplateConverter,
@@ -98,7 +100,7 @@ available_converters = [
     CellularControllerTemplateConverter,
     CellularProfileTemplateConverter,
     CliTemplateConverter,
-    MultilinkTemplateConverter,
+    WanMultilinkTemplateConverter,
 ]
 
 

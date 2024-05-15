@@ -7,6 +7,7 @@ from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeature
 from catalystwan.models.common import (
     CableLengthLongValue,
     Carrier,
+    ClockRate,
     CoreRegion,
     E1Framing,
     E1Linecode,
@@ -44,6 +45,20 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_p
     ProfileInfo,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.gps import GpsParcel
+from catalystwan.models.configuration.feature_profile.common import (
+    AdvancedGre,
+    ChannelGroup,
+    MultilinkAuthenticationType,
+    MultilinkClockSource,
+    MultilinkControllerTxExList,
+    MultilinkControllerType,
+    MultilinkMethod,
+    MultilinkNimList,
+    MultilinkTxExName,
+    MultiRegionFabric,
+)
+from catalystwan.models.configuration.feature_profile.common import Prefix as CommonPrefix
+from catalystwan.models.configuration.feature_profile.common import SourceLoopback, TunnelSourceType
 from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1controller import (
     E1,
     T1,
@@ -88,13 +103,8 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
     InterfaceIpsecParcel,
     PerfectForwardSecrecy,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.multilink import AuthenticationType
-from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.multilink import (
-    ControllerType as MultilinkControllerType,
-)
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.multilink import (
     InterfaceMultilinkParcel,
-    Method,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
     AclQos as AclQosPPPoE,
@@ -925,17 +935,70 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
         assert parcel_id
 
     def test_when_fully_specified_multilink_interface_parcel_expect_successful_post(self):
+        nim_list = [
+            MultilinkNimList(
+                if_name=Global[str](value="Serial1"),
+                bandwidth=Global[int](value=10),
+                clock_rate=Global[ClockRate](value="1200"),
+                description=Global[str](value="desc"),
+            ),
+            MultilinkNimList(
+                if_name=Global[str](value="Serial2"),
+                bandwidth=Global[int](value=12),
+                clock_rate=Global[ClockRate](value="115200"),
+                description=None,
+            ),
+        ]
+        controller_tx_ex_list = [
+            MultilinkControllerTxExList(
+                channel_group=[
+                    ChannelGroup(
+                        number=Global[int](value=12),
+                        timeslots=Global[str](value="12"),
+                    )
+                ],
+                number=Global[str](value="1/1/1"),
+                clock_source=Global[MultilinkClockSource](value="internal"),
+                description=Global[str](value="desc"),
+                e1_framing=Global[E1Framing](value="crc4"),
+                e1_linecode=Global[E1Linecode](value="ami"),
+                line_mode=Global[LineMode](value="primary"),
+                long=None,
+                name=Global[MultilinkTxExName](value="E1"),
+                short=None,
+                t1_framing=None,
+                t1_linecode=None,
+            ),
+            MultilinkControllerTxExList(
+                channel_group=[
+                    ChannelGroup(
+                        number=Global[int](value=13),
+                        timeslots=Global[str](value="13"),
+                    )
+                ],
+                number=Global[str](value="2/2/2"),
+                clock_source=Global[MultilinkClockSource](value="loop-timed"),
+                description=Global[str](value="desc"),
+                e1_framing=None,
+                e1_linecode=None,
+                line_mode=Global[LineMode](value="secondary"),
+                long=Global[CableLengthLongValue](value="-15db"),
+                name=Global[MultilinkTxExName](value="T1"),
+                short=None,
+                t1_framing=Global[T1Framing](value="esf"),
+                t1_linecode=Global[T1Linecode](value="ami"),
+            ),
+        ]
         multilink_parcel = InterfaceMultilinkParcel(
             parcel_name="Test",
             parcel_description="Description",
-            type_="interface/multilink",
             group_number=Global[int](value=299),
             if_name=Global[str](value="Multilink1"),
-            method=Global[Literal[Method]](value="CHAP"),
+            method=Global[Literal[MultilinkMethod]](value="CHAP"),
             address_ipv4=Global[IPv4Address](value=IPv4Address("192.175.48.4")),
             address_ipv6=Global[IPv6Interface](value=IPv6Interface("::3e46/100")),
             all=Global[bool](value=True),
-            authentication_type=Default[Literal[AuthenticationType]](value="unidirectional"),
+            authentication_type=Default[Literal[MultilinkAuthenticationType]](value="unidirectional"),
             bandwidth_upstream=Global[int](value=21),
             bgp=Global[bool](value=True),
             bind=Global[str](value="JmwcJz"),
@@ -943,7 +1006,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
             carrier=Global[Literal[Carrier]](value="carrier8"),
             clear_dont_fragment_sdwan_tunnel=Global[bool](value=True),
             control_connections=Global[bool](value=False),
-            controller_tx_ex_list=[],
+            controller_tx_ex_list=controller_tx_ex_list,
             controller_type=Global[Literal[MultilinkControllerType]](value="T1/E1"),
             delay_value=Global[int](value=99),
             dhcp=Global[bool](value=False),
@@ -982,7 +1045,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
             nat_refresh_interval=Global[int](value=33),
             netconf=Global[bool](value=False),
             network_broadcast=Global[bool](value=False),
-            nim_list=[],
+            nim_list=nim_list,
             ntp=Global[bool](value=True),
             ospf=Global[bool](value=True),
             password=Global[str](value="hyBBiuDgO"),

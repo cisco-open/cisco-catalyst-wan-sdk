@@ -1,10 +1,32 @@
-from ipaddress import IPv4Address
+from ipaddress import IPv4Address, IPv6Interface
+from typing import Literal
 from uuid import UUID
 
-from catalystwan.api.configuration_groups.parcel import Global, as_global, as_variable
+from catalystwan.api.configuration_groups.parcel import Default, Global, as_global, as_variable
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
 from catalystwan.models.common import SubnetMask
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask
+from catalystwan.models.common import (
+    CableLengthLongValue,
+    ClockRate,
+    E1Framing,
+    E1Linecode,
+    LineMode,
+    SubnetMask,
+    T1Framing,
+    T1Linecode,
+)
+from catalystwan.models.configuration.feature_profile.common import (
+    ChannelGroup,
+    MultilinkAuthenticationType,
+    MultilinkClockSource,
+    MultilinkControllerTxExList,
+    MultilinkControllerType,
+    MultilinkMethod,
+    MultilinkNimList,
+    MultilinkTxExName,
+    Prefix,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.service.acl import Ipv4AclParcel, Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import (
     AddressPool,
@@ -18,6 +40,8 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet import InterfaceEthernetParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import BasicGre, InterfaceGreParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import InterfaceIpsecParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import InterfaceIpsecParcel, IpsecAddress
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.multilink import InterfaceMultilinkParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.svi import InterfaceSviParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import (
@@ -536,6 +560,101 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestFeatureProfileModels):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, multicast_parcel, self.vpn_parcel_uuid).id
         # Assert
+        assert parcel_id
+
+    def test_when_fully_specified_multilink_interface_parcel_expect_successful_post(self):
+        nim_list = [
+            MultilinkNimList(
+                if_name=Global[str](value="Serial1"),
+                bandwidth=Global[int](value=10),
+                clock_rate=Global[ClockRate](value="1200"),
+                description=Global[str](value="desc"),
+            ),
+            MultilinkNimList(
+                if_name=Global[str](value="Serial2"),
+                bandwidth=Global[int](value=12),
+                clock_rate=Global[ClockRate](value="115200"),
+                description=None,
+            ),
+        ]
+        controller_tx_ex_list = [
+            MultilinkControllerTxExList(
+                channel_group=[
+                    ChannelGroup(
+                        number=Global[int](value=12),
+                        timeslots=Global[str](value="12"),
+                    )
+                ],
+                number=Global[str](value="1/1/1"),
+                clock_source=Global[MultilinkClockSource](value="internal"),
+                description=Global[str](value="desc"),
+                e1_framing=Global[E1Framing](value="crc4"),
+                e1_linecode=Global[E1Linecode](value="ami"),
+                line_mode=Global[LineMode](value="primary"),
+                long=None,
+                name=Global[MultilinkTxExName](value="E1"),
+                short=None,
+                t1_framing=None,
+                t1_linecode=None,
+            ),
+            MultilinkControllerTxExList(
+                channel_group=[
+                    ChannelGroup(
+                        number=Global[int](value=13),
+                        timeslots=Global[str](value="13"),
+                    )
+                ],
+                number=Global[str](value="2/2/2"),
+                clock_source=Global[MultilinkClockSource](value="loop-timed"),
+                description=Global[str](value="desc"),
+                e1_framing=None,
+                e1_linecode=None,
+                line_mode=Global[LineMode](value="secondary"),
+                long=Global[CableLengthLongValue](value="-15db"),
+                name=Global[MultilinkTxExName](value="T1"),
+                short=None,
+                t1_framing=Global[T1Framing](value="esf"),
+                t1_linecode=Global[T1Linecode](value="ami"),
+            ),
+        ]
+
+        multilink_parcel = InterfaceMultilinkParcel(
+            parcel_name="Test",
+            parcel_description="Description",
+            group_number=Global[int](value=299),
+            if_name=Global[str](value="Multilink1"),
+            method=Global[Literal[MultilinkMethod]](value="CHAP"),
+            address_ipv4=Global[IPv4Address](value=IPv4Address("192.175.48.4")),
+            address_ipv6=Global[IPv6Interface](value=IPv6Interface("::3e46/100")),
+            authentication_type=Default[Literal[MultilinkAuthenticationType]](value="unidirectional"),
+            bandwidth_upstream=Global[int](value=21),
+            clear_dont_fragment_sdwan_tunnel=Global[bool](value=True),
+            control_connections=Global[bool](value=False),
+            controller_tx_ex_list=controller_tx_ex_list,
+            controller_type=Global[Literal[MultilinkControllerType]](value="T1/E1"),
+            delay_value=Global[int](value=99),
+            disable=Global[bool](value=True),
+            hostname=Global[str](value="oitSeZBfw"),
+            interleave=Global[bool](value=False),
+            ip_directed_broadcast=Global[bool](value=True),
+            ipv4_acl_egress=None,
+            ipv4_acl_ingress=None,
+            ipv6_acl_egress=None,
+            ipv6_acl_ingress=None,
+            mask_ipv4=Global[SubnetMask](value="255.255.255.254"),
+            mtu=Global[int](value=5266),
+            nim_list=nim_list,
+            password=Global[str](value="hyBBiuDgO"),
+            ppp_auth_password=Global[str](value="aCBBBxnzsw"),
+            shaping_rate=Global[int](value=294),
+            shutdown=Global[bool](value=False),
+            tcp_mss_adjust=Global[int](value=1267),
+            tloc_extension=Global[str](value="ATM"),
+            username_string=Global[str](value="ONBBAAB"),
+        )
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, multilink_parcel, self.vpn_parcel_uuid).id
+
         assert parcel_id
 
     @classmethod

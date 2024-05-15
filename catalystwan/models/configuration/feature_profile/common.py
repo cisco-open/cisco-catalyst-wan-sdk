@@ -8,7 +8,21 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
-from catalystwan.models.common import CoreRegion, EncapType, SecondaryRegion, SubnetMask, check_fields_exclusive
+from catalystwan.models.common import (
+    CableLengthLongValue,
+    CableLengthShortValue,
+    ClockRate,
+    CoreRegion,
+    E1Framing,
+    E1Linecode,
+    EncapType,
+    LineMode,
+    SecondaryRegion,
+    SubnetMask,
+    T1Framing,
+    T1Linecode,
+    check_fields_exclusive,
+)
 from catalystwan.models.configuration.common import Solution
 
 IPV4Address = str
@@ -440,3 +454,83 @@ class ChannelGroup(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     number: Union[Global[int], Variable] = Field()
     timeslots: Union[Global[str], Variable] = Field()
+
+
+MultilinkControllerType = Literal[
+    "A/S Serial",
+    "T1/E1",
+]
+
+
+MultilinkAuthenticationType = Literal[
+    "bidirectional",
+    "unidirectional",
+]
+
+MultilinkMethod = Literal[
+    "CHAP",
+    "PAP",
+    "PAP and CHAP",
+]
+
+MultilinkTxExName = Literal[
+    "E1",
+    "T1",
+]
+
+MultilinkClockSource = Literal[
+    "internal",
+    "line",
+    "loop-timed",
+]
+
+
+class MultilinkControllerTxExList(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+
+    channel_group: List[ChannelGroup] = Field(
+        default=[],
+        validation_alias="channelGroup",
+        serialization_alias="channelGroup",
+        description="Channel Group List",
+    )
+    number: Union[Variable, Global[str]] = Field()
+    clock_source: Optional[Union[Global[MultilinkClockSource], Default[None]]] = Field(
+        default=None, validation_alias="clockSource", serialization_alias="clockSource"
+    )
+    description: Optional[Union[Variable, Global[str], Default[None]]] = Field(default=None)
+    e1_framing: Optional[Union[Variable, Global[E1Framing], Default[None]]] = Field(
+        default=None, validation_alias="e1Framing", serialization_alias="e1Framing"
+    )
+    e1_linecode: Optional[Union[Variable, Global[E1Linecode], Default[None]]] = Field(
+        default=None, validation_alias="e1Linecode", serialization_alias="e1Linecode"
+    )
+    line_mode: Optional[Union[Variable, Default[None], Global[LineMode]]] = Field(
+        default=None, validation_alias="lineMode", serialization_alias="lineMode"
+    )
+    long: Optional[Union[Variable, Global[CableLengthLongValue], Default[None]]] = Field(default=None)
+    name: Optional[Global[MultilinkTxExName]] = Field(default=None)
+    short: Optional[Union[Variable, Global[CableLengthShortValue], Default[None]]] = Field(default=None)
+    t1_framing: Optional[Union[Variable, Global[T1Framing], Default[None]]] = Field(
+        default=None, validation_alias="t1Framing", serialization_alias="t1Framing"
+    )
+    t1_linecode: Optional[Union[Variable, Default[None], Global[T1Linecode]]] = Field(
+        default=None, validation_alias="t1Linecode", serialization_alias="t1Linecode"
+    )
+
+
+class MultilinkNimList(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+
+    if_name: Union[Variable, Global[str]] = Field(validation_alias="ifName", serialization_alias="ifName")
+    bandwidth: Optional[Union[Variable, Global[int], Default[None]]] = Field(default=None)
+    clock_rate: Optional[Union[Variable, Global[ClockRate], Default[None]]] = Field(
+        default=None, validation_alias="clockRate", serialization_alias="clockRate"
+    )
+    description: Optional[Union[Variable, Global[str], Default[None]]] = Field(default=None)
