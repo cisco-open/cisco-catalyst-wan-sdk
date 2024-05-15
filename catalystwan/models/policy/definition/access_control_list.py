@@ -103,7 +103,7 @@ class AclPolicySequence(PolicyDefinitionSequenceBase):
         self._insert_match(SourcePortEntry.from_port_set_and_ranges(ports, port_ranges))
 
     def match_destination_data_prefix_list(self, data_prefix_list_id: UUID) -> None:
-        self._insert_match(DestinationDataPrefixListEntry(ref=data_prefix_list_id))
+        self._insert_match(DestinationDataPrefixListEntry(ref=[data_prefix_list_id]))
 
     def match_destination_ip(self, networks: List[IPv4Network]) -> None:
         self._insert_match(DestinationIPEntry.from_ipv4_networks(networks))

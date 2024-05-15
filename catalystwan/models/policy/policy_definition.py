@@ -13,10 +13,10 @@ from catalystwan.models.common import (
     EncapType,
     ICMPMessageType,
     ServiceChainNumber,
+    SpaceSeparatedUUIDList,
     TLOCColor,
     check_fields_exclusive,
     str_as_str_list,
-    str_as_uuid_list,
 )
 from catalystwan.models.misc.application_protocols import ApplicationProtocol
 
@@ -497,24 +497,22 @@ class ICMPMessageEntry(BaseModel):
 
 class SourceDataPrefixListEntry(BaseModel):
     field: Literal["sourceDataPrefixList"] = "sourceDataPrefixList"
-    ref: List[UUID]
-
-    _ref = field_validator("ref", mode="before")(str_as_uuid_list)
+    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
 
 
 class SourceDataIPv6PrefixListEntry(BaseModel):
     field: Literal["sourceDataIpv6PrefixList"] = "sourceDataIpv6PrefixList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
 
 
 class DestinationDataPrefixListEntry(BaseModel):
     field: Literal["destinationDataPrefixList"] = "destinationDataPrefixList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
 
 
 class DestinationDataIPv6PrefixListEntry(BaseModel):
     field: Literal["destinationDataIpv6PrefixList"] = "destinationDataIpv6PrefixList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
 
 
 class DNSAppListEntry(BaseModel):
@@ -569,7 +567,7 @@ class SourceScalableGroupTagListEntry(BaseModel):
 
 class DestinationPortListEntry(BaseModel):
     field: Literal["destinationPortList"] = "destinationPortList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
 
 
 class DestinationScalableGroupTagListEntry(BaseModel):

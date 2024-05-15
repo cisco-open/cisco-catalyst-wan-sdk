@@ -138,6 +138,18 @@ def check_any_of_exclusive_field_sets(values: Dict, field_sets: List[Tuple[Set[s
         raise ValueError(f"One of {all_sets_field_names} must be assigned")
 
 
+def str_as_uuid_list(val: Union[str, Sequence[UUID]]) -> Sequence[UUID]:
+    if isinstance(val, str):
+        return [UUID(uuid_) for uuid_ in val.split()]
+    return val
+
+
+def str_as_str_list(val: Union[str, Sequence[str]]) -> Sequence[str]:
+    if isinstance(val, str):
+        return val.split()
+    return val
+
+
 IntStr = Annotated[
     int,
     PlainSerializer(lambda x: str(x), return_type=str, when_used="json-unless-none"),
@@ -145,6 +157,12 @@ IntStr = Annotated[
 ]
 
 IntRange = Tuple[int, Optional[int]]
+
+SpaceSeparatedUUIDList = Annotated[
+    List[UUID],
+    PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
+    BeforeValidator(str_as_uuid_list),
+]
 
 
 def int_range_str_validator(value: Union[str, IntRange], ascending: bool = True) -> IntRange:
@@ -172,18 +190,6 @@ IntRangeStr = Annotated[
     PlainSerializer(int_range_serializer, return_type=str, when_used="json-unless-none"),
     BeforeValidator(int_range_str_validator),
 ]
-
-
-def str_as_uuid_list(val: Union[str, Sequence[UUID]]) -> Sequence[UUID]:
-    if isinstance(val, str):
-        return [UUID(uuid_) for uuid_ in val.split()]
-    return val
-
-
-def str_as_str_list(val: Union[str, Sequence[str]]) -> Sequence[str]:
-    if isinstance(val, str):
-        return val.split()
-    return val
 
 
 EncapType = Literal[

@@ -133,8 +133,8 @@ class ZoneBasedFWPolicySequence(PolicyDefinitionSequenceBase):
             raise ValueError("Action must be inspect when Application/Application Family List is selected.")
         self._insert_match(AppListEntry(ref=app_list_id))
 
-    def match_destination_data_prefix_list(self, data_prefix_list_id: UUID) -> None:
-        self._insert_match(DestinationDataPrefixListEntry(ref=data_prefix_list_id))
+    def match_destination_data_prefix_list(self, data_prefix_lists: List[UUID]) -> None:
+        self._insert_match(DestinationDataPrefixListEntry(ref=data_prefix_lists))
 
     def match_destination_fqdn(self, fqdn: str) -> None:
         self._insert_match(DestinationFQDNEntry(value=fqdn))
@@ -151,8 +151,8 @@ class ZoneBasedFWPolicySequence(PolicyDefinitionSequenceBase):
     def match_destination_ports(self, ports: Set[int] = set(), port_ranges: List[Tuple[int, int]] = []) -> None:
         self._insert_match(DestinationPortEntry.from_port_set_and_ranges(ports, port_ranges))
 
-    def match_destination_port_list(self, port_list_id: UUID) -> None:
-        self._insert_match(DestinationPortListEntry(ref=port_list_id))
+    def match_destination_port_list(self, data_prefix_lists: List[UUID]) -> None:
+        self._insert_match(DestinationPortListEntry(ref=data_prefix_lists))
 
     def match_protocols(self, protocols: Set[int]) -> None:
         self._insert_match(ProtocolEntry.from_protocol_set(protocols))
