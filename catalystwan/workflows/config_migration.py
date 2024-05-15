@@ -130,7 +130,6 @@ FEATURE_PROFILE_TRANSPORT = [
     "vpn-interface-pppoe",
     "vpn-interface-pppoa",
     "vpn-interface-ipoe",
-    "vpn-cedge-interface-multilink-controller",
     CISCO_VPN_TRANSPORT_AND_MANAGEMENT,
 ]
 
@@ -153,7 +152,6 @@ FEATURE_PROFILE_SERVICE = [
     "cedge_igmp",
     "cedge_multicast",
     "cedge_pim",
-    "vpn-cedge-interface-multilink-controller",
     CISCO_VPN_SERVICE,
 ]
 
