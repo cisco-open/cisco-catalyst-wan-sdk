@@ -244,6 +244,96 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
         # Assert
         assert parcel_id
 
+    def test_when_fully_specifed_gps_parcel_expect_successful_post(self):
+        # Arrange
+        gps_parcel = GpsParcel(
+            parcel_name="GpsParcel",
+            parcel_description="Description",
+            destination_address=Global[IPv4Address](value=IPv4Address("66.22.1.2")),
+            destination_port=Global[int](value=266),
+            enable=Global[bool](value=True),
+            mode=Global[Literal["ms-based", "standalone"]](value="standalone"),
+            nmea=Global[bool](value=True),
+            source_address=Global[IPv4Address](value=IPv4Address("76.22.3.9")),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, gps_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_fully_specifed_cellular_controller_expect_successful_post(self):
+        cellular_controller_parcel = CellularControllerParcel(
+            parcel_name="CellularControllerParcel",
+            description="Description",
+            controller_config=ControllerConfig(
+                id=as_global("0/2/0"),
+                slot=as_global(1),
+                max_retry=as_global(3),
+                failover_timer=as_global(4),
+                auto_sim=as_global(True),
+            ),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, cellular_controller_parcel).id
+        # Assert
+        assert parcel_id
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.api.delete_profile(cls.profile_uuid)
+        super().tearDownClass()
+
+
+class TestTransportFeatureProfileTransportVpn(TestFeatureProfileModels):
+    def setUp(self) -> None:
+        self.api = self.session.api.sdwan_feature_profiles.transport
+        self.profile_uuid = self.api.create_profile("TestProfileService", "Description").id
+        self.config_id = self.session.api.config_group.create(
+            "TestConfigGroupTransport", "Descr", "sdwan", [self.profile_uuid]
+        ).id
+
+    def test_when_minimal_specifed_transport_vpn_parcel_expect_successful_post(self):
+        # Arrange
+        transport_vpn_parcel = TransportVpnParcel(
+            parcel_name="MinimumSpecifiedTransportVpnParcel",
+            description="Description",
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_set_dns_address_specifed_transport_vpn_parcel_expect_successful_post(self):
+        # Arrange
+        transport_vpn_parcel = TransportVpnParcel(
+            parcel_name="MinimumSpecifiedTransportVpnParcel",
+            description="Description",
+        )
+        # Act
+        transport_vpn_parcel.set_dns_ipv4("1.1.1.1", "2.2.2.2")
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_add_ipv4_route_specifed_transport_vpn_parcel_expect_successful_post(self):
+        # Arrange
+        transport_vpn_parcel = TransportVpnParcel(
+            parcel_name="MinimumSpecifiedTransportVpnParcel",
+            description="Description",
+        )
+        # Act
+        next_hops = [
+            ("2.2.2.2", 1),
+            ("3.3.3.3", 8),
+            ("4.4.4.4", 10),
+        ]
+        transport_vpn_parcel.add_ipv4_route("1.1.1.1", "255.255.255.255", next_hops)
+        parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
+
+        # Assert
+        assert parcel_id
+
     def test_when_fully_specifed_transport_vpn_parcel_expect_successful_post(self):
         # Arrange
         transport_vpn_parcel = TransportVpnParcel(
@@ -302,44 +392,9 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
         # Assert
         assert parcel_id
 
-    def test_when_fully_specifed_gps_parcel_expect_successful_post(self):
-        # Arrange
-        gps_parcel = GpsParcel(
-            parcel_name="GpsParcel",
-            parcel_description="Description",
-            destination_address=Global[IPv4Address](value=IPv4Address("66.22.1.2")),
-            destination_port=Global[int](value=266),
-            enable=Global[bool](value=True),
-            mode=Global[Literal["ms-based", "standalone"]](value="standalone"),
-            nmea=Global[bool](value=True),
-            source_address=Global[IPv4Address](value=IPv4Address("76.22.3.9")),
-        )
-        # Act
-        parcel_id = self.api.create_parcel(self.profile_uuid, gps_parcel).id
-        # Assert
-        assert parcel_id
-
-    def test_when_fully_specifed_cellular_controller_expect_successful_post(self):
-        cellular_controller_parcel = CellularControllerParcel(
-            parcel_name="CellularControllerParcel",
-            description="Description",
-            controller_config=ControllerConfig(
-                id=as_global("0/2/0"),
-                slot=as_global(1),
-                max_retry=as_global(3),
-                failover_timer=as_global(4),
-                auto_sim=as_global(True),
-            ),
-        )
-        # Act
-        parcel_id = self.api.create_parcel(self.profile_uuid, cellular_controller_parcel).id
-        # Assert
-        assert parcel_id
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        cls.api.delete_profile(cls.profile_uuid)
-        super().tearDownClass()
+    def tearDown(self) -> None:
+        self.session.api.config_group.delete(self.config_id)
+        self.api.delete_profile(self.profile_uuid)
 
 
 class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
