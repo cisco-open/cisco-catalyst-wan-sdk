@@ -16,6 +16,7 @@ from .basic import SystemToBasicTemplateConverter
 from .bfd import BFDTemplateConverter
 from .bgp import BGPTemplateConverter
 from .cellular_controller import CellularControllerTemplateConverter
+from .cellular_profile import CellularProfileTemplateConverter
 from .dhcp import DhcpTemplateConverter
 from .global_ import GlobalTemplateConverter
 from .gps import GpsTemplateConverter
@@ -93,6 +94,7 @@ available_converters = [
     InterfaceCellularTemplateConverter,
     GpsTemplateConverter,
     CellularControllerTemplateConverter,
+    CellularProfileTemplateConverter,
 ]
 
 

@@ -7,6 +7,7 @@ from typing_extensions import Annotated
 
 from .bgp import WanRoutingBgpParcel as BGPParcel
 from .cellular_controller import CellularControllerParcel
+from .cellular_profile import CellularProfileParcel
 from .gps import GpsParcel
 from .t1e1controller import T1E1ControllerParcel
 from .vpn import ManagementVpnParcel, TransportVpnParcel
@@ -34,7 +35,14 @@ AnyTransportVpnSubParcel = Annotated[
 ]
 AnyTransportVpnParcel = Annotated[Union[ManagementVpnParcel, TransportVpnParcel], Field(discriminator="type_")]
 AnyTransportSuperParcel = Annotated[
-    Union[T1E1ControllerParcel, CellularControllerParcel, BGPParcel, T1E1ControllerParcel, GpsParcel],
+    Union[
+        T1E1ControllerParcel,
+        CellularControllerParcel,
+        CellularProfileParcel,
+        BGPParcel,
+        T1E1ControllerParcel,
+        GpsParcel,
+    ],
     Field(discriminator="type_"),
 ]
 AnyTransportParcel = Annotated[
