@@ -68,13 +68,13 @@ from .definition.vpn_membership import VPNMembershipPolicy, VPNMembershipPolicyG
 from .definition.zone_based_firewall import ZoneBasedFWPolicy, ZoneBasedFWPolicyGetResponse
 from .localized import LocalizedPolicy
 from .policy_definition import (
+    AccessPolicyActionType,
     Carrier,
     DNSTypeEntryType,
     MultiRegionRole,
     OriginProtocol,
     PathType,
     PLPEntryType,
-    PolicyActionType,
     ServiceType,
     TLOCActionType,
 )
@@ -248,7 +248,7 @@ __all__ = (
     "PathType",
     "PLPEntryType",
     "PolicerList",
-    "PolicyActionType",
+    "AccessPolicyActionType",
     "PortList",
     "PreferredColorGroupList",
     "PrefixList",
