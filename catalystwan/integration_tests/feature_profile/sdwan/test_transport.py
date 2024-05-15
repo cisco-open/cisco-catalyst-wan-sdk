@@ -29,6 +29,13 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_c
     CellularControllerParcel,
     ControllerConfig,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_profile import (
+    Authentication,
+    CellularProfileParcel,
+    NeedAuthentication,
+    ProfileConfig,
+    ProfileInfo,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.transport.gps import GpsParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1controller import (
     E1,
@@ -125,7 +132,7 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.api = cls.session.api.sdwan_feature_profiles.transport
-        cls.profile_uuid = cls.api.create_profile("TestProfileService", "Description").id
+        cls.profile_uuid = cls.api.create_profile("TestTransportService", "Description").id
 
     def test_when_fully_specified_management_vpn_parcel_expect_successful_post(self):
         # Arrange
@@ -336,6 +343,33 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
         # Assert
         assert parcel_id
 
+    def test_when_fully_specifed_cellular_profile_expect_successful_post(self):
+        # Arrange
+        cellular_profile_parcel = CellularProfileParcel(
+            parcel_name="CellularProfileParcel",
+            parcel_description="Description",
+            profile_config=ProfileConfig(
+                id=Global[int](value=2),
+                profile_info=ProfileInfo(
+                    apn=Global[str](value="KvqJrCD"),
+                    authentication=Authentication(
+                        need_authentication=NeedAuthentication(
+                            password=Global[str](value="HfBBBHZlFH"),
+                            type=Global[Literal["chap", "pap", "pap_chap"]](value="chap"),
+                            username=Global[str](value="BABBBBBBV"),
+                        )
+                    ),
+                    no_overwrite=Global[bool](value=False),
+                    pdn_type=Global[Literal["ipv4", "ipv4v6", "ipv6"]](value="ipv4"),
+                ),
+            ),
+            config_type=Default[Literal["non-eSim"]](value="non-eSim"),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, cellular_profile_parcel).id
+        # Assert
+        assert parcel_id
+
     @classmethod
     def tearDownClass(cls) -> None:
         cls.api.delete_profile(cls.profile_uuid)
@@ -349,7 +383,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.api = cls.session.api.sdwan_feature_profiles.transport
-        cls.profile_uuid = cls.api.create_profile("TestProfileService", "Description").id
+        cls.profile_uuid = cls.api.create_profile("TestTransportService", "Description").id
         cls.wan_uuid = cls.api.create_parcel(
             cls.profile_uuid,
             TransportVpnParcel(
