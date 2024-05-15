@@ -473,3 +473,43 @@ VrrpTrackerAction = Literal[
     "Decrement",
     "Shutdown",
 ]
+
+TunnelMode = Literal[
+    "hub",
+    "spoke",
+]
+
+Duplex = Literal[
+    "full",
+    "half",
+]
+
+EthernetDuplexMode = Literal[
+    "full",
+    "half",
+    "auto",
+]
+
+MediaType = Literal[
+    "auto-select",
+    "rj45",
+    "sfp",
+]
+
+Speed = Literal[
+    "10",
+    "100",
+    "1000",
+    "10000",
+    "2500",
+]
+
+EthernetNatType = Literal[
+    "pool",
+    "loopback",
+]
+
+EthernetDirection = Literal[
+    "inside",
+    "outside",
+]

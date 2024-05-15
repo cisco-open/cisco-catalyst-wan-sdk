@@ -2,11 +2,7 @@ from copy import deepcopy
 from typing import List, Optional
 
 from catalystwan.api.configuration_groups.parcel import Default, as_global
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import (
-    Arp,
-    StaticIPv4Address,
-    StaticIPv6Address,
-)
+from catalystwan.models.configuration.feature_profile.common import Arp, StaticIPv4Address, StaticIPv6Address
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.svi import (
     AdvancedSviAttributes,
     InterfaceSviParcel,

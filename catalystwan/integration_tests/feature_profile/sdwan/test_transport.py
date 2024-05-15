@@ -16,13 +16,20 @@ from catalystwan.models.common import (
 )
 from catalystwan.models.configuration.feature_profile.common import AclQos
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask as CommonPrefix
+from catalystwan.models.configuration.feature_profile.common import AdvancedGre, AllowService
+from catalystwan.models.configuration.feature_profile.common import Arp as CommonArp
 from catalystwan.models.configuration.feature_profile.common import (
-    AdvancedGre,
-    AllowService,
+    EthernetNatAttributesIpv4 as EthernetNatAttributesIpv4,
+)
+from catalystwan.models.configuration.feature_profile.common import (
+    InterfaceStaticIPv4Address,
     MultiRegionFabric,
     ShapingRateDownstreamConfig,
     ShapingRateUpstreamConfig,
     SourceLoopback,
+    StaticIPv4Address,
+    StaticIPv4AddressConfig,
+    StaticNat,
     TunnelSourceType,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_controller import (
@@ -82,6 +89,17 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.cellular import (
     Tunnel as TunnelCellular,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.ethernet import (
+    Advanced as EthernetAdvanced,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.ethernet import (
+    InterfaceEthernetParcel,
+    NatAttributesIpv6,
+    StaticNat66,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.ethernet import (
+    Tunnel as TunnelEthernet,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.gre import Basic, InterfaceGreParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.ipsec import (
@@ -913,6 +931,154 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, cellular_parcel, self.wan_uuid).id
+        # Assert
+        assert parcel_id
+
+    def test_when_fully_specified_ethernet_interface_expect_successfull_post(self):
+        # Arrange
+        ethernet_parcel = InterfaceEthernetParcel(
+            parcel_name="InterfaceEthernetParcel",
+            parcel_description="Description",
+            interface_description=Global[str](value="Description"),
+            encapsulation=[
+                Encapsulation(
+                    encap=Global[Literal["ipsec", "gre"]](value="ipsec"),
+                    preference=Default[None](value=None),
+                    weight=Variable(value="{{1fk}}"),
+                ),
+                Encapsulation(encap=Global[EncapType](value="gre"), preference=None, weight=Global[int](value=92)),
+            ],
+            interface_name=Global[str](value="Ethernet3"),
+            interface_ip_address=InterfaceStaticIPv4Address(
+                static=StaticIPv4AddressConfig(
+                    primary_ip_address=StaticIPv4Address(
+                        ip_address=Default[None](value=None), subnet_mask=Default[None](value=None)
+                    ),
+                    secondary_ip_address=None,
+                )
+            ),
+            nat=Global[bool](value=True),
+            shutdown=Global[bool](value=False),
+            tunnel_interface=Global[bool](value=True),
+            advanced=EthernetAdvanced(
+                arp_timeout=Global[int](value=97),
+                autonegotiate=Global[bool](value=False),
+                duplex=Global[Literal["full", "half", "auto"]](value="auto"),
+                icmp_redirect_disable=Global[bool](value=True),
+                intrf_mtu=Global[int](value=1500),
+                ip_directed_broadcast=Global[bool](value=True),
+                ip_mtu=Global[int](value=600),
+                load_interval=Global[int](value=189),
+                mac_address=Global[str](value="1B:5A:0F:AB:9E:CE"),
+                media_type=Global[Literal["auto-select", "rj45", "sfp"]](value="sfp"),
+                speed=Global[Literal["10", "100", "1000", "10000", "2500"]](value="10000"),
+                tracker=Global[str](value="TlQCYe"),
+            ),
+            allow_service=AllowService(
+                bfd=None,
+                all=None,
+                bgp=Default[bool](value=False),
+                dhcp=Variable(value="{{DwA}}"),
+                dns=Variable(value="{{ZpbcB9SD-}}"),
+                https=None,
+                icmp=Variable(value="{{l8}}"),
+                netconf=Variable(value="{{dn_.}}"),
+                ntp=None,
+                ospf=None,
+                snmp=None,
+                sshd=None,
+                stun=Variable(value="{{IOg/gP626}}"),
+                ssh=Default[bool](value=True),
+            ),
+            arp=[
+                CommonArp(
+                    ip_address=Global[IPv4Address](value=IPv4Address("203.0.113.2")),
+                    mac_address=Global[str](value="DC:F1:17:22:FA:3D"),
+                ),
+                CommonArp(ip_address=Global[str](value="3.2.1.1"), mac_address=Global[str](value="BF:DB:A1:F0:4B:C8")),
+                CommonArp(
+                    ip_address=Global[IPv4Address](value=IPv4Address("192.0.0.170")),
+                    mac_address=Global[str](value="1B:5A:0F:AB:9E:CE"),
+                ),
+            ],
+            auto_detect_bandwidth=Global[bool](value=False),
+            bandwidth_downstream=Global[int](value=168),
+            bandwidth_upstream=Global[int](value=113),
+            block_non_source_ip=Global[bool](value=True),
+            dhcp_helper=Global[List[str]](value=["1.1.1.1,2.3.3.3"]),
+            iperf_server=Global[str](value="OXYQIcr"),
+            multi_region_fabric=MultiRegionFabric(
+                core_region=None,
+                enable_core_region=None,
+                enable_secondary_region=Global[bool](value=False),
+                secondary_region=Default[SecondaryRegion](value="secondary-shared"),
+            ),
+            nat_attributes_ipv4=EthernetNatAttributesIpv4(
+                nat_type=Variable(value="{{Qs6}}"),
+                udp_timeout=Variable(value="{{2DdkYshx]a}}"),
+                tcp_timeout=Variable(value="{{U}}"),
+                new_static_nat=[
+                    StaticNat(
+                        source_ip=Variable(value="{{-_m}}"),
+                        translate_ip=Global[IPv4Address](value=IPv4Address("100.125.239.247")),
+                        static_nat_direction=Global[Literal["inside", "outside"]](value="outside"),
+                        source_vpn=Global[int](value=422),
+                    ),
+                    StaticNat(
+                        source_ip=Global[str](value="hWhYrEZZ"),
+                        translate_ip=Variable(value="{{xskEgr6}}"),
+                        static_nat_direction=Default[Literal["inside", "outside"]](value="inside"),
+                        source_vpn=Default[int](value=0),
+                    ),
+                ],
+            ),
+            nat_attributes_ipv6=NatAttributesIpv6(
+                nat64=Global[bool](value=False),
+                nat66=Global[bool](value=True),
+                static_nat66=[
+                    StaticNat66(
+                        source_prefix=Global[str](value="0::/16"),
+                        source_vpn_id=Global[int](value=10),
+                        egress_interface=Global[bool](value=False),
+                        translated_source_prefix=Global[str](value="0::/16"),
+                    ),
+                    StaticNat66(
+                        source_prefix=Global[str](value="2::/16"),
+                        source_vpn_id=Global[int](value=282),
+                        egress_interface=Global[bool](value=True),
+                        translated_source_prefix=None,
+                    ),
+                ],
+            ),
+            nat_ipv6=Global[bool](value=True),
+            service_provider=Global[str](value="HpZoKuVPSR"),
+            tunnel=TunnelEthernet(
+                bandwidth_percent=Global[int](value=50),
+                bind=Global[str](value="aDzWWarP"),
+                border=Global[bool](value=False),
+                carrier=Global[Carrier](value="carrier1"),
+                clear_dont_fragment=Global[bool](value=True),
+                color=Global[TLOCColor](value="bronze"),
+                cts_sgt_propagation=Global[bool](value=False),
+                exclude_controller_group_list=Global[List[int]](value=[]),
+                group=Global[int](value=87),
+                hello_interval=Global[int](value=388),
+                hello_tolerance=Global[int](value=33),
+                last_resort_circuit=Global[bool](value=False),
+                low_bandwidth_link=Global[bool](value=False),
+                max_control_connections=Global[int](value=2),
+                nat_refresh_interval=Global[int](value=5),
+                network_broadcast=Global[bool](value=True),
+                per_tunnel_qos=Global[bool](value=True),
+                port_hop=Global[bool](value=False),
+                restrict=Global[bool](value=False),
+                tloc_extension_gre_to=None,
+                v_bond_as_stun_server=Global[bool](value=True),
+                v_manage_connection_preference=Global[int](value=5),
+            ),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.wan_uuid).id
         # Assert
         assert parcel_id
 

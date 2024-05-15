@@ -5,6 +5,7 @@ from typing import List, Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
+from catalystwan.models.common import Duplex, Speed
 
 
 class StaticMacAddress(BaseModel):
@@ -22,10 +23,6 @@ SwitchportMode = Literal[
     "trunk",
 ]
 
-Duplex = Literal[
-    "full",
-    "half",
-]
 
 PortControl = Literal[
     "auto",
@@ -43,14 +40,6 @@ HostMode = Literal[
 ControlDirection = Literal[
     "both",
     "in",
-]
-
-Speed = Literal[
-    "10",
-    "100",
-    "1000",
-    "2500",
-    "10000",
 ]
 
 

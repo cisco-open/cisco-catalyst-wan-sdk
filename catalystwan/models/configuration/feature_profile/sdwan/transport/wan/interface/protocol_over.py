@@ -9,7 +9,7 @@ from typing import Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.common import Carrier, TLOCColor
+from catalystwan.models.common import Carrier, TLOCColor, TunnelMode
 from catalystwan.models.configuration.feature_profile.common import (
     AclQos,
     AddressWithMask,
@@ -96,12 +96,6 @@ class Ppp(BaseModel):
     )
 
 
-Mode = Literal[
-    "hub",
-    "spoke",
-]
-
-
 class Tunnel(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -125,7 +119,7 @@ class Tunnel(BaseModel):
     max_control_connections: Optional[Union[Variable, Global[int], Default[None]]] = Field(
         default=None, validation_alias="maxControlConnections", serialization_alias="maxControlConnections"
     )
-    mode: Optional[Union[Variable, Global[Mode]]] = Field(default=None)
+    mode: Optional[Union[Variable, Global[TunnelMode]]] = Field(default=None)
     network_broadcast: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
         default=None, validation_alias="networkBroadcast", serialization_alias="networkBroadcast"
     )

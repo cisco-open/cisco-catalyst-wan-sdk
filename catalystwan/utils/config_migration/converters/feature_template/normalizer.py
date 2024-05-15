@@ -3,6 +3,8 @@ from typing import List, Optional, Union, get_args
 
 from catalystwan.api.configuration_groups.parcel import Global, as_global
 from catalystwan.models.common import (
+    EthernetDuplexMode,
+    EthernetNatType,
     IkeCiphersuite,
     IkeMode,
     IpsecCiphersuite,
@@ -13,7 +15,7 @@ from catalystwan.models.common import (
     VrrpTrackerAction,
 )
 from catalystwan.models.configuration.feature_profile.common import TunnelApplication
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet import DuplexMode, MediaType, NatType
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet import MediaType
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import GreTunnelMode
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import IpsecTunnelMode
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import Direction
@@ -64,9 +66,9 @@ CastableLiterals = Union[
     GreTunnelMode,
     VrrpTrackerAction,
     Duplex,
-    DuplexMode,
+    EthernetDuplexMode,
     MediaType,
-    NatType,
+    EthernetNatType,
     IpsecTunnelMode,
     NetworkType,
     AuthenticationType,

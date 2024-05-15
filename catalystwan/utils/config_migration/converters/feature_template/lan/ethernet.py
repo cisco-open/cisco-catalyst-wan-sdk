@@ -2,8 +2,10 @@ from copy import deepcopy
 from typing import List, Optional
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, as_default, as_global, as_variable
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import (
+from catalystwan.models.configuration.feature_profile.common import (
     Arp,
+    DynamicIPv6Dhcp,
+    EthernetNatPool,
     StaticIPv4Address,
     StaticIPv6Address,
 )
@@ -11,14 +13,12 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet
     AclQos,
     AdvancedEthernetAttributes,
     DynamicDhcpDistance,
-    DynamicIPv6Dhcp,
+    EthernetNatAttributesIpv4,
     InterfaceDynamicIPv4Address,
     InterfaceDynamicIPv6Address,
     InterfaceEthernetParcel,
     InterfaceStaticIPv4Address,
     InterfaceStaticIPv6Address,
-    NatAttributesIPv4,
-    NatPool,
     StaticIPv4AddressConfig,
     StaticIPv6AddressConfig,
     Trustsec,
@@ -244,7 +244,7 @@ class InterfaceEthernetTemplateConverter:
                 nat_type = nat.get("nat_choice", as_variable(self.nat_attribute_nat_choice))
                 if nat_type.value.lower() == "interface":
                     nat_type = as_variable(self.nat_attribute_nat_choice)
-                values["nat_attributes_ipv4"] = NatAttributesIPv4(
+                values["nat_attributes_ipv4"] = EthernetNatAttributesIpv4(
                     nat_type=nat_type,
                     nat_pool=self.get_nat_pool(nat),
                     udp_timeout=nat.get("udp_timeout", as_default(1)),
@@ -253,9 +253,9 @@ class InterfaceEthernetTemplateConverter:
                 )
                 values["nat"] = as_global(True)
 
-    def get_nat_pool(self, values: dict) -> Optional[NatPool]:
+    def get_nat_pool(self, values: dict) -> Optional[EthernetNatPool]:
         if nat_pool := values.get("natpool"):
-            return NatPool(**nat_pool)
+            return EthernetNatPool(**nat_pool)
         return None
 
     def configure_acl_qos(self, values: dict) -> None:
