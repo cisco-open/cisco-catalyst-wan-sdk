@@ -15,6 +15,7 @@ from .base import FeatureTemplateConverter
 from .basic import SystemToBasicTemplateConverter
 from .bfd import BFDTemplateConverter
 from .bgp import BGPTemplateConverter
+from .cellular_controller import CellularControllerTemplateConverter
 from .dhcp import DhcpTemplateConverter
 from .global_ import GlobalTemplateConverter
 from .gps import GpsTemplateConverter
@@ -91,6 +92,7 @@ available_converters = [
     WanInterfaceIpsecTemplateConverter,
     InterfaceCellularTemplateConverter,
     GpsTemplateConverter,
+    CellularControllerTemplateConverter,
 ]
 
 

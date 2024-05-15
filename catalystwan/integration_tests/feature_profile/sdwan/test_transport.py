@@ -25,6 +25,10 @@ from catalystwan.models.configuration.feature_profile.common import (
     SourceLoopback,
     TunnelSourceType,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_controller import (
+    CellularControllerParcel,
+    ControllerConfig,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.transport.gps import GpsParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1controller import (
     E1,
@@ -312,6 +316,23 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, gps_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_fully_specifed_cellular_controller_expect_successful_post(self):
+        cellular_controller_parcel = CellularControllerParcel(
+            parcel_name="CellularControllerParcel",
+            description="Description",
+            controller_config=ControllerConfig(
+                id=as_global("0/2/0"),
+                slot=as_global(1),
+                max_retry=as_global(3),
+                failover_timer=as_global(4),
+                auto_sim=as_global(True),
+            ),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, cellular_controller_parcel).id
         # Assert
         assert parcel_id
 
