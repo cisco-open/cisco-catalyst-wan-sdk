@@ -1,7 +1,6 @@
 from copy import deepcopy
 from typing import Dict, List
 
-from catalystwan.api.configuration_groups.parcel import Global
 from catalystwan.models.configuration.feature_profile.sdwan.system import NtpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.ntp import (
     Authentication,
