@@ -17,6 +17,7 @@ from .bfd import BFDTemplateConverter
 from .bgp import BGPTemplateConverter
 from .cellular_controller import CellularControllerTemplateConverter
 from .cellular_profile import CellularProfileTemplateConverter
+from .cli import CliTemplateConverter
 from .dhcp import DhcpTemplateConverter
 from .global_ import GlobalTemplateConverter
 from .gps import GpsTemplateConverter
@@ -31,7 +32,7 @@ from .multicast import (
     PimToMulticastTemplateConverter,
 )
 from .normalizer import template_definition_normalization
-from .ntp import NTPTemplateConverter
+from .ntp import NtpTemplateConverter
 from .omp import OMPTemplateConverter
 from .ospf import OspfTemplateConverter
 from .ospfv3 import Ospfv3TemplateConverter
@@ -64,7 +65,7 @@ available_converters = [
     GlobalTemplateConverter,
     LoggingTemplateConverter,
     OMPTemplateConverter,
-    NTPTemplateConverter,
+    NtpTemplateConverter,
     BGPTemplateConverter,
     ThousandEyesTemplateConverter,
     UcseTemplateConverter,
@@ -95,6 +96,7 @@ available_converters = [
     GpsTemplateConverter,
     CellularControllerTemplateConverter,
     CellularProfileTemplateConverter,
+    CliTemplateConverter,
 ]
 
 

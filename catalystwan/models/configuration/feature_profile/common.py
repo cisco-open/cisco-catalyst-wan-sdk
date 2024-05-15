@@ -23,6 +23,8 @@ ProfileType = Literal[
     "policy-object",
     "embedded-security",
     "other",
+    "uc-voice",
+    "global",  # automatically created global cellulargateway feature profile
 ]
 
 SchemaType = Literal[

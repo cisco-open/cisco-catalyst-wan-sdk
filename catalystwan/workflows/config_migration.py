@@ -87,6 +87,7 @@ SUPPORTED_TEMPLATE_TYPES = [
     LAN_VPN_GRE,
     LAN_VPN_ETHERNET,
     LAN_VPN_IPSEC,
+    "cli-template",
 ]
 
 FEATURE_PROFILE_SYSTEM = [
@@ -150,6 +151,10 @@ FEATURE_PROFILE_SERVICE = [
     CISCO_VPN_SERVICE,
 ]
 
+FEATURE_PROFILE_CLI = [
+    "cli-template",
+]
+
 
 def log_progress(task: str, completed: int, total: int) -> None:
     logger.info(f"{task} {completed}/{total}")
@@ -207,6 +212,17 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
                 description="transport_and_management",
             ),
         )
+        fp_cli_uuid = uuid4()
+        transformed_fp_cli = TransformedFeatureProfile(
+            header=TransformHeader(
+                type="cli",
+                origin=fp_cli_uuid,
+            ),
+            feature_profile=FeatureProfileCreationPayload(
+                name=f"{dt.template_name}_cli",
+                description="cli",
+            ),
+        )
 
         for template in templates:
             # Those feature templates IDs are real UUIDs and are used to map to the feature profiles
@@ -221,6 +237,8 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
                 transformed_fp_service.header.subelements.add(template_uuid)
             elif template.templateType in FEATURE_PROFILE_TRANSPORT:
                 transformed_fp_transport_and_management.header.subelements.add(template_uuid)
+            elif template.templateType in FEATURE_PROFILE_CLI:
+                transformed_fp_cli.header.subelements.add(template_uuid)
             # Map subtemplates
             if len(template.subTemplates) > 0:
                 subtemplates_mapping[template_uuid] = set(
@@ -231,7 +249,9 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
             header=TransformHeader(
                 type="config_group",
                 origin=UUID(dt.template_id),
-                subelements=set([fp_system_uuid, fp_other_uuid, fp_service_uuid, fp_transport_and_management_uuid]),
+                subelements=set(
+                    [fp_system_uuid, fp_other_uuid, fp_service_uuid, fp_transport_and_management_uuid, fp_cli_uuid]
+                ),
             ),
             config_group=ConfigGroupCreationPayload(
                 name=dt.template_name,
@@ -245,6 +265,7 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
         ux2.feature_profiles.append(transformed_fp_other)
         ux2.feature_profiles.append(transformed_fp_service)
         ux2.feature_profiles.append(transformed_fp_transport_and_management)
+        ux2.feature_profiles.append(transformed_fp_cli)
         ux2.config_groups.append(transformed_cg)
 
     for ft in ux1.templates.feature_templates:
