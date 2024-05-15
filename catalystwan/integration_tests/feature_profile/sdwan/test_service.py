@@ -4,8 +4,6 @@ from uuid import UUID
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, as_global, as_variable
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
-from catalystwan.models.common import SubnetMask
-from catalystwan.models.configuration.feature_profile.common import AddressWithMask
 from catalystwan.models.common import (
     CableLengthLongValue,
     ClockRate,
@@ -17,6 +15,7 @@ from catalystwan.models.common import (
     T1Linecode,
 )
 from catalystwan.models.configuration.feature_profile.common import (
+    AddressWithMask,
     ChannelGroup,
     MultilinkAuthenticationType,
     MultilinkClockSource,
@@ -25,7 +24,6 @@ from catalystwan.models.configuration.feature_profile.common import (
     MultilinkMethod,
     MultilinkNimList,
     MultilinkTxExName,
-    Prefix,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.acl import Ipv4AclParcel, Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import (
@@ -40,7 +38,6 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet import InterfaceEthernetParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import BasicGre, InterfaceGreParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import InterfaceIpsecParcel
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import InterfaceIpsecParcel, IpsecAddress
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.multilink import InterfaceMultilinkParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.svi import InterfaceSviParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel

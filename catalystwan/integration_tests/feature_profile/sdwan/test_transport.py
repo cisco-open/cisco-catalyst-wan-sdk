@@ -27,6 +27,13 @@ from catalystwan.models.configuration.feature_profile.common import (
     AdvancedGre,
     AllowService,
     ChannelGroup,
+    MultilinkAuthenticationType,
+    MultilinkClockSource,
+    MultilinkControllerTxExList,
+    MultilinkControllerType,
+    MultilinkMethod,
+    MultilinkNimList,
+    MultilinkTxExName,
     MultiRegionFabric,
     ShapingRateDownstreamConfig,
     ShapingRateUpstreamConfig,
@@ -45,20 +52,6 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_p
     ProfileInfo,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.gps import GpsParcel
-from catalystwan.models.configuration.feature_profile.common import (
-    AdvancedGre,
-    ChannelGroup,
-    MultilinkAuthenticationType,
-    MultilinkClockSource,
-    MultilinkControllerTxExList,
-    MultilinkControllerType,
-    MultilinkMethod,
-    MultilinkNimList,
-    MultilinkTxExName,
-    MultiRegionFabric,
-)
-from catalystwan.models.configuration.feature_profile.common import Prefix as CommonPrefix
-from catalystwan.models.configuration.feature_profile.common import SourceLoopback, TunnelSourceType
 from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1controller import (
     E1,
     T1,
