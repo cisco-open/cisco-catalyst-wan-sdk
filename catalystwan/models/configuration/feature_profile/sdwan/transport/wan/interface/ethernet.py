@@ -3,7 +3,7 @@ from typing import List, Literal, Optional, Union
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
 from catalystwan.models.common import Carrier, EthernetDuplexMode, MediaType, Speed, TLOCColor, TunnelMode
 from catalystwan.models.configuration.feature_profile.common import (
     AclQos,
@@ -203,8 +203,12 @@ class InterfaceEthernetParcel(_ParcelBase):
     interface_description: Optional[Union[Variable, Global[str], Default[None]]] = Field(
         default=None, validation_alias=AliasPath("data", "description")
     )
-    nat: Union[Variable, Global[bool], Default[bool]] = Field(validation_alias=AliasPath("data", "nat"))
-    shutdown: Union[Variable, Global[bool], Default[bool]] = Field(validation_alias=AliasPath("data", "shutdown"))
+    nat: Union[Variable, Global[bool], Default[bool]] = Field(
+        default=as_default(False), validation_alias=AliasPath("data", "nat")
+    )
+    shutdown: Union[Variable, Global[bool], Default[bool]] = Field(
+        default=as_default(True), validation_alias=AliasPath("data", "shutdown")
+    )
     tunnel_interface: Union[Global[bool], Default[bool]] = Field(validation_alias=AliasPath("data", "tunnelInterface"))
     acl_qos: Optional[AclQos] = Field(default=None, validation_alias=AliasPath("data", "aclQos"), description="ACL/QOS")
     advanced: Optional[Advanced] = Field(

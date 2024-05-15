@@ -27,7 +27,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet
 from catalystwan.utils.config_migration.steps.constants import LAN_VPN_ETHERNET
 
 
-class InterfaceEthernetTemplateConverter:
+class LanInterfaceEthernetTemplateConverter:
     supported_template_types = (LAN_VPN_ETHERNET,)
 
     delete_keys = (

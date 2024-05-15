@@ -21,7 +21,7 @@ from .cli import CliTemplateConverter
 from .dhcp import DhcpTemplateConverter
 from .global_ import GlobalTemplateConverter
 from .gps import GpsTemplateConverter
-from .lan.ethernet import InterfaceEthernetTemplateConverter
+from .lan.ethernet import LanInterfaceEthernetTemplateConverter
 from .lan.gre import LanInterfaceGreTemplateConverter
 from .lan.ipsec import LanInterfaceIpsecTemplateConverter
 from .lan.svi import InterfaceSviTemplateConverter
@@ -43,6 +43,7 @@ from .thousandeyes import ThousandEyesTemplateConverter
 from .ucse import UcseTemplateConverter
 from .vpn import VpnTemplateConverter
 from .wan.cellular import InterfaceCellularTemplateConverter
+from .wan.ethernet import WanInterfaceEthernetTemplateConverter
 from .wan.gre import WanInterfaceGreTemplateConverter
 from .wan.ipsec import WanInterfaceIpsecTemplateConverter
 from .wan.protocol_over import (
@@ -75,7 +76,7 @@ available_converters = [
     VpnTemplateConverter,
     LanInterfaceGreTemplateConverter,
     InterfaceSviTemplateConverter,
-    InterfaceEthernetTemplateConverter,
+    LanInterfaceEthernetTemplateConverter,
     LanInterfaceIpsecTemplateConverter,
     OspfTemplateConverter,
     Ospfv3TemplateConverter,
@@ -97,6 +98,7 @@ available_converters = [
     CellularControllerTemplateConverter,
     CellularProfileTemplateConverter,
     CliTemplateConverter,
+    WanInterfaceEthernetTemplateConverter,
 ]
 
 
