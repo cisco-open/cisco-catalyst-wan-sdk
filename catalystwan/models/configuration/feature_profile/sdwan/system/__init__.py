@@ -10,7 +10,7 @@ from .bfd import BFDParcel
 from .global_parcel import GlobalParcel
 from .logging_parcel import LoggingParcel
 from .mrf import MRFParcel
-from .ntp import NTPParcel
+from .ntp import NtpParcel
 from .omp import OMPParcel
 from .security import SecurityParcel
 from .snmp import SNMPParcel
@@ -23,7 +23,7 @@ AnySystemParcel = Annotated[
         BannerParcel,
         BasicParcel,
         GlobalParcel,
-        NTPParcel,
+        NtpParcel,
         MRFParcel,
         OMPParcel,
         SecurityParcel,
@@ -39,7 +39,7 @@ __all__ = [
     "BannerParcel",
     "BasicParcel",
     "GlobalParcel",
-    "NTPParcel",
+    "NtpParcel",
     "MRFParcel",
     "OMPParcel",
     "SecurityParcel",

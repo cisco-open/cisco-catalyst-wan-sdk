@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, Mapping, Union
 
+from catalystwan.api.builders.feature_profiles.cli import CliFeatureProfileBuilder
 from catalystwan.api.builders.feature_profiles.other import OtherFeatureProfileBuilder
 from catalystwan.api.builders.feature_profiles.service import ServiceFeatureProfileBuilder
 from catalystwan.api.builders.feature_profiles.system import SystemFeatureProfileBuilder
@@ -17,6 +18,7 @@ FeatureProfileBuilder = Union[
     SystemFeatureProfileBuilder,
     OtherFeatureProfileBuilder,
     TransportAndManagementProfileBuilder,
+    CliFeatureProfileBuilder,
 ]
 
 BUILDER_MAPPING: Mapping[ProfileType, Callable] = {
@@ -24,6 +26,7 @@ BUILDER_MAPPING: Mapping[ProfileType, Callable] = {
     "system": SystemFeatureProfileBuilder,
     "other": OtherFeatureProfileBuilder,
     "transport": TransportAndManagementProfileBuilder,
+    "cli": CliFeatureProfileBuilder,
 }
 
 

@@ -22,7 +22,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.system.bfd import BF
 from catalystwan.models.configuration.feature_profile.sdwan.system.global_parcel import GlobalParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.logging_parcel import LoggingParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.mrf import MRFParcel
-from catalystwan.models.configuration.feature_profile.sdwan.system.ntp import NTPParcel
+from catalystwan.models.configuration.feature_profile.sdwan.system.ntp import NtpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.omp import OMPParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.security import SecurityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.snmp import SNMPParcel
@@ -146,12 +146,12 @@ class SystemFeatureProfile(APIEndpoints):
 
     @versions(supported_versions=(">=20.9"), raises=False)
     @get("/v1/feature-profile/sdwan/system/{profile_id}/ntp", resp_json_key="data")
-    def get_all_ntp(self, profile_id: UUID) -> DataSequence[Parcel[NTPParcel]]:
+    def get_all_ntp(self, profile_id: UUID) -> DataSequence[Parcel[NtpParcel]]:
         ...
 
     @versions(supported_versions=(">=20.9"), raises=False)
     @get("/v1/feature-profile/sdwan/system/{profile_id}/ntp/{parcel_id}")
-    def get_by_id_ntp(self, profile_id: UUID, parcel_id: UUID) -> Parcel[NTPParcel]:
+    def get_by_id_ntp(self, profile_id: UUID, parcel_id: UUID) -> Parcel[NtpParcel]:
         ...
 
     @versions(supported_versions=(">=20.9"), raises=False)

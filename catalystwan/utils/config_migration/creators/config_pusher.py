@@ -54,7 +54,11 @@ class UX2ConfigPusher:
         config_groups = self._ux2_config.config_groups
         config_groups_length = len(config_groups)
         for i, transformed_config_group in enumerate(config_groups):
-            self._progress("Creating Configuration Groups", i + 1, config_groups_length)
+            self._progress(
+                f"Creating Configuration Group: {transformed_config_group.config_group.name}",
+                i + 1,
+                config_groups_length,
+            )
             logger.debug(
                 f"Creating config group: {transformed_config_group.config_group.name} "
                 f"with origin uuid: {transformed_config_group.header.origin} "
@@ -73,9 +77,7 @@ class UX2ConfigPusher:
 
     def _create_feature_profile_and_parcels(self, feature_profiles_ids: List[UUID]) -> List[FeatureProfileBuildReport]:
         feature_profiles: List[FeatureProfileBuildReport] = []
-        feature_profile_length = len(feature_profiles_ids)
         for i, feature_profile_id in enumerate(feature_profiles_ids):
-            self._progress("Creating Feature Profile", i + 1, feature_profile_length)
             transformed_feature_profile = self._config_map.feature_profile_map[feature_profile_id]
             logger.debug(
                 f"Creating feature profile: {transformed_feature_profile.feature_profile.name} "

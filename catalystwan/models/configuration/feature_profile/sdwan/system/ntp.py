@@ -44,7 +44,8 @@ class AuthenticationVariable(BaseModel):
     )
     md5_value: Union[Variable, Global[str]] = Field(
         ...,
-        alias="md5Value",
+        serialization_alias="md5Value",
+        validation_alias="md5Value",
         description="Enter cleartext or AES-encrypted MD5 authentication key"
         "[Note: Catalyst SD-WAN Manager will encrypt this field before saving."
         "Cleartext strings will not be returned back to the user in GET responses for sensitive fields.]",
@@ -79,14 +80,14 @@ class Leader(BaseModel):
         default=as_default(False), description="Variable device as NTP Leader"
     )
     stratum: Optional[Union[Variable, Global[int], Default[None]]] = Field(
-        None, description="Variable device as NTP Leader"
+        default=as_default(None), description="Variable device as NTP Leader"
     )
     source: Optional[Union[Variable, Global[str], Default[None]]] = Field(
-        None, description="Variable device as NTP Leader"
+        default=as_default(None), description="Variable device as NTP Leader"
     )
 
 
-class NTPParcel(_ParcelBase):
+class NtpParcel(_ParcelBase):
     type_: Literal["ntp"] = Field(default="ntp", exclude=True)
     model_config = ConfigDict(
         extra="forbid",
