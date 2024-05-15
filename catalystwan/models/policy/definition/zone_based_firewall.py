@@ -24,6 +24,7 @@ from catalystwan.models.policy.policy_definition import (
     DestinationScalableGroupTagListEntry,
     LogAction,
     Match,
+    PolicyActionBase,
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
@@ -89,8 +90,12 @@ ZoneBasedFWPolicyActions = Annotated[
     Field(discriminator="type"),
 ]
 
-
+ZoneBasedFirewallDefaultActionType = Literal["drop", "pass"]
 ZoneBasedFirewallBaseActionType = Literal["drop", "pass", "inspect"]
+
+
+class ZoneBasedFirewallDefaultAction(PolicyActionBase):
+    type: ZoneBasedFirewallDefaultActionType
 
 
 class ZoneBasedFWPolicyMatches(Match):
@@ -206,6 +211,11 @@ class ZoneBasedFWPolicyHeader(PolicyDefinitionBase):
 
 
 class ZoneBasedFWPolicyDefinition(DefinitionWithSequencesCommonBase):
+    default_action: ZoneBasedFirewallDefaultAction = Field(
+        default=ZoneBasedFirewallDefaultAction(type="drop"),
+        serialization_alias="defaultAction",
+        validation_alias="defaultAction",
+    )
     sequences: List[Union[ZoneBasedFWPolicySequence, ZoneBasedFWPolicySequenceWithRuleSets]] = []
     entries: List[ZoneBasedFWPolicyEntry] = []
 

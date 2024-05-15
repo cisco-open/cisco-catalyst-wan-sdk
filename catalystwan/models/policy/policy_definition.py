@@ -93,7 +93,7 @@ SequenceIpType = Literal[
 ]
 
 
-AccessPolicyActionType = Literal["accept", "drop"]
+BasicPolicyActionType = Literal["accept", "drop"]
 
 SequenceType = Literal[
     "applicationFirewall",
@@ -1051,8 +1051,8 @@ class PolicyActionBase(BaseModel):
     type: str
 
 
-class AccessPolicyAction(PolicyActionBase):
-    type: AccessPolicyActionType
+class BasicPolicyAction(PolicyActionBase):
+    type: BasicPolicyActionType
 
 
 class InfoTag(BaseModel):
