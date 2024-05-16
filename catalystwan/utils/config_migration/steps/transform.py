@@ -11,11 +11,11 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.multicast im
 )
 from catalystwan.utils.config_migration.converters.feature_template.parcel_factory import create_parcel_from_template
 from catalystwan.utils.config_migration.steps.constants import (
-    ADDITIONAL_TEMPLATES,
-    CAST_TEMPLATE_TYPE,
-    CISCO_VPN_SERVICE,
-    CISCO_VPN_TRANSPORT_AND_MANAGEMENT,
-    NEW_TEMPALTE_NAME_SUFFIX,
+    VPN_ADDITIONAL_TEMPLATES,
+    VPN_MANAGEMENT,
+    VPN_SERVICE,
+    VPN_TEMPLATE_MAPPINGS,
+    VPN_TRANSPORT,
 )
 
 logger = logging.getLogger(__name__)
@@ -104,10 +104,12 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
 
     # Determine the VPN type based on the VPN ID
     vpn_id = create_parcel_from_template(target_feature_template).vpn_id.value  # type: ignore
-    if vpn_id in [0, 512]:
-        cisco_vpn_template.templateType = CISCO_VPN_TRANSPORT_AND_MANAGEMENT
+    if vpn_id == 0:
+        cisco_vpn_template.templateType = VPN_TRANSPORT
+    elif vpn_id == 512:
+        cisco_vpn_template.templateType = VPN_MANAGEMENT
     else:
-        cisco_vpn_template.templateType = CISCO_VPN_SERVICE
+        cisco_vpn_template.templateType = VPN_SERVICE
 
     logger.debug(
         f"Resolved Cisco VPN {target_feature_template.name} template to type {cisco_vpn_template.templateType}"
@@ -119,7 +121,7 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
 
     # Get templates that need casting
     subtemplates_uuids = [
-        st.templateId for st in cisco_vpn_template.subTemplates if st.templateType in ADDITIONAL_TEMPLATES
+        st.templateId for st in cisco_vpn_template.subTemplates if st.templateType in VPN_ADDITIONAL_TEMPLATES
     ]
     feature_templates_to_differentiate = [
         t for t in ux1_config.templates.feature_templates if t.id in subtemplates_uuids
@@ -131,8 +133,8 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
 
     for ft in feature_templates_to_differentiate:
         new_id = str(uuid4())
-        new_name = f"{ft.name}{NEW_TEMPALTE_NAME_SUFFIX[cisco_vpn_template.templateType]}"
-        new_type = CAST_TEMPLATE_TYPE[cisco_vpn_template.templateType][ft.template_type]
+        new_name = f"{ft.name}{VPN_TEMPLATE_MAPPINGS[cisco_vpn_template.templateType]['suffix']}"
+        new_type = VPN_TEMPLATE_MAPPINGS[cisco_vpn_template.templateType]["mapping"][ft.template_type]  # type: ignore
 
         logger.debug(
             f"Copied feature template and casted type from: {ft.name}[{ft.template_type}] to {new_name}[{new_type}]"
@@ -155,5 +157,6 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
 
     # Remove old GeneralTemplates
     cisco_vpn_template.subTemplates = [
-        st for st in cisco_vpn_template.subTemplates if st.templateType not in ADDITIONAL_TEMPLATES
+        st for st in cisco_vpn_template.subTemplates if st.templateType not in VPN_ADDITIONAL_TEMPLATES
     ]
+    print(cisco_vpn_template.subTemplates)

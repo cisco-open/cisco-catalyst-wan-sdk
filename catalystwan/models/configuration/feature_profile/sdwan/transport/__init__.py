@@ -11,6 +11,7 @@ from .cellular_profile import CellularProfileParcel
 from .gps import GpsParcel
 from .t1e1controller import T1E1ControllerParcel
 from .vpn import ManagementVpnParcel, TransportVpnParcel
+from .wan.interface.ethernet import InterfaceEthernetParcel
 from .wan.interface.gre import InterfaceGreParcel
 from .wan.interface.ipsec import InterfaceIpsecParcel
 from .wan.interface.protocol_over import (
@@ -30,6 +31,7 @@ AnyTransportVpnSubParcel = Annotated[
         InterfaceDslIPoEParcel,
         InterfaceGreParcel,
         InterfaceIpsecParcel,
+        InterfaceEthernetParcel,
     ],
     Field(discriminator="type_"),
 ]

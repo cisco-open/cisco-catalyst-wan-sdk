@@ -1,11 +1,52 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
-from datetime import datetime
-from uuid import uuid4
+from typing import List, Optional, TypeVar
+from uuid import UUID, uuid4
 
+from catalystwan.api.configuration_groups.parcel import _ParcelBase
 from catalystwan.api.templates.device_template.device_template import GeneralTemplate
-from catalystwan.models.configuration.config_migration import DeviceTemplateWithInfo, UX1Config, UX1Templates
+from catalystwan.models.configuration.config_migration import (
+    DeviceTemplateWithInfo,
+    TransformedParcel,
+    UX1Config,
+    UX1Templates,
+)
 from catalystwan.models.templates import FeatureTemplateInformation
+from catalystwan.tests.config_migration.models import (
+    interface_ethernet,
+    interface_gre,
+    interface_ipsec,
+    malformed,
+    vpn_management,
+    vpn_service,
+    vpn_transport,
+)
 from catalystwan.workflows.config_migration import transform
+
+T = TypeVar("T", FeatureTemplateInformation, _ParcelBase)
+
+
+def deepcopy_models(*models: T) -> List[T]:
+    """During testing, models can be modified."""
+    return [model.model_copy(deep=True) for model in models]
+
+
+def find_subelement_parcel(
+    parcels: List[TransformedParcel],
+    parent_parcel: TransformedParcel,
+    subelement_name: str,
+    subelement_name_suffix: str,
+) -> Optional[TransformedParcel]:
+    subelement_parcel = next(
+        (
+            p
+            for p in parcels
+            if p.header.origin in parent_parcel.header.subelements
+            and p.parcel.parcel_name.startswith(subelement_name)
+            and p.parcel.parcel_name.endswith(subelement_name_suffix)
+        ),
+        None,
+    )
+    return subelement_parcel
 
 
 def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_profile():
@@ -30,225 +71,18 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
     # Please look at the DeviceTemplateWithInfo and see the structure that should be
     # preserved when we transform the data from UX1.0 to UX2.0
 
-    vpn_512_uuid = uuid4()
-    vpn_0_uuid = uuid4()
-    vpn_1_uuid = uuid4()
-
-    vpn_0_1_shared_gre_uuid = uuid4()
-    vpn_1_ethernet_uuid = uuid4()
-    vpn_1_ethernet_ipsec = uuid4()
+    vpn_512_management, vpn_0_transport, vpn_1_service = deepcopy_models(vpn_management, vpn_transport, vpn_service)
+    gre, ethernet, ipsec = deepcopy_models(interface_gre, interface_ethernet, interface_ipsec)
 
     ux1_config = UX1Config(
         templates=UX1Templates(
             feature_templates=[
-                FeatureTemplateInformation(
-                    last_updated_by="",
-                    id=str(vpn_512_uuid),
-                    factory_default=True,
-                    name="Management_VPN",
-                    devices_attached=0,
-                    description="Default Cisco Management VPN template settings",
-                    last_updated_on=datetime.now(),
-                    resource_group="global",
-                    template_type="cisco_vpn",
-                    device_type=[""],
-                    version="15.0.0",
-                    template_definiton='{"vpn-id":{"vipObjectType":"object","vipType":"constant","vipValue":512},'
-                    '"name":{"vipObjectType":"object","vipType":"constant","vipValue":"Management VPN"},'
-                    '"ecmp-hash-key":{"layer4":{"vipObjectType":"object","vipType":"ignore","vipValue":"false"}},'
-                    '"host":{"vipType":"ignore","vipValue":[],"vipObjectType":"tree","vipPrimaryKey":["hostname"]}}',
-                ),
-                FeatureTemplateInformation(
-                    last_updated_by="",
-                    id=str(vpn_0_uuid),
-                    factory_default=True,
-                    name="Transport_VPN",
-                    devices_attached=0,
-                    description="Default Cisco Transport VPN template settings",
-                    last_updated_on=datetime.now(),
-                    resource_group="global",
-                    template_type="cisco_vpn",
-                    device_type=[""],
-                    version="15.0.0",
-                    template_definiton='{"vpn-id":{"vipObjectType":"object","vipType":"constant","vipValue":0},'
-                    '"name":{"vipObjectType":"object","vipType":"constant","vipValue":"Transport VPN"},'
-                    '"ecmp-hash-key":{"layer4":{"vipObjectType":"object","vipType":"ignore","vipValue":"false"}},'
-                    '"host":{"vipType":"ignore","vipValue":[],"vipObjectType":"tree","vipPrimaryKey":["hostname"]}}',
-                ),
-                FeatureTemplateInformation(
-                    last_updated_by="",
-                    id=str(vpn_1_uuid),
-                    factory_default=True,
-                    name="Service_VPN",
-                    devices_attached=0,
-                    description="Factory Default template for VPN 1 Cisco",
-                    last_updated_on=datetime.now(),
-                    resource_group="global",
-                    template_type="cisco_vpn",
-                    device_type=[""],
-                    version="15.0.0",
-                    template_definiton='{"vpn-id":{"vipValue":1,"vipObjectType":"object",'
-                    '"vipType":"constant","vipVariableName":""},"name":{"vipValue":"","vipObjectType":'
-                    '"object","vipType":"ignore"},"dns":{"vipValue":[],"vipObjectType":"tree",'
-                    '"vipType":"ignore","vipPrimaryKey":["dns-addr"]},"dns-ipv6":{"vipValue":[],'
-                    '"vipObjectType":"tree","vipType":"ignore","vipPrimaryKey":["dns-addr"]},'
-                    '"ecmp-hash-key":{"layer4":{"vipValue":"","vipObjectType":"object","vipType":"ignore"}},'
-                    '"host":{"vipValue":[],"vipObjectType":"tree","vipType":"ignore","vipPrimaryKey":'
-                    '["hostname"]},"ip":{"route": {"vipValue":[],"vipObjectType":"tree","vipType":"ignore",'
-                    '"vipPrimaryKey":["prefix"]}}, "ipv6":{"route":{"vipValue":[],"vipObjectType":"tree",'
-                    '"vipType":"ignore","vipPrimaryKey":["prefix"]}}, "omp":{"advertise":{"vipValue":[],'
-                    '"vipObjectType":"tree","vipType":"ignore","vipPrimaryKey":["protocol"]},'
-                    '"ipv6-advertise":{"vipValue":[],"vipObjectType":"tree","vipType":"ignore",'
-                    '"vipPrimaryKey":["protocol"]}}, "nat64":{"v4":{"pool":{"vipValue":[],"vipObjectType":'
-                    '"tree","vipType":"ignore","vipPrimaryKey":["name"]}}}}',
-                ),
-                FeatureTemplateInformation(
-                    last_updated_by="admin",
-                    id=str(vpn_0_1_shared_gre_uuid),
-                    factory_default=False,
-                    name="GREVPN",
-                    devices_attached=0,
-                    description="HnQSYJsm",
-                    last_updated_on=1715275556625,
-                    resource_group="global",
-                    template_type="cisco_vpn_interface_gre",
-                    device_type=["vedge-C1101-4PLTEPW"],
-                    version="15.0.0",
-                    template_definiton='{"if-name":{"vipObjectType":"object","vipType":"constant","vipValue":'
-                    '"ImW32","vipVariableName":"vpn_if_name"},"description":{"vipObjectType":"object","vipType":'
-                    '"constant","vipValue":"AVDYACBJ","vipVariableName":"vpn_if_description"},"application":'
-                    '{"vipObjectType":"object","vipType":"constant","vipValue":"none","vipVariableName":'
-                    '"vpn_if_application"},"ip":{"address":{"vipObjectType":"object","vipType":"constant"'
-                    ',"vipValue":"3.4.5.6/15","vipVariableName":"vpn_if_ipv4_address"}},"shutdown":'
-                    '{"vipObjectType":"object","vipType":"constant","vipValue":"true","vipVariableName":'
-                    '"vpn_if_shutdown"},"tunnel-source-interface":{"vipObjectType":"object","vipType":'
-                    '"constant","vipValue":"Gre123","vipVariableName":"vpn_if_tunnel_source_interface"},'
-                    '"tunnel-destination":{"vipObjectType":"object","vipType":"constant","vipValue":"3.4.5.2"'
-                    ',"vipVariableName":"vpn_if_tunnel_destination"},"mtu":{"vipObjectType":"object","vipType"'
-                    ':"constant","vipValue":72,"vipVariableName":"vpn_if_ip_mtu"},"tcp-mss-adjust":'
-                    '{"vipObjectType":"object","vipType":"constant","vipValue":1213,"vipVariableName":'
-                    '"vpn_if_tcp_mss_adjust"},"rewrite-rule":{"rule-name":{"vipObjectType":"object","vipType"'
-                    ':"constant","vipValue":"GPqkFuGH","vipVariableName":"rewrite_rule_name"}},"access-list"'
-                    ':{"vipType":"constant","vipValue":[{"acl-name":{"vipObjectType":"object","vipType":'
-                    '"constant","vipValue":"JPlPFHcO","vipVariableName":"access_list_ingress_acl_name_ipv4"},'
-                    '"direction":{"vipType":"constant","vipValue":"in","vipObjectType":"object"}'
-                    ',"priority-order":["direction","acl-name"]},{"acl-name":{"vipObjectType":"object",'
-                    '"vipType":"constant","vipValue":"OICQGibD","vipVariableName":"access_list_egress_acl_name_ipv4"}'
-                    ',"direction":{"vipType":"constant","vipValue":"out","vipObjectType":"object"},'
-                    '"priority-order":["direction","acl-name"]}],"vipObjectType":"tree",'
-                    '"vipPrimaryKey":["direction"]},"clear-dont-fragment":{"vipObjectType":'
-                    '"object","vipType":"constant","vipValue":"true","vipVariableName":'
-                    '"vpn_gre_tunnel_tunnel_clear_dont_fragment"},"tracker":{"vipObjectType":"list","vipType"'
-                    ':"constant","vipValue":["JibukWQq"],"vipVariableName":"tracker"}}',
-                ),
-                FeatureTemplateInformation(
-                    last_updated_by="admin",
-                    id=str(vpn_1_ethernet_uuid),
-                    factory_default=False,
-                    name="EthernetVPN1",
-                    devices_attached=0,
-                    description="HnQSYJsm",
-                    last_updated_on=1715275556625,
-                    resource_group="global",
-                    template_type="cisco_vpn_interface",
-                    device_type=["vedge-C1101-4PLTEPW"],
-                    version="15.0.0",
-                    template_definiton='{"if-name":'
-                    '{"vipValue": "GigabitEthernet2", "vipObjectType": "object", "vipType":'
-                    '"constant", "vipVariableName": ""}, "description": {"vipValue": "", "vipObjectType":'
-                    '"object", "vipType": "ignore"}, "poe": {"vipValue": "", "vipObjectType": "object",'
-                    '"vipType": "ignore"}, "ip": {"address": {"vipValue": "10.1.17.15/24", "vipObjectType":'
-                    '"object", "vipType": "constant", "vipVariableName": ""}, "secondary-address": {"vipValue":'
-                    '[], "vipObjectType": "tree", "vipType": "ignore", "vipPrimaryKey": ["address"]}, "dhcp-'
-                    'client": {"vipValue": "", "vipObjectType": "object", "vipType": "ignore"}, "dhcp-'
-                    'distance": {"vipValue": "", "vipObjectType": "object", "vipType": "ignore"}}, "ipv6":'
-                    '{"address": {"vipValue": "", "vipObjectType": "object", "vipType": "ignore"}, "dhcp-'
-                    'client": {"vipValue": "", "vipObjectType": "object", "vipType": "ignore"}, "secondary-'
-                    'address": {"vipValue": [], "vipObjectType": "tree", "vipType": "ignore", "vipPrimaryKey":'
-                    '["address"]}, "access-list": {"vipValue": [], "vipObjectType": "tree", "vipType":'
-                    '"ignore", "vipPrimaryKey": ["direction"]}, "dhcp-helper-v6": {"vipValue": [],'
-                    '"vipObjectType": "tree", "vipType": "ignore", "vipPrimaryKey": ["address"]}}, "dhcp-'
-                    'helper": {"vipValue": "", "vipObjectType": "list", "vipType": "ignore"}, "tracker":'
-                    '{"vipValue": "", "vipObjectType": "list", "vipType": "ignore"}, "nat": {"vipValue": "",'
-                    '"vipObjectType": "node-only", "vipType": "ignore", "udp-timeout": {"vipValue": "",'
-                    '"vipObjectType": "object", "vipType": "ignore"}, "tcp-timeout": {"vipValue": "",'
-                    '"vipObjectType": "object", "vipType": "ignore"}, "static": {"vipValue": [],'
-                    '"vipObjectType": "tree", "vipType": "ignore", "vipPrimaryKey": ["source-ip", "translate-'
-                    'ip"]}}, "nat64": {"vipValue": "", "vipObjectType": "node-only", "vipType": "ignore"},'
-                    '"mtu": {"vipValue": "", "vipObjectType": "object", "vipType": "ignore"}, "tcp-mss-adjust":'
-                    '{"vipValue": "", "vipObjectType": "object", "vipType": "ignore"}, "tloc-extension":'
-                    '{"vipValue": "", "vipObjectType": "object", "vipType": "ignore"}, "tloc-extension-gre-'
-                    'from": {"src-ip": {"vipValue": "", "vipObjectType": "object", "vipType": "ignore"},'
-                    '"xconnect": {"vipValue": "", "vipObjectType": "object", "vipType": "ignore"}}, "mac-'
-                    'address": {"vipValue": "", "vipObjectType": "object", "vipType": "ignore"}, "speed":'
-                    '{"vipValue": "", "vipObjectType": "object", "vipType": "ignore"}, "duplex": {"vipValue":'
-                    '"", "vipObjectType": "object", "vipType": "ignore"}, "shutdown": {"vipValue": "false",'
-                    '"vipObjectType": "object", "vipType": "constant", "vipVariableName": ""}, "arp-timeout":'
-                    '{"vipValue": "", "vipObjectType": "object", "vipType": "ignore"}, "autonegotiate":'
-                    '{"vipValue": "true", "vipObjectType": "object", "vipType": "constant", "vipVariableName":'
-                    '""}, "ip-directed-broadcast": {"vipValue": "", "vipObjectType": "object", "vipType":'
-                    '"ignore"}, "icmp-redirect-disable": {"vipValue": "", "vipObjectType": "object", "vipType":'
-                    '"ignore"}, "shaping-rate": {"vipValue": "", "vipObjectType": "object", "vipType":'
-                    '"ignore"}, "qos-map": {"vipValue": "", "vipObjectType": "object", "vipType": "ignore"},'
-                    '"rewrite-rule": {"rule-name": {"vipValue": "", "vipObjectType": "object", "vipType":'
-                    '"ignore"}}, "access-list": {"vipValue": [], "vipObjectType": "tree", "vipType": "ignore",'
-                    '"vipPrimaryKey": ["direction"]}, "arp": {"ip": {"vipValue": [], "vipObjectType": "tree",'
-                    '"vipType": "ignore", "vipPrimaryKey": ["addr"]}}, "vrrp": {"vipValue": [],'
-                    '"vipObjectType": "tree", "vipType": "ignore", "vipPrimaryKey": ["grp-id"]}, "ipv6-vrrp":'
-                    '{"vipValue": [], "vipObjectType": "tree", "vipType": "ignore", "vipPrimaryKey": ["grp-'
-                    'id"]}}',
-                ),
-                FeatureTemplateInformation(
-                    last_updated_by="admin",
-                    id=str(vpn_1_ethernet_ipsec),
-                    factory_default=False,
-                    name="EthernetIpsecVPN1",
-                    devices_attached=0,
-                    description="HnQSYJsm",
-                    last_updated_on=1715275556625,
-                    resource_group="global",
-                    template_type="cisco_vpn_interface_ipsec",
-                    device_type=["vedge-C1101-4PLTEPW"],
-                    version="15.0.0",
-                    template_definiton='{"if-name": {"vipObjectType":'
-                    '"object", "vipType": "constant", "vipValue": "ipsec4",'
-                    '"vipVariableName": "vpn_if_name"}, "description": {"vipObjectType": "object", "vipType":'
-                    '"ignore", "vipVariableName": "vpn_if_description"}, "application": {"vipObjectType":'
-                    '"object", "vipType": "notIgnore", "vipValue": "none", "vipVariableName":'
-                    '"vpn_if_application"}, "ip": {"address": {"vipObjectType": "object", "vipType":'
-                    '"constant", "vipValue": "2.2.2.2/16", "vipVariableName": "vpn_if_ipv4_address"}},'
-                    '"shutdown": {"vipObjectType": "object", "vipType": "ignore", "vipValue": "true",'
-                    '"vipVariableName": "vpn_if_shutdown"}, "tunnel-source": {"vipObjectType": "object",'
-                    '"vipType": "constant", "vipValue": "10.0.0.5", "vipVariableName": "vpn_if_tunnel_source"},'
-                    '"tunnel-destination": {"vipObjectType": "object", "vipType": "constant", "vipValue": "0::"'
-                    ', "vipVariableName": "vpn_if_tunnel_destination"}, "mtu": {"vipObjectType": "object",'
-                    '"vipType": "ignore", "vipValue": 1500, "vipVariableName": "vpn_if_mtu"}, "tcp-mss-adjust":'
-                    '{"vipObjectType": "object", "vipType": "ignore", "vipVariableName":'
-                    '"vpn_if_tcp_mss_adjust"}, "dead-peer-detection": {"dpd-interval": {"vipObjectType":'
-                    '"object", "vipType": "ignore", "vipValue": 10, "vipVariableName": "vpn_if_dpd_interval"},'
-                    '"dpd-retries": {"vipObjectType": "object", "vipType": "ignore", "vipValue": 3,'
-                    '"vipVariableName": "vpn_if_dpd_retries"}}, "ike": {"ike-version": {"vipObjectType":'
-                    '"object", "vipType": "constant", "vipValue": 2}, "ike-rekey-interval": {"vipObjectType":'
-                    '"object", "vipType": "ignore", "vipValue": 14400, "vipVariableName":'
-                    '"vpn_if_ike_rekey_interval"}, "ike-ciphersuite": {"vipObjectType": "object", "vipType":'
-                    '"ignore", "vipValue": "aes256-cbc-sha1", "vipVariableName": "vpn_if_ike_ciphersuite"},'
-                    '"ike-group": {"vipObjectType": "object", "vipType": "ignore", "vipValue": "16",'
-                    '"vipVariableName": "vpn_if_ike_group"}, "authentication-type": {"pre-shared-key": {"pre-'
-                    'shared-secret": {"vipObjectType": "object", "vipType": "ignore", "vipVariableName":'
-                    '"vpn_if_pre_shared_secret"}, "ike-local-id": {"vipObjectType": "object", "vipType":'
-                    '"ignore", "vipVariableName": "vpn_if_ike_local_id"}, "ike-remote-id": {"vipObjectType":'
-                    '"object", "vipType": "ignore", "vipVariableName": "vpn_if_ike_remote_id"}}}}, "ipsec":'
-                    '{"ipsec-rekey-interval": {"vipObjectType": "object", "vipType": "ignore", "vipValue":'
-                    '3600, "vipVariableName": "vpn_if_ipsec_rekey_interval"}, "ipsec-replay-window":'
-                    '{"vipObjectType": "object", "vipType": "ignore", "vipValue": 512, "vipVariableName":'
-                    '"vpn_if_ipsec_replay_window"}, "ipsec-ciphersuite": {"vipObjectType": "object", "vipType":'
-                    '"ignore", "vipValue": "aes256-gcm", "vipVariableName": "vpn_if_ipsec_ciphersuite"},'
-                    '"perfect-forward-secrecy": {"vipObjectType": "object", "vipType": "ignore", "vipValue":'
-                    '"group-16", "vipVariableName": "vpn_if_ipsec_perfect_forward_secrecy"}}, "clear-dont-'
-                    'fragment": {"vipObjectType": "object", "vipType": "ignore", "vipValue": "false",'
-                    '"vipVariableName": "vpn_ipsec_tunnel_tunnel_clear_dont_fragment"}, "tracker":'
-                    '{"vipObjectType": "list", "vipType": "ignore", "vipVariableName": "tracker"}}',
-                ),
+                vpn_512_management,
+                vpn_0_transport,
+                vpn_1_service,
+                gre,
+                ethernet,
+                ipsec,
             ],
             device_templates=[
                 DeviceTemplateWithInfo(
@@ -263,42 +97,47 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
                     policy_id="None",
                     generalTemplates=[
                         GeneralTemplate(
-                            name="Management_VPN",
-                            templateId=str(vpn_512_uuid),
-                            templateType="cisco_vpn",
+                            name=vpn_management.name,
+                            templateId=vpn_management.id,
+                            templateType=vpn_management.template_type,
                             subTemplates=[],
                         ),
                         GeneralTemplate(
-                            name="Transport_VPN",
-                            templateId=str(vpn_0_uuid),
-                            templateType="cisco_vpn",
+                            name=vpn_0_transport.name,
+                            templateId=vpn_0_transport.id,
+                            templateType=vpn_0_transport.template_type,
                             subTemplates=[
                                 GeneralTemplate(
-                                    name="GREVPN",
-                                    templateId=str(vpn_0_1_shared_gre_uuid),
-                                    templateType="cisco_vpn_interface_gre",
-                                )
+                                    name=gre.name,
+                                    templateId=gre.id,
+                                    templateType=gre.template_type,
+                                ),
+                                GeneralTemplate(
+                                    name=ethernet.name,
+                                    templateId=ethernet.id,
+                                    templateType=ethernet.template_type,
+                                ),
                             ],
                         ),
                         GeneralTemplate(
-                            name="Service_VPN",
-                            templateId=str(vpn_1_uuid),
-                            templateType="cisco_vpn",
+                            name=vpn_1_service.name,
+                            templateId=vpn_1_service.id,
+                            templateType=vpn_1_service.template_type,
                             subTemplates=[
                                 GeneralTemplate(
-                                    name="GREVPN",
-                                    templateId=str(vpn_0_1_shared_gre_uuid),
-                                    templateType="cisco_vpn_interface_gre",
+                                    name=gre.name,
+                                    templateId=gre.id,
+                                    templateType=gre.template_type,
                                 ),
                                 GeneralTemplate(
-                                    name="EthernetVPN1",
-                                    templateId=str(vpn_1_ethernet_uuid),
-                                    templateType="cisco_vpn_interface",
+                                    name=ethernet.name,
+                                    templateId=ethernet.id,
+                                    templateType=ethernet.template_type,
                                 ),
                                 GeneralTemplate(
-                                    name="EthernetIpsecVPN1",
-                                    templateId=str(vpn_1_ethernet_ipsec),
-                                    templateType="cisco_vpn_interface_ipsec",
+                                    name=ipsec.name,
+                                    templateId=ipsec.id,
+                                    templateType=ipsec.template_type,
                                 ),
                             ],
                         ),
@@ -319,97 +158,52 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
             transport_and_management_profile = profile
 
     # Find the transformed VPN parcels
-    transport_vpn_parcel = next(p for p in ux2_config.profile_parcels if p.parcel.parcel_name == "Transport_VPN")
-    service_vpn_parcel = next(p for p in ux2_config.profile_parcels if p.parcel.parcel_name == "Service_VPN")
+    transport_vpn_parcel = next(p for p in ux2_config.profile_parcels if p.parcel.parcel_name == vpn_0_transport.name)
+    service_vpn_parcel = next(p for p in ux2_config.profile_parcels if p.parcel.parcel_name == vpn_1_service.name)
 
     # Find the required VPN sub-elements
-    transport_gre = next(
-        (
-            p
-            for p in ux2_config.profile_parcels
-            if p.header.origin in transport_vpn_parcel.header.subelements and p.parcel.parcel_name == "GREVPN_TRANSPORT"
-        ),
-        None,
+    transport_gre = find_subelement_parcel(
+        ux2_config.profile_parcels, transport_vpn_parcel, interface_gre.name, "_TRANSPORT"
     )
-    service_gre = next(
-        (
-            p
-            for p in ux2_config.profile_parcels
-            if p.header.origin in service_vpn_parcel.header.subelements and p.parcel.parcel_name == "GREVPN_SERVICE"
-        ),
-        None,
+    transport_ethernet = find_subelement_parcel(
+        ux2_config.profile_parcels, transport_vpn_parcel, interface_ethernet.name, "_TRANSPORT"
     )
-    service_ethernet = next(
-        (
-            p
-            for p in ux2_config.profile_parcels
-            if p.header.origin in service_vpn_parcel.header.subelements
-            and p.parcel.parcel_name == "EthernetVPN1_SERVICE"
-        ),
-        None,
+    service_gre = find_subelement_parcel(ux2_config.profile_parcels, service_vpn_parcel, interface_gre.name, "_SERVICE")
+    service_ethernet = find_subelement_parcel(
+        ux2_config.profile_parcels, service_vpn_parcel, interface_ethernet.name, "_SERVICE"
     )
-    service_ethernet_ipsec = next(
-        (
-            p
-            for p in ux2_config.profile_parcels
-            if p.header.origin in service_vpn_parcel.header.subelements
-            and p.parcel.parcel_name == "EthernetIpsecVPN1_SERVICE"
-        ),
-        None,
+    service_ipsec = find_subelement_parcel(
+        ux2_config.profile_parcels, service_vpn_parcel, interface_ipsec.name, "_SERVICE"
     )
 
     # Assert
 
     # Assert Feature Profiles have correct VPNs
     assert service_profile is not None
-    assert service_profile.header.subelements == {vpn_1_uuid}
+    assert service_profile.header.subelements == {UUID(vpn_1_service.id)}
     assert transport_and_management_profile is not None
-    assert transport_and_management_profile.header.subelements == {vpn_0_uuid, vpn_512_uuid}
+    assert transport_and_management_profile.header.subelements == {
+        UUID(vpn_0_transport.id),
+        UUID(vpn_512_management.id),
+    }
 
     # Assert VPNs have correct interfaces
     assert transport_gre is not None
+    assert transport_ethernet is not None
     assert service_gre is not None
     assert service_ethernet is not None
-    assert service_ethernet_ipsec is not None
+    assert service_ipsec is not None
 
 
 def test_when_one_feature_template_with_invalid_payload_expect_one_failed_item_in_conversion_result():
-    invalid_ft_uuid = uuid4()
-    invalid_ft = FeatureTemplateInformation(
-        last_updated_by="",
-        id=str(invalid_ft_uuid),
-        factory_default=True,
-        name="Invalid",
-        devices_attached=0,
-        description="",
-        last_updated_on=datetime.now(),
-        resource_group="global",
-        template_type="cisco_logging",
-        device_type=[""],
-        version="15.0.0",
-        template_definiton="rasrewrwqerqwer",
-    )
-    correct_ft_uuid = uuid4()
-    correct_ft = FeatureTemplateInformation(
-        last_updated_by="",
-        id=str(correct_ft_uuid),
-        factory_default=True,
-        name="Factory_Default_Cisco_VPN_0_Template",
-        devices_attached=0,
-        description="Default Cisco Transport VPN template settings",
-        last_updated_on=datetime.now(),
-        resource_group="global",
-        template_type="cisco_vpn",
-        device_type=[""],
-        version="15.0.0",
-        template_definiton='{"vpn-id":{"vipObjectType":"object","vipType":"constant","vipValue":0},'
-        '"name":{"vipObjectType":"object","vipType":"constant","vipValue":"Transport VPN"},'
-        '"ecmp-hash-key":{"layer4":{"vipObjectType":"object","vipType":"ignore","vipValue":"false"}},'
-        '"host":{"vipType":"ignore","vipValue":[],"vipObjectType":"tree","vipPrimaryKey":["hostname"]}}',
-    )
+    # Arrange
+    vpn_0_transport, malformed_logging = deepcopy_models(vpn_transport, malformed)
+    malformed_logging.template_type = "cisco_logging"
+    malformed_logging.name = "Malformed"
+
     ux1_config = UX1Config(
         templates=UX1Templates(
-            feature_templates=[invalid_ft, correct_ft],
+            feature_templates=[malformed_logging, vpn_0_transport],
             device_templates=[
                 DeviceTemplateWithInfo(
                     template_id=str(uuid4()),
@@ -423,15 +217,15 @@ def test_when_one_feature_template_with_invalid_payload_expect_one_failed_item_i
                     policy_id="None",
                     generalTemplates=[
                         GeneralTemplate(
-                            name="Invalid",
-                            templateId=str(invalid_ft_uuid),
-                            templateType="cisco_logging",
+                            name=malformed_logging.name,
+                            templateId=str(malformed_logging.id),
+                            templateType=malformed_logging.template_type,
                             subTemplates=[],
                         ),
                         GeneralTemplate(
-                            name="Factory_Default_Cisco_VPN_0_Template",
-                            templateId=str(correct_ft_uuid),
-                            templateType="cisco_vpn",
+                            name=vpn_0_transport.name,
+                            templateId=str(vpn_0_transport.id),
+                            templateType=vpn_0_transport.template_type,
                             subTemplates=[],
                         ),
                     ],
@@ -443,5 +237,5 @@ def test_when_one_feature_template_with_invalid_payload_expect_one_failed_item_i
     transform_result = transform(ux1_config)
     # Assert
     assert len(transform_result.failed_items) == 1
-    assert transform_result.failed_items[0].feature_template == invalid_ft
+    assert transform_result.failed_items[0].feature_template == malformed_logging
     assert len(transform_result.ux2_config.profile_parcels) == 1

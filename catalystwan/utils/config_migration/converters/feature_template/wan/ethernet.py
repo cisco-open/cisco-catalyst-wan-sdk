@@ -37,6 +37,7 @@ class WanInterfaceEthernetTemplateConverter:
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceEthernetParcel:
         data = deepcopy(template_values)
+        print("CALLED WAN INTERFACE ETHERNET TEMPLATE CONVERTER")
 
         encapsulation = self.parse_encapsulations(data.get("tunnel_interface", {}).get("encapsulation", []))
         interface_name = data["if_name"]
