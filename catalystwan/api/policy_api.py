@@ -13,6 +13,7 @@ from catalystwan.endpoints.configuration.policy.definition.access_control_list_i
 )
 from catalystwan.endpoints.configuration.policy.definition.aip import ConfigurationPolicyAIPDefinition
 from catalystwan.endpoints.configuration.policy.definition.amp import ConfigurationPolicyAMPDefinition
+from catalystwan.endpoints.configuration.policy.definition.cflowd import ConfigurationPolicyCflowdDefinition
 from catalystwan.endpoints.configuration.policy.definition.control import ConfigurationPolicyControlDefinition
 from catalystwan.endpoints.configuration.policy.definition.device_access import (
     ConfigurationPolicyDeviceAccessDefinition,
@@ -140,6 +141,7 @@ from catalystwan.models.policy.definition.amp import (
     AdvancedMalwareProtectionPolicy,
     AdvancedMalwareProtectionPolicyGetResponse,
 )
+from catalystwan.models.policy.definition.cflowd import CflowdPolicy, CflowdPolicyGetResponse
 from catalystwan.models.policy.definition.control import ControlPolicy, ControlPolicyGetResponse
 from catalystwan.models.policy.definition.device_access import DeviceAccessPolicy, DeviceAccessPolicyGetResponse
 from catalystwan.models.policy.definition.device_access_ipv6 import (
@@ -258,6 +260,7 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     SslDecryptionUtdProfilePolicy: ConfigurationSslDecryptionUtdProfileDefinition,
     UrlFilteringPolicy: ConfigurationPolicyUrlFilteringDefinition,
     DnsSecurityPolicy: ConfigurationPolicyDnsSecurityDefinition,
+    CflowdPolicy: ConfigurationPolicyCflowdDefinition,
 }
 
 
@@ -710,6 +713,10 @@ class PolicyDefinitionsAPI:
         ...
 
     @overload
+    def get(self, type: Type[CflowdPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[DnsSecurityPolicy]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
@@ -788,6 +795,10 @@ class PolicyDefinitionsAPI:
 
     @overload
     def get(self, type: Type[AdvancedMalwareProtectionPolicy], id: UUID) -> AdvancedMalwareProtectionPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[CflowdPolicy], id: UUID) -> CflowdPolicyGetResponse:
         ...
 
     @overload

@@ -47,6 +47,7 @@ from .definition.access_control_list import AclPolicy, AclPolicyGetResponse
 from .definition.access_control_list_ipv6 import AclIPv6Policy, AclIPv6PolicyGetResponse
 from .definition.aip import AdvancedInspectionProfilePolicy, AdvancedInspectionProfilePolicyGetResponse
 from .definition.amp import AdvancedMalwareProtectionPolicy, AdvancedMalwareProtectionPolicyGetResponse
+from .definition.cflowd import CflowdPolicy, CflowdPolicyGetResponse
 from .definition.control import ControlPolicy, ControlPolicyGetResponse
 from .definition.device_access import DeviceAccessPolicy, DeviceAccessPolicyGetResponse
 from .definition.device_access_ipv6 import DeviceAccessIPv6Policy, DeviceAccessIPv6PolicyGetResponse
@@ -86,6 +87,7 @@ AnyPolicyDefinition = Annotated[
         AclPolicy,
         AdvancedInspectionProfilePolicy,
         AdvancedMalwareProtectionPolicy,
+        CflowdPolicy,
         ControlPolicy,
         IntrusionPreventionPolicy,
         DeviceAccessIPv6Policy,
@@ -188,6 +190,7 @@ AnyPolicyDefinitionInfo = Annotated[
         AdvancedMalwareProtectionPolicyGetResponse,
         AclIPv6PolicyGetResponse,
         AclPolicyGetResponse,
+        CflowdPolicyGetResponse,
         ControlPolicyGetResponse,
         DeviceAccessIPv6PolicyGetResponse,
         DeviceAccessPolicyGetResponse,
@@ -221,6 +224,7 @@ __all__ = (
     "ASPathList",
     "Carrier",
     "CentralizedPolicy",
+    "CflowdPolicy",
     "ClassMapList",
     "ColorList",
     "CommunityList",
