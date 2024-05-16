@@ -24,7 +24,7 @@ from catalystwan.models.policy.policy_definition import (
     DestinationScalableGroupTagListEntry,
     LogAction,
     Match,
-    PolicyActionType,
+    PolicyActionBase,
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
@@ -89,6 +89,13 @@ ZoneBasedFWPolicyActions = Annotated[
     ],
     Field(discriminator="type"),
 ]
+
+ZoneBasedFirewallDefaultActionType = Literal["drop", "pass"]
+ZoneBasedFirewallBaseActionType = Literal["drop", "pass", "inspect"]
+
+
+class ZoneBasedFirewallDefaultAction(PolicyActionBase):
+    type: ZoneBasedFirewallDefaultActionType
 
 
 class ZoneBasedFWPolicyMatches(Match):
@@ -155,7 +162,7 @@ class ZoneBasedFWPolicySequence(PolicyDefinitionSequenceBase):
         for name in names:
             app_protocol = protocol_map.get(name, None)
             if app_protocol is None:
-                raise ValueError(f"{name} not found in protocol map keys: {protocol_map.keys()}")
+                raise ValueError(f"{name} not found in protocol map keys: {protocol_map.keys()}")  # noqa: E713
             app_protocols.append(app_protocol)
         self._insert_match(ProtocolNameEntry.from_application_protocols(app_protocols))
         self._insert_match(DestinationPortEntry.from_application_protocols(app_protocols), False)
@@ -204,6 +211,11 @@ class ZoneBasedFWPolicyHeader(PolicyDefinitionBase):
 
 
 class ZoneBasedFWPolicyDefinition(DefinitionWithSequencesCommonBase):
+    default_action: ZoneBasedFirewallDefaultAction = Field(
+        default=ZoneBasedFirewallDefaultAction(type="drop"),
+        serialization_alias="defaultAction",
+        validation_alias="defaultAction",
+    )
     sequences: List[Union[ZoneBasedFWPolicySequence, ZoneBasedFWPolicySequenceWithRuleSets]] = []
     entries: List[ZoneBasedFWPolicyEntry] = []
 
@@ -214,7 +226,7 @@ class ZoneBasedFWPolicy(ZoneBasedFWPolicyHeader):
     definition: ZoneBasedFWPolicyDefinition = ZoneBasedFWPolicyDefinition()
 
     def add_ipv4_rule(
-        self, name: str, base_action: PolicyActionType = "drop", log: bool = False
+        self, name: str, base_action: ZoneBasedFirewallBaseActionType = "drop", log: bool = False
     ) -> ZoneBasedFWPolicySequence:
         """Adds new IPv4 Rule to Zone Based Firewall Policy
 
@@ -238,7 +250,7 @@ class ZoneBasedFWPolicy(ZoneBasedFWPolicyHeader):
         return sequence
 
     def add_ipv4_rule_sets(
-        self, name: str, base_action: PolicyActionType = "drop", log: bool = False
+        self, name: str, base_action: ZoneBasedFirewallBaseActionType = "drop", log: bool = False
     ) -> ZoneBasedFWPolicySequenceWithRuleSets:
         sequence = ZoneBasedFWPolicySequenceWithRuleSets(
             sequence_name=name,

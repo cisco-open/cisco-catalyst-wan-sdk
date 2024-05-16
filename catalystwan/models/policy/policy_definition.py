@@ -92,13 +92,8 @@ SequenceIpType = Literal[
     "all",
 ]
 
-PolicyActionType = Literal[
-    "drop",
-    "accept",
-    "pass",
-    "inspect",
-    "reject",
-]
+
+BasicPolicyActionType = Literal["accept", "drop"]
 
 SequenceType = Literal[
     "applicationFirewall",
@@ -953,9 +948,7 @@ class Action(BaseModel):
 class PolicyDefinitionSequenceBase(BaseModel):
     sequence_id: int = Field(default=0, serialization_alias="sequenceId", validation_alias="sequenceId")
     sequence_name: str = Field(serialization_alias="sequenceName", validation_alias="sequenceName")
-    base_action: PolicyActionType = Field(
-        default="drop", serialization_alias="baseAction", validation_alias="baseAction"
-    )
+    base_action: str = Field(serialization_alias="baseAction", validation_alias="baseAction")
     sequence_type: SequenceType = Field(serialization_alias="sequenceType", validation_alias="sequenceType")
     sequence_ip_type: Optional[SequenceIpType] = Field(
         default="ipv4", serialization_alias="sequenceIpType", validation_alias="sequenceIpType"
@@ -1054,8 +1047,12 @@ def accept_action(method):
     return wrapper
 
 
-class DefaultAction(BaseModel):
-    type: PolicyActionType
+class PolicyActionBase(BaseModel):
+    type: str
+
+
+class BasicPolicyAction(PolicyActionBase):
+    type: BasicPolicyActionType
 
 
 class InfoTag(BaseModel):
@@ -1072,8 +1069,8 @@ class PolicyReference(BaseModel):
 
 
 class DefinitionWithSequencesCommonBase(BaseModel):
-    default_action: Optional[DefaultAction] = Field(
-        default=DefaultAction(type="drop"),
+    default_action: Optional[PolicyActionBase] = Field(
+        default=None,
         serialization_alias="defaultAction",
         validation_alias="defaultAction",
     )

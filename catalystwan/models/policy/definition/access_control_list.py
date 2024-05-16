@@ -8,10 +8,11 @@ from pydantic import ConfigDict, Field
 from typing_extensions import Annotated
 
 from catalystwan.models.policy.policy_definition import (
+    BasicPolicyAction,
+    BasicPolicyActionType,
     ClassMapAction,
     ClassMapListEntry,
     CountAction,
-    DefaultAction,
     DefinitionWithSequencesCommonBase,
     DestinationDataPrefixListEntry,
     DestinationIPEntry,
@@ -24,7 +25,6 @@ from catalystwan.models.policy.policy_definition import (
     PacketLengthEntry,
     PLPEntry,
     PolicerAction,
-    PolicyActionType,
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
@@ -71,7 +71,7 @@ class AclPolicySequence(PolicyDefinitionSequenceBase):
     sequence_type: Literal["acl"] = Field(
         default="acl", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
-    base_action: PolicyActionType = Field(
+    base_action: BasicPolicyActionType = Field(
         default="accept", serialization_alias="baseAction", validation_alias="baseAction"
     )
     match: AclPolicySequenceMatch = AclPolicySequenceMatch()
@@ -146,15 +146,15 @@ class AclPolicySequence(PolicyDefinitionSequenceBase):
 
 class AclPolicy(AclPolicyHeader, DefinitionWithSequencesCommonBase):
     sequences: List[AclPolicySequence] = []
-    default_action: DefaultAction = Field(
-        default=DefaultAction(type="drop"),
+    default_action: BasicPolicyAction = Field(
+        default=BasicPolicyAction(type="drop"),
         serialization_alias="defaultAction",
         validation_alias="defaultAction",
     )
     model_config = ConfigDict(populate_by_name=True)
 
     def add_acl_sequence(
-        self, name: str = "Access Control List", base_action: PolicyActionType = "accept"
+        self, name: str = "Access Control List", base_action: BasicPolicyActionType = "accept"
     ) -> AclPolicySequence:
         seq = AclPolicySequence(
             sequence_name=name,

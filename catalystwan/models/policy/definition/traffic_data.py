@@ -10,6 +10,8 @@ from typing_extensions import Annotated
 from catalystwan.models.common import EncapType, ICMPMessageType, ServiceChainNumber, TLOCColor
 from catalystwan.models.policy.policy_definition import (
     AppListEntry,
+    BasicPolicyAction,
+    BasicPolicyActionType,
     CFlowDAction,
     CountAction,
     DefinitionWithSequencesCommonBase,
@@ -40,7 +42,6 @@ from catalystwan.models.policy.policy_definition import (
     PacketLengthEntry,
     PLPEntry,
     PolicerListEntry,
-    PolicyActionType,
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
@@ -365,10 +366,15 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
 
 class TrafficDataPolicy(TrafficDataPolicyHeader, DefinitionWithSequencesCommonBase):
     sequences: List[TrafficDataPolicySequence] = []
+    default_action: BasicPolicyAction = Field(
+        default=BasicPolicyAction(type="drop"),
+        serialization_alias="defaultAction",
+        validation_alias="defaultAction",
+    )
     model_config = ConfigDict(populate_by_name=True)
 
     def add_ipv4_sequence(
-        self, name: str = "Custom", base_action: PolicyActionType = "drop", log: bool = False
+        self, name: str = "Custom", base_action: BasicPolicyActionType = "drop", log: bool = False
     ) -> TrafficDataPolicySequence:
         seq = TrafficDataPolicySequence(
             sequence_name=name,
