@@ -6,7 +6,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.system import (
     GlobalParcel,
     LoggingParcel,
     MRFParcel,
-    NTPParcel,
+    NtpParcel,
     OMPParcel,
     SecurityParcel,
     SNMPParcel,
@@ -229,7 +229,7 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
 
     def test_when_default_values_ntp_parcel_expect_successful_post(self):
         # Arrange
-        ntp_parcel = NTPParcel(
+        ntp_parcel = NtpParcel(
             parcel_name="NTPDefault",
             parcel_description="NTP Parcel",
         )

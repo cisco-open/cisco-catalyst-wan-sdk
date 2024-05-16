@@ -86,7 +86,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.system import (
     GlobalParcel,
     LoggingParcel,
     MRFParcel,
-    NTPParcel,
+    NtpParcel,
     OMPParcel,
     SecurityParcel,
     SNMPParcel,
@@ -482,8 +482,8 @@ class SystemFeatureProfileAPI:
     def get_parcels(
         self,
         profile_id: UUID,
-        parcel_type: Type[NTPParcel],
-    ) -> DataSequence[Parcel[NTPParcel]]:
+        parcel_type: Type[NtpParcel],
+    ) -> DataSequence[Parcel[NtpParcel]]:
         ...
 
     @overload
@@ -587,9 +587,9 @@ class SystemFeatureProfileAPI:
     def get_parcel(
         self,
         profile_id: UUID,
-        parcel_type: Type[NTPParcel],
+        parcel_type: Type[NtpParcel],
         parcel_id: UUID,
-    ) -> Parcel[NTPParcel]:
+    ) -> Parcel[NtpParcel]:
         ...
 
     @overload
@@ -702,7 +702,7 @@ class SystemFeatureProfileAPI:
     def delete_parcel(
         self,
         profile_id: UUID,
-        parcel_type: Type[NTPParcel],
+        parcel_type: Type[NtpParcel],
         parcel_id: UUID,
     ) -> None:
         ...
