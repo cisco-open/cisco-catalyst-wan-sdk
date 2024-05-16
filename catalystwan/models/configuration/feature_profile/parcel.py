@@ -13,6 +13,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
 from catalystwan.models.configuration.feature_profile.sdwan.sig_security import AnySIGSecurityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system import AnySystemParcel
+from catalystwan.models.configuration.feature_profile.sdwan.topology import AnyTopologyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport import AnyTransportParcel
 
 ParcelType = Literal[
@@ -96,6 +97,9 @@ ParcelType = Literal[
     "sig",
     "policy-settings",
     "qos-policy",
+    "hubspoke",
+    "mesh",
+    "custom-control",
 ]
 
 
@@ -111,6 +115,7 @@ AnyParcel = Annotated[
         AnyDnsSecurityParcel,
         AnySIGSecurityParcel,
         AnyApplicationPriorityParcel,
+        AnyTopologyParcel,
     ],
     Field(discriminator="type_"),
 ]

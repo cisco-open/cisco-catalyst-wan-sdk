@@ -21,18 +21,24 @@ def _get_parcel_name_desc(policy_definition: AnyPolicyDefinition) -> Dict[str, A
 
 
 def control(in_: ControlPolicy, **context) -> CustomControlParcel:
+    if not context:
+        raise CatalystwanConverterCantConvertException(f"Additional context required for {MeshPolicy.__name__}")
     out = CustomControlParcel(**_get_parcel_name_desc(in_))
     # TODO: convert definition
     return out
 
 
 def hubspoke(in_: HubAndSpokePolicy, **context) -> HubSpokeParcel:
+    if not context:
+        raise CatalystwanConverterCantConvertException(f"Additional context required for {MeshPolicy.__name__}")
     out = HubSpokeParcel(**_get_parcel_name_desc(in_))
     # TODO: convert definition
     return out
 
 
 def mesh(in_: MeshPolicy, **context) -> MeshParcel:
+    if not context:
+        raise CatalystwanConverterCantConvertException(f"Additional context required for {MeshPolicy.__name__}")
     out = MeshParcel(**_get_parcel_name_desc(in_))
     # TODO: convert definition
     return out

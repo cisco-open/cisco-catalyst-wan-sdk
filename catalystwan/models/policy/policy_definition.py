@@ -14,6 +14,7 @@ from catalystwan.models.common import (
     ControlPathType,
     EncapType,
     ICMPMessageType,
+    MultiRegionRole,
     OriginProtocol,
     SequenceIpType,
     ServiceChainNumber,
@@ -101,11 +102,6 @@ LossProtectionType = Literal[
     "fecAdaptive",
     "fecAlways",
     "packetDuplication",
-]
-
-MultiRegionRole = Literal[
-    "border-router",
-    "edge-router",
 ]
 
 DeviceAccessProtocol = Literal[22, 161]

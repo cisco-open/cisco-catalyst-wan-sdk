@@ -14,7 +14,7 @@ from catalystwan.models.configuration.feature_profile.common import (
     GetFeatureProfilesPayload,
     SchemaTypeQuery,
 )
-from catalystwan.models.configuration.feature_profile.parcel import ParcelCreationResponse
+from catalystwan.models.configuration.feature_profile.parcel import Parcel, ParcelCreationResponse
 from catalystwan.models.configuration.feature_profile.sdwan.topology import AnyTopologyParcel
 from catalystwan.typed_list import DataSequence
 
@@ -48,7 +48,7 @@ class TopologyFeatureProfile(APIEndpoints):
         ...
 
     #
-    # Create/Delete Any Topology Parcel
+    # Create/Delete/Get Any Topology Parcel
     #
 
     @versions(supported_versions=(">=20.13"), raises=False)
@@ -61,6 +61,11 @@ class TopologyFeatureProfile(APIEndpoints):
     @versions(supported_versions=(">=20.9"), raises=False)
     @delete("/v1/feature-profile/sdwan/topology/{profile_id}/{parcel_type}/{parcel_id}")
     def delete_any_parcel(self, profile_id: UUID, parcel_type: str, parcel_id: UUID) -> None:
+        ...
+
+    @versions(supported_versions=(">=20.9"), raises=False)
+    @get("/v1/feature-profile/sdwan/topology/{profile_id}/{parcel_type}/{parcel_id}")
+    def get_any_parcel_by_id(self, profile_id: UUID, parcel_type: str, parcel_id: UUID) -> Parcel[AnyTopologyParcel]:
         ...
 
     #
