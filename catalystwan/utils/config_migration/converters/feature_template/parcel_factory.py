@@ -38,6 +38,7 @@ from .omp import OMPTemplateConverter
 from .ospf import OspfTemplateConverter
 from .ospfv3 import Ospfv3TemplateConverter
 from .security import SecurityTemplateConverter
+from .sig import SIGTemplateConverter
 from .snmp import SNMPTemplateConverter
 from .switchport import SwitchportTemplateConverter
 from .thousandeyes import ThousandEyesTemplateConverter
@@ -100,6 +101,7 @@ available_converters = [
     CellularControllerTemplateConverter,
     CellularProfileTemplateConverter,
     CliTemplateConverter,
+    SIGTemplateConverter,
     WanMultilinkTemplateConverter,
 ]
 

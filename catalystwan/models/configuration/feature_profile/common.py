@@ -39,12 +39,18 @@ ProfileType = Literal[
     "other",
     "uc-voice",
     "global",  # automatically created global cellulargateway feature profile
+    "sig-security",
 ]
 
 SchemaType = Literal[
     "post",
     "put",
 ]
+
+
+class ParcelBasic(BaseModel):
+    parcel_id: str = Field(alias="parcelId")
+    description: Optional[str] = None
 
 
 class FeatureProfileInfo(BaseModel):
@@ -57,6 +63,7 @@ class FeatureProfileInfo(BaseModel):
     description: str
     created_on: datetime = Field(alias="createdOn")
     last_updated_on: datetime = Field(alias="lastUpdatedOn")
+    reference_count: Optional[int] = Field(default=None, alias="referenceCount")
 
 
 class FeatureProfileDetail(BaseModel):
@@ -69,10 +76,10 @@ class FeatureProfileDetail(BaseModel):
     description: str
     created_on: datetime = Field(alias="createdOn")
     last_updated_on: datetime = Field(alias="lastUpdatedOn")
-    associated_profile_parcels: List[str] = Field(alias="associatedProfileParcels")
+    associated_profile_parcels: Optional[Union[List[str], List[ParcelBasic]]] = Field(alias="associatedProfileParcels")
     rid: int = Field(alias="@rid")
-    profile_parcel_count: int = Field(alias="profileParcelCount")
-    cached_profile: Optional[str] = Field(alias="cachedProfile")
+    profile_parcel_count: Optional[int] = Field(default=None, alias="profileParcelCount")
+    cached_profile: Optional[str] = Field(default=None, alias="cachedProfile")
 
 
 class FromFeatureProfile(BaseModel):
@@ -108,6 +115,12 @@ class SchemaTypeQuery(BaseModel):
 class GetFeatureProfilesPayload(BaseModel):
     limit: Optional[int]
     offset: Optional[int]
+
+
+class GetReferenceCountFeatureProfilesPayload(GetFeatureProfilesPayload):
+    model_config = ConfigDict(populate_by_name=True)
+
+    reference_count: Optional[bool] = Field(serialization_alias="referenceCount", validation_alias="referenceCount")
 
 
 class DNSIPv4(BaseModel):

@@ -4,7 +4,7 @@ from typing import List, Literal, Optional
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, model_validator
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase
-from catalystwan.models.configuration.feature_profile.sdwan.transport.bgp import RefIdItem
+from catalystwan.models.configuration.feature_profile.common import RefIdItem
 
 
 class TargetVpns(BaseModel):

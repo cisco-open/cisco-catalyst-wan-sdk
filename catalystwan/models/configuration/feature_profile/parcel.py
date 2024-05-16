@@ -10,6 +10,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.embedded_security im
 from catalystwan.models.configuration.feature_profile.sdwan.other import AnyOtherParcel
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
+from catalystwan.models.configuration.feature_profile.sdwan.sig_security import AnySIGSecurityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system import AnySystemParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport import AnyTransportParcel
 
@@ -90,6 +91,7 @@ ParcelType = Literal[
     "gps",
     "cellular-controller",
     "config",
+    "sig",
 ]
 
 
@@ -103,6 +105,7 @@ AnyParcel = Annotated[
         AnyEmbeddedSecurityParcel,
         AnyCliParcel,
         AnyDnsSecurityParcel,
+        AnySIGSecurityParcel,
     ],
     Field(discriminator="type_"),
 ]
