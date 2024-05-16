@@ -92,7 +92,6 @@ SequenceIpType = Literal[
     "all",
 ]
 
-
 BasicPolicyActionType = Literal["accept", "drop"]
 
 SequenceType = Literal[
@@ -108,6 +107,7 @@ SequenceType = Literal[
     "aclv6",
     "deviceaccesspolicy",
     "deviceaccesspolicyv6",
+    "sslDecryption",
 ]
 
 
@@ -232,7 +232,10 @@ class DSCPEntry(BaseModel):
 
 class SourceIPEntry(BaseModel):
     field: Literal["sourceIp"] = "sourceIp"
-    value: str = Field(description="IP network specifiers separate by space")
+    value: Optional[str] = Field(default=None, description="IP network specifiers separate by space")
+    vipVariableName: Optional[str] = Field(
+        default=None, serialization_alias="vipVariableName", validation_alias="vipVariableName"
+    )
 
     @staticmethod
     def from_ipv4_networks(networks: List[IPv4Network]) -> "SourceIPEntry":
@@ -264,7 +267,10 @@ class SourcePortEntry(BaseModel):
 
 class DestinationIPEntry(BaseModel):
     field: Literal["destinationIp"] = "destinationIp"
-    value: str
+    value: Optional[str] = Field(default=None)
+    vipVariableName: Optional[str] = Field(
+        default=None, serialization_alias="vipVariableName", validation_alias="vipVariableName"
+    )
 
     @staticmethod
     def from_ipv4_networks(networks: List[IPv4Network]) -> "DestinationIPEntry":
@@ -594,6 +600,16 @@ class TLOCListEntry(BaseModel):
     ref: UUID
 
 
+class SourceVpnEntry(BaseModel):
+    field: Literal["sourceVpn"] = "sourceVpn"
+    value: str = Field(description="VPN ids numbers separated by space")
+
+
+class DestinationVpnEntry(BaseModel):
+    field: Literal["destinationVpn"] = "destinationVpn"
+    value: str = Field(description="VPN ids numbers separated by space")
+
+
 class PrefferedColorGroupListEntry(BaseModel):
     field: Literal["preferredColorGroup"] = "preferredColorGroup"
     ref: UUID
@@ -862,6 +878,7 @@ MatchEntry = Annotated[
         DestinationPortListEntry,
         DestinationRegionEntry,
         DestinationScalableGroupTagListEntry,
+        DestinationVpnEntry,
         DNSAppListEntry,
         DNSEntry,
         DomainIDEntry,
@@ -899,6 +916,7 @@ MatchEntry = Annotated[
         SourcePortEntry,
         SourcePortListEntry,
         SourceScalableGroupTagListEntry,
+        SourceVpnEntry,
         TCPEntry,
         TLOCEntry,
         TLOCListEntry,
@@ -953,7 +971,7 @@ class PolicyDefinitionSequenceBase(BaseModel):
     )
     ruleset: Optional[bool] = None
     match: Match
-    actions: Sequence[ActionEntry]
+    actions: Optional[Sequence[ActionEntry]] = None
 
     @staticmethod
     def _check_field_collision(field: str, fields: Sequence[str]) -> None:

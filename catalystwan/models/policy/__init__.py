@@ -58,6 +58,7 @@ from .definition.qos_map import QoSDropType, QoSMapPolicy, QoSMapPolicyGetRespon
 from .definition.rewrite import RewritePolicy, RewritePolicyGetResponse
 from .definition.rule_set import RuleSet, RuleSetGetResponse
 from .definition.security_group import SecurityGroup, SecurityGroupGetResponse
+from .definition.ssl_decryption import SslDecryptionPolicy, SslDecryptionPolicyGetResponse
 from .definition.ssl_decryption_utd_profile import (
     SslDecryptionUtdProfilePolicy,
     SslDecryptionUtdProfilePolicyGetResponse,
@@ -97,6 +98,7 @@ AnyPolicyDefinition = Annotated[
         RewritePolicy,
         RuleSet,
         SecurityGroup,
+        SslDecryptionPolicy,
         SslDecryptionUtdProfilePolicy,
         TrafficDataPolicy,
         UrlFilteringPolicy,
@@ -199,6 +201,7 @@ AnyPolicyDefinitionInfo = Annotated[
         RewritePolicyGetResponse,
         RuleSetGetResponse,
         SecurityGroupGetResponse,
+        SslDecryptionPolicyGetResponse,
         SslDecryptionUtdProfilePolicyGetResponse,
         TrafficDataPolicyGetResponse,
         UrlFilteringPolicyGetResponse,
@@ -263,6 +266,7 @@ __all__ = (
     "ServiceType",
     "SiteList",
     "SLAClassList",
+    "SslDecryptionPolicy",
     "SslDecryptionUtdProfilePolicy",
     "ThreatGridApiKeyList",
     "TLOCActionType",
