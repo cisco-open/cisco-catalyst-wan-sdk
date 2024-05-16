@@ -344,7 +344,7 @@ class TestTransportFeatureProfileTransportVpn(TestFeatureProfileModels):
             description="Description",
         )
         # Act
-        transport_vpn_parcel.set_dns_ipv4("1.1.1.1", "2.2.2.2")
+        transport_vpn_parcel.set_dns_ipv4(as_global(IPv4Address("1.1.1.1")), as_global(IPv4Address("2.2.2.2")))
 
         parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
         # Assert
@@ -358,11 +358,13 @@ class TestTransportFeatureProfileTransportVpn(TestFeatureProfileModels):
         )
         # Act
         next_hops = [
-            ("2.2.2.2", 1),
-            ("3.3.3.3", 8),
-            ("4.4.4.4", 10),
+            (as_global(IPv4Address("2.2.2.2")), as_global(1)),
+            (as_global(IPv4Address("3.3.3.3")), as_global(8)),
+            (as_global(IPv4Address("4.4.4.4")), as_global(10)),
         ]
-        transport_vpn_parcel.add_ipv4_route("1.1.1.1", "255.255.255.255", next_hops)
+        transport_vpn_parcel.add_ipv4_route(
+            as_global(IPv4Address("1.1.1.1")), as_global("255.255.255.255", SubnetMask), next_hops
+        )
         parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
 
         # Assert
@@ -404,11 +406,7 @@ class TestTransportFeatureProfileTransportVpn(TestFeatureProfileModels):
                         ip_address=as_global(IPv4Address("202.153.165.234")),
                         subnet_mask=as_global("255.255.255.0", SubnetMask),
                     ),
-                    next_hop=[
-                        NextHopItem(
-                            address=as_global(IPv4Address("1.1.1.1")),
-                        )
-                    ],
+                    next_hop=[NextHopItem(address=as_global(IPv4Address("1.1.1.1")), distance=as_global(8))],
                 )
             ],
             service=[ServiceItem(service_type=as_global("TE", ServiceType))],
