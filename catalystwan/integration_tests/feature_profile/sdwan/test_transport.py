@@ -262,64 +262,6 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
         # Assert
         assert parcel_id
 
-    def test_when_fully_specifed_transport_vpn_parcel_expect_successful_post(self):
-        # Arrange
-        transport_vpn_parcel = TransportVpnParcel(
-            parcel_name="FullySpecifiedTransportVpnParcel",
-            description="Description",
-            dns_ipv6=DnsIpv6(
-                primary_dns_address_ipv6=as_global(IPv6Address("67ca:c2df:edfe:c8ec:b6cb:f9f4:eab0:ece6")),
-                secondary_dns_address_ipv6=as_global(IPv6Address("8989:8d33:c00a:4d13:324d:8b23:8d77:a289")),
-            ),
-            dns_ipv4=DnsIpv4(
-                primary_dns_address_ipv4=as_global(IPv4Address("68.138.29.222")),
-                secondary_dns_address_ipv4=as_global(IPv4Address("122.89.114.112")),
-            ),
-            new_host_mapping=[
-                NewHostMappingItem(
-                    host_name=as_global("FullySpecifiedHost"),
-                    list_of_ip=as_global(
-                        [
-                            "165.16.181.116",
-                            "7a4c:1d87:8587:a6ec:21a6:48a7:00e8:1fef",
-                        ]
-                    ),
-                )
-            ],
-            ipv6_route=[
-                Ipv6RouteItem(
-                    prefix=as_global(IPv6Interface("0::/16")),
-                    one_of_ip_route=OneOfIpRouteNull0(),
-                )
-            ],
-            ipv4_route=[
-                Ipv4RouteItem(
-                    prefix=Prefix(
-                        ip_address=as_global(IPv4Address("202.153.165.234")),
-                        subnet_mask=as_global("255.255.255.0", SubnetMask),
-                    ),
-                    next_hop=[
-                        NextHopItem(
-                            address=as_global(IPv4Address("1.1.1.1")),
-                        )
-                    ],
-                )
-            ],
-            service=[ServiceItem(service_type=as_global("TE", ServiceType))],
-            nat64_v4_pool=[
-                Address64V4PoolItem(
-                    name=as_global("FullySpecifiedNat64V4Pool"),
-                    range_start=as_global(IPv4Address("3.3.3.3")),
-                    range_end=as_global(IPv4Address("3.3.3.7")),
-                    overload=as_global(True),
-                )
-            ],
-        )
-        # Act
-        parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
-        # Assert
-        assert parcel_id
-
     def test_when_fully_specifed_gps_parcel_expect_successful_post(self):
         # Arrange
         gps_parcel = GpsParcel(
@@ -385,6 +327,117 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
     def tearDownClass(cls) -> None:
         cls.api.delete_profile(cls.profile_uuid)
         super().tearDownClass()
+
+
+class TestTransportFeatureProfileTransportVpn(TestFeatureProfileModels):
+    def setUp(self) -> None:
+        self.api = self.session.api.sdwan_feature_profiles.transport
+        self.profile_uuid = self.api.create_profile("TestProfileService", "Description").id
+        self.config_id = self.session.api.config_group.create(
+            "TestConfigGroupTransport", "Descr", "sdwan", [self.profile_uuid]
+        ).id
+
+    def test_when_minimal_specifed_transport_vpn_parcel_expect_successful_post(self):
+        # Arrange
+        transport_vpn_parcel = TransportVpnParcel(
+            parcel_name="MinimumSpecifiedTransportVpnParcel",
+            description="Description",
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_set_dns_address_specifed_transport_vpn_parcel_expect_successful_post(self):
+        # Arrange
+        transport_vpn_parcel = TransportVpnParcel(
+            parcel_name="MinimumSpecifiedTransportVpnParcel",
+            description="Description",
+        )
+        # Act
+        transport_vpn_parcel.set_dns_ipv4(as_global(IPv4Address("1.1.1.1")), as_global(IPv4Address("2.2.2.2")))
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_add_ipv4_route_specifed_transport_vpn_parcel_expect_successful_post(self):
+        # Arrange
+        transport_vpn_parcel = TransportVpnParcel(
+            parcel_name="MinimumSpecifiedTransportVpnParcel",
+            description="Description",
+        )
+        # Act
+        next_hops = [
+            (as_global(IPv4Address("2.2.2.2")), as_global(1)),
+            (as_global(IPv4Address("3.3.3.3")), as_global(8)),
+            (as_global(IPv4Address("4.4.4.4")), as_global(10)),
+        ]
+        transport_vpn_parcel.add_ipv4_route(
+            as_global(IPv4Address("1.1.1.1")), as_global("255.255.255.255", SubnetMask), next_hops
+        )
+        parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
+
+        # Assert
+        assert parcel_id
+
+    def test_when_fully_specifed_transport_vpn_parcel_expect_successful_post(self):
+        # Arrange
+        transport_vpn_parcel = TransportVpnParcel(
+            parcel_name="FullySpecifiedTransportVpnParcel",
+            description="Description",
+            dns_ipv6=DnsIpv6(
+                primary_dns_address_ipv6=as_global(IPv6Address("67ca:c2df:edfe:c8ec:b6cb:f9f4:eab0:ece6")),
+                secondary_dns_address_ipv6=as_global(IPv6Address("8989:8d33:c00a:4d13:324d:8b23:8d77:a289")),
+            ),
+            dns_ipv4=DnsIpv4(
+                primary_dns_address_ipv4=as_global(IPv4Address("68.138.29.222")),
+                secondary_dns_address_ipv4=as_global(IPv4Address("122.89.114.112")),
+            ),
+            new_host_mapping=[
+                NewHostMappingItem(
+                    host_name=as_global("FullySpecifiedHost"),
+                    list_of_ip=as_global(
+                        [
+                            "165.16.181.116",
+                            "7a4c:1d87:8587:a6ec:21a6:48a7:00e8:1fef",
+                        ]
+                    ),
+                )
+            ],
+            ipv6_route=[
+                Ipv6RouteItem(
+                    prefix=as_global(IPv6Interface("0::/16")),
+                    one_of_ip_route=OneOfIpRouteNull0(),
+                )
+            ],
+            ipv4_route=[
+                Ipv4RouteItem(
+                    prefix=Prefix(
+                        ip_address=as_global(IPv4Address("202.153.165.234")),
+                        subnet_mask=as_global("255.255.255.0", SubnetMask),
+                    ),
+                    next_hop=[NextHopItem(address=as_global(IPv4Address("1.1.1.1")), distance=as_global(8))],
+                )
+            ],
+            service=[ServiceItem(service_type=as_global("TE", ServiceType))],
+            nat64_v4_pool=[
+                Address64V4PoolItem(
+                    name=as_global("FullySpecifiedNat64V4Pool"),
+                    range_start=as_global(IPv4Address("3.3.3.3")),
+                    range_end=as_global(IPv4Address("3.3.3.7")),
+                    overload=as_global(True),
+                )
+            ],
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
+        # Assert
+        assert parcel_id
+
+    def tearDown(self) -> None:
+        self.session.api.config_group.delete(self.config_id)
+        self.api.delete_profile(self.profile_uuid)
 
 
 class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
