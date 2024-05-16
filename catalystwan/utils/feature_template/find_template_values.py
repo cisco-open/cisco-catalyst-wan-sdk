@@ -45,7 +45,8 @@ def find_template_values(
         # TODO: Handle nested DeviceVariable
         if value == "variableName":
             if device_specific_variables is not None:
-                device_specific_variables[field_key] = DeviceVariable(name=template_definition["vipVariableName"])
+                current_nesting = get_nested_dict(device_specific_variables, path[:-1])
+                current_nesting[field_key] = DeviceVariable(name=template_definition["vipVariableName"])
             return template_definition
         if template_value is None:
             return template_definition

@@ -4,6 +4,7 @@ import logging
 from typing import Any, Callable, Dict, cast
 
 from catalystwan.api.template_api import FeatureTemplateInformation
+from catalystwan.api.templates.device_variable import DeviceVariable
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
 from catalystwan.utils.feature_template.find_template_values import find_template_values
@@ -143,7 +144,11 @@ def create_parcel_from_template(template: FeatureTemplateInformation) -> AnyParc
     """
     converter = choose_parcel_converter(template.template_type)()
     template_definition_as_dict = json.loads(cast(str, template.template_definiton))
-    template_values = find_template_values(template_definition_as_dict)
-    template_values_normalized = template_definition_normalization(template_values)
+    device_specific_variables: Dict[str, DeviceVariable] = {}
+    template_values = find_template_values(
+        template_definition_as_dict, device_specific_variables=device_specific_variables
+    )
+    template_values_normalized = template_definition_normalization(template_values, device_specific_variables)
+    print(template_values_normalized)
     logger.debug(f"Normalized template {template.name}: {template_values_normalized}")
     return converter.create_parcel(template.name, template.description, template_values_normalized)

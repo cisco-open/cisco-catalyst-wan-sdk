@@ -1,4 +1,4 @@
-from ipaddress import IPv6Interface
+from ipaddress import IPv4Address, IPv6Interface
 from typing import List, Literal, Optional, Union
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
@@ -86,7 +86,7 @@ class Tunnel(BaseModel):
         default=None, validation_alias="portHop", serialization_alias="portHop"
     )
     restrict: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
-    tloc_extension_gre_to: Optional[Union[Variable, Global[str], Default[None]]] = Field(
+    tloc_extension_gre_to: Optional[Union[Variable, Global[str], Global[IPv4Address], Default[None]]] = Field(
         default=None, validation_alias="tlocExtensionGreTo", serialization_alias="tlocExtensionGreTo"
     )
     tunnel_tcp_mss: Optional[Union[Variable, Global[int], Default[None]]] = Field(
@@ -140,10 +140,10 @@ class NatAttributesIpv6(BaseModel):
 
 class TlocExtensionGreFrom(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-    source_ip: Optional[Union[Variable, Global[str], Default[None]]] = Field(
+    source_ip: Optional[Union[Variable, Global[str], Global[IPv4Address], Default[None]]] = Field(
         default=None, validation_alias="sourceIp", serialization_alias="sourceIp"
     )
-    xconnect: Optional[Union[Variable, Global[str], Default[None]]] = Field(default=None)
+    xconnect: Optional[Union[Variable, Global[str], Global[IPv4Address], Default[None]]] = Field(default=None)
 
 
 class Advanced(BaseModel):
@@ -209,7 +209,9 @@ class InterfaceEthernetParcel(_ParcelBase):
     shutdown: Union[Variable, Global[bool], Default[bool]] = Field(
         default=as_default(True), validation_alias=AliasPath("data", "shutdown")
     )
-    tunnel_interface: Union[Global[bool], Default[bool]] = Field(validation_alias=AliasPath("data", "tunnelInterface"))
+    tunnel_interface: Union[Global[bool], Default[bool]] = Field(
+        default=as_default(False), validation_alias=AliasPath("data", "tunnelInterface")
+    )
     acl_qos: Optional[AclQos] = Field(default=None, validation_alias=AliasPath("data", "aclQos"), description="ACL/QOS")
     advanced: Optional[Advanced] = Field(
         default=None, validation_alias=AliasPath("data", "advanced"), description="Advanced Attributes"

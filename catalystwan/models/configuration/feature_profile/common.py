@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_default, as_global
 from catalystwan.models.common import (
     CoreRegion,
     EncapType,
@@ -463,7 +463,7 @@ class EthernetNatPool(BaseModel):
         serialization_alias="rangeEnd", validation_alias="rangeEnd"
     )
     prefix_length: Union[Variable, Global[int], Default[None]] = Field(
-        serialization_alias="prefixLength", validation_alias="prefixLength"
+        default=as_default(None), serialization_alias="prefixLength", validation_alias="prefixLength"
     )
     overload: Union[Variable, Global[bool], Default[bool]] = Default[bool](value=True)
 
