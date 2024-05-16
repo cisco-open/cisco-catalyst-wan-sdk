@@ -42,7 +42,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.system import (
     GlobalParcel,
     LoggingParcel,
     MRFParcel,
-    NTPParcel,
+    NtpParcel,
     OMPParcel,
     SecurityParcel,
     SNMPParcel,
@@ -65,6 +65,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport import (
 from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_controller import (
     CellularControllerParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_profile import CellularProfileParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.gps import GpsParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.cellular import (
     InterfaceCellularParcel,
@@ -78,7 +79,7 @@ system_endpoint_mapping = {
     GlobalParcel: "global",
     LoggingParcel: "logging",
     MRFParcel: "mrf",
-    NTPParcel: "ntp",
+    NtpParcel: "ntp",
     OMPParcel: "omp",
     SecurityParcel: "security",
     SNMPParcel: "snmp",
@@ -219,6 +220,7 @@ transport_enpoint_mapping = {
     T1E1ControllerParcel: "t1-e1-controller",
     GpsParcel: "gps",
     CellularControllerParcel: "cellular-controller",
+    CellularProfileParcel: "cellular-profile",
     ManagementVpnParcel: "management/vpn",
     TransportVpnParcel: "wan/vpn",
 }

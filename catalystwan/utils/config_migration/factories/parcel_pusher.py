@@ -18,6 +18,7 @@ PARCEL_PUSHER_MAPPING: Mapping[ProfileType, Callable[[ManagerSession, ProfileTyp
     "system": SimpleParcelPusher,
     "service": ServiceParcelPusher,
     "transport": TransportAndManagementParcelPusher,
+    "cli": SimpleParcelPusher,
 }
 
 
