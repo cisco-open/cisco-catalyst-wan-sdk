@@ -33,6 +33,7 @@ from catalystwan.endpoints.configuration.policy.definition.rule_set import Confi
 from catalystwan.endpoints.configuration.policy.definition.security_group import (
     ConfigurationPolicySecurityGroupDefinition,
 )
+from catalystwan.endpoints.configuration.policy.definition.ssl_decryption import ConfigurationSslDecryptionDefinition
 from catalystwan.endpoints.configuration.policy.definition.ssl_decryption_utd_profile import (
     ConfigurationSslDecryptionUtdProfileDefinition,
 )
@@ -159,6 +160,7 @@ from catalystwan.models.policy.definition.qos_map import QoSMapPolicy, QoSMapPol
 from catalystwan.models.policy.definition.rewrite import RewritePolicy, RewritePolicyGetResponse
 from catalystwan.models.policy.definition.rule_set import RuleSet, RuleSetGetResponse
 from catalystwan.models.policy.definition.security_group import SecurityGroup, SecurityGroupGetResponse
+from catalystwan.models.policy.definition.ssl_decryption import SslDecryptionPolicy, SslDecryptionPolicyGetResponse
 from catalystwan.models.policy.definition.ssl_decryption_utd_profile import (
     SslDecryptionUtdProfilePolicy,
     SslDecryptionUtdProfilePolicyGetResponse,
@@ -257,6 +259,7 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     AdvancedInspectionProfilePolicy: ConfigurationPolicyAIPDefinition,
     AdvancedMalwareProtectionPolicy: ConfigurationPolicyAMPDefinition,
     IntrusionPreventionPolicy: ConfigurationPolicyIntrusionPreventionDefinition,
+    SslDecryptionPolicy: ConfigurationSslDecryptionDefinition,
     SslDecryptionUtdProfilePolicy: ConfigurationSslDecryptionUtdProfileDefinition,
     UrlFilteringPolicy: ConfigurationPolicyUrlFilteringDefinition,
     DnsSecurityPolicy: ConfigurationPolicyDnsSecurityDefinition,
@@ -729,6 +732,10 @@ class PolicyDefinitionsAPI:
         ...
 
     @overload
+    def get(self, type: Type[SslDecryptionPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[SslDecryptionUtdProfilePolicy]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
@@ -811,6 +818,10 @@ class PolicyDefinitionsAPI:
 
     @overload
     def get(self, type: Type[SecurityGroup], id: UUID) -> SecurityGroupGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[SslDecryptionPolicy], id: UUID) -> SslDecryptionPolicyGetResponse:
         ...
 
     @overload
