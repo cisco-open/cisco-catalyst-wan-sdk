@@ -13,6 +13,7 @@ from .t1e1controller import T1E1ControllerParcel
 from .vpn import ManagementVpnParcel, TransportVpnParcel
 from .wan.interface.gre import InterfaceGreParcel
 from .wan.interface.ipsec import InterfaceIpsecParcel
+from .wan.interface.multilink import InterfaceMultilinkParcel
 from .wan.interface.protocol_over import (
     InterfaceDslIPoEParcel,
     InterfaceDslPPPoAParcel,
@@ -30,6 +31,8 @@ AnyTransportVpnSubParcel = Annotated[
         InterfaceDslIPoEParcel,
         InterfaceGreParcel,
         InterfaceIpsecParcel,
+        InterfaceMultilinkParcel,
+        # Add wan interfaces here
     ],
     Field(discriminator="type_"),
 ]

@@ -30,7 +30,9 @@ from catalystwan.utils.config_migration.steps.constants import (
     LAN_VPN_ETHERNET,
     LAN_VPN_GRE,
     LAN_VPN_IPSEC,
+    LAN_VPN_MULTILINK,
     WAN_VPN_GRE,
+    WAN_VPN_MULTILINK,
 )
 from catalystwan.utils.config_migration.steps.transform import merge_parcels, resolve_template_type
 
@@ -83,6 +85,8 @@ SUPPORTED_TEMPLATE_TYPES = [
     "vpn-interface-pppoe",
     "vpn-interface-pppoa",
     "vpn-interface-ipoe",
+    WAN_VPN_MULTILINK,
+    LAN_VPN_MULTILINK,
     WAN_VPN_GRE,
     LAN_VPN_GRE,
     LAN_VPN_ETHERNET,
