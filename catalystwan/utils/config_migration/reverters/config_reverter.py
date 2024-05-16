@@ -11,18 +11,24 @@ class UX2ConfigReverter:
         self._session = session
 
     def rollback(self, rollback_config: UX2ConfigRollback, progress: Callable[[str, int, int], None]) -> bool:
-        try:
-            for i, cg_id in enumerate(rollback_config.config_group_ids):
+        all_deleted = True
+        for i, cg_id in enumerate(rollback_config.config_group_ids):
+            try:
                 self._session.endpoints.configuration_group.delete_config_group(cg_id)
                 progress("Removing Configuration Groups", i + 1, len(rollback_config.config_group_ids))
-            for i, feature_profile_entry in enumerate(rollback_config.feature_profile_ids):
-                feature_profile_id, type_ = feature_profile_entry
+            except CatalystwanException as e:
+                all_deleted = False
+                logger.error(f"Error occured during deleting config group {cg_id}: {e}")
+
+        for i, feature_profile_entry in enumerate(rollback_config.feature_profile_ids):
+            feature_profile_id, type_ = feature_profile_entry
+            try:
                 api = FeatureProfileAPIFactory.get_api(type_, self._session)
                 if type_ == "policy-object":
                     continue
                 api.delete_profile(feature_profile_id)  # type: ignore
                 progress("Removing Feature Profiles", i + 1, len(rollback_config.feature_profile_ids))
-        except CatalystwanException as e:
-            logger.error(f"Error occured during config revert: {e}")
-            return False
-        return True
+            except CatalystwanException as e:
+                all_deleted = False
+                logger.error(f"Error occured during deleting feature profile {feature_profile_id}: {e}")
+        return all_deleted
