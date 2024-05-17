@@ -8,6 +8,7 @@ from catalystwan.api.feature_profile_api import (
     DnsSecurityFeatureProfileAPI,
     OtherFeatureProfileAPI,
     ServiceFeatureProfileAPI,
+    SIGSecurityAPI,
     SystemFeatureProfileAPI,
     TransportFeatureProfileAPI,
 )
@@ -24,6 +25,7 @@ class TestFeatureProfileModels(unittest.TestCase):
         TransportFeatureProfileAPI,
         CliFeatureProfileAPI,
         DnsSecurityFeatureProfileAPI,
+        SIGSecurityAPI,
     ]
 
     @classmethod

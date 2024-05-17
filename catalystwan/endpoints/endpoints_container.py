@@ -12,6 +12,7 @@ from catalystwan.endpoints.cluster_management import ClusterManagement
 from catalystwan.endpoints.configuration.device.software_update import ConfigurationDeviceSoftwareUpdate
 from catalystwan.endpoints.configuration.disaster_recovery import ConfigurationDisasterRecovery
 from catalystwan.endpoints.configuration.feature_profile.sdwan.cli import CliFeatureProfile
+from catalystwan.endpoints.configuration.feature_profile.sdwan.sig_security import SIGSecurity
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
 from catalystwan.endpoints.configuration.policy.definition.access_control_list import ConfigurationPolicyAclDefinition
@@ -217,3 +218,4 @@ class APIEndpointContainter:
         self.misc = MiscellaneousEndpoints(session)
         self.real_time_monitoring = RealTimeMonitoringContainer(session)
         self.certificate_management_device = CertificateManagementDevice(session)
+        self.sig_security = SIGSecurity(session)

@@ -10,6 +10,7 @@ from pydantic import Json
 from catalystwan.endpoints.configuration.feature_profile.sdwan.cli import CliFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.other import OtherFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
+from catalystwan.endpoints.configuration.feature_profile.sdwan.sig_security import SIGSecurity
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
 from catalystwan.exceptions import ManagerHTTPError
@@ -17,6 +18,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.other import AnyOthe
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.url import URLParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import MulticastParcel
+from catalystwan.models.configuration.feature_profile.sdwan.sig_security.sig_security import SIGParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport import AnyTransportParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.bgp import WanRoutingBgpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_controller import (
@@ -39,6 +41,7 @@ from catalystwan.models.configuration.feature_profile.common import (
     FeatureProfileCreationResponse,
     FeatureProfileInfo,
     GetFeatureProfilesPayload,
+    GetReferenceCountFeatureProfilesPayload,
 )
 from catalystwan.models.configuration.feature_profile.parcel import (
     Parcel,
@@ -108,6 +111,7 @@ class SDWANFeatureProfilesAPI:
         self.embedded_security = EmbeddedSecurityFeatureProfileAPI(session=session)
         self.cli = CliFeatureProfileAPI(session=session)
         self.dns_security = DnsSecurityFeatureProfileAPI(session=session)
+        self.sig_security = SIGSecurityAPI(session=session)
 
 
 class FeatureProfileAPI(Protocol):
@@ -1351,3 +1355,48 @@ class DnsSecurityFeatureProfileAPI:
         Delete DNS Security Parcel for selected profile_id based on payload type
         """
         return self.endpoint.delete(profile_id, parcel_type._get_parcel_type(), parcel_id)
+
+
+class SIGSecurityAPI:
+    """
+    SDWAN Feature Profile Service APIs
+    """
+
+    def __init__(self, session: ManagerSession):
+        self.session = session
+        self.endpoint = SIGSecurity(session)
+
+    def get_profiles(
+        self, limit: Optional[int] = None, offset: Optional[int] = None, reference_count: Optional[bool] = None
+    ) -> DataSequence[FeatureProfileInfo]:
+        """
+        Get all SIG Security Feature Profiles
+        """
+        payload = GetReferenceCountFeatureProfilesPayload(limit=limit, offset=offset, reference_count=reference_count)
+
+        return self.endpoint.get_sig_security_feature_profiles(payload)
+
+    def create_profile(self, name: str, description: str) -> FeatureProfileCreationResponse:
+        """
+        Create SIG Security Feature Profile
+        """
+        payload = FeatureProfileCreationPayload(name=name, description=description)
+        return self.endpoint.create_sig_security_feature_profile(payload)
+
+    def delete_profile(self, profile_id: UUID) -> None:
+        """
+        Delete SIG Security Feature Profile
+        """
+        self.endpoint.delete_sig_security_feature_profile(profile_id)
+
+    def create_parcel(self, profile_uuid: UUID, payload: SIGParcel) -> ParcelCreationResponse:
+        """
+        Create SIG Security Parcel for selected profile_id
+        """
+        return self.endpoint.create_sig_security_parcel(profile_uuid, payload)
+
+    def delete_parcel(self, profile_uuid: UUID, parcel_uuid: UUID) -> None:
+        """
+        Delete Service Parcel for selected profile_uuid based on payload type
+        """
+        return self.endpoint.delete_sig_security_parcel(profile_uuid, parcel_uuid)
