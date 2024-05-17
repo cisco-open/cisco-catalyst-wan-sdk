@@ -178,6 +178,8 @@ FEATURE_PROFILE_CLI = [
     "cli-template",
 ]
 
+DEVICE_TYPE_BLOCKLIST = ["vsmart", "vbond", "vmanage"]
+
 
 def log_progress(task: str, completed: int, total: int) -> None:
     logger.info(f"{task} {completed}/{total}")
@@ -407,7 +409,8 @@ def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, in
     for i, device_template_information in enumerate(device_templates_information):
         device_template = template_api.get_device_template(device_template_information.id)
         device_template_with_info = DeviceTemplateWithInfo.from_merged(device_template, device_template_information)
-        ux1.templates.device_templates.append(device_template_with_info)
+        if device_template_with_info.device_type not in DEVICE_TYPE_BLOCKLIST:
+            ux1.templates.device_templates.append(device_template_with_info)
         progress("Collecting Device Templates", i + 1, len(device_templates_information))
 
     return ux1
