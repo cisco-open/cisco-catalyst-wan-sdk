@@ -4,7 +4,7 @@ from typing import List, Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
-from catalystwan.models.common import Carrier, EthernetDuplexMode, MediaType, Speed, TLOCColor, TunnelMode
+from catalystwan.models.common import CarrierType, EthernetDuplexMode, MediaType, Speed, TLOCColor, TunnelMode
 from catalystwan.models.configuration.feature_profile.common import (
     AclQos,
     AllowService,
@@ -45,7 +45,7 @@ class Tunnel(BaseModel):
     )
     bind: Optional[Union[Variable, Global[str], Default[None]]] = Field(default=None)
     border: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(default=None)
-    carrier: Optional[Union[Variable, Default[Literal["default"]], Global[Carrier]]] = Field(default=None)
+    carrier: Optional[Union[Variable, Default[Literal["default"]], Global[CarrierType]]] = Field(default=None)
     clear_dont_fragment: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
         default=None, validation_alias="clearDontFragment", serialization_alias="clearDontFragment"
     )
