@@ -10,10 +10,17 @@ from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, m
 from typing_extensions import Annotated, Literal
 
 from catalystwan.models.common import (
+    CarrierType,
+    ControlPathType,
     EncapType,
     ICMPMessageType,
+    MultiRegionRole,
+    OriginProtocol,
+    SequenceIpType,
     ServiceChainNumber,
+    ServiceType,
     SpaceSeparatedUUIDList,
+    TLOCActionType,
     TLOCColor,
     check_fields_exclusive,
     str_as_str_list,
@@ -55,42 +62,12 @@ DestinationRegion = Literal[
     "other-region",
 ]
 
-OriginProtocol = Literal[
-    "aggregate",
-    "bgp",
-    "bgp-external",
-    "bgp-internal",
-    "connected",
-    "eigrp",
-    "ospf",
-    "ospf-inter-area",
-    "ospf-intra-area",
-    "ospf-external1",
-    "ospf-external2",
-    "rip",
-    "static",
-    "eigrp-summary",
-    "eigrp-internal",
-    "eigrp-external",
-    "lisp",
-    "nat-dia",
-    "natpool",
-    "isis",
-    "isis-level1",
-    "isis-level2",
-]
-
 PathType = Literal[
     "hierarchical-path",
     "direct-path",
     "transport-gateway-path",
 ]
 
-SequenceIpType = Literal[
-    "ipv4",
-    "ipv6",
-    "all",
-]
 
 BasicPolicyActionType = Literal["accept", "drop"]
 
@@ -125,40 +102,6 @@ LossProtectionType = Literal[
     "fecAdaptive",
     "fecAlways",
     "packetDuplication",
-]
-
-MultiRegionRole = Literal[
-    "border-router",
-    "edge-router",
-]
-
-ServiceType = Literal[
-    "FW",
-    "IDP",
-    "IDS",
-    "netsvc1",
-    "netsvc2",
-    "netsvc3",
-    "netsvc4",
-]
-
-TLOCActionType = Literal[
-    "strict",
-    "primary",
-    "backup",
-    "ecmp",
-]
-
-Carrier = Literal[
-    "default",
-    "carrier1",
-    "carrier2",
-    "carrier3",
-    "carrier4",
-    "carrier5",
-    "carrier6",
-    "carrier7",
-    "carrier8",
 ]
 
 DeviceAccessProtocol = Literal[22, 161]
@@ -406,7 +349,7 @@ class PreferenceEntry(BaseModel):
 
 class PathTypeEntry(BaseModel):
     field: Literal["pathType"] = "pathType"
-    value: PathType
+    value: ControlPathType
 
 
 class RegionEntry(BaseModel):
@@ -461,7 +404,7 @@ class CommunityAdditiveEntry(BaseModel):
 
 class CarrierEntry(BaseModel):
     field: Literal["carrier"] = "carrier"
-    value: Carrier
+    value: CarrierType
 
 
 class DomainIDEntry(BaseModel):

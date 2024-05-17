@@ -192,6 +192,24 @@ IntRangeStr = Annotated[
 ]
 
 
+CarrierType = Literal[
+    "default",
+    "carrier1",
+    "carrier2",
+    "carrier3",
+    "carrier4",
+    "carrier5",
+    "carrier6",
+    "carrier7",
+    "carrier8",
+]
+
+ControlPathType = Literal[
+    "direct-path",
+    "hierarchical-path",
+    "transport-gateway-path",
+]
+
 EncapType = Literal[
     "ipsec",
     "gre",
@@ -248,6 +266,47 @@ WellKnownBGPCommunities = Literal[
     "no-export",
 ]
 
+
+MultiRegionRole = Literal[
+    "border-router",
+    "edge-router",
+]
+
+OriginProtocol = Literal[
+    "aggregate",
+    "bgp",
+    "bgp-external",
+    "bgp-internal",
+    "connected",
+    "eigrp",
+    "ospf",
+    "ospf-inter-area",
+    "ospf-intra-area",
+    "ospf-external1",
+    "ospf-external2",
+    "rip",
+    "static",
+    "eigrp-summary",
+    "eigrp-internal",
+    "eigrp-external",
+    "lisp",
+    "nat-dia",
+    "natpool",
+    "isis",
+    "isis-level1",
+    "isis-level2",
+]
+
+ServiceType = Literal[
+    "FW",
+    "IDP",
+    "IDS",
+    "netsvc1",
+    "netsvc2",
+    "netsvc3",
+    "netsvc4",
+]
+
 ServiceChainNumber = Literal[
     "SC1",
     "SC2",
@@ -265,6 +324,19 @@ ServiceChainNumber = Literal[
     "SC14",
     "SC15",
     "SC16",
+]
+
+SequenceIpType = Literal[
+    "ipv4",
+    "ipv6",
+    "all",
+]
+
+TLOCActionType = Literal[
+    "strict",
+    "primary",
+    "backup",
+    "ecmp",
 ]
 
 ICMPMessageType = Literal[
@@ -306,18 +378,6 @@ SubnetMask = Literal[
     "192.0.0.0",
     "128.0.0.0",
     "0.0.0.0",
-]
-
-Carrier = Literal[
-    "carrier1",
-    "carrier2",
-    "carrier3",
-    "carrier4",
-    "carrier5",
-    "carrier6",
-    "carrier7",
-    "carrier8",
-    "default",
 ]
 
 VpnId = Annotated[

@@ -14,6 +14,7 @@ from catalystwan.endpoints.configuration.disaster_recovery import ConfigurationD
 from catalystwan.endpoints.configuration.feature_profile.sdwan.cli import CliFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.sig_security import SIGSecurity
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
+from catalystwan.endpoints.configuration.feature_profile.sdwan.topology import TopologyFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
 from catalystwan.endpoints.configuration.policy.definition.access_control_list import ConfigurationPolicyAclDefinition
 from catalystwan.endpoints.configuration.policy.definition.access_control_list_ipv6 import (
@@ -166,6 +167,7 @@ class ConfigurationSDWANFeatureProfileContainer:
         self.transport = TransportFeatureProfile(client=session)
         self.system = SystemFeatureProfile(client=session)
         self.cli = CliFeatureProfile(client=session)
+        self.topology = TopologyFeatureProfile(client=session)
 
 
 class ConfigurationFeatureProfileContainer:

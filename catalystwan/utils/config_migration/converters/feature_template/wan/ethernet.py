@@ -2,7 +2,7 @@ from copy import deepcopy
 from typing import Dict, List, Optional, Union
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_default, as_global
-from catalystwan.models.common import Carrier, EncapType, EthernetDuplexMode, EthernetNatType, Speed
+from catalystwan.models.common import CarrierType, EncapType, EthernetDuplexMode, EthernetNatType, Speed
 from catalystwan.models.configuration.feature_profile.common import (
     AclQos,
     AllowService,
@@ -299,9 +299,9 @@ class WanInterfaceEthernetTemplateConverter:
             v_manage_connection_preference=ti.get("v_manage_connection_preference"),
         )
 
-    def parse_carrier(self, data: Dict) -> Optional[Global[Carrier]]:
+    def parse_carrier(self, data: Dict) -> Optional[Global[CarrierType]]:
         if carrier := data.get("carrier"):
-            return as_global(carrier.value, Carrier)
+            return as_global(carrier.value, CarrierType)
         return None
 
     def parse_group(self, data: Dict) -> Optional[Global[int]]:

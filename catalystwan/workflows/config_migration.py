@@ -4,6 +4,8 @@ from collections import defaultdict
 from typing import Callable
 from uuid import UUID, uuid4
 
+from pydantic import ValidationError
+
 from catalystwan.api.policy_api import POLICY_LIST_ENDPOINTS_MAP
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
 from catalystwan.models.configuration.config_migration import (
@@ -23,7 +25,6 @@ from catalystwan.utils.config_migration.converters.feature_template import creat
 from catalystwan.utils.config_migration.converters.feature_template.cloud_credentials import (
     create_cloud_credentials_from_templates,
 )
-from catalystwan.utils.config_migration.converters.policy.policy_lists import PolicyListConversionError
 from catalystwan.utils.config_migration.converters.policy.policy_lists import convert as convert_policy_list
 from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigRollback
 from catalystwan.utils.config_migration.reverters.config_reverter import UX2ConfigReverter
@@ -326,8 +327,15 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
             policy_parcel = convert_policy_list(policy_list)
             header = TransformHeader(type=policy_parcel._get_parcel_type(), origin=policy_list.list_id)
             ux2.profile_parcels.append(TransformedParcel(header=header, parcel=policy_parcel))
-        except PolicyListConversionError as e:
-            logger.warning(f"{policy_list.type} {policy_list.list_id} {policy_list.name} was not converted: {e}")
+        except (CatalystwanConverterCantConvertException, ValidationError) as e:
+            error_message = (
+                f"Policy List {policy_list.type} {policy_list.list_id} {policy_list.name} was not converted: {e}"
+            )
+            logger.warning(error_message)
+            transform_result.add_failed_conversion_parcel(
+                exception_message=exception_message,
+                policy=policy_list,
+            )
 
     ux2 = merge_parcels(ux2)
     transform_result.ux2_config = ux2
