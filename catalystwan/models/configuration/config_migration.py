@@ -3,8 +3,10 @@
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
+from packaging.version import Version
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from catalystwan import PACKAGE_VERSION
 from catalystwan.api.builders.feature_profiles.report import FailedParcel, FeatureProfileBuildReport
 from catalystwan.api.templates.device_template.device_template import DeviceTemplate, GeneralTemplate
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
@@ -17,6 +19,19 @@ from catalystwan.models.policy.centralized import CentralizedPolicyInfo
 from catalystwan.models.policy.localized import LocalizedPolicyInfo
 from catalystwan.models.policy.security import AnySecurityPolicyInfo
 from catalystwan.models.templates import FeatureTemplateInformation, TemplateInformation
+from catalystwan.version import parse_api_version
+
+
+class VersionInfo(BaseModel):
+    platform: str = "unknown"
+    sdk: str = PACKAGE_VERSION
+
+    @property
+    def platform_api(self) -> Version:
+        return parse_api_version(self.platform)
+
+    def is_compatible(self, other: "VersionInfo"):
+        return True if (self.sdk == other.sdk and self.platform_api == other.platform_api) else False
 
 
 class DeviceTemplateWithInfo(DeviceTemplate):
@@ -55,7 +70,7 @@ class DeviceTemplateWithInfo(DeviceTemplate):
 
 
 class UX1Policies(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     centralized_policies: List[CentralizedPolicyInfo] = Field(
         default=[],
         serialization_alias="centralizedPolicies",
@@ -97,6 +112,7 @@ class UX1Templates(BaseModel):
 
 class UX1Config(BaseModel):
     # All UX1 Configuration items - Mega Model
+    version: VersionInfo = VersionInfo()
     policies: UX1Policies = UX1Policies()
     templates: UX1Templates = UX1Templates()
 
@@ -149,7 +165,8 @@ class FailedConversionItem(BaseModel):
 
 class UX2Config(BaseModel):
     # All UX2 Configuration items - Mega Model
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+    version: VersionInfo = VersionInfo()
     topology_groups: List[TransformedTopologyGroup] = Field(
         default=[],
         serialization_alias="topologyGroups",
@@ -173,7 +190,9 @@ class UX2Config(BaseModel):
         serialization_alias="profileParcels",
         validation_alias="profileParcels",
     )
-    cloud_credentials: Optional[CloudCredentials] = None
+    cloud_credentials: Optional[CloudCredentials] = Field(
+        default=None, serialization_alias="cloudCredentials", validation_alias="cloudCredentials"
+    )
 
     @model_validator(mode="before")
     @classmethod

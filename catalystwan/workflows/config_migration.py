@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 
 from pydantic import ValidationError
 
+from catalystwan import PACKAGE_VERSION
 from catalystwan.api.policy_api import POLICY_LIST_ENDPOINTS_MAP
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
 from catalystwan.models.configuration.config_migration import (
@@ -17,6 +18,7 @@ from catalystwan.models.configuration.config_migration import (
     TransformHeader,
     UX1Config,
     UX2Config,
+    VersionInfo,
 )
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.policy import AnyPolicyDefinitionInfo
@@ -180,9 +182,13 @@ def log_progress(task: str, completed: int, total: int) -> None:
     logger.info(f"{task} {completed}/{total}")
 
 
+def get_version_info(session: ManagerSession) -> VersionInfo:
+    return VersionInfo(platform=session._platform_version, sdk=PACKAGE_VERSION)
+
+
 def transform(ux1: UX1Config) -> ConfigTransformResult:
     transform_result = ConfigTransformResult()
-    ux2 = UX2Config()
+    ux2 = UX2Config(version=ux1.version)
     subtemplates_mapping = defaultdict(set)
     # Create Feature Profiles and Config Group
     for dt in ux1.templates.device_templates:
@@ -346,7 +352,7 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
 
 
 def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, int], None] = log_progress) -> UX1Config:
-    ux1 = UX1Config()
+    ux1 = UX1Config(version=get_version_info(session))
 
     """Collect Policies"""
     policy_api = session.api.policy
@@ -409,6 +415,11 @@ def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, in
 def push_ux2_config(
     session: ManagerSession, ux2_config: UX2Config, progress: Callable[[str, int, int], None] = log_progress
 ) -> UX2ConfigRollback:
+    current_versions = get_version_info(session)
+    if not ux2_config.version.is_compatible(current_versions):
+        logger.warning(
+            f"Pushing UX2 config with versions mismatch\nsource: {ux2_config.version}\ntarget: {current_versions}"
+        )
     config_pusher = UX2ConfigPusher(session, ux2_config, progress)
     rollback = config_pusher.push()
     return rollback
