@@ -1,7 +1,8 @@
 from ipaddress import AddressValueError, IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
 from typing import List, Optional, Union, get_args
 
-from catalystwan.api.configuration_groups.parcel import Global, Variable, as_global
+from catalystwan.api.configuration_groups.parcel import Global, Variable, as_global, as_variable
+from catalystwan.api.templates.device_variable import DeviceVariable
 from catalystwan.models.common import (
     EthernetDuplexMode,
     EthernetNatType,
@@ -106,7 +107,9 @@ def to_snake_case(s: str) -> str:
     return s.replace("-", "_")
 
 
-def cast_value_to_global(value: Union[str, int, List[str], List[int]]) -> CastedTypes:
+def cast_value_to_global(value: Union[DeviceVariable, str, int, List[str], List[int]]) -> CastedTypes:
+    if isinstance(value, DeviceVariable):
+        return as_variable(value.name)
     if isinstance(value, list):
         value_type = Global[List[int]] if isinstance(value[0], int) else Global[List[str]]
         return value_type(value=value)  # type: ignore
@@ -159,6 +162,6 @@ def transform_dict(d: dict) -> dict:
 
 
 def template_definition_normalization(template_definition: dict) -> dict:
-    """Merges the templates values  then normalizes by changing keys to snake_case and
-    cast all values to Global types."""
+    """Merges the templates values and device_specific_variables then normalizes by changing keys to snake_case and
+    cast all values to Global types or Varaibles."""
     return transform_dict(template_definition)

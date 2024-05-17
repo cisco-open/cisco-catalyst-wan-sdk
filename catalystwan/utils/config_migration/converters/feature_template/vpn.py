@@ -1,11 +1,19 @@
 import logging
 from copy import deepcopy
 from ipaddress import IPv4Interface, IPv6Interface
-from typing import List, Literal, Type, Union
+from typing import Dict, List, Literal, Optional, Type, Union
 
 from pydantic import BaseModel, IPvAnyAddress
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, as_default, as_global, as_variable
+from catalystwan.api.configuration_groups.parcel import (
+    Default,
+    Global,
+    OptionType,
+    ParcelAttribute,
+    as_default,
+    as_global,
+    as_variable,
+)
 from catalystwan.models.common import SubnetMask
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import (
@@ -17,6 +25,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn impo
     InterfaceRouteIPv6Container,
     IPv4Prefix,
     IPv4RouteGatewayNextHop,
+    IPv4RouteGatewayNextHopWithTracker,
     IPv6Prefix,
     IPv6StaticRouteInterface,
     LanVpnParcel,
@@ -70,6 +79,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import
 from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import ServiceItem
 from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import ServiceType as TransportServiceType
 from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import TransportVpnParcel
+from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
 
 logger = logging.getLogger(__name__)
 
@@ -116,11 +126,10 @@ class BaseTransportAndManagementTemplateConverter:
                 )
             )
         values["new_host_mapping"] = host_mapping_items
+        return host_mapping_items
 
     def configure_dns(self, values: dict) -> None:
         dns = values.get("dns", [])
-        if not dns:
-            return
         dns_ipv4 = DnsIpv4()
         dns_ipv6 = DnsIpv6()
         for dns_entry in dns:
@@ -135,6 +144,7 @@ class BaseTransportAndManagementTemplateConverter:
                 dns_ipv6.secondary_dns_address_ipv6 = dns_address
         values["dns_ipv4"] = dns_ipv4
         values["dns_ipv6"] = dns_ipv6
+        return dns_ipv4, dns_ipv6
 
     def configure_route_ipv4(self, values: dict) -> None:
         routes = values.get("ip", {}).get("route", [])
@@ -145,12 +155,18 @@ class BaseTransportAndManagementTemplateConverter:
             prefix = route.get("prefix")
             if not prefix:
                 continue
-            ipv4route_item = Ipv4RouteItem(
-                prefix=TransportPrefix(
-                    ip_address=as_global(prefix.value.network.network_address),
-                    subnet_mask=as_global(str(prefix.value.netmask), SubnetMask),
+
+            if prefix.option_type == OptionType.GLOBAL:
+                ipv4route_item = Ipv4RouteItem(
+                    prefix=TransportPrefix(
+                        ip_address=as_global(prefix.value.network.network_address),
+                        subnet_mask=as_global(str(prefix.value.netmask), SubnetMask),
+                    )
                 )
-            )
+            elif prefix.option_type == OptionType.VARIABLE:
+                ipv4route_item = Ipv4RouteItem(
+                    prefix=TransportPrefix(ip_address=prefix, subnet_mask=as_global("0.0.0.0", SubnetMask))
+                )
             if "next_hop" in route:
                 ipv4route_item.gateway = as_global("nextHop", Gateway)
                 for next_hop in route["next_hop"]:
@@ -167,6 +183,7 @@ class BaseTransportAndManagementTemplateConverter:
                 ipv4route_item.gateway = as_global("dhcp", Gateway)
             static_routes.append(ipv4route_item)
         values["ipv4_route"] = static_routes
+        return static_routes
 
     def configure_route_ipv6(self, values: dict) -> None:
         routes = values.get("ipv6", {}).get("route", [])
@@ -194,6 +211,7 @@ class BaseTransportAndManagementTemplateConverter:
             ipv6route_item = Ipv6RouteItem(prefix=route.get("prefix"), one_of_ip_route=one_of_ip_route)
             static_routes.append(ipv6route_item)
         values["ipv6_route"] = static_routes
+        return static_routes
 
     def cleanup_keys(self, values: dict) -> None:
         for key in self.delete_keys:
@@ -235,32 +253,36 @@ class TransportVpnTemplateConverter(BaseTransportAndManagementTemplateConverter)
         Returns:
             VPN: The created TransportVpnParcel.
         """
-        values = deepcopy(template_values)
-        self.configure_dns(values)
-        self.configure_new_host_mapping(values)
-        self.configure_enhance_ecmp_keying(values)
-        self.configure_service_type(values)
-        self.configure_route_ipv4(values)
-        self.configure_route_ipv6(values)
-        self.cleanup_keys(values)
-        return TransportVpnParcel(parcel_name=name, parcel_description=description, **values)
+        data = deepcopy(template_values)
 
-    def configure_service_type(self, values: dict) -> None:
-        services = values.get("service", [])
+        ipv4_route = self.configure_route_ipv4(data)
+        ipv6_route = self.configure_route_ipv6(data)
+        new_host_mapping = self.configure_new_host_mapping(data)
+        dns_ipv4, dns_ipv6 = self.configure_dns(data)
+        service = self.parse_service(data.get("service", []))
+        enhance_ecmp_keying = data.get("enhance_ecmp_keying", {}).get("layer4")
+
+        payload = create_dict_without_none(
+            service=service,
+            enhance_ecmp_keying=enhance_ecmp_keying,
+            dns_ipv4=dns_ipv4,
+            dns_ipv6=dns_ipv6,
+            new_host_mapping=new_host_mapping,
+            ipv6_route=ipv6_route,
+            ipv4_route=ipv4_route,
+        )
+
+        return TransportVpnParcel(parcel_name=name, parcel_description=description, **payload)
+
+    def parse_service(self, services: List[Dict]) -> Optional[List[ServiceItem]]:
         if not services:
-            return
-        service_items = []
-        for service in services:
-            service_items.append(
-                ServiceItem(
-                    service_type=as_global(service["svc_type"].value, TransportServiceType),
-                )
+            return None
+        return [
+            ServiceItem(
+                service_type=as_global(service["svc_type"].value, TransportServiceType),
             )
-        values["service"] = service_items
-
-    def configure_enhance_ecmp_keying(self, values: dict) -> None:
-        if enhance_ecmp_keying := values.get("ecmp_hash_key", {}).get("layer4"):
-            values["enhance_ecmp_keying"] = enhance_ecmp_keying
+            for service in services
+        ]
 
 
 class ServiceVpnTemplateConverter:
@@ -539,17 +561,18 @@ class ServiceVpnTemplateConverter:
         if ipv4_route := values.get("ip", {}).get("route", []):
             ipv4_route_items = []
             for route_i, route in enumerate(ipv4_route):
-                prefix = route.pop("prefix", None)
-                if prefix:
+                prefix: ParcelAttribute = route.pop("prefix", None)
+                if prefix.option_type == OptionType.GLOBAL:
                     interface = IPv4Interface(prefix.value)
                     route_prefix = RoutePrefix(
                         ip_address=as_global(interface.network.network_address),
                         subnet_mask=as_global(str(interface.netmask)),
                     )
-                else:
+
+                elif prefix.option_type == OptionType.VARIABLE:
                     route_prefix = RoutePrefix(
-                        ip_address=as_variable(self.ipv4_route_prefix_network_address.format(route_i + 1)),
-                        subnet_mask=as_variable(self.ipv4_route_prefix_subnet_mask.format(route_i + 1)),
+                        ip_address=prefix,
+                        subnet_mask=as_global("0.0.0.0"),
                     )
                 ip_route_item = None
                 if "next_hop" in route:
@@ -574,28 +597,22 @@ class ServiceVpnTemplateConverter:
                     ip_route_item = NextHopRouteContainer(next_hop_container=NextHopContainer(next_hop=next_hop_items))
                 elif "next_hop_with_track" in route:
                     next_hop_with_track_items = []
-                    for next_hop_with_track_i, next_hop_with_track in enumerate(route.pop("next_hop_with_track", [])):
-                        next_hop_with_track_items.append(
-                            IPv4RouteGatewayNextHop(
-                                address=next_hop_with_track.pop(
-                                    "address",
-                                    as_variable(
-                                        self.ipv4_route_next_hop_address.format(route_i + 1, next_hop_with_track_i + 1)
-                                    ),
-                                ),
-                                distance=next_hop_with_track.pop(
-                                    "distance",
-                                    as_variable(
-                                        self.ipv4_route_next_hop_administrative_distance.format(
-                                            route_i + 1, next_hop_with_track_i + 1
-                                        )
-                                    ),
-                                ),
+                    for next_hop_with_track in route.pop("next_hop_with_track", []):
+                        tracker = next_hop_with_track.pop("tracker")
+                        if tracker:
+                            logger.warning(
+                                f"Tracker can be any value in UX1.0, but must be UUID in UX2.0. Current value {tracker}"
                             )
+
+                        payload = create_dict_without_none(
+                            address=next_hop_with_track.pop("address", None),
+                            distance=next_hop_with_track.pop("distance", None),
                         )
 
+                        next_hop_with_track_items.append(IPv4RouteGatewayNextHopWithTracker(**payload))
+
                     ip_route_item = NextHopRouteContainer(
-                        next_hop_container=NextHopContainer(next_hop_with_tracker=next_hop_items)  # type: ignore
+                        next_hop_container=NextHopContainer(next_hop_with_tracker=next_hop_with_track_items)
                     )
                 elif "vpn" in route:
                     ip_route_item = StaticRouteVPN(  # type: ignore
@@ -728,6 +745,7 @@ class VpnTemplateConverter:
         Returns:
             VPN: The created VPN object.
         """
+        print(template_values)
         if 0 == self.get_vpn_id(template_values):
             return TransportVpnTemplateConverter().create_parcel(name, description, template_values)
         elif 512 == self.get_vpn_id(template_values):

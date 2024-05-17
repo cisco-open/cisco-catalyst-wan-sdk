@@ -27,7 +27,6 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
     TlocExtensionGreFrom,
     Tunnel,
 )
-from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
 from catalystwan.utils.config_migration.steps.constants import WAN_VPN_ETHERNET
 
@@ -121,7 +120,7 @@ class WanInterfaceEthernetTemplateConverter:
                 dynamic=DynamicDhcpDistance(dynamic_dhcp_distance=ip_address.get("dhcp_distance", as_default(1)))
             )
 
-        raise CatalystwanConverterCantConvertException("Missing IP address configuration")
+        return InterfaceDynamicIPv4Address(dynamic=DynamicDhcpDistance())
 
     def get_static_ipv4_address(self, address_configuration: dict) -> StaticIPv4Address:
         address = address_configuration["address"]

@@ -3,7 +3,8 @@ from ipaddress import IPv4Address, IPv6Address
 from typing import List, Literal
 from unittest.mock import patch
 
-from catalystwan.api.configuration_groups.parcel import Global
+from catalystwan.api.configuration_groups.parcel import Global, Variable
+from catalystwan.api.templates.device_variable import DeviceVariable
 from catalystwan.utils.config_migration.converters.feature_template import template_definition_normalization
 
 TestLiteral = Literal["castable_literal"]
@@ -30,6 +31,9 @@ class TestNormalizer(unittest.TestCase):
             "nested-objects": [{"next-hop": [{"distance": 1}]}],
             "ipv4-address": "10.0.0.2",
             "ipv6addr": "2000:0:2:3::",
+            "ip": {
+                "address": DeviceVariable(name="lan_ip_address_2"),
+            },
         }
         self.expected_result = {
             "key_one": Global[str](value="Simple string !@#$%^&*()-=[';/.,`~]"),
@@ -54,6 +58,7 @@ class TestNormalizer(unittest.TestCase):
             "nested_objects": [{"next_hop": [{"distance": Global[int](value=1)}]}],
             "ipv4_address": Global[IPv4Address](value=IPv4Address("10.0.0.2")),
             "ipv6addr": Global[IPv6Address](value=IPv6Address("2000:0:2:3::")),
+            "ip": {"address": Variable(value="{{lan_ip_address_2}}")},
         }
 
     def test_normalizer_handles_various_types_of_input(self):

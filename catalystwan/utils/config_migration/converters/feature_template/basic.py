@@ -1,8 +1,16 @@
 from copy import deepcopy
+from typing import Dict, Optional
 
-from catalystwan.api.configuration_groups.parcel import Global, as_default, as_global
+from catalystwan.api.configuration_groups.parcel import Global, OptionType, as_default, as_global
 from catalystwan.models.configuration.feature_profile.sdwan.system import BasicParcel
-from catalystwan.models.configuration.feature_profile.sdwan.system.basic import ConsoleBaudRate
+from catalystwan.models.configuration.feature_profile.sdwan.system.basic import (
+    Clock,
+    ConsoleBaudRate,
+    GeoFencing,
+    GpsVariable,
+    Sms,
+)
+from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
 from catalystwan.utils.timezone import Timezone
 
 
@@ -21,53 +29,64 @@ class SystemToBasicTemplateConverter:
         Returns:
             BasicParcel: A BasicParcel object with the provided template values.
         """
-        parcel_values = deepcopy(template_values)
-        parcel_values = {
-            "parcel_name": name,
-            "parcel_description": description,
-        }
+        data = deepcopy(template_values)
+        print(data)
+        # {'host_name': Variable(option_type=<OptionType.VARIABLE: 'variable'>, value='{{host-name}}'), 'system_ip': Variable(option_type=<OptionType.VARIABLE: 'variable'>, value='{{system-ip}}'), 'site_id': Variable(option_type=<OptionType.VARIABLE: 'variable'>, value='{{site-id}}'), 'port_offset': Global[int](option_type=<OptionType.GLOBAL: 'global'>, value=1), 'console_baud_rate': Global[str](option_type=<OptionType.GLOBAL: 'global'>, value='19200')}
 
-        track_default_gateway = template_values.get("track_default_gateway", as_default(False)).value
-        if track_default_gateway == "":
-            track_default_gateway = False
-        parcel_values["track_default_gateway"] = as_global(track_default_gateway)
+        track_default_gateway = data.get("track_default_gateway")
+        clock = self.parse_clock(data)
+        console_baud_rate = self.parse_console_baud_rate(data)
+        gps_location = self.parse_gps_location(data)
+        port_offset = data.get("port_offset")
 
-        clock_timezone = template_values.get("timezone", as_default("UTC")).value
-        parcel_values["clock"] = {"timezone": Global[Timezone](value=clock_timezone)}
+        payload = create_dict_without_none(
+            parcel_name=name,
+            parcel_description=description,
+            track_default_gateway=track_default_gateway,
+            clock=clock,
+            console_baud_rate=console_baud_rate,
+            gps_location=gps_location,
+            port_offset=port_offset,
+        )
 
-        console_baud_rate = template_values.get("console_baud_rate", as_default("9600")).value
-        if console_baud_rate == "":
-            console_baud_rate = "9600"  # Default value for console baud rate
-        parcel_values["console_baud_rate"] = Global[ConsoleBaudRate](value=console_baud_rate)
+        return BasicParcel(**payload)
 
-        parcel_values["gps_location"] = {}
+    def parse_clock(self, data: Dict) -> Clock:
+        timezone = data.get("timezone")
+        if timezone:
+            return Clock(timezone=Global[Timezone](value=timezone))
+        return Clock()
 
-        longitude = parcel_values.get("longitude", as_default("")).value
-        latitude = parcel_values.get("latitude", as_default("")).value
-        if longitude and latitude:
-            parcel_values["gps_location"]["longitude"] = longitude
-            parcel_values["gps_location"]["latitude"] = latitude
+    def parse_console_baud_rate(self, data: Dict) -> Optional[Global[ConsoleBaudRate]]:
+        baud_rate = data.get("console_baud_rate")
+        if not baud_rate:
+            return None
+        if baud_rate.option_type == OptionType.VARIABLE:
+            return baud_rate
+        return Global[ConsoleBaudRate](value=baud_rate.value)
 
-        if mobile_number := parcel_values.get("mobile_number", []):
-            parcel_values["gps_location"]["geo_fencing"] = {
-                "enable": as_global(True),
-                "range": parcel_values.get("range", as_default(100)),
-                "sms": {"enable": as_global(True), "mobile_number": mobile_number},
-            }
+    def parse_gps_location(self, data: Dict) -> GpsVariable:
+        gps_location = data.get("gps_location")
+        if not gps_location:
+            return GpsVariable()
 
-        # Remove unnecessary keys from template_values
-        for key in [
-            "timezone",
-            "longitude",
-            "latitude",
-            "mobile_number",
-            "range",
-            "site_id",
-            "system_ip",
-            "host_name",
-            "enable",
-            "tracker",
-        ]:
-            parcel_values.pop(key, None)
+        payload = create_dict_without_none(
+            longitude=gps_location.get("longitude"),
+            latitude=gps_location.get("latitude"),
+            geo_fencing=self.parse_geo_fencing(data),
+        )
 
-        return BasicParcel(**parcel_values)
+        return GpsVariable(**payload)
+
+    def parse_geo_fencing(self, data: Dict) -> GeoFencing:
+        mobile_number = data.get("mobile_number", [])
+        if mobile_number:
+            return GeoFencing(
+                enable=as_global(True),
+                range=data.get("range", as_default(100)),
+                sms=Sms(
+                    enable=as_global(True),
+                    mobile_number=mobile_number,
+                ),
+            )
+        return GeoFencing()

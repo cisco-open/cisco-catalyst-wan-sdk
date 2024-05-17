@@ -18,7 +18,6 @@ from catalystwan.models.configuration.config_migration import (
 )
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.session import ManagerSession
-from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.feature_template import create_parcel_from_template
 from catalystwan.utils.config_migration.converters.feature_template.cloud_credentials import (
     create_cloud_credentials_from_templates,
@@ -287,33 +286,34 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
     cloud_credential_templates = []
     for ft in ux1.templates.feature_templates:
         if ft.template_type in SUPPORTED_TEMPLATE_TYPES:
-            try:
-                parcel = create_parcel_from_template(ft)
-                ft_template_uuid = UUID(ft.id)
-                transformed_parcel = TransformedParcel(
-                    header=TransformHeader(
-                        type=parcel._get_parcel_type(),
-                        origin=ft_template_uuid,
-                        subelements=subtemplates_mapping[ft_template_uuid],
-                    ),
-                    parcel=parcel,
-                )
-                # Add to UX2. We can indentify the parcels as subelements of the feature profiles by the UUIDs
-                ux2.profile_parcels.append(transformed_parcel)
-            except CatalystwanConverterCantConvertException as e:
-                exception_message = f"Feature Template ({ft.name}) missing data during conversion: {e}."
-                logger.warning(exception_message)
-                transform_result.add_failed_conversion_parcel(
-                    exception_message=exception_message,
-                    feature_template=ft,
-                )
-            except Exception as e:
-                exception_message = f"Feature Template ({ft.name}) unexpected error during converion: {e}."
-                logger.warning(exception_message)
-                transform_result.add_failed_conversion_parcel(
-                    exception_message=exception_message,
-                    feature_template=ft,
-                )
+            # try:
+            parcel = create_parcel_from_template(ft)
+            ft_template_uuid = UUID(ft.id)
+            transformed_parcel = TransformedParcel(
+                header=TransformHeader(
+                    type=parcel._get_parcel_type(),
+                    origin=ft_template_uuid,
+                    subelements=subtemplates_mapping[ft_template_uuid],
+                ),
+                parcel=parcel,
+            )
+            # Add to UX2. We can indentify the parcels as subelements of the feature profiles by the UUIDs
+            ux2.profile_parcels.append(transformed_parcel)
+            # except CatalystwanConverterCantConvertException as e:
+            #     exception_message = f"Feature Template ({ft.name}) missing data during conversion: {e}."
+            #     logger.warning(exception_message)
+            #     transform_result.add_failed_conversion_parcel(
+            #         exception_message=exception_message,
+            #         feature_template=ft,
+            #     )
+            # except Exception as e:
+            #     exception_message = f"Feature Template ({ft.name}) unexpected error during converion: {e}."
+            #     logger.warning(exception_message)
+            #     transform_result.add_failed_conversion_parcel(
+            #         exception_message=exception_message,
+            #         feature_template=ft,
+            #     )
+
         elif ft.template_type in CLOUD_CREDENTIALS_FEATURE_TEMPLATES:
             cloud_credential_templates.append(ft)
     # Add Cloud Credentials to UX2
