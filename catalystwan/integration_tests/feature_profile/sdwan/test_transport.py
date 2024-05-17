@@ -25,14 +25,12 @@ from catalystwan.models.configuration.feature_profile.common import AclQos
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask as CommonPrefix
 from catalystwan.models.configuration.feature_profile.common import AdvancedGre, AllowService
 from catalystwan.models.configuration.feature_profile.common import Arp as CommonArp
+from catalystwan.models.configuration.feature_profile.common import ChannelGroup
 from catalystwan.models.configuration.feature_profile.common import (
     EthernetNatAttributesIpv4 as EthernetNatAttributesIpv4,
 )
 from catalystwan.models.configuration.feature_profile.common import (
     InterfaceStaticIPv4Address,
-    AdvancedGre,
-    AllowService,
-    ChannelGroup,
     MultilinkAuthenticationType,
     MultilinkClockSource,
     MultilinkControllerTxExList,
