@@ -4,6 +4,7 @@ from typing import Union
 from uuid import UUID
 
 from catalystwan.api.feature_profile_api import (
+    ApplicationPriorityFeatureProfileAPI,
     CliFeatureProfileAPI,
     DnsSecurityFeatureProfileAPI,
     OtherFeatureProfileAPI,
@@ -26,6 +27,7 @@ class TestFeatureProfileModels(unittest.TestCase):
         CliFeatureProfileAPI,
         DnsSecurityFeatureProfileAPI,
         SIGSecurityAPI,
+        ApplicationPriorityFeatureProfileAPI,
     ]
 
     @classmethod
