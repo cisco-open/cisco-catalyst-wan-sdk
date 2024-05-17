@@ -297,7 +297,8 @@ class UX2ConfigPushReport(BaseModel):
         return success_rate_message
 
 
-class UX2ConfigRollback(BaseModel):
+class UX2RollbackInfo(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     config_group_ids: List[UUID] = Field(
         default_factory=list,
         serialization_alias="ConfigGroupIds",
@@ -309,14 +310,14 @@ class UX2ConfigRollback(BaseModel):
         validation_alias="FeatureProfileIds",
     )
 
-    report: UX2ConfigPushReport = Field(
-        default=UX2ConfigPushReport(),
-        serialization_alias="ConfigPushReport",
-        validation_alias="ConfigPushReport",
-    )
-
     def add_config_group(self, config_group_id: UUID) -> None:
         self.config_group_ids.append(config_group_id)
 
     def add_feature_profile(self, feature_profile_id: UUID, profile_type: ProfileType) -> None:
         self.feature_profile_ids.append((feature_profile_id, profile_type))
+
+
+class UX2ConfigPushResult(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    rollback: UX2RollbackInfo = UX2RollbackInfo()
+    report: UX2ConfigPushReport = UX2ConfigPushReport()

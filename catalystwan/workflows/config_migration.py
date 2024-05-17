@@ -18,6 +18,7 @@ from catalystwan.models.configuration.config_migration import (
     TransformHeader,
     UX1Config,
     UX2Config,
+    UX2RollbackInfo,
     VersionInfo,
 )
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
@@ -29,7 +30,7 @@ from catalystwan.utils.config_migration.converters.feature_template.cloud_creden
     create_cloud_credentials_from_templates,
 )
 from catalystwan.utils.config_migration.converters.policy.policy_lists import convert as convert_policy_list
-from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigRollback
+from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigPushResult
 from catalystwan.utils.config_migration.reverters.config_reverter import UX2ConfigReverter
 from catalystwan.utils.config_migration.steps.constants import (
     LAN_VPN_ETHERNET,
@@ -414,20 +415,20 @@ def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, in
 
 def push_ux2_config(
     session: ManagerSession, ux2_config: UX2Config, progress: Callable[[str, int, int], None] = log_progress
-) -> UX2ConfigRollback:
+) -> UX2ConfigPushResult:
     current_versions = get_version_info(session)
     if not ux2_config.version.is_compatible(current_versions):
         logger.warning(
             f"Pushing UX2 config with versions mismatch\nsource: {ux2_config.version}\ntarget: {current_versions}"
         )
     config_pusher = UX2ConfigPusher(session, ux2_config, progress)
-    rollback = config_pusher.push()
-    return rollback
+    result = config_pusher.push()
+    return result
 
 
 def rollback_ux2_config(
     session: ManagerSession,
-    rollback_config: UX2ConfigRollback,
+    rollback_config: UX2RollbackInfo,
     progress: Callable[[str, int, int], None] = log_progress,
 ) -> bool:
     config_reverter = UX2ConfigReverter(session)
