@@ -493,7 +493,20 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestFeatureProfileModels):
             parcel_name="TestEthernetParcelSets",
             interface_name=as_global("HundredGigE"),
         )
-        ethernet_parcel.set_dynamic_interface_ip_address(dhcp_distance=123)
+        ethernet_parcel.set_dynamic_interface_ip_address(as_global(123))
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
+
+        # Assert
+        assert parcel_id
+
+    def test_set_dynamic_interface_ip_address_as_variable_for_ethernet_parcel(self):
+        # Arrange
+        ethernet_parcel = InterfaceEthernetParcel(
+            parcel_name="TestEthernetParcelVariable",
+            interface_name=as_global("HundredGigE"),
+        )
+        ethernet_parcel.set_dynamic_interface_ip_address(as_variable("address"))
 
         parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
 
@@ -506,7 +519,20 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestFeatureProfileModels):
             parcel_name="TestEthernetParcelPrimaryStaticOne",
             interface_name=as_global("HundredGigE"),
         )
-        ethernet_parcel.set_static_primary_interface_ip_address("1.1.1.1")
+        ethernet_parcel.set_static_primary_interface_ip_address(as_global("1.1.1.1"))
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
+
+        # Assert
+        assert parcel_id
+
+    def test_set_primary_static_interface_ip_address_as_variable_for_ethernet_parcel(self):
+        # Arrange
+        ethernet_parcel = InterfaceEthernetParcel(
+            parcel_name="TestEthernetParcelPrimaryStaticVariable",
+            interface_name=as_global("HundredGigE"),
+        )
+        ethernet_parcel.set_static_primary_interface_ip_address(as_variable("address"))
 
         parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
 
@@ -519,8 +545,24 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestFeatureProfileModels):
             parcel_name="TestEthernetParcelPrimaryStaticMask",
             interface_name=as_global("HundredGigE"),
         )
-        ethernet_parcel.set_static_primary_interface_ip_address("1.1.1.1")
-        ethernet_parcel.add_static_secondary_interface_ip_address("3.3.3.3", "255.255.255.128")
+        ethernet_parcel.set_static_primary_interface_ip_address(as_global("1.1.1.1"))
+        ethernet_parcel.add_static_secondary_interface_ip_address(as_global("3.3.3.3"), as_global("255.255.255.128"))
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
+
+        # Assert
+        assert parcel_id
+
+    def test_set_primary_static_with_mask_interface_ip_address_as_varialbles_for_ethernet_parcel(self):
+        # Arrange
+        ethernet_parcel = InterfaceEthernetParcel(
+            parcel_name="TestEthernetParcelPrimaryStaticMaskVariable",
+            interface_name=as_global("HundredGigE"),
+        )
+        ethernet_parcel.set_static_primary_interface_ip_address(as_variable("static_ip_address"))
+        ethernet_parcel.add_static_secondary_interface_ip_address(
+            as_variable("second_ip_address"), as_variable("second_mask")
+        )
 
         parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
 

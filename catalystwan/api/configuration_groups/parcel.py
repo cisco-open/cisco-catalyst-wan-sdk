@@ -162,6 +162,8 @@ def as_variable(value: str):
     Returns:
         Variable: variable option type object
     """
+    if not value.startswith("{{") and not value.endswith("}}"):
+        value = "{{" + value + "}}"
     return Variable(value=value)
 
 
