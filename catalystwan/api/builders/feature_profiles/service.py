@@ -119,7 +119,7 @@ class ServiceFeatureProfileBuilder:
             Service feature profile UUID
         """
         profile_uuid = self._endpoints.create_sdwan_service_feature_profile(self._profile).id
-        self.build_raport = FeatureProfileBuildReport(profile_uuid=profile_uuid, profile_name=self._profile.name)
+        self.build_report = FeatureProfileBuildReport(profile_uuid=profile_uuid, profile_name=self._profile.name)
         for parcel in self._independent_items:
             self._create_parcel(profile_uuid, parcel)
         for vpn_tag, vpn_parcel in self._independent_items_vpns.items():
@@ -129,7 +129,7 @@ class ServiceFeatureProfileBuilder:
                     subparcel_fail_message = (
                         f"Parent parcel: {vpn_parcel.parcel_name} failed to create. This subparcel is dependent on it."
                     )
-                    self.build_raport.add_failed_parcel(
+                    self.build_report.add_failed_parcel(
                         sub_parcel.parcel_name,
                         sub_parcel._get_parcel_type(),  # type: ignore
                         subparcel_fail_message
@@ -140,7 +140,7 @@ class ServiceFeatureProfileBuilder:
                 for sub_parcel in self._depended_items_on_vpns[vpn_tag]:
                     self._create_parcel(profile_uuid, sub_parcel, vpn_uuid)
 
-        return self.build_raport
+        return self.build_report
 
     @handle_build_report
     def _create_parcel(self, profile_uuid: UUID, parcel: AnyServiceParcel, vpn_uuid: Optional[None] = None) -> UUID:

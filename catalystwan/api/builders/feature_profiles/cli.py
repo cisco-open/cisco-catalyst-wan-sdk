@@ -66,10 +66,10 @@ class CliFeatureProfileBuilder:
         """
 
         profile_uuid = self._endpoints.create_profile(self._profile).id
-        self.build_raport = FeatureProfileBuildReport(profile_uuid=profile_uuid, profile_name=self._profile.name)
+        self.build_report = FeatureProfileBuildReport(profile_uuid=profile_uuid, profile_name=self._profile.name)
         for config_parcel in self._cli_configs:
             self._create_parcel(profile_uuid, config_parcel)
-        return self.build_raport
+        return self.build_report
 
     @handle_build_report
     def _create_parcel(self, profile_uuid: UUID, parcel: AnyCliParcel) -> UUID:
