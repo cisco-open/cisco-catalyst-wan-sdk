@@ -23,6 +23,7 @@ VPN_ADDITIONAL_TEMPLATES = [
     "vpn-cedge-interface-multilink-controller",
 ]
 
+
 MANAGEMENT_VPN_ETHERNET = "management/vpn/interface/ethernet"
 
 WAN_VPN_GRE = "wan/vpn/interface/gre"
@@ -57,7 +58,7 @@ VPN_TEMPLATE_MAPPINGS: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {
             "vpn-vsmart-interface": WAN_VPN_ETHERNET,
             "vpn-vedge-interface": WAN_VPN_ETHERNET,
             "vpn-vmanage-interface": WAN_VPN_ETHERNET,
-    "vpn-cedge-interface-multilink-controller": WAN_VPN_MULTILINK,
+            "vpn-cedge-interface-multilink-controller": WAN_VPN_MULTILINK,
         },
         "suffix": "_TRANSPORT",
     },
@@ -72,7 +73,7 @@ VPN_TEMPLATE_MAPPINGS: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {
             "cisco_vpn_interface_ipsec": LAN_VPN_IPSEC,
             "vpn-interface-svi": LAN_VPN_SVI,
             "vpn-vedge-interface-ipsec": LAN_VPN_IPSEC,
-    "vpn-cedge-interface-multilink-controller": LAN_VPN_MULTILINK,
+            "vpn-cedge-interface-multilink-controller": LAN_VPN_MULTILINK,
         },
         "suffix": "_SERVICE",
     },
