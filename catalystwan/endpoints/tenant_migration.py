@@ -19,6 +19,8 @@ class MigrationTokenQueryParams(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def single_migration_id_required(cls, values: Any):
+        if not isinstance(values, dict):
+            return values
         migration_id = values.get("migrationId")
         if isinstance(migration_id, list) and len(migration_id) == 1:
             values["migrationId"] = migration_id[0]

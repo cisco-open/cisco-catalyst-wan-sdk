@@ -123,6 +123,8 @@ class LocalizedPolicy(PolicyCreationPayload):
         # this is needed because GET /template/policy/vedge contains string in policyDefinition field
         # while POST /template/policy/vedge requires a regular object
         # it makes sense to reuse that model for both requests and present parsed data to the user
+        if not isinstance(values, dict):
+            return values
         if (policy_definition := values.get("policyDefinition")) and values.get("policyType") != "cli":
             if isinstance(policy_definition, str):
                 values["policyDefinition"] = LocalizedPolicyDefinition.model_validate_json(policy_definition)

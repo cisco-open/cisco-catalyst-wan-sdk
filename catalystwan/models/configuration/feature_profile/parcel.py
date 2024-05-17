@@ -134,6 +134,8 @@ class Parcel(BaseModel, Generic[T]):
 
     @model_validator(mode="before")
     def validate_payload(cls, data):
+        if not isinstance(data, dict):
+            return data
         data["payload"]["type_"] = data["parcelType"]
         return data
 

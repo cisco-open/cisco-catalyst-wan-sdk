@@ -178,6 +178,8 @@ class UX2Config(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def insert_parcel_type_from_headers(cls, values: Dict[str, Any]):
+        if not isinstance(values, dict):
+            return values
         profile_parcels = values.get("profileParcels", [])
         if not profile_parcels:
             profile_parcels = values.get("profile_parcels", [])
