@@ -259,3 +259,20 @@ class DataSequence(TypedList[T], Generic[T]):
             raise InvalidOperationError("The input sequence contains no elements.")
 
         return self.data[0]
+
+    def find(self, **kwargs) -> T:
+        """Finds first item in sequence matching values based on attributes.
+        Works similarily as filter but assures single element is returned or raises exception.
+
+        >>> seq = DataSequence(User, [User(username="User1"), User(username="User2")])
+        >>> seq.find(username="User1")
+        User(username='User1', password=None, group=[], locale=None, description=None, resource_group=None)
+
+        Returns:
+            [T]: The single element of the input sequence.
+        """
+        annotations = set(kwargs.keys())
+        result = next(filter(lambda x: all(getattr(x, a) == kwargs[a] for a in annotations), self.data), None)
+        if result is None:
+            raise InvalidOperationError(f"Item matching {kwargs} not found in the input sequence")
+        return result
