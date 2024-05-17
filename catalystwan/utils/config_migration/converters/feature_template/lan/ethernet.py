@@ -1,9 +1,12 @@
 from copy import deepcopy
-from typing import List, Optional
+from typing import Dict, List, Optional
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, as_default, as_global, as_variable
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import (
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_default, as_global, as_variable
+from catalystwan.models.common import EthernetDuplexMode
+from catalystwan.models.configuration.feature_profile.common import (
     Arp,
+    DynamicIPv6Dhcp,
+    EthernetNatPool,
     StaticIPv4Address,
     StaticIPv6Address,
 )
@@ -11,14 +14,12 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet
     AclQos,
     AdvancedEthernetAttributes,
     DynamicDhcpDistance,
-    DynamicIPv6Dhcp,
+    EthernetNatAttributesIpv4,
     InterfaceDynamicIPv4Address,
     InterfaceDynamicIPv6Address,
     InterfaceEthernetParcel,
     InterfaceStaticIPv4Address,
     InterfaceStaticIPv6Address,
-    NatAttributesIPv4,
-    NatPool,
     StaticIPv4AddressConfig,
     StaticIPv6AddressConfig,
     Trustsec,
@@ -27,7 +28,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet
 from catalystwan.utils.config_migration.steps.constants import LAN_VPN_ETHERNET
 
 
-class InterfaceEthernetTemplateConverter:
+class LanInterfaceEthernetTemplateConverter:
     supported_template_types = (LAN_VPN_ETHERNET,)
 
     delete_keys = (
@@ -66,6 +67,10 @@ class InterfaceEthernetTemplateConverter:
         "clear_dont_fragment",
         "access_list",
         "qos_adaptive",
+        "poe",
+        "pmtu",
+        "static_ingress_qos",
+        "flow_control",
         "tunnel_interface",  # Not sure if this is correct. There is some data in UX1 that is not transferable to UX2
         "nat66",  # Not sure if this is correct. There is some data in UX1 that is not transferable to UX2
     )
@@ -78,6 +83,7 @@ class InterfaceEthernetTemplateConverter:
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceEthernetParcel:
         values = deepcopy(template_values)
+        print("CALLED LAN INTERFACE ETHERNET TEMPLATE CONVERTER")
         self.configure_interface_name(values)
         self.configure_ethernet_description(values)
         self.configure_ipv4_address(values)
@@ -131,7 +137,15 @@ class InterfaceEthernetTemplateConverter:
                 )
 
     def get_static_ipv4_address(self, address_configuration: dict) -> StaticIPv4Address:
-        static_network = address_configuration["address"].value.network
+        address = address_configuration["address"]
+
+        if isinstance(address, Variable):
+            return StaticIPv4Address(
+                ip_address=address,
+                subnet_mask=address,
+            )
+
+        static_network = address.value.network
         return StaticIPv4Address(
             ip_address=as_global(value=static_network.network_address),
             subnet_mask=as_global(value=str(static_network.netmask)),
@@ -179,7 +193,7 @@ class InterfaceEthernetTemplateConverter:
 
     def configure_advanced_attributes(self, values: dict) -> None:
         values["advanced"] = AdvancedEthernetAttributes(
-            duplex=values.get("duplex"),
+            duplex=self.parse_duplex(values),
             mac_address=values.get("mac_address"),
             speed=values.get("speed"),
             ip_mtu=values.get("mtu", as_default(value=1500)),
@@ -194,6 +208,11 @@ class InterfaceEthernetTemplateConverter:
             xconnect=values.get("tloc_extension_gre_from", {}).get("xconnect"),
             ip_directed_broadcast=values.get("ip_directed_broadcast", as_default(False)),
         )
+
+    def parse_duplex(self, data: Dict) -> Optional[Global[EthernetDuplexMode]]:
+        if duplex := data.get("duplex"):
+            return as_global(duplex.value, EthernetDuplexMode)
+        return None
 
     def get_tracker_value(self, values: dict) -> Optional[Global[str]]:
         if tracker := values.get("tracker"):
@@ -244,7 +263,7 @@ class InterfaceEthernetTemplateConverter:
                 nat_type = nat.get("nat_choice", as_variable(self.nat_attribute_nat_choice))
                 if nat_type.value.lower() == "interface":
                     nat_type = as_variable(self.nat_attribute_nat_choice)
-                values["nat_attributes_ipv4"] = NatAttributesIPv4(
+                values["nat_attributes_ipv4"] = EthernetNatAttributesIpv4(
                     nat_type=nat_type,
                     nat_pool=self.get_nat_pool(nat),
                     udp_timeout=nat.get("udp_timeout", as_default(1)),
@@ -253,9 +272,9 @@ class InterfaceEthernetTemplateConverter:
                 )
                 values["nat"] = as_global(True)
 
-    def get_nat_pool(self, values: dict) -> Optional[NatPool]:
+    def get_nat_pool(self, values: dict) -> Optional[EthernetNatPool]:
         if nat_pool := values.get("natpool"):
-            return NatPool(**nat_pool)
+            return EthernetNatPool(**nat_pool)
         return None
 
     def configure_acl_qos(self, values: dict) -> None:

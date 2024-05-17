@@ -7,10 +7,8 @@ from uuid import UUID
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+from catalystwan.models.configuration.feature_profile.common import Arp, StaticIPv4Address, StaticIPv6Address
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import (
-    Arp,
-    StaticIPv4Address,
-    StaticIPv6Address,
     VrrpIPv6Address,
     VrrpTrackingObject,
 )

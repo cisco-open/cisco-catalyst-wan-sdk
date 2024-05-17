@@ -4,6 +4,7 @@ import logging
 from typing import Any, Callable, Dict, cast
 
 from catalystwan.api.template_api import FeatureTemplateInformation
+from catalystwan.api.templates.device_variable import DeviceVariable
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
 from catalystwan.utils.config_migration.converters.feature_template.lan.multilink import LanMultilinkTemplateConverter
@@ -22,7 +23,7 @@ from .cli import CliTemplateConverter
 from .dhcp import DhcpTemplateConverter
 from .global_ import GlobalTemplateConverter
 from .gps import GpsTemplateConverter
-from .lan.ethernet import InterfaceEthernetTemplateConverter
+from .lan.ethernet import LanInterfaceEthernetTemplateConverter
 from .lan.gre import LanInterfaceGreTemplateConverter
 from .lan.ipsec import LanInterfaceIpsecTemplateConverter
 from .lan.svi import InterfaceSviTemplateConverter
@@ -45,6 +46,7 @@ from .thousandeyes import ThousandEyesTemplateConverter
 from .ucse import UcseTemplateConverter
 from .vpn import VpnTemplateConverter
 from .wan.cellular import InterfaceCellularTemplateConverter
+from .wan.ethernet import WanInterfaceEthernetTemplateConverter
 from .wan.gre import WanInterfaceGreTemplateConverter
 from .wan.ipsec import WanInterfaceIpsecTemplateConverter
 from .wan.multilink import WanMultilinkTemplateConverter
@@ -79,7 +81,7 @@ available_converters = [
     LanInterfaceGreTemplateConverter,
     LanMultilinkTemplateConverter,
     InterfaceSviTemplateConverter,
-    InterfaceEthernetTemplateConverter,
+    LanInterfaceEthernetTemplateConverter,
     LanInterfaceIpsecTemplateConverter,
     OspfTemplateConverter,
     Ospfv3TemplateConverter,
@@ -101,6 +103,7 @@ available_converters = [
     CellularControllerTemplateConverter,
     CellularProfileTemplateConverter,
     CliTemplateConverter,
+    WanInterfaceEthernetTemplateConverter,
     SIGTemplateConverter,
     WanMultilinkTemplateConverter,
 ]
@@ -147,7 +150,10 @@ def create_parcel_from_template(template: FeatureTemplateInformation) -> AnyParc
     """
     converter = choose_parcel_converter(template.template_type)()
     template_definition_as_dict = json.loads(cast(str, template.template_definiton))
-    template_values = find_template_values(template_definition_as_dict)
+    device_specific_variables: Dict[str, DeviceVariable] = {}
+    template_values = find_template_values(
+        template_definition_as_dict, device_specific_variables=device_specific_variables
+    )
     template_values_normalized = template_definition_normalization(template_values)
     logger.debug(f"Normalized template {template.name}: {template_values_normalized}")
     return converter.create_parcel(template.name, template.description, template_values_normalized)

@@ -86,6 +86,7 @@ ParcelType = Literal[
     "wan/vpn/interface/eth-pppoe",
     "wan/vpn/interface/gre",
     "wan/vpn/interface/cellular",
+    "wan/vpn/interface/ethernet",
     "wan/vpn/interface/multilink",
     "config",
     "dns",

@@ -28,12 +28,14 @@ from catalystwan.utils.config_migration.converters.policy.policy_lists import co
 from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigRollback
 from catalystwan.utils.config_migration.reverters.config_reverter import UX2ConfigReverter
 from catalystwan.utils.config_migration.steps.constants import (
-    CISCO_VPN_SERVICE,
-    CISCO_VPN_TRANSPORT_AND_MANAGEMENT,
     LAN_VPN_ETHERNET,
     LAN_VPN_GRE,
     LAN_VPN_IPSEC,
     LAN_VPN_MULTILINK,
+    VPN_MANAGEMENT,
+    VPN_SERVICE,
+    VPN_TRANSPORT,
+    WAN_VPN_ETHERNET,
     WAN_VPN_GRE,
     WAN_VPN_MULTILINK,
 )
@@ -91,6 +93,7 @@ SUPPORTED_TEMPLATE_TYPES = [
     WAN_VPN_MULTILINK,
     LAN_VPN_MULTILINK,
     WAN_VPN_GRE,
+    WAN_VPN_ETHERNET,
     LAN_VPN_GRE,
     LAN_VPN_ETHERNET,
     LAN_VPN_IPSEC,
@@ -138,7 +141,8 @@ FEATURE_PROFILE_TRANSPORT = [
     "vpn-interface-pppoe",
     "vpn-interface-pppoa",
     "vpn-interface-ipoe",
-    CISCO_VPN_TRANSPORT_AND_MANAGEMENT,
+    VPN_TRANSPORT,
+    VPN_MANAGEMENT,
 ]
 
 FEATURE_PROFILE_OTHER = [
@@ -160,7 +164,7 @@ FEATURE_PROFILE_SERVICE = [
     "cedge_igmp",
     "cedge_multicast",
     "cedge_pim",
-    CISCO_VPN_SERVICE,
+    VPN_SERVICE,
 ]
 
 FEATURE_PROFILE_CLI = [

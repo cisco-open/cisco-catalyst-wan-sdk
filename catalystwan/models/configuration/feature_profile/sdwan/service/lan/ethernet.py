@@ -7,81 +7,22 @@ from uuid import UUID
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import (
+from catalystwan.models.common import EthernetDuplexMode, MediaType
+from catalystwan.models.configuration.feature_profile.common import (
     Arp,
+    DynamicDhcpDistance,
+    EthernetNatAttributesIpv4,
+    InterfaceDynamicIPv4Address,
+    InterfaceDynamicIPv6Address,
+    InterfaceStaticIPv4Address,
     StaticIPv4Address,
+    StaticIPv4AddressConfig,
     StaticIPv6Address,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.common import (
     VrrpIPv6Address,
     VrrpTrackingObject,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import Direction
-
-NatType = Literal[
-    "pool",
-    "loopback",
-]
-
-DuplexMode = Literal[
-    "full",
-    "half",
-    "auto",
-]
-
-MediaType = Literal[
-    "auto-select",
-    "rj45",
-    "sfp",
-]
-
-
-class DynamicDhcpDistance(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    dynamic_dhcp_distance: Union[Variable, Global[int], Default[int]] = Field(
-        default=Default[int](value=1), serialization_alias="dynamicDhcpDistance", validation_alias="dynamicDhcpDistance"
-    )
-
-
-class InterfaceDynamicIPv4Address(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    dynamic: DynamicDhcpDistance
-
-
-class StaticIPv4AddressConfig(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    primary_ip_address: StaticIPv4Address = Field(
-        serialization_alias="staticIpV4AddressPrimary",
-        validation_alias="staticIpV4AddressPrimary",
-        default_factory=StaticIPv4Address,
-    )
-    secondary_ip_address: Optional[List[StaticIPv4Address]] = Field(
-        serialization_alias="staticIpV4AddressSecondary", validation_alias="staticIpV4AddressSecondary", default=None
-    )
-
-
-class InterfaceStaticIPv4Address(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    static: StaticIPv4AddressConfig = Field(default_factory=StaticIPv4AddressConfig)
-
-
-class DynamicIPv6Dhcp(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    dhcp_client: Union[Global[dict], Global[bool]] = Field(
-        serialization_alias="dhcpClient", validation_alias="dhcpClient", default=Global[dict](value={})
-    )
-    secondary_ipv6_address: Optional[List[StaticIPv6Address]] = Field(
-        serialization_alias="secondaryIpV6Address", validation_alias="secondaryIpV6Address", default=None
-    )
-
-
-class InterfaceDynamicIPv6Address(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    dynamic: DynamicIPv6Dhcp
 
 
 class Dhcpv6Helper(BaseModel):
@@ -109,60 +50,6 @@ class InterfaceStaticIPv6Address(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     static: StaticIPv6AddressConfig
-
-
-class NatPool(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    range_start: Union[Variable, Global[str], Global[IPv4Address], Default[None]] = Field(
-        serialization_alias="rangeStart", validation_alias="rangeStart"
-    )
-    range_end: Union[Variable, Global[str], Global[IPv4Address], Default[None]] = Field(
-        serialization_alias="rangeEnd", validation_alias="rangeEnd"
-    )
-    prefix_length: Union[Variable, Global[int], Default[None]] = Field(
-        serialization_alias="prefixLength", validation_alias="prefixLength"
-    )
-    overload: Union[Variable, Global[bool], Default[bool]] = Default[bool](value=True)
-
-
-class StaticNat(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    source_ip: Union[Global[str], Global[IPv4Address], Variable] = Field(
-        serialization_alias="sourceIp", validation_alias="sourceIp"
-    )
-
-    translate_ip: Union[Global[str], Global[IPv4Address], Variable] = Field(
-        serialization_alias="translateIp", validation_alias="translateIp"
-    )
-    static_nat_direction: Union[Global[Direction], Default[Direction]] = Field(
-        serialization_alias="staticNatDirection",
-        validation_alias="staticNatDirection",
-        default=Default[Direction](value="inside"),
-    )
-    source_vpn: Union[Global[int], Variable, Default[int]] = Field(
-        serialization_alias="sourceVpn", validation_alias="sourceVpn", default=Default[int](value=0)
-    )
-
-
-class NatAttributesIPv4(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
-    nat_type: Union[Global[NatType], Variable] = Field(serialization_alias="natType", validation_alias="natType")
-    nat_pool: Optional[NatPool] = Field(serialization_alias="natPool", validation_alias="natPool", default=None)
-    nat_loopback: Optional[Union[Global[str], Variable, Default[None]]] = Field(
-        serialization_alias="natLoopbakc", validation_alias="natLoopbakc", default=None
-    )
-    udp_timeout: Union[Global[int], Variable, Default[int]] = Field(
-        serialization_alias="udpTimeout", validation_alias="udpTimeout", default=Default[int](value=1)
-    )
-    tcp_timeout: Union[Global[int], Variable, Default[int]] = Field(
-        serialization_alias="tcpTimeout", validation_alias="tcpTimeout", default=Default[int](value=60)
-    )
-    new_static_nat: Optional[List[StaticNat]] = Field(
-        serialization_alias="newStaticNat", validation_alias="newStaticNat", default=None
-    )
 
 
 class NatAttributesIPv6(BaseModel):
@@ -254,7 +141,7 @@ class Trustsec(BaseModel):
 class AdvancedEthernetAttributes(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    duplex: Optional[Union[Global[DuplexMode], Variable, Default[None]]] = None
+    duplex: Optional[Union[Global[EthernetDuplexMode], Variable, Default[None]]] = None
     mac_address: Optional[Union[Global[str], Variable, Default[None]]] = Field(
         serialization_alias="macAddress", validation_alias="macAddress", default=None
     )
@@ -315,7 +202,7 @@ class InterfaceEthernetParcel(_ParcelBase):
     nat: Union[Global[bool], Default[bool]] = Field(
         validation_alias=AliasPath("data", "nat"), default=Default[bool](value=False)
     )
-    nat_attributes_ipv4: Optional[NatAttributesIPv4] = Field(
+    nat_attributes_ipv4: Optional[EthernetNatAttributesIpv4] = Field(
         validation_alias=AliasPath("data", "natAttributesIpv4"), default=None
     )
     nat_ipv6: Optional[Union[Global[bool], Default[bool]]] = Field(

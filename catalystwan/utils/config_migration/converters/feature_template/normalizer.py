@@ -1,8 +1,10 @@
 from ipaddress import AddressValueError, IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
 from typing import List, Optional, Union, get_args
 
-from catalystwan.api.configuration_groups.parcel import Global, as_global
+from catalystwan.api.configuration_groups.parcel import Global, Variable, as_global
 from catalystwan.models.common import (
+    EthernetDuplexMode,
+    EthernetNatType,
     IkeCiphersuite,
     IkeMode,
     IpsecCiphersuite,
@@ -13,7 +15,7 @@ from catalystwan.models.common import (
     VrrpTrackerAction,
 )
 from catalystwan.models.configuration.feature_profile.common import TunnelApplication
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet import DuplexMode, MediaType, NatType
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet import MediaType
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import GreTunnelMode
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import IpsecTunnelMode
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import Direction
@@ -64,9 +66,9 @@ CastableLiterals = Union[
     GreTunnelMode,
     VrrpTrackerAction,
     Duplex,
-    DuplexMode,
+    EthernetDuplexMode,
     MediaType,
-    NatType,
+    EthernetNatType,
     IpsecTunnelMode,
     NetworkType,
     AuthenticationType,
@@ -95,6 +97,7 @@ CastedTypes = Union[
     Global[IPv4Interface],
     Global[IPv6Interface],
     Global[CastableLiterals],
+    Variable,
 ]
 
 
@@ -104,7 +107,6 @@ def to_snake_case(s: str) -> str:
 
 
 def cast_value_to_global(value: Union[str, int, List[str], List[int]]) -> CastedTypes:
-    """Casts value to Global."""
     if isinstance(value, list):
         value_type = Global[List[int]] if isinstance(value[0], int) else Global[List[str]]
         return value_type(value=value)  # type: ignore
@@ -157,5 +159,6 @@ def transform_dict(d: dict) -> dict:
 
 
 def template_definition_normalization(template_definition: dict) -> dict:
-    """Normalizes a template definition by changing keys to snake_case and casting all leafs values to global types."""
+    """Merges the templates values  then normalizes by changing keys to snake_case and
+    cast all values to Global types."""
     return transform_dict(template_definition)
