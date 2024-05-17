@@ -10,7 +10,7 @@ class Cflowd(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     value: bool
     option_type: Literal["network-settings"] = Field(
-        default=Literal["network-settings"], validation_alias="optionType", serialization_alias="optionType"
+        default="network-settings", validation_alias="optionType", serialization_alias="optionType"
     )
 
 
