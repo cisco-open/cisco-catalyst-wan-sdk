@@ -7,9 +7,9 @@ from requests import HTTPError, RequestException
 
 
 class ManagerErrorInfo(BaseModel):
-    message: Union[str, None]
-    details: Union[str, None]
-    code: Union[str, None]
+    message: Union[str, None] = None
+    details: Union[str, None] = None
+    code: Union[str, None] = None
 
 
 class CatalystwanException(Exception):
