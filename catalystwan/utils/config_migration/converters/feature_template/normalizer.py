@@ -2,7 +2,6 @@ from ipaddress import AddressValueError, IPv4Address, IPv4Interface, IPv6Address
 from typing import List, Optional, Union, get_args
 
 from catalystwan.api.configuration_groups.parcel import Global, Variable, as_global
-from catalystwan.api.templates.device_variable import DeviceVariable
 from catalystwan.models.common import (
     EthernetDuplexMode,
     EthernetNatType,
@@ -107,10 +106,7 @@ def to_snake_case(s: str) -> str:
     return s.replace("-", "_")
 
 
-def cast_value_to_global_or_variable(value: Union[DeviceVariable, str, int, List[str], List[int]]) -> CastedTypes:
-    """Casts value to Global or Variable."""
-    if isinstance(value, DeviceVariable):
-        return Variable(value="{{" + value.name + "}}")
+def cast_value_to_global(value: Union[str, int, List[str], List[int]]) -> CastedTypes:
     if isinstance(value, list):
         value_type = Global[List[int]] if isinstance(value[0], int) else Global[List[str]]
         return value_type(value=value)  # type: ignore
@@ -157,12 +153,12 @@ def transform_dict(d: dict) -> dict:
         elif isinstance(value, list):
             if all(isinstance(v, dict) for v in value):
                 return [transform_value(item) for item in value]
-        return cast_value_to_global_or_variable(value)
+        return cast_value_to_global(value)
 
     return {to_snake_case(key): transform_value(val) for key, val in d.items()}
 
 
-def template_definition_normalization(template_definition: dict, device_specific_variables: dict) -> dict:
-    """Merges the templates values and variables then normalizes by changing keys to snake_case and
-    cast all values to Global and device variables to Variable."""
-    return transform_dict({**template_definition, **device_specific_variables})
+def template_definition_normalization(template_definition: dict) -> dict:
+    """Merges the templates values  then normalizes by changing keys to snake_case and
+    cast all values to Global types."""
+    return transform_dict(template_definition)

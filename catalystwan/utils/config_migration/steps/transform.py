@@ -159,4 +159,3 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
     cisco_vpn_template.subTemplates = [
         st for st in cisco_vpn_template.subTemplates if st.templateType not in VPN_ADDITIONAL_TEMPLATES
     ]
-    print(cisco_vpn_template.subTemplates)

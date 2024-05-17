@@ -7,17 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-<<<<<<< HEAD
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_default, as_global
-from catalystwan.models.common import (
-    CoreRegion,
-    EncapType,
-    EthernetDirection,
-    EthernetNatType,
-    SecondaryRegion,
-    SubnetMask,
-=======
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
 from catalystwan.models.common import (
     CableLengthLongValue,
     CableLengthShortValue,
@@ -26,12 +16,13 @@ from catalystwan.models.common import (
     E1Framing,
     E1Linecode,
     EncapType,
+    EthernetDirection,
+    EthernetNatType,
     LineMode,
     SecondaryRegion,
     SubnetMask,
     T1Framing,
     T1Linecode,
->>>>>>> dev-uxmt
     check_fields_exclusive,
 )
 from catalystwan.models.configuration.common import Solution
@@ -472,6 +463,7 @@ class AllowService(BaseModel):
     ssh: Optional[Union[Default[bool], Global[bool], Variable]] = Field(
         default=None, description="Field available only for InterfaceCellularParcel"
     )
+
 
 class Arp(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
