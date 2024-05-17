@@ -1,20 +1,16 @@
-import os
-import unittest
 from ipaddress import IPv4Address
-from typing import cast
 from uuid import UUID
 
 from catalystwan.api.configuration_groups.parcel import as_global
 from catalystwan.api.feature_profile_api import ServiceFeatureProfileAPI, TopologyFeatureProfileAPI
+from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
-from catalystwan.session import ManagerSession, create_manager_session
 
 
-class TestTopologyFeatureProfile(unittest.TestCase):
-    session: ManagerSession
+class TestTopologyFeatureProfile(TestFeatureProfileModels):
     topology_api: TopologyFeatureProfileAPI
     topology_profile_id: UUID
     service_api: ServiceFeatureProfileAPI
@@ -24,12 +20,7 @@ class TestTopologyFeatureProfile(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.session = create_manager_session(
-            url=cast(str, os.environ.get("TEST_VMANAGE_URL")),
-            port=cast(int, int(os.environ.get("TEST_VMANAGE_PORT"))),  # type: ignore
-            username=cast(str, os.environ.get("TEST_VMANAGE_USERNAME")),
-            password=cast(str, os.environ.get("TEST_VMANAGE_PASSWORD")),
-        )
+        super().setUpClass()
         cls.topology_api = cls.session.api.sdwan_feature_profiles.topology
         cls.topology_profile_id = cls.topology_api.create_profile("TestProfile", "Description").id
         # preconditions
