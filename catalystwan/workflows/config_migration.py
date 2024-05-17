@@ -1,7 +1,7 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
 from collections import defaultdict
-from typing import Callable
+from typing import Callable, Optional, TypeVar, cast
 from uuid import UUID, uuid4
 
 from pydantic import ValidationError
@@ -19,6 +19,7 @@ from catalystwan.models.configuration.config_migration import (
     UX2Config,
 )
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
+from catalystwan.models.policy import AnyPolicyDefinitionInfo
 from catalystwan.session import ManagerSession
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.feature_template import create_parcel_from_template
@@ -43,6 +44,8 @@ from catalystwan.utils.config_migration.steps.constants import (
 from catalystwan.utils.config_migration.steps.transform import merge_parcels, resolve_template_type
 
 logger = logging.getLogger(__name__)
+
+T = TypeVar("T")
 
 SUPPORTED_TEMPLATE_TYPES = [
     "cisco_aaa",
@@ -327,7 +330,7 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
             policy_parcel = convert_policy_list(policy_list)
             header = TransformHeader(type=policy_parcel._get_parcel_type(), origin=policy_list.list_id)
             ux2.profile_parcels.append(TransformedParcel(header=header, parcel=policy_parcel))
-        except (CatalystwanConverterCantConvertException, ValidationError) as e:
+        except CatalystwanConverterCantConvertException as e:
             error_message = (
                 f"Policy List {policy_list.type} {policy_list.list_id} {policy_list.name} was not converted: {e}"
             )
@@ -348,6 +351,13 @@ def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, in
     """Collect Policies"""
     policy_api = session.api.policy
 
+    def guard(func: Callable[..., T], *args, **kwargs) -> Optional[T]:
+        try:
+            return func(*args, **kwargs)
+        except ValidationError as e:
+            logger.warning(f"{args} {kwargs}\n{e}")
+        return None
+
     progress("Collecting Policy Info", 0, 1)
     policy_definition_types_and_ids = [
         (policy_type, info.definition_id) for policy_type, info in policy_api.definitions.get_all()
@@ -356,11 +366,15 @@ def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, in
 
     policy_list_types = POLICY_LIST_ENDPOINTS_MAP.keys()
     for i, policy_list_type in enumerate(policy_list_types):
-        ux1.policies.policy_lists.extend(policy_api.lists.get(policy_list_type))
+        if policy_list := guard(policy_api.lists.get, policy_list_type):
+            ux1.policies.policy_lists.extend(policy_list)
         progress("Collecting Policy Lists", i + 1, len(policy_list_types))
 
     for i, type_and_id in enumerate(policy_definition_types_and_ids):
-        ux1.policies.policy_definitions.append(policy_api.definitions.get(*type_and_id))
+        if _policy_definition := guard(policy_api.definitions.get, *type_and_id):
+            # type checker cannot infer correct signature not knowing arguments (it is overloaded method)
+            policy_definition = cast(AnyPolicyDefinitionInfo, _policy_definition)
+            ux1.policies.policy_definitions.append(policy_definition)
         progress("Collecting Policy Definitions", i + 1, len(policy_definition_types_and_ids))
 
     progress("Collecting Centralized Policies", 0, 1)
