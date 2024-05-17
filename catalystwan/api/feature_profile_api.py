@@ -1410,6 +1410,7 @@ class SIGSecurityAPI:
         """
         return self.endpoint.delete_sig_security_parcel(profile_uuid, parcel_uuid)
 
+
 class ApplicationPriorityFeatureProfileAPI:
     """
     SDWAN Feature Profile Application Priority APIs
