@@ -155,6 +155,5 @@ def create_parcel_from_template(template: FeatureTemplateInformation) -> AnyParc
         template_definition_as_dict, device_specific_variables=device_specific_variables
     )
     template_values_normalized = template_definition_normalization(template_values)
-    print(template_values_normalized)
     logger.debug(f"Normalized template {template.name}: {template_values_normalized}")
     return converter.create_parcel(template.name, template.description, template_values_normalized)
