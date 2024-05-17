@@ -8,15 +8,15 @@ from pydantic import ConfigDict, Field
 from typing_extensions import Annotated
 
 from catalystwan.models.policy.policy_definition import (
+    BasicPolicyAction,
+    BasicPolicyActionType,
     CountAction,
-    DefaultAction,
     DefinitionWithSequencesCommonBase,
     DestinationDataIPv6PrefixListEntry,
     DestinationIPv6Entry,
     DestinationPortEntry,
     DeviceAccessProtocol,
     Match,
-    PolicyActionType,
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
@@ -53,7 +53,7 @@ class DeviceAccessIPv6PolicySequence(PolicyDefinitionSequenceBase):
     sequence_type: Literal["deviceaccesspolicyv6"] = Field(
         default="deviceaccesspolicyv6", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
-    base_action: PolicyActionType = Field(
+    base_action: BasicPolicyActionType = Field(
         default="accept", serialization_alias="baseAction", validation_alias="baseAction"
     )
     match: DeviceAccessIPv6PolicySequenceMatch = DeviceAccessIPv6PolicySequenceMatch()
@@ -64,7 +64,7 @@ class DeviceAccessIPv6PolicySequence(PolicyDefinitionSequenceBase):
         self._insert_match(DestinationPortEntry.from_port_set_and_ranges(ports={port}))
 
     def match_source_data_prefix_list(self, data_prefix_list_id: UUID) -> None:
-        self._insert_match(SourceDataIPv6PrefixListEntry(ref=data_prefix_list_id))
+        self._insert_match(SourceDataIPv6PrefixListEntry(ref=[data_prefix_list_id]))
 
     def match_source_ip(self, networks: List[IPv6Network]) -> None:
         self._insert_match(SourceIPv6Entry.from_ipv6_networks(networks))
@@ -73,7 +73,7 @@ class DeviceAccessIPv6PolicySequence(PolicyDefinitionSequenceBase):
         self._insert_match(SourcePortEntry.from_port_set_and_ranges(ports, port_ranges))
 
     def match_destination_data_prefix_list(self, data_prefix_list_id: UUID) -> None:
-        self._insert_match(DestinationDataIPv6PrefixListEntry(ref=data_prefix_list_id))
+        self._insert_match(DestinationDataIPv6PrefixListEntry(ref=[data_prefix_list_id]))
 
     def match_destination_ip(self, networks: List[IPv6Network]) -> None:
         self._insert_match(DestinationIPv6Entry.from_ipv6_networks(networks))
@@ -84,8 +84,8 @@ class DeviceAccessIPv6PolicySequence(PolicyDefinitionSequenceBase):
 
 class DeviceAccessIPv6Policy(DeviceAccessIPv6PolicyHeader, DefinitionWithSequencesCommonBase):
     sequences: List[DeviceAccessIPv6PolicySequence] = []
-    default_action: DefaultAction = Field(
-        default=DefaultAction(type="drop"),
+    default_action: BasicPolicyAction = Field(
+        default=BasicPolicyAction(type="drop"),
         serialization_alias="defaultAction",
         validation_alias="defaultAction",
     )
@@ -94,7 +94,7 @@ class DeviceAccessIPv6Policy(DeviceAccessIPv6PolicyHeader, DefinitionWithSequenc
     def add_acl_sequence(
         self,
         name: str = "Device Access Control List",
-        base_action: PolicyActionType = "accept",
+        base_action: BasicPolicyActionType = "accept",
         device_access_protocol: Optional[DeviceAccessProtocol] = None,
     ) -> DeviceAccessIPv6PolicySequence:
         seq = DeviceAccessIPv6PolicySequence(

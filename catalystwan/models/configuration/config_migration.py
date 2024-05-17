@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from catalystwan.api.builders.feature_profiles.report import FailedParcel, FeatureProfileBuildReport
 from catalystwan.api.templates.device_template.device_template import DeviceTemplate, GeneralTemplate
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
+from catalystwan.endpoints.configuration_settings import CloudCredentials
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
 from catalystwan.models.configuration.topology_group import TopologyGroup
@@ -172,6 +173,7 @@ class UX2Config(BaseModel):
         serialization_alias="profileParcels",
         validation_alias="profileParcels",
     )
+    cloud_credentials: Optional[CloudCredentials] = None
 
     @model_validator(mode="before")
     @classmethod

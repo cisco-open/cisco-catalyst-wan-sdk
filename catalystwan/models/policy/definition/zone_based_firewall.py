@@ -24,7 +24,7 @@ from catalystwan.models.policy.policy_definition import (
     DestinationScalableGroupTagListEntry,
     LogAction,
     Match,
-    PolicyActionType,
+    PolicyActionBase,
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
@@ -90,6 +90,13 @@ ZoneBasedFWPolicyActions = Annotated[
     Field(discriminator="type"),
 ]
 
+ZoneBasedFirewallDefaultActionType = Literal["drop", "pass"]
+ZoneBasedFirewallBaseActionType = Literal["drop", "pass", "inspect"]
+
+
+class ZoneBasedFirewallDefaultAction(PolicyActionBase):
+    type: ZoneBasedFirewallDefaultActionType
+
 
 class ZoneBasedFWPolicyMatches(Match):
     entries: List[ZoneBasedFWPolicySequenceEntry] = []
@@ -126,8 +133,8 @@ class ZoneBasedFWPolicySequence(PolicyDefinitionSequenceBase):
             raise ValueError("Action must be inspect when Application/Application Family List is selected.")
         self._insert_match(AppListEntry(ref=app_list_id))
 
-    def match_destination_data_prefix_list(self, data_prefix_list_id: UUID) -> None:
-        self._insert_match(DestinationDataPrefixListEntry(ref=data_prefix_list_id))
+    def match_destination_data_prefix_list(self, data_prefix_lists: List[UUID]) -> None:
+        self._insert_match(DestinationDataPrefixListEntry(ref=data_prefix_lists))
 
     def match_destination_fqdn(self, fqdn: str) -> None:
         self._insert_match(DestinationFQDNEntry(value=fqdn))
@@ -144,8 +151,8 @@ class ZoneBasedFWPolicySequence(PolicyDefinitionSequenceBase):
     def match_destination_ports(self, ports: Set[int] = set(), port_ranges: List[Tuple[int, int]] = []) -> None:
         self._insert_match(DestinationPortEntry.from_port_set_and_ranges(ports, port_ranges))
 
-    def match_destination_port_list(self, port_list_id: UUID) -> None:
-        self._insert_match(DestinationPortListEntry(ref=port_list_id))
+    def match_destination_port_list(self, data_prefix_lists: List[UUID]) -> None:
+        self._insert_match(DestinationPortListEntry(ref=data_prefix_lists))
 
     def match_protocols(self, protocols: Set[int]) -> None:
         self._insert_match(ProtocolEntry.from_protocol_set(protocols))
@@ -155,7 +162,7 @@ class ZoneBasedFWPolicySequence(PolicyDefinitionSequenceBase):
         for name in names:
             app_protocol = protocol_map.get(name, None)
             if app_protocol is None:
-                raise ValueError(f"{name} not found in protocol map keys: {protocol_map.keys()}")
+                raise ValueError(f"{name} not found in protocol map keys: {protocol_map.keys()}")  # noqa: E713
             app_protocols.append(app_protocol)
         self._insert_match(ProtocolNameEntry.from_application_protocols(app_protocols))
         self._insert_match(DestinationPortEntry.from_application_protocols(app_protocols), False)
@@ -204,6 +211,11 @@ class ZoneBasedFWPolicyHeader(PolicyDefinitionBase):
 
 
 class ZoneBasedFWPolicyDefinition(DefinitionWithSequencesCommonBase):
+    default_action: ZoneBasedFirewallDefaultAction = Field(
+        default=ZoneBasedFirewallDefaultAction(type="drop"),
+        serialization_alias="defaultAction",
+        validation_alias="defaultAction",
+    )
     sequences: List[Union[ZoneBasedFWPolicySequence, ZoneBasedFWPolicySequenceWithRuleSets]] = []
     entries: List[ZoneBasedFWPolicyEntry] = []
 
@@ -214,7 +226,7 @@ class ZoneBasedFWPolicy(ZoneBasedFWPolicyHeader):
     definition: ZoneBasedFWPolicyDefinition = ZoneBasedFWPolicyDefinition()
 
     def add_ipv4_rule(
-        self, name: str, base_action: PolicyActionType = "drop", log: bool = False
+        self, name: str, base_action: ZoneBasedFirewallBaseActionType = "drop", log: bool = False
     ) -> ZoneBasedFWPolicySequence:
         """Adds new IPv4 Rule to Zone Based Firewall Policy
 
@@ -238,7 +250,7 @@ class ZoneBasedFWPolicy(ZoneBasedFWPolicyHeader):
         return sequence
 
     def add_ipv4_rule_sets(
-        self, name: str, base_action: PolicyActionType = "drop", log: bool = False
+        self, name: str, base_action: ZoneBasedFirewallBaseActionType = "drop", log: bool = False
     ) -> ZoneBasedFWPolicySequenceWithRuleSets:
         sequence = ZoneBasedFWPolicySequenceWithRuleSets(
             sequence_name=name,

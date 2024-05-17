@@ -13,10 +13,10 @@ from catalystwan.models.common import (
     EncapType,
     ICMPMessageType,
     ServiceChainNumber,
+    SpaceSeparatedUUIDList,
     TLOCColor,
     check_fields_exclusive,
     str_as_str_list,
-    str_as_uuid_list,
 )
 from catalystwan.models.misc.application_protocols import ApplicationProtocol
 
@@ -92,13 +92,7 @@ SequenceIpType = Literal[
     "all",
 ]
 
-PolicyActionType = Literal[
-    "drop",
-    "accept",
-    "pass",
-    "inspect",
-    "reject",
-]
+BasicPolicyActionType = Literal["accept", "drop"]
 
 SequenceType = Literal[
     "applicationFirewall",
@@ -113,6 +107,7 @@ SequenceType = Literal[
     "aclv6",
     "deviceaccesspolicy",
     "deviceaccesspolicyv6",
+    "sslDecryption",
 ]
 
 
@@ -237,7 +232,10 @@ class DSCPEntry(BaseModel):
 
 class SourceIPEntry(BaseModel):
     field: Literal["sourceIp"] = "sourceIp"
-    value: str = Field(description="IP network specifiers separate by space")
+    value: Optional[str] = Field(default=None, description="IP network specifiers separate by space")
+    vipVariableName: Optional[str] = Field(
+        default=None, serialization_alias="vipVariableName", validation_alias="vipVariableName"
+    )
 
     @staticmethod
     def from_ipv4_networks(networks: List[IPv4Network]) -> "SourceIPEntry":
@@ -269,7 +267,10 @@ class SourcePortEntry(BaseModel):
 
 class DestinationIPEntry(BaseModel):
     field: Literal["destinationIp"] = "destinationIp"
-    value: str
+    value: Optional[str] = Field(default=None)
+    vipVariableName: Optional[str] = Field(
+        default=None, serialization_alias="vipVariableName", validation_alias="vipVariableName"
+    )
 
     @staticmethod
     def from_ipv4_networks(networks: List[IPv4Network]) -> "DestinationIPEntry":
@@ -502,24 +503,22 @@ class ICMPMessageEntry(BaseModel):
 
 class SourceDataPrefixListEntry(BaseModel):
     field: Literal["sourceDataPrefixList"] = "sourceDataPrefixList"
-    ref: List[UUID]
-
-    _ref = field_validator("ref", mode="before")(str_as_uuid_list)
+    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
 
 
 class SourceDataIPv6PrefixListEntry(BaseModel):
     field: Literal["sourceDataIpv6PrefixList"] = "sourceDataIpv6PrefixList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
 
 
 class DestinationDataPrefixListEntry(BaseModel):
     field: Literal["destinationDataPrefixList"] = "destinationDataPrefixList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
 
 
 class DestinationDataIPv6PrefixListEntry(BaseModel):
     field: Literal["destinationDataIpv6PrefixList"] = "destinationDataIpv6PrefixList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
 
 
 class DNSAppListEntry(BaseModel):
@@ -574,7 +573,7 @@ class SourceScalableGroupTagListEntry(BaseModel):
 
 class DestinationPortListEntry(BaseModel):
     field: Literal["destinationPortList"] = "destinationPortList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
 
 
 class DestinationScalableGroupTagListEntry(BaseModel):
@@ -599,6 +598,16 @@ class PolicerListEntry(BaseModel):
 class TLOCListEntry(BaseModel):
     field: Literal["tlocList"] = "tlocList"
     ref: UUID
+
+
+class SourceVpnEntry(BaseModel):
+    field: Literal["sourceVpn"] = "sourceVpn"
+    value: str = Field(description="VPN ids numbers separated by space")
+
+
+class DestinationVpnEntry(BaseModel):
+    field: Literal["destinationVpn"] = "destinationVpn"
+    value: str = Field(description="VPN ids numbers separated by space")
 
 
 class PrefferedColorGroupListEntry(BaseModel):
@@ -869,6 +878,7 @@ MatchEntry = Annotated[
         DestinationPortListEntry,
         DestinationRegionEntry,
         DestinationScalableGroupTagListEntry,
+        DestinationVpnEntry,
         DNSAppListEntry,
         DNSEntry,
         DomainIDEntry,
@@ -906,6 +916,7 @@ MatchEntry = Annotated[
         SourcePortEntry,
         SourcePortListEntry,
         SourceScalableGroupTagListEntry,
+        SourceVpnEntry,
         TCPEntry,
         TLOCEntry,
         TLOCListEntry,
@@ -953,16 +964,14 @@ class Action(BaseModel):
 class PolicyDefinitionSequenceBase(BaseModel):
     sequence_id: int = Field(default=0, serialization_alias="sequenceId", validation_alias="sequenceId")
     sequence_name: str = Field(serialization_alias="sequenceName", validation_alias="sequenceName")
-    base_action: PolicyActionType = Field(
-        default="drop", serialization_alias="baseAction", validation_alias="baseAction"
-    )
+    base_action: str = Field(serialization_alias="baseAction", validation_alias="baseAction")
     sequence_type: SequenceType = Field(serialization_alias="sequenceType", validation_alias="sequenceType")
     sequence_ip_type: Optional[SequenceIpType] = Field(
         default="ipv4", serialization_alias="sequenceIpType", validation_alias="sequenceIpType"
     )
     ruleset: Optional[bool] = None
     match: Match
-    actions: Sequence[ActionEntry]
+    actions: Optional[Sequence[ActionEntry]] = None
 
     @staticmethod
     def _check_field_collision(field: str, fields: Sequence[str]) -> None:
@@ -1054,8 +1063,12 @@ def accept_action(method):
     return wrapper
 
 
-class DefaultAction(BaseModel):
-    type: PolicyActionType
+class PolicyActionBase(BaseModel):
+    type: str
+
+
+class BasicPolicyAction(PolicyActionBase):
+    type: BasicPolicyActionType
 
 
 class InfoTag(BaseModel):
@@ -1072,8 +1085,8 @@ class PolicyReference(BaseModel):
 
 
 class DefinitionWithSequencesCommonBase(BaseModel):
-    default_action: Optional[DefaultAction] = Field(
-        default=DefaultAction(type="drop"),
+    default_action: Optional[PolicyActionBase] = Field(
+        default=None,
         serialization_alias="defaultAction",
         validation_alias="defaultAction",
     )

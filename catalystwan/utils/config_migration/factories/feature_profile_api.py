@@ -1,6 +1,7 @@
 from typing import Callable, Mapping, Union
 
 from catalystwan.api.feature_profile_api import (
+    CliFeatureProfileAPI,
     OtherFeatureProfileAPI,
     PolicyObjectFeatureProfileAPI,
     ServiceFeatureProfileAPI,
@@ -16,6 +17,7 @@ FEATURE_PROFILE_API_MAPPING: Mapping[ProfileType, Callable] = {
     "policy-object": PolicyObjectFeatureProfileAPI,
     "service": ServiceFeatureProfileAPI,
     "transport": TransportFeatureProfileAPI,
+    "cli": CliFeatureProfileAPI,
 }
 
 FeatureProfile = Union[
@@ -24,6 +26,7 @@ FeatureProfile = Union[
     PolicyObjectFeatureProfileAPI,
     ServiceFeatureProfileAPI,
     TransportFeatureProfileAPI,
+    CliFeatureProfileAPI,
 ]
 
 

@@ -10,6 +10,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.embedded_security im
 from catalystwan.models.configuration.feature_profile.sdwan.other import AnyOtherParcel
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
+from catalystwan.models.configuration.feature_profile.sdwan.sig_security import AnySIGSecurityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system import AnySystemParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport import AnyTransportParcel
 
@@ -31,6 +32,7 @@ ParcelType = Literal[
     "lan/vpn/interface/ethernet",
     "lan/vpn/interface/gre",
     "lan/vpn/interface/ipsec",
+    "lan/vpn/interface/multilink",
     "lan/vpn/interface/svi",
     "dhcp-server",
     "tracker",
@@ -84,11 +86,13 @@ ParcelType = Literal[
     "wan/vpn/interface/gre",
     "wan/vpn/interface/cellular",
     "wan/vpn/interface/ethernet",
+    "wan/vpn/interface/multilink",
     "config",
     "dns",
     "gps",
     "cellular-controller",
     "config",
+    "sig",
 ]
 
 
@@ -102,6 +106,7 @@ AnyParcel = Annotated[
         AnyEmbeddedSecurityParcel,
         AnyCliParcel,
         AnyDnsSecurityParcel,
+        AnySIGSecurityParcel,
     ],
     Field(discriminator="type_"),
 ]

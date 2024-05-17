@@ -20,6 +20,9 @@ from catalystwan.models.configuration.feature_profile.common import FeatureProfi
 from catalystwan.session import ManagerSession
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.feature_template import create_parcel_from_template
+from catalystwan.utils.config_migration.converters.feature_template.cloud_credentials import (
+    create_cloud_credentials_from_templates,
+)
 from catalystwan.utils.config_migration.converters.policy.policy_lists import PolicyListConversionError
 from catalystwan.utils.config_migration.converters.policy.policy_lists import convert as convert_policy_list
 from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigRollback
@@ -32,7 +35,9 @@ from catalystwan.utils.config_migration.steps.constants import (
     VPN_SERVICE,
     VPN_TRANSPORT,
     WAN_VPN_ETHERNET,
+    LAN_VPN_MULTILINK,
     WAN_VPN_GRE,
+    WAN_VPN_MULTILINK,
 )
 from catalystwan.utils.config_migration.steps.transform import merge_parcels, resolve_template_type
 
@@ -85,13 +90,20 @@ SUPPORTED_TEMPLATE_TYPES = [
     "vpn-interface-pppoe",
     "vpn-interface-pppoa",
     "vpn-interface-ipoe",
+    WAN_VPN_MULTILINK,
+    LAN_VPN_MULTILINK,
     WAN_VPN_GRE,
     WAN_VPN_ETHERNET,
     LAN_VPN_GRE,
     LAN_VPN_ETHERNET,
     LAN_VPN_IPSEC,
     "cli-template",
+    "cisco_secure_internet_gateway",
 ]
+
+
+CLOUD_CREDENTIALS_FEATURE_TEMPLATES = ["cisco_sig_credentials"]
+
 
 FEATURE_PROFILE_SYSTEM = [
     "cisco_aaa",
@@ -272,6 +284,7 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
         ux2.feature_profiles.append(transformed_fp_cli)
         ux2.config_groups.append(transformed_cg)
 
+    cloud_credential_templates = []
     for ft in ux1.templates.feature_templates:
         if ft.template_type in SUPPORTED_TEMPLATE_TYPES:
             try:
@@ -301,6 +314,11 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
                     exception_message=exception_message,
                     feature_template=ft,
                 )
+        elif ft.template_type in CLOUD_CREDENTIALS_FEATURE_TEMPLATES:
+            cloud_credential_templates.append(ft)
+    # Add Cloud Credentials to UX2
+    if cloud_credential_templates:
+        ux2.cloud_credentials = create_cloud_credentials_from_templates(cloud_credential_templates)
 
     # Policy Lists
     for policy_list in ux1.policies.policy_lists:

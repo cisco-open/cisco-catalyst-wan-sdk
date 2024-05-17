@@ -16,7 +16,6 @@ from catalystwan.models.policy.policy_definition import (
     CommunityAdditiveEntry,
     CommunityEntry,
     CommunityListEntry,
-    DefaultAction,
     DefinitionWithSequencesCommonBase,
     DomainIDEntry,
     ExpandedCommunityListEntry,
@@ -30,7 +29,7 @@ from catalystwan.models.policy.policy_definition import (
     OriginProtocol,
     PathType,
     PathTypeEntry,
-    PolicyActionType,
+    PolicyActionBase,
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
@@ -102,6 +101,11 @@ AnyControlPolicyTLOCSequenceMatchEntry = Annotated[
 
 ControlPolicyRouteSequenceActions = Any  # TODO
 ControlPolicyTLOCSequenceActions = Any  # TODO
+ControlPolicyBaseActionType = Literal["accept", "reject"]
+
+
+class ControlPolicyBaseAction(PolicyActionBase):
+    type: ControlPolicyBaseActionType
 
 
 class ControlPolicyHeader(PolicyDefinitionBase):
@@ -120,7 +124,7 @@ class ControlPolicyRouteSequence(PolicyDefinitionSequenceBase):
     sequence_type: Literal["route"] = Field(
         default="route", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
-    base_action: PolicyActionType = Field(
+    base_action: ControlPolicyBaseActionType = Field(
         default="reject", serialization_alias="baseAction", validation_alias="baseAction"
     )
     match: ControlPolicyRouteSequenceMatch = ControlPolicyRouteSequenceMatch()
@@ -239,7 +243,7 @@ class ControlPolicyTLOCSequence(PolicyDefinitionSequenceBase):
     sequence_type: Literal["tloc"] = Field(
         default="tloc", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
-    base_action: PolicyActionType = Field(
+    base_action: ControlPolicyBaseActionType = Field(
         default="reject", serialization_alias="baseAction", validation_alias="baseAction"
     )
     match: ControlPolicyTLOCSequenceMatch = ControlPolicyTLOCSequenceMatch()
@@ -314,15 +318,15 @@ AnyControlPolicySequence = Annotated[
 
 class ControlPolicy(ControlPolicyHeader, DefinitionWithSequencesCommonBase):
     sequences: List[AnyControlPolicySequence] = []
-    default_action: DefaultAction = Field(
-        default=DefaultAction(type="reject"),
+    default_action: ControlPolicyBaseAction = Field(
+        default=ControlPolicyBaseAction(type="reject"),
         serialization_alias="defaultAction",
         validation_alias="defaultAction",
     )
     model_config = ConfigDict(populate_by_name=True)
 
     def add_route_sequence(
-        self, name: str = "Route", base_action: PolicyActionType = "reject"
+        self, name: str = "Route", base_action: ControlPolicyBaseActionType = "reject"
     ) -> ControlPolicyRouteSequence:
         seq = ControlPolicyRouteSequence(
             sequence_name=name,
@@ -333,7 +337,7 @@ class ControlPolicy(ControlPolicyHeader, DefinitionWithSequencesCommonBase):
         return seq
 
     def add_tloc_sequence(
-        self, name: str = "TLOC", base_action: PolicyActionType = "reject"
+        self, name: str = "TLOC", base_action: ControlPolicyBaseActionType = "reject"
     ) -> ControlPolicyTLOCSequence:
         seq = ControlPolicyTLOCSequence(
             sequence_name=name,

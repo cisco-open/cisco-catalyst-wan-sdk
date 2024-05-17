@@ -1,8 +1,5 @@
-# Copyright 2024 Cisco Systems, Inc. and its affiliates
-from __future__ import annotations
-
 from ipaddress import IPv4Address, IPv6Address, IPv6Interface
-from typing import List, Literal, Optional, Union
+from typing import Iterator, List, Literal, Optional, Tuple, Union
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
@@ -12,6 +9,11 @@ from catalystwan.models.common import SubnetMask
 Gateway = Literal["nextHop", "dhcp", "null0"]
 Nat = Literal["NAT64", "NAT66"]
 ServiceType = Literal["TE"]
+
+UnitIPv4Address = Union[Variable, Global[IPv4Address]]
+UnitDistance = Union[Variable, Global[int]]
+
+RouteHop = Union[Tuple[UnitIPv4Address, UnitDistance], UnitIPv4Address]
 
 
 class DnsIpv4(BaseModel):
@@ -266,3 +268,67 @@ class TransportVpnParcel(_ParcelBase):
     nat64_v4_pool: Optional[List[Address64V4PoolItem]] = Field(
         default=None, validation_alias=AliasPath("data", "nat64V4Pool"), description="NAT64 V4 Pool"
     )
+
+    def set_dns_ipv4(
+        self,
+        primary_ipv4: Union[Variable, Global[IPv4Address]],
+        secondary_ipv4: Optional[Union[Variable, Global[IPv4Address]]] = None,
+    ) -> None:
+        """
+        Set the DNS server IP addresses for IPv4.
+
+        Sets the primary and, optionally, the secondary DNS server IP addresses for the system.
+        The addresses can be specified as either string representations or as IPv4Address objects.
+
+        Args:
+            primary (Union[Variable, Global[IPv4Address]]): The IP address of the primary DNS server.
+            secondary (Optional[Union[Variable, Global[IPv4Address]], optional): The IP address of the
+                secondary DNS server.
+                Defaults to None, which means no secondary DNS server is set.
+        """
+        self.dns_ipv4 = DnsIpv4(primary_dns_address_ipv4=primary_ipv4, secondary_dns_address_ipv4=secondary_ipv4)
+
+    def add_ipv4_route(
+        self,
+        prefix_ip_address: Global[IPv4Address],
+        prefix_mask_address: Global[SubnetMask],
+        next_hops: List[RouteHop],
+        gateway: Optional[Global[Gateway]] = None,
+        distance: Optional[UnitDistance] = None,
+    ):
+        """
+        Add an IPv4 route to the instance's routing table.
+
+        Constructs an IPv4 route using the provided network prefix, subnet mask, and next hops.
+        Optionally, a default gateway and administrative distance can be set for the route.
+
+        Args:
+            prefix_ip_address (IPv4Address): The IP address of the network prefix.
+            prefix_mask_address (SubnetMask): The subnet mask associated with the network prefix.
+            next_hops (List[RouteHop]): A list of next hop addresses for the route.
+            gateway (Gateway, optional): The default gateway for the route. Defaults to "nextHop".
+            distance (Optional[int], optional): The administrative distance of the route. Defaults to None.
+
+        """
+        prefix = Prefix(ip_address=prefix_ip_address, subnet_mask=prefix_mask_address)
+        gateway_route = gateway if gateway is not None else as_default("nextHop", Gateway)
+        route = Ipv4RouteItem(prefix=prefix, gateway=gateway_route, distance=distance)
+        for next_hop in _create_next_hops(next_hops):
+            if route.next_hop is None:
+                route.next_hop = []
+            route.next_hop.append(next_hop)
+        self.ipv4_route.append(route)
+
+
+def _normalize_route_hops(hop: RouteHop) -> Tuple[UnitIPv4Address, Union[Default[int], UnitDistance]]:
+    if isinstance(hop, (list, tuple)):
+        return hop
+    else:
+        return hop, as_default(1)
+
+
+def _create_next_hops(hops: Optional[List[RouteHop]]) -> Iterator[NextHopItem]:
+    if hops:
+        for hop in hops:
+            address, distance = _normalize_route_hops(hop)
+            yield NextHopItem(address=address, distance=distance)

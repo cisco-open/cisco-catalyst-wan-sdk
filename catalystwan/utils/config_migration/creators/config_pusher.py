@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from catalystwan.api.builders.feature_profiles.report import FeatureProfileBuildReport
 from catalystwan.endpoints.configuration_group import ProfileId
+from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.config_migration import (
     TransformedFeatureProfile,
     TransformedParcel,
@@ -45,10 +46,20 @@ class UX2ConfigPusher:
         )
 
     def push(self) -> UX2ConfigRollback:
+        try:
+            self._create_cloud_credentials()
+        except ManagerHTTPError as e:
+            logger.error(f"Error occured during credentials migration: {e.info}")
         self._create_config_groups()
         self._config_rollback.report.set_failed_push_parcels_flat_list()
         logger.debug(f"Configuration push completed. Rollback configuration {self._config_rollback}")
         return self._config_rollback
+
+    def _create_cloud_credentials(self):
+        cloud_credentials = self._ux2_config.cloud_credentials
+        if cloud_credentials is None:
+            return
+        self._session.endpoints.configuration_settings.create_cloud_credentials(cloud_credentials)
 
     def _create_config_groups(self):
         config_groups = self._ux2_config.config_groups
@@ -85,7 +96,7 @@ class UX2ConfigPusher:
                 f"and parcels: {transformed_feature_profile.header.subelements}"
             )
             profile_type = cast(ProfileType, transformed_feature_profile.header.type)
-            if profile_type in ["policy-object"]:
+            if profile_type in ["policy-object", "sig-security"]:
                 # TODO: Add builders for those profiles
                 logger.debug(f"Skipping profile: {transformed_feature_profile.feature_profile.name}")
                 continue

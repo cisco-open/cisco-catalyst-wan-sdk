@@ -8,10 +8,11 @@ from pydantic import ConfigDict, Field
 from typing_extensions import Annotated
 
 from catalystwan.models.policy.policy_definition import (
+    BasicPolicyAction,
+    BasicPolicyActionType,
     ClassMapAction,
     ClassMapListEntry,
     CountAction,
-    DefaultAction,
     DefinitionWithSequencesCommonBase,
     DestinationDataIPv6PrefixListEntry,
     DestinationIPv6Entry,
@@ -24,7 +25,6 @@ from catalystwan.models.policy.policy_definition import (
     PacketLengthEntry,
     PLPEntry,
     PolicerAction,
-    PolicyActionType,
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
@@ -71,7 +71,7 @@ class AclIPv6PolicySequence(PolicyDefinitionSequenceBase):
     sequence_type: Literal["aclv6"] = Field(
         default="aclv6", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
-    base_action: PolicyActionType = Field(
+    base_action: BasicPolicyActionType = Field(
         default="accept", serialization_alias="baseAction", validation_alias="baseAction"
     )
     match: AclIPv6PolicySequenceMatch = AclIPv6PolicySequenceMatch()
@@ -91,7 +91,7 @@ class AclIPv6PolicySequence(PolicyDefinitionSequenceBase):
         self._insert_match(PLPEntry(value="high"))
 
     def match_source_data_prefix_list(self, data_prefix_list_id: UUID) -> None:
-        self._insert_match(SourceDataIPv6PrefixListEntry(ref=data_prefix_list_id))
+        self._insert_match(SourceDataIPv6PrefixListEntry(ref=[data_prefix_list_id]))
 
     def match_source_ip(self, networks: List[IPv6Network]) -> None:
         self._insert_match(SourceIPv6Entry.from_ipv6_networks(networks))
@@ -100,7 +100,7 @@ class AclIPv6PolicySequence(PolicyDefinitionSequenceBase):
         self._insert_match(SourcePortEntry.from_port_set_and_ranges(ports, port_ranges))
 
     def match_destination_data_prefix_list(self, data_prefix_list_id: UUID) -> None:
-        self._insert_match(DestinationDataIPv6PrefixListEntry(ref=data_prefix_list_id))
+        self._insert_match(DestinationDataIPv6PrefixListEntry(ref=[data_prefix_list_id]))
 
     def match_destination_ip(self, networks: List[IPv6Network]) -> None:
         self._insert_match(DestinationIPv6Entry.from_ipv6_networks(networks))
@@ -146,15 +146,15 @@ class AclIPv6PolicySequence(PolicyDefinitionSequenceBase):
 
 class AclIPv6Policy(AclIPv6PolicyHeader, DefinitionWithSequencesCommonBase):
     sequences: List[AclIPv6PolicySequence] = []
-    default_action: DefaultAction = Field(
-        default=DefaultAction(type="drop"),
+    default_action: BasicPolicyAction = Field(
+        default=BasicPolicyAction(type="drop"),
         serialization_alias="defaultAction",
         validation_alias="defaultAction",
     )
     model_config = ConfigDict(populate_by_name=True)
 
     def add_acl_sequence(
-        self, name: str = "Access Control List", base_action: PolicyActionType = "accept"
+        self, name: str = "Access Control List", base_action: BasicPolicyActionType = "accept"
     ) -> AclIPv6PolicySequence:
         seq = AclIPv6PolicySequence(
             sequence_name=name,

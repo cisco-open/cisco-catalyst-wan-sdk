@@ -7,6 +7,7 @@ from catalystwan.api.template_api import FeatureTemplateInformation
 from catalystwan.api.templates.device_variable import DeviceVariable
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
+from catalystwan.utils.config_migration.converters.feature_template.lan.multilink import LanMultilinkTemplateConverter
 from catalystwan.utils.feature_template.find_template_values import find_template_values
 
 from .aaa import AAATemplateConverter
@@ -38,6 +39,7 @@ from .omp import OMPTemplateConverter
 from .ospf import OspfTemplateConverter
 from .ospfv3 import Ospfv3TemplateConverter
 from .security import SecurityTemplateConverter
+from .sig import SIGTemplateConverter
 from .snmp import SNMPTemplateConverter
 from .switchport import SwitchportTemplateConverter
 from .thousandeyes import ThousandEyesTemplateConverter
@@ -47,6 +49,7 @@ from .wan.cellular import InterfaceCellularTemplateConverter
 from .wan.ethernet import WanInterfaceEthernetTemplateConverter
 from .wan.gre import WanInterfaceGreTemplateConverter
 from .wan.ipsec import WanInterfaceIpsecTemplateConverter
+from .wan.multilink import WanMultilinkTemplateConverter
 from .wan.protocol_over import (
     InterfaceDslIPoETemplateConverter,
     InterfaceDslPppoaTemplateConverter,
@@ -76,6 +79,7 @@ available_converters = [
     AppqoeTemplateConverter,
     VpnTemplateConverter,
     LanInterfaceGreTemplateConverter,
+    LanMultilinkTemplateConverter,
     InterfaceSviTemplateConverter,
     LanInterfaceEthernetTemplateConverter,
     LanInterfaceIpsecTemplateConverter,
@@ -100,6 +104,8 @@ available_converters = [
     CellularProfileTemplateConverter,
     CliTemplateConverter,
     WanInterfaceEthernetTemplateConverter,
+    SIGTemplateConverter,
+    WanMultilinkTemplateConverter,
 ]
 
 

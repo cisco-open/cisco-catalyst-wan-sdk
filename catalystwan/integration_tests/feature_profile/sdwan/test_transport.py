@@ -5,13 +5,20 @@ from uuid import UUID
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
 from catalystwan.models.common import (
+    CableLengthLongValue,
     Carrier,
+    ClockRate,
     CoreRegion,
+    E1Framing,
+    E1Linecode,
     EncapType,
     IkeCiphersuite,
     IkeGroup,
     IpsecCiphersuite,
+    LineMode,
     SecondaryRegion,
+    T1Framing,
+    T1Linecode,
     TLOCColor,
 )
 from catalystwan.models.configuration.feature_profile.common import AclQos
@@ -23,6 +30,16 @@ from catalystwan.models.configuration.feature_profile.common import (
 )
 from catalystwan.models.configuration.feature_profile.common import (
     InterfaceStaticIPv4Address,
+    AdvancedGre,
+    AllowService,
+    ChannelGroup,
+    MultilinkAuthenticationType,
+    MultilinkClockSource,
+    MultilinkControllerTxExList,
+    MultilinkControllerType,
+    MultilinkMethod,
+    MultilinkNimList,
+    MultilinkTxExName,
     MultiRegionFabric,
     ShapingRateDownstreamConfig,
     ShapingRateUpstreamConfig,
@@ -48,20 +65,13 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1contro
     E1,
     T1,
     CableLengthLong,
-    ChannelGroup,
     ClockSource,
     ControllerTxExList,
     ControllerType,
     E1Basic,
-    E1Framing,
-    E1Linecode,
-    LengthLong,
-    LineMode,
     Long,
     T1Basic,
     T1E1ControllerParcel,
-    T1Framing,
-    T1Linecode,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import (
     Address64V4PoolItem,
@@ -105,6 +115,9 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.ipsec import (
     InterfaceIpsecParcel,
     PerfectForwardSecrecy,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.multilink import (
+    InterfaceMultilinkParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
     AclQos as AclQosPPPoE,
@@ -250,7 +263,7 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
                     ),
                     cable=CableLengthLong(
                         cable_length=as_global("long", Long),
-                        length_long=as_global("-15db", LengthLong),
+                        length_long=as_global("-15db", CableLengthLongValue),
                     ),
                     channel_group=[
                         ChannelGroup(
@@ -266,64 +279,6 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, t1e1controller).id
-        # Assert
-        assert parcel_id
-
-    def test_when_fully_specifed_transport_vpn_parcel_expect_successful_post(self):
-        # Arrange
-        transport_vpn_parcel = TransportVpnParcel(
-            parcel_name="FullySpecifiedTransportVpnParcel",
-            description="Description",
-            dns_ipv6=DnsIpv6(
-                primary_dns_address_ipv6=as_global(IPv6Address("67ca:c2df:edfe:c8ec:b6cb:f9f4:eab0:ece6")),
-                secondary_dns_address_ipv6=as_global(IPv6Address("8989:8d33:c00a:4d13:324d:8b23:8d77:a289")),
-            ),
-            dns_ipv4=DnsIpv4(
-                primary_dns_address_ipv4=as_global(IPv4Address("68.138.29.222")),
-                secondary_dns_address_ipv4=as_global(IPv4Address("122.89.114.112")),
-            ),
-            new_host_mapping=[
-                NewHostMappingItem(
-                    host_name=as_global("FullySpecifiedHost"),
-                    list_of_ip=as_global(
-                        [
-                            "165.16.181.116",
-                            "7a4c:1d87:8587:a6ec:21a6:48a7:00e8:1fef",
-                        ]
-                    ),
-                )
-            ],
-            ipv6_route=[
-                Ipv6RouteItem(
-                    prefix=as_global(IPv6Interface("0::/16")),
-                    one_of_ip_route=OneOfIpRouteNull0(),
-                )
-            ],
-            ipv4_route=[
-                Ipv4RouteItem(
-                    prefix=Prefix(
-                        ip_address=as_global(IPv4Address("202.153.165.234")),
-                        subnet_mask=as_global("255.255.255.0", SubnetMask),
-                    ),
-                    next_hop=[
-                        NextHopItem(
-                            address=as_global(IPv4Address("1.1.1.1")),
-                        )
-                    ],
-                )
-            ],
-            service=[ServiceItem(service_type=as_global("TE", ServiceType))],
-            nat64_v4_pool=[
-                Address64V4PoolItem(
-                    name=as_global("FullySpecifiedNat64V4Pool"),
-                    range_start=as_global(IPv4Address("3.3.3.3")),
-                    range_end=as_global(IPv4Address("3.3.3.7")),
-                    overload=as_global(True),
-                )
-            ],
-        )
-        # Act
-        parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
         # Assert
         assert parcel_id
 
@@ -392,6 +347,117 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
     def tearDownClass(cls) -> None:
         cls.api.delete_profile(cls.profile_uuid)
         super().tearDownClass()
+
+
+class TestTransportFeatureProfileTransportVpn(TestFeatureProfileModels):
+    def setUp(self) -> None:
+        self.api = self.session.api.sdwan_feature_profiles.transport
+        self.profile_uuid = self.api.create_profile("TestProfileService", "Description").id
+        self.config_id = self.session.api.config_group.create(
+            "TestConfigGroupTransport", "Descr", "sdwan", [self.profile_uuid]
+        ).id
+
+    def test_when_minimal_specifed_transport_vpn_parcel_expect_successful_post(self):
+        # Arrange
+        transport_vpn_parcel = TransportVpnParcel(
+            parcel_name="MinimumSpecifiedTransportVpnParcel",
+            description="Description",
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_set_dns_address_specifed_transport_vpn_parcel_expect_successful_post(self):
+        # Arrange
+        transport_vpn_parcel = TransportVpnParcel(
+            parcel_name="MinimumSpecifiedTransportVpnParcel",
+            description="Description",
+        )
+        # Act
+        transport_vpn_parcel.set_dns_ipv4(as_global(IPv4Address("1.1.1.1")), as_global(IPv4Address("2.2.2.2")))
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_add_ipv4_route_specifed_transport_vpn_parcel_expect_successful_post(self):
+        # Arrange
+        transport_vpn_parcel = TransportVpnParcel(
+            parcel_name="MinimumSpecifiedTransportVpnParcel",
+            description="Description",
+        )
+        # Act
+        next_hops = [
+            (as_global(IPv4Address("2.2.2.2")), as_global(1)),
+            (as_global(IPv4Address("3.3.3.3")), as_global(8)),
+            (as_global(IPv4Address("4.4.4.4")), as_global(10)),
+        ]
+        transport_vpn_parcel.add_ipv4_route(
+            as_global(IPv4Address("1.1.1.1")), as_global("255.255.255.255", SubnetMask), next_hops
+        )
+        parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
+
+        # Assert
+        assert parcel_id
+
+    def test_when_fully_specifed_transport_vpn_parcel_expect_successful_post(self):
+        # Arrange
+        transport_vpn_parcel = TransportVpnParcel(
+            parcel_name="FullySpecifiedTransportVpnParcel",
+            description="Description",
+            dns_ipv6=DnsIpv6(
+                primary_dns_address_ipv6=as_global(IPv6Address("67ca:c2df:edfe:c8ec:b6cb:f9f4:eab0:ece6")),
+                secondary_dns_address_ipv6=as_global(IPv6Address("8989:8d33:c00a:4d13:324d:8b23:8d77:a289")),
+            ),
+            dns_ipv4=DnsIpv4(
+                primary_dns_address_ipv4=as_global(IPv4Address("68.138.29.222")),
+                secondary_dns_address_ipv4=as_global(IPv4Address("122.89.114.112")),
+            ),
+            new_host_mapping=[
+                NewHostMappingItem(
+                    host_name=as_global("FullySpecifiedHost"),
+                    list_of_ip=as_global(
+                        [
+                            "165.16.181.116",
+                            "7a4c:1d87:8587:a6ec:21a6:48a7:00e8:1fef",
+                        ]
+                    ),
+                )
+            ],
+            ipv6_route=[
+                Ipv6RouteItem(
+                    prefix=as_global(IPv6Interface("0::/16")),
+                    one_of_ip_route=OneOfIpRouteNull0(),
+                )
+            ],
+            ipv4_route=[
+                Ipv4RouteItem(
+                    prefix=Prefix(
+                        ip_address=as_global(IPv4Address("202.153.165.234")),
+                        subnet_mask=as_global("255.255.255.0", SubnetMask),
+                    ),
+                    next_hop=[NextHopItem(address=as_global(IPv4Address("1.1.1.1")), distance=as_global(8))],
+                )
+            ],
+            service=[ServiceItem(service_type=as_global("TE", ServiceType))],
+            nat64_v4_pool=[
+                Address64V4PoolItem(
+                    name=as_global("FullySpecifiedNat64V4Pool"),
+                    range_start=as_global(IPv4Address("3.3.3.3")),
+                    range_end=as_global(IPv4Address("3.3.3.7")),
+                    overload=as_global(True),
+                )
+            ],
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
+        # Assert
+        assert parcel_id
+
+    def tearDown(self) -> None:
+        self.session.api.config_group.delete(self.config_id)
+        self.api.delete_profile(self.profile_uuid)
 
 
 class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
@@ -1080,6 +1146,143 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.wan_uuid).id
         # Assert
+        assert parcel_id
+
+    def test_when_fully_specified_multilink_interface_parcel_expect_successful_post(self):
+        nim_list = [
+            MultilinkNimList(
+                if_name=Global[str](value="Serial1"),
+                bandwidth=Global[int](value=10),
+                clock_rate=Global[ClockRate](value="1200"),
+                description=Global[str](value="desc"),
+            ),
+            MultilinkNimList(
+                if_name=Global[str](value="Serial2"),
+                bandwidth=Global[int](value=12),
+                clock_rate=Global[ClockRate](value="115200"),
+                description=None,
+            ),
+        ]
+        controller_tx_ex_list = [
+            MultilinkControllerTxExList(
+                channel_group=[
+                    ChannelGroup(
+                        number=Global[int](value=12),
+                        timeslots=Global[str](value="12"),
+                    )
+                ],
+                number=Global[str](value="1/1/1"),
+                clock_source=Global[MultilinkClockSource](value="internal"),
+                description=Global[str](value="desc"),
+                e1_framing=Global[E1Framing](value="crc4"),
+                e1_linecode=Global[E1Linecode](value="ami"),
+                line_mode=Global[LineMode](value="primary"),
+                long=None,
+                name=Global[MultilinkTxExName](value="E1"),
+                short=None,
+                t1_framing=None,
+                t1_linecode=None,
+            ),
+            MultilinkControllerTxExList(
+                channel_group=[
+                    ChannelGroup(
+                        number=Global[int](value=13),
+                        timeslots=Global[str](value="13"),
+                    )
+                ],
+                number=Global[str](value="2/2/2"),
+                clock_source=Global[MultilinkClockSource](value="loop-timed"),
+                description=Global[str](value="desc"),
+                e1_framing=None,
+                e1_linecode=None,
+                line_mode=Global[LineMode](value="secondary"),
+                long=Global[CableLengthLongValue](value="-15db"),
+                name=Global[MultilinkTxExName](value="T1"),
+                short=None,
+                t1_framing=Global[T1Framing](value="esf"),
+                t1_linecode=Global[T1Linecode](value="ami"),
+            ),
+        ]
+        multilink_parcel = InterfaceMultilinkParcel(
+            parcel_name="Test",
+            parcel_description="Description",
+            group_number=Global[int](value=299),
+            if_name=Global[str](value="Multilink1"),
+            method=Global[Literal[MultilinkMethod]](value="CHAP"),
+            address_ipv4=Global[IPv4Address](value=IPv4Address("192.175.48.4")),
+            address_ipv6=Global[IPv6Interface](value=IPv6Interface("::3e46/100")),
+            all=Global[bool](value=True),
+            authentication_type=Default[Literal[MultilinkAuthenticationType]](value="unidirectional"),
+            bandwidth_upstream=Global[int](value=21),
+            bgp=Global[bool](value=True),
+            bind=Global[str](value="JmwcJz"),
+            border=Global[bool](value=True),
+            carrier=Global[Literal[Carrier]](value="carrier8"),
+            clear_dont_fragment_sdwan_tunnel=Global[bool](value=True),
+            control_connections=Global[bool](value=False),
+            controller_tx_ex_list=controller_tx_ex_list,
+            controller_type=Global[Literal[MultilinkControllerType]](value="T1/E1"),
+            delay_value=Global[int](value=99),
+            dhcp=Global[bool](value=False),
+            disable=Global[bool](value=True),
+            dns=Global[bool](value=False),
+            exclude_controller_group_list=Global[str](value="12 13 14"),
+            gre_encap=Global[bool](value=True),
+            gre_preference=Global[int](value=91),
+            gre_weight=Global[int](value=48),
+            groups=Global[int](value=363),
+            hello_interval=Global[int](value=224),
+            hello_tolerance=Global[int](value=214),
+            hostname=Global[str](value="oitSeZBfw"),
+            https=Global[bool](value=False),
+            icmp=Global[bool](value=True),
+            interleave=Global[bool](value=False),
+            ip_directed_broadcast=Global[bool](value=True),
+            ipsec_encap=Global[bool](value=False),
+            ipsec_preference=Global[int](value=498),
+            ipsec_weight=Global[int](value=135),
+            ipv4_acl_egress=None,
+            ipv4_acl_ingress=None,
+            ipv6_acl_egress=None,
+            ipv6_acl_ingress=None,
+            last_resort_circuit=Global[bool](value=True),
+            low_bandwidth_link=Global[bool](value=False),
+            mask_ipv4=Global[SubnetMask](value="255.255.255.254"),
+            max_control_connections=Global[int](value=50),
+            mtu=Global[int](value=5266),
+            multi_region_fabric=MultiRegionFabric(
+                core_region=None,
+                enable_core_region=None,
+                enable_secondary_region=None,
+                secondary_region=None,
+            ),
+            nat_refresh_interval=Global[int](value=33),
+            netconf=Global[bool](value=False),
+            network_broadcast=Global[bool](value=False),
+            nim_list=nim_list,
+            ntp=Global[bool](value=True),
+            ospf=Global[bool](value=True),
+            password=Global[str](value="hyBBiuDgO"),
+            port_hop=Global[bool](value=False),
+            ppp_auth_password=Global[str](value="aCBBBxnzsw"),
+            restrict=Global[bool](value=False),
+            shaping_rate=Global[int](value=294),
+            shutdown=Global[bool](value=False),
+            snmp=Global[bool](value=False),
+            sshd=Global[bool](value=False),
+            stun=Global[bool](value=False),
+            tcp_mss_adjust=Global[int](value=1267),
+            tloc_extension=Global[str](value="ATM"),
+            tunnel_interface=Global[bool](value=True),
+            tunnel_tcp_mss_adjust=Global[int](value=1269),
+            username_string=Global[str](value="ONBBAAB"),
+            value=Global[Literal[TLOCColor]](value="silver"),
+            vbond_as_stun_server=Global[bool](value=False),
+            vmanage_connection_preference=Global[int](value=7),
+        )
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, multilink_parcel, self.wan_uuid).id
+
         assert parcel_id
 
     @classmethod

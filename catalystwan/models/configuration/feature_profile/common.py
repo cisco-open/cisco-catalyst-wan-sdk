@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+<<<<<<< HEAD
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_default, as_global
 from catalystwan.models.common import (
     CoreRegion,
@@ -15,6 +16,22 @@ from catalystwan.models.common import (
     EthernetNatType,
     SecondaryRegion,
     SubnetMask,
+=======
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
+from catalystwan.models.common import (
+    CableLengthLongValue,
+    CableLengthShortValue,
+    ClockRate,
+    CoreRegion,
+    E1Framing,
+    E1Linecode,
+    EncapType,
+    LineMode,
+    SecondaryRegion,
+    SubnetMask,
+    T1Framing,
+    T1Linecode,
+>>>>>>> dev-uxmt
     check_fields_exclusive,
 )
 from catalystwan.models.configuration.common import Solution
@@ -33,12 +50,18 @@ ProfileType = Literal[
     "other",
     "uc-voice",
     "global",  # automatically created global cellulargateway feature profile
+    "sig-security",
 ]
 
 SchemaType = Literal[
     "post",
     "put",
 ]
+
+
+class ParcelBasic(BaseModel):
+    parcel_id: str = Field(alias="parcelId")
+    description: Optional[str] = None
 
 
 class FeatureProfileInfo(BaseModel):
@@ -51,6 +74,7 @@ class FeatureProfileInfo(BaseModel):
     description: str
     created_on: datetime = Field(alias="createdOn")
     last_updated_on: datetime = Field(alias="lastUpdatedOn")
+    reference_count: Optional[int] = Field(default=None, alias="referenceCount")
 
 
 class FeatureProfileDetail(BaseModel):
@@ -63,10 +87,10 @@ class FeatureProfileDetail(BaseModel):
     description: str
     created_on: datetime = Field(alias="createdOn")
     last_updated_on: datetime = Field(alias="lastUpdatedOn")
-    associated_profile_parcels: List[str] = Field(alias="associatedProfileParcels")
+    associated_profile_parcels: Optional[Union[List[str], List[ParcelBasic]]] = Field(alias="associatedProfileParcels")
     rid: int = Field(alias="@rid")
-    profile_parcel_count: int = Field(alias="profileParcelCount")
-    cached_profile: Optional[str] = Field(alias="cachedProfile")
+    profile_parcel_count: Optional[int] = Field(default=None, alias="profileParcelCount")
+    cached_profile: Optional[str] = Field(default=None, alias="cachedProfile")
 
 
 class FromFeatureProfile(BaseModel):
@@ -102,6 +126,12 @@ class SchemaTypeQuery(BaseModel):
 class GetFeatureProfilesPayload(BaseModel):
     limit: Optional[int]
     offset: Optional[int]
+
+
+class GetReferenceCountFeatureProfilesPayload(GetFeatureProfilesPayload):
+    model_config = ConfigDict(populate_by_name=True)
+
+    reference_count: Optional[bool] = Field(serialization_alias="referenceCount", validation_alias="referenceCount")
 
 
 class DNSIPv4(BaseModel):
@@ -443,7 +473,6 @@ class AllowService(BaseModel):
         default=None, description="Field available only for InterfaceCellularParcel"
     )
 
-
 class Arp(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
@@ -574,3 +603,89 @@ class InterfaceDynamicIPv6Address(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     dynamic: DynamicIPv6Dhcp
+
+
+class ChannelGroup(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+    number: Union[Global[int], Variable] = Field()
+    timeslots: Union[Global[str], Variable] = Field()
+
+
+MultilinkControllerType = Literal[
+    "A/S Serial",
+    "T1/E1",
+]
+
+
+MultilinkAuthenticationType = Literal[
+    "bidirectional",
+    "unidirectional",
+]
+
+MultilinkMethod = Literal[
+    "CHAP",
+    "PAP",
+    "PAP and CHAP",
+]
+
+MultilinkTxExName = Literal[
+    "E1",
+    "T1",
+]
+
+MultilinkClockSource = Literal[
+    "internal",
+    "line",
+    "loop-timed",
+]
+
+
+class MultilinkControllerTxExList(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+
+    channel_group: List[ChannelGroup] = Field(
+        default=[],
+        validation_alias="channelGroup",
+        serialization_alias="channelGroup",
+        description="Channel Group List",
+    )
+    number: Union[Variable, Global[str]] = Field()
+    clock_source: Optional[Union[Global[MultilinkClockSource], Default[None]]] = Field(
+        default=None, validation_alias="clockSource", serialization_alias="clockSource"
+    )
+    description: Optional[Union[Variable, Global[str], Default[None]]] = Field(default=None)
+    e1_framing: Optional[Union[Variable, Global[E1Framing], Default[None]]] = Field(
+        default=None, validation_alias="e1Framing", serialization_alias="e1Framing"
+    )
+    e1_linecode: Optional[Union[Variable, Global[E1Linecode], Default[None]]] = Field(
+        default=None, validation_alias="e1Linecode", serialization_alias="e1Linecode"
+    )
+    line_mode: Optional[Union[Variable, Default[None], Global[LineMode]]] = Field(
+        default=None, validation_alias="lineMode", serialization_alias="lineMode"
+    )
+    long: Optional[Union[Variable, Global[CableLengthLongValue], Default[None]]] = Field(default=None)
+    name: Optional[Global[MultilinkTxExName]] = Field(default=None)
+    short: Optional[Union[Variable, Global[CableLengthShortValue], Default[None]]] = Field(default=None)
+    t1_framing: Optional[Union[Variable, Global[T1Framing], Default[None]]] = Field(
+        default=None, validation_alias="t1Framing", serialization_alias="t1Framing"
+    )
+    t1_linecode: Optional[Union[Variable, Default[None], Global[T1Linecode]]] = Field(
+        default=None, validation_alias="t1Linecode", serialization_alias="t1Linecode"
+    )
+
+
+class MultilinkNimList(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+
+    if_name: Union[Variable, Global[str]] = Field(validation_alias="ifName", serialization_alias="ifName")
+    bandwidth: Optional[Union[Variable, Global[int], Default[None]]] = Field(default=None)
+    clock_rate: Optional[Union[Variable, Global[ClockRate], Default[None]]] = Field(
+        default=None, validation_alias="clockRate", serialization_alias="clockRate"
+    )
+    description: Optional[Union[Variable, Global[str], Default[None]]] = Field(default=None)

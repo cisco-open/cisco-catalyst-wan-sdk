@@ -7,7 +7,7 @@ from typing import List, Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.common import Carrier, TLOCColor
+from catalystwan.models.common import Carrier, ClockRate, TLOCColor
 from catalystwan.models.configuration.feature_profile.common import (
     AddressWithMask,
     AllowService,
@@ -15,39 +15,6 @@ from catalystwan.models.configuration.feature_profile.common import (
     MultiRegionFabric,
     RefIdItem,
 )
-
-ClockRate = Literal[
-    "9600",
-    "8000000",
-    "800000",
-    "768000",
-    "72000",
-    "64000",
-    "57600",
-    "56000",
-    "5300000",
-    "512000",
-    "500000",
-    "48000",
-    "4800",
-    "4000000",
-    "384000",
-    "38400",
-    "32000",
-    "28800",
-    "256000",
-    "250000",
-    "2400",
-    "2000000",
-    "192000",
-    "19200",
-    "148000",
-    "14400",
-    "125000",
-    "1200",
-    "115200",
-    "1000000",
-]
 
 EncapsulationSerial = Literal[
     "frame-relay",

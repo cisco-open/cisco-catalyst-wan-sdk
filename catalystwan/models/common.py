@@ -138,6 +138,18 @@ def check_any_of_exclusive_field_sets(values: Dict, field_sets: List[Tuple[Set[s
         raise ValueError(f"One of {all_sets_field_names} must be assigned")
 
 
+def str_as_uuid_list(val: Union[str, Sequence[UUID]]) -> Sequence[UUID]:
+    if isinstance(val, str):
+        return [UUID(uuid_) for uuid_ in val.split()]
+    return val
+
+
+def str_as_str_list(val: Union[str, Sequence[str]]) -> Sequence[str]:
+    if isinstance(val, str):
+        return val.split()
+    return val
+
+
 IntStr = Annotated[
     int,
     PlainSerializer(lambda x: str(x), return_type=str, when_used="json-unless-none"),
@@ -145,6 +157,12 @@ IntStr = Annotated[
 ]
 
 IntRange = Tuple[int, Optional[int]]
+
+SpaceSeparatedUUIDList = Annotated[
+    List[UUID],
+    PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
+    BeforeValidator(str_as_uuid_list),
+]
 
 
 def int_range_str_validator(value: Union[str, IntRange], ascending: bool = True) -> IntRange:
@@ -172,18 +190,6 @@ IntRangeStr = Annotated[
     PlainSerializer(int_range_serializer, return_type=str, when_used="json-unless-none"),
     BeforeValidator(int_range_str_validator),
 ]
-
-
-def str_as_uuid_list(val: Union[str, Sequence[UUID]]) -> Sequence[UUID]:
-    if isinstance(val, str):
-        return [UUID(uuid_) for uuid_ in val.split()]
-    return val
-
-
-def str_as_str_list(val: Union[str, Sequence[str]]) -> Sequence[str]:
-    if isinstance(val, str):
-        return val.split()
-    return val
 
 
 EncapType = Literal[
@@ -512,4 +518,78 @@ EthernetNatType = Literal[
 EthernetDirection = Literal[
     "inside",
     "outside",
+]
+
+ClockRate = Literal[
+    "1000000",
+    "115200",
+    "1200",
+    "125000",
+    "14400",
+    "148000",
+    "19200",
+    "192000",
+    "2000000",
+    "2400",
+    "250000",
+    "256000",
+    "28800",
+    "32000",
+    "38400",
+    "384000",
+    "4000000",
+    "4800",
+    "48000",
+    "500000",
+    "512000",
+    "5300000",
+    "56000",
+    "57600",
+    "64000",
+    "72000",
+    "768000",
+    "800000",
+    "8000000",
+    "9600",
+]
+
+LineMode = Literal[
+    "primary",
+    "secondary",
+]
+
+T1Framing = Literal[
+    "esf",
+    "sf",
+]
+
+T1Linecode = Literal[
+    "ami",
+    "b8zs",
+]
+
+E1Framing = Literal[
+    "crc4",
+    "no-crc4",
+]
+
+E1Linecode = Literal[
+    "ami",
+    "hdb3",
+]
+
+CableLengthShortValue = Literal[
+    "110ft",
+    "220ft",
+    "330ft",
+    "440ft",
+    "550ft",
+    "660ft",
+]
+
+CableLengthLongValue = Literal[
+    "-15db",
+    "-22.5db",
+    "-7.5db",
+    "0db",
 ]

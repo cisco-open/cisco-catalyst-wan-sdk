@@ -335,6 +335,52 @@ class CRLSettings(BaseModel):
         return vpn_str
 
 
+class CloudCredentials(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    umbrella_org_id: Optional[str] = Field(
+        default=None, validation_alias="umbrellaOrgId", serialization_alias="umbrellaOrgId"
+    )
+    umbrella_sig_auth_key: Optional[str] = Field(
+        default=None, validation_alias="umbrellaSIGAuthKey", serialization_alias="umbrellaSIGAuthKey"
+    )
+    umbrella_sig_auth_secret: Optional[str] = Field(
+        default=None, validation_alias="umbrellaSIGAuthSecret", serialization_alias="umbrellaSIGAuthSecret"
+    )
+    umbrella_dns_auth_key: Optional[str] = Field(
+        default=None, validation_alias="umbrellaDNSAuthKey", serialization_alias="umbrellaDNSAuthKey"
+    )
+    umbrella_dns_auth_secret: Optional[str] = Field(
+        default=None, validation_alias="umbrellaDNSAuthSecret", serialization_alias="umbrellaDNSAuthSecret"
+    )
+
+    zscaler_organization: Optional[str] = Field(
+        default=None, validation_alias="zscalerOrganization", serialization_alias="zscalerOrganization"
+    )
+    zscaler_partner_base_uri: Optional[str] = Field(
+        default=None, validation_alias="zscalerPartnerBaseUri", serialization_alias="zscalerPartnerBaseUri"
+    )
+    zscaler_partner_key: Optional[str] = Field(
+        default=None, validation_alias="zscalerPartnerKey", serialization_alias="zscalerPartnerKey"
+    )
+    zscaler_username: Optional[str] = Field(
+        default=None, validation_alias="zscalerUsername", serialization_alias="zscalerUsername"
+    )
+    zscaler_password: Optional[str] = Field(
+        default=None, validation_alias="zscalerPassword", serialization_alias="zscalerPassword"
+    )
+
+    cisco_sse_org_id: Optional[str] = Field(
+        default=None, validation_alias="ciscoSSEOrgId", serialization_alias="ciscoSSEOrgId"
+    )
+    cisco_sse_auth_key: Optional[str] = Field(
+        default=None, validation_alias="ciscoSSEAuthKey", serialization_alias="ciscoSSEAuthKey"
+    )
+    cisco_sse_auth_secret: Optional[str] = Field(
+        default=None, validation_alias="ciscoSSEAuthSecret", serialization_alias="ciscoSSEAuthSecret"
+    )
+
+
 class ConfigurationSettings(APIEndpoints):
     def create_analytics_data_file(self):
         # POST /settings/configuration/analytics/dca
@@ -502,6 +548,10 @@ class ConfigurationSettings(APIEndpoints):
     def get_smart_licensing_settings(self) -> DataSequence[SmartLicensingSetting]:
         ...
 
+    @get("/settings/configuration/cloudProviderSetting", "data")
+    def get_cloud_credentials(self) -> DataSequence[CloudCredentials]:
+        ...
+
     def new_cert_configuration(self):
         # POST /settings/configuration/certificate/{settingType}
         ...
@@ -657,4 +707,12 @@ class ConfigurationSettings(APIEndpoints):
     @view({SingleTenantView, ProviderView})
     @put("/settings/configuration/smartLicensing", "data")
     def edit_smart_licensing_settings(self, payload: SmartLicensingSetting) -> DataSequence[SmartLicensingSetting]:
+        ...
+
+    @put("/settings/configuration/cloudProviderSetting", "data")
+    def edit_cloud_credentials(self, payload: CloudCredentials) -> DataSequence[CloudCredentials]:
+        ...
+
+    @post("/settings/configuration/cloudProviderSetting", "data")
+    def create_cloud_credentials(self, payload: CloudCredentials) -> DataSequence[CloudCredentials]:
         ...

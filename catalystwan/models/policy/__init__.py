@@ -47,6 +47,7 @@ from .definition.access_control_list import AclPolicy, AclPolicyGetResponse
 from .definition.access_control_list_ipv6 import AclIPv6Policy, AclIPv6PolicyGetResponse
 from .definition.aip import AdvancedInspectionProfilePolicy, AdvancedInspectionProfilePolicyGetResponse
 from .definition.amp import AdvancedMalwareProtectionPolicy, AdvancedMalwareProtectionPolicyGetResponse
+from .definition.cflowd import CflowdPolicy, CflowdPolicyGetResponse
 from .definition.control import ControlPolicy, ControlPolicyGetResponse
 from .definition.device_access import DeviceAccessPolicy, DeviceAccessPolicyGetResponse
 from .definition.device_access_ipv6 import DeviceAccessIPv6Policy, DeviceAccessIPv6PolicyGetResponse
@@ -58,6 +59,7 @@ from .definition.qos_map import QoSDropType, QoSMapPolicy, QoSMapPolicyGetRespon
 from .definition.rewrite import RewritePolicy, RewritePolicyGetResponse
 from .definition.rule_set import RuleSet, RuleSetGetResponse
 from .definition.security_group import SecurityGroup, SecurityGroupGetResponse
+from .definition.ssl_decryption import SslDecryptionPolicy, SslDecryptionPolicyGetResponse
 from .definition.ssl_decryption_utd_profile import (
     SslDecryptionUtdProfilePolicy,
     SslDecryptionUtdProfilePolicyGetResponse,
@@ -68,13 +70,13 @@ from .definition.vpn_membership import VPNMembershipPolicy, VPNMembershipPolicyG
 from .definition.zone_based_firewall import ZoneBasedFWPolicy, ZoneBasedFWPolicyGetResponse
 from .localized import LocalizedPolicy
 from .policy_definition import (
+    BasicPolicyActionType,
     Carrier,
     DNSTypeEntryType,
     MultiRegionRole,
     OriginProtocol,
     PathType,
     PLPEntryType,
-    PolicyActionType,
     ServiceType,
     TLOCActionType,
 )
@@ -86,6 +88,7 @@ AnyPolicyDefinition = Annotated[
         AclPolicy,
         AdvancedInspectionProfilePolicy,
         AdvancedMalwareProtectionPolicy,
+        CflowdPolicy,
         ControlPolicy,
         IntrusionPreventionPolicy,
         DeviceAccessIPv6Policy,
@@ -97,6 +100,7 @@ AnyPolicyDefinition = Annotated[
         RewritePolicy,
         RuleSet,
         SecurityGroup,
+        SslDecryptionPolicy,
         SslDecryptionUtdProfilePolicy,
         TrafficDataPolicy,
         UrlFilteringPolicy,
@@ -188,6 +192,7 @@ AnyPolicyDefinitionInfo = Annotated[
         AdvancedMalwareProtectionPolicyGetResponse,
         AclIPv6PolicyGetResponse,
         AclPolicyGetResponse,
+        CflowdPolicyGetResponse,
         ControlPolicyGetResponse,
         DeviceAccessIPv6PolicyGetResponse,
         DeviceAccessPolicyGetResponse,
@@ -199,6 +204,7 @@ AnyPolicyDefinitionInfo = Annotated[
         RewritePolicyGetResponse,
         RuleSetGetResponse,
         SecurityGroupGetResponse,
+        SslDecryptionPolicyGetResponse,
         SslDecryptionUtdProfilePolicyGetResponse,
         TrafficDataPolicyGetResponse,
         UrlFilteringPolicyGetResponse,
@@ -221,6 +227,7 @@ __all__ = (
     "ASPathList",
     "Carrier",
     "CentralizedPolicy",
+    "CflowdPolicy",
     "ClassMapList",
     "ColorList",
     "CommunityList",
@@ -248,7 +255,7 @@ __all__ = (
     "PathType",
     "PLPEntryType",
     "PolicerList",
-    "PolicyActionType",
+    "BasicPolicyActionType",
     "PortList",
     "PreferredColorGroupList",
     "PrefixList",
@@ -263,6 +270,7 @@ __all__ = (
     "ServiceType",
     "SiteList",
     "SLAClassList",
+    "SslDecryptionPolicy",
     "SslDecryptionUtdProfilePolicy",
     "ThreatGridApiKeyList",
     "TLOCActionType",
