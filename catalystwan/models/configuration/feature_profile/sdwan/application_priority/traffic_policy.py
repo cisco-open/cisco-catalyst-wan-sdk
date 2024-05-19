@@ -20,8 +20,8 @@ Direction = Literal[
 
 class TrafficPolicyTarget(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    direction: Optional[Global[Direction]] = Field(default=None)
-    vpn: Optional[Global[List[str]]] = Field(default=None)
+    direction: Global[Direction]
+    vpn: Global[List[str]]
 
 
 SequenceIpType = Literal[
@@ -749,6 +749,6 @@ class TrafficPolicyParcel(_ParcelBase):
         default=None, validation_alias=AliasPath("data", "dataDefaultAction")
     )
     has_cor_via_sig: Optional[Global[bool]] = Field(default=None, validation_alias=AliasPath("data", "hasCorViaSig"))
-    sequences: Optional[List[Sequences]] = Field(default=None, validation_alias=AliasPath("data", "sequences"))
+    sequences: List[Sequences] = Field(default=[], validation_alias=AliasPath("data", "sequences"))
     simple_flow: Optional[Global[bool]] = Field(default=None, validation_alias=AliasPath("data", "simpleFlow"))
-    target: Optional[TrafficPolicyTarget] = Field(default=None, validation_alias=AliasPath("data", "target"))
+    target: TrafficPolicyTarget = Field(validation_alias=AliasPath("data", "target"))

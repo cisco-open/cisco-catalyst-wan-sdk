@@ -9,8 +9,14 @@ from catalystwan.models.configuration.feature_profile.sdwan.application_priority
     PolicySettingsParcel,
     QosMap,
     QosPolicyParcel,
+    TrafficPolicyParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority.qos_policy import QosPolicyTarget
+from catalystwan.models.configuration.feature_profile.sdwan.application_priority.traffic_policy import (
+    BaseAction,
+    Direction,
+    TrafficPolicyTarget,
+)
 
 
 class TestPolicySettingsParcel(TestFeatureProfileModels):
@@ -115,6 +121,69 @@ class TestQosPolicyParcel(TestFeatureProfileModels):
         # Assert
         with pytest.raises(ManagerHTTPError):
             self.api.get_parcel(self.profile_id, QosPolicyParcel, parcel_id).payload
+
+    def tearDown(self) -> None:
+        self.api.delete_profile(self.profile_id)
+
+
+class TestTrafficPolicyParcel(TestFeatureProfileModels):
+    def setUp(self) -> None:
+        self.api = self.session.api.sdwan_feature_profiles.application_priority
+        self.profile_id = self.api.create_profile("TestApplicationPriorityProfile", "Description").id
+
+    def test_create_traffic_policy_parcel(self):
+        traffic_policy_parcel = TrafficPolicyParcel(
+            name="traffic_policy_test_parcel",
+            data_default_action=Global[BaseAction](value="accept"),
+            target=TrafficPolicyTarget(
+                direction=Global[Direction](value="all"), vpn=Global[List[str]](value=["VPN_1"])
+            ),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_id, traffic_policy_parcel).id
+        # Assert
+        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_id, TrafficPolicyParcel, parcel_id).payload
+
+        assert parcel.parcel_name == "traffic_policy_test_parcel"
+
+    def test_update_traffic_policy_parcel(self):
+        traffic_policy_parcel = TrafficPolicyParcel(
+            name="traffic_policy_test_parcel",
+            data_default_action=Global[BaseAction](value="accept"),
+            target=TrafficPolicyTarget(
+                direction=Global[Direction](value="all"), vpn=Global[List[str]](value=["VPN_1"])
+            ),
+        )
+        parcel_id = self.api.create_parcel(self.profile_id, traffic_policy_parcel).id
+        parcel = self.api.get_parcel(self.profile_id, TrafficPolicyParcel, parcel_id).payload
+        parcel.target = TrafficPolicyTarget(
+            direction=Global[Direction](value="service"), vpn=Global[List[str]](value=["VPN_2"])
+        )
+        # Act
+        self.api.update_parcel(self.profile_id, parcel, parcel_id)
+        parcel = self.api.get_parcel(self.profile_id, TrafficPolicyParcel, parcel_id).payload
+
+        # Assert
+        assert parcel.target == TrafficPolicyTarget(
+            direction=Global[Direction](value="service"), vpn=Global[List[str]](value=["VPN_2"])
+        )
+
+    def test_delete_traffic_policy_parcel(self):
+        traffic_policy_parcel = TrafficPolicyParcel(
+            name="traffic_policy_test_parcel",
+            data_default_action=Global[BaseAction](value="accept"),
+            target=TrafficPolicyTarget(
+                direction=Global[Direction](value="all"), vpn=Global[List[str]](value=["VPN_1"])
+            ),
+        )
+        parcel_id = self.api.create_parcel(self.profile_id, traffic_policy_parcel).id
+        # Act
+        self.api.delete_parcel(self.profile_id, TrafficPolicyParcel, parcel_id)
+
+        # Assert
+        with pytest.raises(ManagerHTTPError):
+            self.api.get_parcel(self.profile_id, TrafficPolicyParcel, parcel_id).payload
 
     def tearDown(self) -> None:
         self.api.delete_profile(self.profile_id)
