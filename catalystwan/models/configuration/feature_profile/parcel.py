@@ -99,6 +99,7 @@ ParcelType = Literal[
     "hubspoke",
     "mesh",
     "custom-control",
+    "traffic-policy",
 ]
 
 
