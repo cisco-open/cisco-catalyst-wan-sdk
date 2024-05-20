@@ -351,7 +351,7 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
             )
 
     ux2 = merge_parcels(ux2)
-    transform_result.ux2_config = ux2
+    transform_result.ux2_config = UX2Config.model_validate(ux2)
     return transform_result
 
 

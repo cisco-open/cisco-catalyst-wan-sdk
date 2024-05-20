@@ -38,14 +38,6 @@ class UX2ConfigPusher:
         self._push_result = UX2ConfigPushResult()
         self._ux2_config = ux2_config
         self._progress = progress
-        self._validate_config()
-
-    def _validate_config(self):
-        try:
-            UX2Config.model_validate(self._ux2_config)
-        except ValidationError as e:
-            logger.error(f"Config validation error occured: {e}")
-            self._push_result.report.add_validation_error(str(e))
 
     def _create_config_map(self, ux2_config: UX2Config) -> ConfigurationMapping:
         return ConfigurationMapping(
