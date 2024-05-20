@@ -9,6 +9,7 @@ from .bgp import WanRoutingBgpParcel as BGPParcel
 from .cellular_controller import CellularControllerParcel
 from .cellular_profile import CellularProfileParcel
 from .gps import GpsParcel
+from .management.ethernet import InterfaceEthernetParcel as ManagementInterfaceEthernetParcel
 from .t1e1controller import T1E1ControllerParcel
 from .vpn import ManagementVpnParcel, TransportVpnParcel
 from .wan.interface.ethernet import InterfaceEthernetParcel
@@ -50,8 +51,12 @@ AnyTransportSuperParcel = Annotated[
     ],
     Field(discriminator="type_"),
 ]
+AnyManagementVpnSubParcel = Annotated[
+    Union[ManagementInterfaceEthernetParcel],
+    Field(discriminator="type_"),
+]
 AnyTransportParcel = Annotated[
-    Union[AnyTransportSuperParcel, AnyTransportVpnParcel, AnyTransportVpnSubParcel],
+    Union[AnyTransportSuperParcel, AnyTransportVpnParcel, AnyTransportVpnSubParcel, AnyManagementVpnSubParcel],
     Field(discriminator="type_"),
 ]
 
@@ -63,6 +68,7 @@ __all__ = [
     "AnyTransportParcel",
     "AnyTransportSuperParcel",
     "AnyTransportVpnSubParcel",
+    "AnyManagementVpnSubParcel",
     "T1E1ControllerParcel",
     "T1E1SerialParcel",
     "InterfaceDslPPPoAParcel",

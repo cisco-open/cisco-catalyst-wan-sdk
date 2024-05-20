@@ -59,6 +59,17 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_p
     ProfileInfo,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.gps import GpsParcel
+from catalystwan.models.configuration.feature_profile.sdwan.transport.management.ethernet import (
+    Advanced as ManagementEthernetAdvanced,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.management.ethernet import (
+    InterfaceEthernetParcel as ManagementEthernetParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.management.ethernet import (
+    InterfaceStaticIPv6Address,
+    StaticIPv6Address,
+    StaticIPv6AddressConfig,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1controller import (
     E1,
     T1,
@@ -1280,6 +1291,86 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
         )
 
         parcel_id = self.api.create_parcel(self.profile_uuid, multilink_parcel, self.wan_uuid).id
+
+        assert parcel_id
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.api.delete_profile(cls.profile_uuid)
+        super().tearDownClass()
+
+
+class TestTransportFeatureProfileWanManagementModels(TestFeatureProfileModels):
+    wan_uuid: UUID
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.api = cls.session.api.sdwan_feature_profiles.transport
+        cls.profile_uuid = cls.api.create_profile("TestTransportService", "Description").id
+        cls.wan_uuid = cls.api.create_parcel(
+            cls.profile_uuid,
+            ManagementVpnParcel(
+                parcel_name="TestTransportVpnParcel",
+                parcel_description="Description",
+            ),
+        ).id
+
+    def test_when_fully_specified_ethernet_parcel_expect_successful_post(self):
+        v4_address = InterfaceStaticIPv4Address(
+            static=StaticIPv4AddressConfig(
+                primary_ip_address=StaticIPv4Address(
+                    ip_address=Default[None](value=None), subnet_mask=Default[None](value=None)
+                ),
+                secondary_ip_address=None,
+            )
+        )
+        v6_address = InterfaceStaticIPv6Address(
+            static=StaticIPv6AddressConfig(
+                primary_ip_v6_address=StaticIPv6Address(address=Global[IPv6Interface](value="0::/16"))
+            )
+        )
+        arp = [
+            CommonArp(
+                ip_address=Global[IPv4Address](value=IPv4Address("203.0.113.2")),
+                mac_address=Global[str](value="DC:F1:17:22:FA:3D"),
+            ),
+            CommonArp(ip_address=Global[str](value="3.2.1.1"), mac_address=Global[str](value="BF:DB:A1:F0:4B:C8")),
+            CommonArp(
+                ip_address=Global[IPv4Address](value=IPv4Address("192.0.0.170")),
+                mac_address=Global[str](value="1B:5A:0F:AB:9E:CE"),
+            ),
+        ]
+        advanced = ManagementEthernetAdvanced(
+            arp_timeout=Global[int](value=97),
+            ip_directed_broadcast=Global[bool](value=True),
+            ip_mtu=Global[int](value=600),
+            load_interval=Global[int](value=189),
+            autonegotiate=Global[bool](value=False),
+            duplex=Global[Literal["full", "half", "auto"]](value="auto"),
+            icmp_redirect_disable=Global[bool](value=True),
+            intrf_mtu=Global[int](value=1444),
+            mac_address=Global[str](value="1B:5A:0F:AB:9E:CE"),
+            media_type=Global[Literal["auto-select", "rj45", "sfp"]](value="sfp"),
+            speed=Global[Literal["10", "100", "1000", "10000", "2500"]](value="10000"),
+            tcp_mss=Global[int](value="1550"),
+        )
+        ethernet_parcel = ManagementEthernetParcel(
+            parcel_name="Test",
+            parcel_description="Description",
+            advanced=advanced,
+            interface_name=Global[str](value="GlobalEthernet1"),
+            interface_description=Global[str](value="Test"),
+            intf_ip_address=v4_address,
+            shutdown=Global[bool](value=True),
+            arp=arp,
+            auto_detect_bandwidth=Global[bool](value=False),
+            dhcp_helper=Global[List[str]](value=["1.1.1.1", "2.2.2.2"]),
+            intf_ip_v6_address=v6_address,
+            iperf_server=Global[str](value="OXYQIcr"),
+        )
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.wan_uuid).id
 
         assert parcel_id
 

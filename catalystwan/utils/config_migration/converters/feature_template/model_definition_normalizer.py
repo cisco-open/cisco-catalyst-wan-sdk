@@ -2,7 +2,7 @@ from typing import Any, Dict, Literal, Optional, Union, get_args, get_origin
 
 from pydantic.fields import FieldInfo
 
-from catalystwan.api.configuration_groups.parcel import Global
+from catalystwan.api.configuration_groups.parcel import Global, Variable
 from catalystwan.utils.config_migration.converters.feature_template.normalizer import to_snake_case
 
 
@@ -91,6 +91,8 @@ def normalize_to_model_definition(d: dict, model_fields: Dict[str, FieldInfo]) -
         cast_type = global_type.model_fields["value"].annotation
 
         if value is None:
+            return value
+        elif isinstance(value, Variable):
             return value
         elif isinstance(value, dict):
             # A nested model, skip

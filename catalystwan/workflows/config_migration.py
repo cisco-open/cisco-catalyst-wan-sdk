@@ -37,6 +37,7 @@ from catalystwan.utils.config_migration.steps.constants import (
     LAN_VPN_GRE,
     LAN_VPN_IPSEC,
     LAN_VPN_MULTILINK,
+    MANAGEMENT_VPN_ETHERNET,
     VPN_MANAGEMENT,
     VPN_SERVICE,
     VPN_TRANSPORT,
@@ -104,6 +105,7 @@ SUPPORTED_TEMPLATE_TYPES = [
     LAN_VPN_GRE,
     LAN_VPN_ETHERNET,
     LAN_VPN_IPSEC,
+    MANAGEMENT_VPN_ETHERNET,
     "cli-template",
     "cisco_secure_internet_gateway",
 ]

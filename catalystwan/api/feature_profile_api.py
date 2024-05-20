@@ -223,6 +223,8 @@ class TransportFeatureProfileAPI:
             # transport and service parcels, but the actual endpoint does not require
             # the prefix, so we remove it here.
             parcel_type = payload._get_parcel_type().replace("wan/vpn/", "")
+            # same applies to management
+            parcel_type = parcel_type.replace("management/vpn/", "")
             if vpn_parcel._get_parcel_type() == TransportVpnParcel._get_parcel_type():
                 return self.endpoint.create_transport_vpn_sub_parcel(profile_id, vpn_uuid, parcel_type, payload)
             else:
