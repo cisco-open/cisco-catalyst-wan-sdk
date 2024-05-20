@@ -29,6 +29,7 @@ from catalystwan.endpoints.configuration.policy.definition.intrusion_prevention 
 from catalystwan.endpoints.configuration.policy.definition.mesh import ConfigurationPolicyMeshDefinition
 from catalystwan.endpoints.configuration.policy.definition.qos_map import ConfigurationPolicyQoSMapDefinition
 from catalystwan.endpoints.configuration.policy.definition.rewrite import ConfigurationPolicyRewriteRuleDefinition
+from catalystwan.endpoints.configuration.policy.definition.route_policy import ConfigurationPolicyRouteDefinition
 from catalystwan.endpoints.configuration.policy.definition.rule_set import ConfigurationPolicyRuleSetDefinition
 from catalystwan.endpoints.configuration.policy.definition.security_group import (
     ConfigurationPolicySecurityGroupDefinition,
@@ -158,6 +159,7 @@ from catalystwan.models.policy.definition.intrusion_prevention import (
 from catalystwan.models.policy.definition.mesh import MeshPolicy, MeshPolicyGetResponse
 from catalystwan.models.policy.definition.qos_map import QoSMapPolicy, QoSMapPolicyGetResponse
 from catalystwan.models.policy.definition.rewrite import RewritePolicy, RewritePolicyGetResponse
+from catalystwan.models.policy.definition.route_policy import RoutePolicy, RoutePolicyGetResponse
 from catalystwan.models.policy.definition.rule_set import RuleSet, RuleSetGetResponse
 from catalystwan.models.policy.definition.security_group import SecurityGroup, SecurityGroupGetResponse
 from catalystwan.models.policy.definition.ssl_decryption import SslDecryptionPolicy, SslDecryptionPolicyGetResponse
@@ -264,6 +266,7 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     UrlFilteringPolicy: ConfigurationPolicyUrlFilteringDefinition,
     DnsSecurityPolicy: ConfigurationPolicyDnsSecurityDefinition,
     CflowdPolicy: ConfigurationPolicyCflowdDefinition,
+    RoutePolicy: ConfigurationPolicyRouteDefinition,
 }
 
 
@@ -724,6 +727,10 @@ class PolicyDefinitionsAPI:
         ...
 
     @overload
+    def get(self, type: Type[RoutePolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[RuleSet]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
@@ -810,6 +817,10 @@ class PolicyDefinitionsAPI:
 
     @overload
     def get(self, type: Type[DnsSecurityPolicy], id: UUID) -> DnsSecurityPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[RoutePolicy], id: UUID) -> RoutePolicyGetResponse:
         ...
 
     @overload
