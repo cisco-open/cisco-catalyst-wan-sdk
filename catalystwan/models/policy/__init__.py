@@ -16,6 +16,8 @@ from catalystwan.models.policy.list.communities import (
     CommunityListInfo,
     ExpandedCommunityList,
     ExpandedCommunityListInfo,
+    ExtendedCommunityList,
+    ExtendedCommunityListInfo,
 )
 from catalystwan.models.policy.list.data_ipv6_prefix import DataIPv6PrefixList, DataIPv6PrefixListInfo
 from catalystwan.models.policy.list.data_prefix import DataPrefixList, DataPrefixListInfo
@@ -123,6 +125,7 @@ AnyPolicyList = Annotated[
         DataIPv6PrefixList,
         DataPrefixList,
         ExpandedCommunityList,
+        ExtendedCommunityList,
         FQDNList,
         GeoLocationList,
         IPSSignatureList,
@@ -161,6 +164,7 @@ AnyPolicyListInfo = Annotated[
         DataIPv6PrefixListInfo,
         DataPrefixListInfo,
         ExpandedCommunityListInfo,
+        ExtendedCommunityListInfo,
         FQDNListInfo,
         GeoLocationListInfo,
         IPSSignatureListInfo,
@@ -242,6 +246,7 @@ __all__ = (
     "DnsSecurityPolicy",
     "DNSTypeEntryType",
     "ExpandedCommunityList",
+    "ExtendedCommunityList",
     "FQDNList",
     "GeoLocationList",
     "HubAndSpokePolicy",

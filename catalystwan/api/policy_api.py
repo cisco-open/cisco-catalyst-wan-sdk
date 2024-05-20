@@ -57,6 +57,7 @@ from catalystwan.endpoints.configuration.policy.list.community import Configurat
 from catalystwan.endpoints.configuration.policy.list.data_ipv6_prefix import ConfigurationPolicyDataIPv6PrefixList
 from catalystwan.endpoints.configuration.policy.list.data_prefix import ConfigurationPolicyDataPrefixList
 from catalystwan.endpoints.configuration.policy.list.expanded_community import ConfigurationPolicyExpandedCommunityList
+from catalystwan.endpoints.configuration.policy.list.extended_community import ConfigurationPolicyExtendedCommunityList
 from catalystwan.endpoints.configuration.policy.list.fqdn import ConfigurationPolicyFQDNList, FQDNListInfo
 from catalystwan.endpoints.configuration.policy.list.geo_location import ConfigurationPolicyGeoLocationList
 from catalystwan.endpoints.configuration.policy.list.ips_signature import ConfigurationPolicyIPSSignatureList
@@ -111,6 +112,7 @@ from catalystwan.models.policy import (
     DataIPv6PrefixList,
     DataPrefixList,
     ExpandedCommunityList,
+    ExtendedCommunityList,
     FQDNList,
     GeoLocationList,
     IPSSignatureList,
@@ -173,7 +175,11 @@ from catalystwan.models.policy.definition.vpn_membership import VPNMembershipPol
 from catalystwan.models.policy.definition.zone_based_firewall import ZoneBasedFWPolicy, ZoneBasedFWPolicyGetResponse
 from catalystwan.models.policy.list.app_probe import AppProbeClassListInfo
 from catalystwan.models.policy.list.class_map import ClassMapListInfo
-from catalystwan.models.policy.list.communities import CommunityListInfo, ExpandedCommunityListInfo
+from catalystwan.models.policy.list.communities import (
+    CommunityListInfo,
+    ExpandedCommunityListInfo,
+    ExtendedCommunityListInfo,
+)
 from catalystwan.models.policy.list.data_ipv6_prefix import DataIPv6PrefixListInfo
 from catalystwan.models.policy.list.data_prefix import DataPrefixListInfo
 from catalystwan.models.policy.list.geo_location import GeoLocationListInfo
@@ -218,6 +224,7 @@ POLICY_LIST_ENDPOINTS_MAP: Mapping[type, type] = {
     DataIPv6PrefixList: ConfigurationPolicyDataIPv6PrefixList,
     DataPrefixList: ConfigurationPolicyDataPrefixList,
     ExpandedCommunityList: ConfigurationPolicyExpandedCommunityList,
+    ExtendedCommunityList: ConfigurationPolicyExtendedCommunityList,
     FQDNList: ConfigurationPolicyFQDNList,
     GeoLocationList: ConfigurationPolicyGeoLocationList,
     IPSSignatureList: ConfigurationPolicyIPSSignatureList,
@@ -442,6 +449,10 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[ExtendedCommunityList]) -> DataSequence[ExtendedCommunityListInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[FQDNList]) -> DataSequence[FQDNListInfo]:
         ...
 
@@ -569,6 +580,10 @@ class PolicyListsAPI:
 
     @overload
     def get(self, type: Type[ExpandedCommunityList], id: UUID) -> ExpandedCommunityListInfo:
+        ...
+
+    @overload
+    def get(self, type: Type[ExtendedCommunityList], id: UUID) -> ExtendedCommunityListInfo:
         ...
 
     @overload
