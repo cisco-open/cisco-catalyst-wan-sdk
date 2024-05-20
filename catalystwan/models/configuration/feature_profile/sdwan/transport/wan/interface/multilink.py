@@ -4,7 +4,7 @@ from typing import List, Literal, Optional, Union
 from pydantic import AliasPath, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.common import Carrier, SubnetMask, TLOCColor
+from catalystwan.models.common import CarrierType, SubnetMask, TLOCColor
 from catalystwan.models.configuration.feature_profile.common import (
     MultilinkAuthenticationType,
     MultilinkControllerTxExList,
@@ -55,7 +55,7 @@ class InterfaceMultilinkParcel(_ParcelBase):
     border: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(
         default=None, validation_alias=AliasPath("data", "border")
     )
-    carrier: Optional[Union[Variable, Default[Carrier], Global[Carrier]]] = Field(
+    carrier: Optional[Union[Variable, Default[CarrierType], Global[CarrierType]]] = Field(
         default=None, validation_alias=AliasPath("data", "carrier")
     )
     clear_dont_fragment_sdwan_tunnel: Optional[Union[Variable, Global[bool], Default[bool]]] = Field(

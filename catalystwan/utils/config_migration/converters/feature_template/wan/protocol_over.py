@@ -4,7 +4,7 @@ from ipaddress import IPv4Interface
 from typing import Dict, List, Optional, Tuple, Union
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, OptionType, as_global
-from catalystwan.models.common import Carrier
+from catalystwan.models.common import CarrierType
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask, AllowService
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
     Advanced,
@@ -51,7 +51,7 @@ class InterfaceBaseTemplateConverter:
 
         carrier = tunnel.get("carrier")
         if carrier:
-            carrier = as_global(carrier.value, Carrier)
+            carrier = as_global(carrier.value, CarrierType)
 
         gre_option, ipsec_option = self.parse_encapsulation_options(tunnel.get("encapsulation", []))
 

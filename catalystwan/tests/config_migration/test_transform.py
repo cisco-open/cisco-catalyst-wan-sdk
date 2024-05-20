@@ -11,7 +11,7 @@ from catalystwan.models.configuration.config_migration import (
     UX1Templates,
 )
 from catalystwan.models.templates import FeatureTemplateInformation
-from catalystwan.tests.config_migration.models import (
+from catalystwan.tests.config_migration.test_data import (
     interface_ethernet,
     interface_gre,
     interface_ipsec,

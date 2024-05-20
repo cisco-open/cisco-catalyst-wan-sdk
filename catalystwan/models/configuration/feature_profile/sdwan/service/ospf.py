@@ -96,7 +96,7 @@ class OspfArea(BaseModel):
         serialization_alias="noSummary", validation_alias="noSummary", default=None
     )
     interface: Optional[List[OspfInterfaceParametres]] = None
-    range: Optional[List[SummaryRoute]]
+    range: Optional[List[SummaryRoute]] = None
 
 
 class RouterLsa(BaseModel):

@@ -237,7 +237,6 @@ class BgpIPv6Neighbor(BaseModel):
 class BgpParcel(_ParcelBase):
     type_: Literal["routing/bgp"] = Field(default="routing/bgp", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
-
     as_num: Union[Global[int], Variable] = Field(validation_alias=AliasPath("data", "asNum"))
     router_id: Optional[Union[Global[str], Variable, Default[None]]] = Field(
         validation_alias=AliasPath("data", "routerId"), default=None

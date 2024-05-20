@@ -12,7 +12,7 @@ from catalystwan.models.configuration.config_migration import (
     TransformedFeatureProfile,
     TransformedParcel,
     UX2Config,
-    UX2ConfigRollback,
+    UX2ConfigPushResult,
 )
 from catalystwan.models.configuration.feature_profile.common import ProfileType
 from catalystwan.session import ManagerSession
@@ -35,7 +35,7 @@ class UX2ConfigPusher:
     ) -> None:
         self._session = session
         self._config_map = self._create_config_map(ux2_config)
-        self._config_rollback = UX2ConfigRollback()
+        self._push_result = UX2ConfigPushResult()
         self._ux2_config = ux2_config
         self._progress = progress
 
@@ -45,15 +45,15 @@ class UX2ConfigPusher:
             parcel_map={item.header.origin: item for item in ux2_config.profile_parcels},
         )
 
-    def push(self) -> UX2ConfigRollback:
+    def push(self) -> UX2ConfigPushResult:
         try:
             self._create_cloud_credentials()
         except ManagerHTTPError as e:
             logger.error(f"Error occured during credentials migration: {e.info}")
         self._create_config_groups()
-        self._config_rollback.report.set_failed_push_parcels_flat_list()
-        logger.debug(f"Configuration push completed. Rollback configuration {self._config_rollback}")
-        return self._config_rollback
+        self._push_result.report.set_failed_push_parcels_flat_list()
+        logger.debug(f"Configuration push completed. Rollback configuration {self._push_result}")
+        return self._push_result
 
     def _create_cloud_credentials(self):
         cloud_credentials = self._ux2_config.cloud_credentials
@@ -79,8 +79,8 @@ class UX2ConfigPusher:
             created_profiles = self._create_feature_profile_and_parcels(transformed_config_group.header.subelements)
             config_group_payload.profiles = [ProfileId(id=profile.profile_uuid) for profile in created_profiles]
             cg_id = self._session.endpoints.configuration_group.create_config_group(config_group_payload).id
-            self._config_rollback.add_config_group(cg_id)
-            self._config_rollback.report.add_report(
+            self._push_result.rollback.add_config_group(cg_id)
+            self._push_result.report.add_report(
                 name=transformed_config_group.config_group.name,
                 uuid=cg_id,
                 feature_profiles=created_profiles,
@@ -104,7 +104,7 @@ class UX2ConfigPusher:
             parcels = self._create_parcels_list(transformed_feature_profile)
             profile = pusher.push(transformed_feature_profile.feature_profile, parcels, self._config_map.parcel_map)
             feature_profiles.append(profile)
-            self._config_rollback.add_feature_profile(profile.profile_uuid, profile_type)
+            self._push_result.rollback.add_feature_profile(profile.profile_uuid, profile_type)
         return feature_profiles
 
     def _create_parcels_list(self, transformed_feature_profile: TransformedFeatureProfile) -> List[TransformedParcel]:

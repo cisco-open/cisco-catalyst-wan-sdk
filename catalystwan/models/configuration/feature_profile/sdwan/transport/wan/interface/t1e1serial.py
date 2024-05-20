@@ -7,7 +7,7 @@ from typing import List, Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.common import Carrier, ClockRate, TLOCColor
+from catalystwan.models.common import CarrierType, ClockRate, TLOCColor
 from catalystwan.models.configuration.feature_profile.common import (
     AddressWithMask,
     AllowService,
@@ -30,7 +30,7 @@ class Tunnel(BaseModel):
     )
     bind: Optional[Union[Global[str], Variable, Default[None]]] = Field(default=None)
     border: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(default=None)
-    carrier: Optional[Union[Global[Carrier], Variable, Default[Literal["default"]]]] = Field(default=None)
+    carrier: Optional[Union[Global[CarrierType], Variable, Default[Literal["default"]]]] = Field(default=None)
     clear_dont_fragment: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(
         default=None, validation_alias="clearDontFragment", serialization_alias="clearDontFragment"
     )

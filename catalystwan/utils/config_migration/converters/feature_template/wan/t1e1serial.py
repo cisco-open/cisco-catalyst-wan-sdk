@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 from catalystwan.api.configuration_groups.parcel import as_global
-from catalystwan.models.common import Carrier, ClockRate, EncapType
+from catalystwan.models.common import CarrierType, ClockRate, EncapType
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask, AllowService, Encapsulation
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.t1e1serial import (
     Advanced,
@@ -93,7 +93,7 @@ class T1E1SerialTemplateConverter:
     def _process_carrier(self, tunnel_interface: dict) -> None:
         carrier = tunnel_interface.get("carrier")
         if carrier:
-            tunnel_interface["carrier"] = as_global(carrier.value, Carrier)
+            tunnel_interface["carrier"] = as_global(carrier.value, CarrierType)
 
     def _process_group(self, tunnel_interface: dict) -> None:
         group = tunnel_interface.get("group")

@@ -6,7 +6,7 @@ from catalystwan.api.configuration_groups.parcel import Default, Global, Variabl
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
 from catalystwan.models.common import (
     CableLengthLongValue,
-    Carrier,
+    CarrierType,
     ClockRate,
     CoreRegion,
     E1Framing,
@@ -631,7 +631,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
             ),
             tunnel_advanced_option=TunnelAdvancedOption(
                 bind=Global[str](value="BAAREAA"),
-                carrier=Global[Carrier](value="carrier8"),
+                carrier=Global[CarrierType](value="carrier8"),
                 gre_encap=Global[bool](value=True),
                 gre_preference=Global[int](value=266),
                 gre_weight=Global[int](value=11),
@@ -734,7 +734,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
             ),
             tunnel_advanced_option=TunnelAdvancedOption(
                 bind=Global[str](value="BAAREAA"),
-                carrier=Global[Carrier](value="carrier8"),
+                carrier=Global[CarrierType](value="carrier8"),
                 gre_encap=Global[bool](value=True),
                 gre_preference=Global[int](value=266),
                 gre_weight=Global[int](value=11),
@@ -974,7 +974,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
             tunnel=TunnelCellular(
                 bind=Global[str](value="VwOXkG"),
                 border=Global[bool](value=False),
-                carrier=Global[Carrier](value="carrier1"),
+                carrier=Global[CarrierType](value="carrier1"),
                 clear_dont_fragment=Global[bool](value=True),
                 color=Global[TLOCColor](value="silver"),
                 hello_interval=Global[int](value=173),
@@ -1120,7 +1120,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
                 bandwidth_percent=Global[int](value=50),
                 bind=Global[str](value="aDzWWarP"),
                 border=Global[bool](value=False),
-                carrier=Global[Carrier](value="carrier1"),
+                carrier=Global[CarrierType](value="carrier1"),
                 clear_dont_fragment=Global[bool](value=True),
                 color=Global[TLOCColor](value="bronze"),
                 cts_sgt_propagation=Global[bool](value=False),
@@ -1215,7 +1215,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
             bgp=Global[bool](value=True),
             bind=Global[str](value="JmwcJz"),
             border=Global[bool](value=True),
-            carrier=Global[Literal[Carrier]](value="carrier8"),
+            carrier=Global[Literal[CarrierType]](value="carrier8"),
             clear_dont_fragment_sdwan_tunnel=Global[bool](value=True),
             control_connections=Global[bool](value=False),
             controller_tx_ex_list=controller_tx_ex_list,

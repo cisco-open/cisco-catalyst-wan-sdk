@@ -9,7 +9,7 @@ from typing import Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.common import Carrier, TLOCColor, TunnelMode
+from catalystwan.models.common import CarrierType, TLOCColor, TunnelMode
 from catalystwan.models.configuration.feature_profile.common import (
     AclQos,
     AddressWithMask,
@@ -150,7 +150,7 @@ class TunnelAdvancedOption(BaseModel):
         populate_by_name=True,
     )
     bind: Optional[Union[Variable, Global[str], Default[None]]] = Field(default=None)
-    carrier: Optional[Union[Variable, Default[Literal["default"]], Global[Carrier]]] = Field(default=None)
+    carrier: Optional[Union[Variable, Default[Literal["default"]], Global[CarrierType]]] = Field(default=None)
     gre_encap: Optional[Union[Global[bool], Default[bool]]] = Field(
         default=None, validation_alias="greEncap", serialization_alias="greEncap"
     )
