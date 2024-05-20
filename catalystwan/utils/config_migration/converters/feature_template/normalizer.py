@@ -161,7 +161,7 @@ def transform_dict(d: dict) -> dict:
     return {to_snake_case(key): transform_value(val) for key, val in d.items()}
 
 
-def template_definition_normalization(template_definition: dict) -> dict:
-    """Merges the templates values and device_specific_variables then normalizes by changing keys to snake_case and
-    cast all values to Global types or Varaibles."""
-    return transform_dict(template_definition)
+def template_values_normalization(template_values: dict) -> dict:
+    """Normalizes template_values by changing keys to snake_case and
+    cast all values to Global types or Variables."""
+    return transform_dict(template_values)

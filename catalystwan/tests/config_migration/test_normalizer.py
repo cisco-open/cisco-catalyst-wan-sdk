@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from catalystwan.api.configuration_groups.parcel import Global, Variable
 from catalystwan.api.templates.device_variable import DeviceVariable
-from catalystwan.utils.config_migration.converters.feature_template import template_definition_normalization
+from catalystwan.utils.config_migration.converters.feature_template import template_values_normalization
 
 TestLiteral = Literal["castable_literal"]
 
@@ -65,7 +65,7 @@ class TestNormalizer(unittest.TestCase):
         # Arrange
         expected_result = self.expected_result
         # Act
-        returned_result = template_definition_normalization(self.template_values)
+        returned_result = template_values_normalization(self.template_values)
         # Assert
         self.assertDictEqual(expected_result, returned_result)
 
@@ -85,7 +85,7 @@ class TestNormalizer(unittest.TestCase):
         }
 
         # Act
-        returned_result = template_definition_normalization(super_nested_input)
+        returned_result = template_values_normalization(super_nested_input)
 
         # Assert
         self.assertDictEqual(expected_result, returned_result)
@@ -97,7 +97,7 @@ class TestNormalizer(unittest.TestCase):
         expected_result = {"in": Global[TestLiteral](value="castable_literal")}
 
         # Act
-        returned_result = template_definition_normalization(simple_input)
+        returned_result = template_values_normalization(simple_input)
 
         # Assert
         self.assertDictEqual(expected_result, returned_result)
