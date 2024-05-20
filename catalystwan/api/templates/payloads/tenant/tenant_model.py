@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, ClassVar, List, Optional
 from pydantic import BaseModel, ConfigDict
 
 from catalystwan.api.templates.feature_template import FeatureTemplate
-from catalystwan.endpoints.monitoring_device_details import Tier as TierInfo
+from catalystwan.endpoints.monitoring.device_details import Tier as TierInfo
 from catalystwan.models.tenant import Tenant as TenantInfo
 
 if TYPE_CHECKING:
@@ -20,8 +20,8 @@ class Tenant(BaseModel):
 
     organization_name: str
     tier_name: str
-    tenant_info: Optional[TenantInfo]
-    tier_info: Optional[TierInfo]
+    tenant_info: Optional[TenantInfo] = None
+    tier_info: Optional[TierInfo] = None
 
 
 class TenantModel(FeatureTemplate):

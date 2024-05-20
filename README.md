@@ -4,7 +4,19 @@
 
 [![Python-Supported](https://img.shields.io/static/v1?label=Python&logo=Python&color=3776AB&message=3.8%20|%203.9%20|%203.10%20|%203.11%20|%203.12)](https://www.python.org/)
 
-Cisco Catalyst WAN SDK is a package for creating simple and parallel automatic requests via official Manager API. It is intended to serve as a multiple session handler (provider, provider as a tenant, tenant). The library is not dependent on environment which is being run in, you just need a connection to any Manager.
+Cisco Catalyst WAN SDK is a package for creating simple and parallel automatic requests via official SD-WAN Manager API. It is intended to serve as a multiple session handler (provider, provider as a tenant, tenant). The library is not dependent on environment which is being run in, you just need a connection to any SD-WAN Manager.
+
+## Important Notice: Early Beta Release
+
+Welcome to the Cisco Catalyst WAN SDK!
+
+We are thrilled to announce that Cisco Catalyst WAN SDK is now available in early beta. This is an exciting step forward in enabling developers to harness the full potential of Cisco's networking solutions.  Please be aware that, as an early beta release, this version of the SDK is still undergoing development and testing. As such, it is provided "as is" and support to address any issues are limited and best effort.
+
+## Not recommend to use in production environments.
+We encourage developers to explore and test the SDK's capabilities, but please exercise caution when using it in production environments.  We are dedicated to improving the Cisco Catalyst WAN SDK and we value your input. Your feedback is crucial to us-it will guide us in refining and enhancing the SDK to better meet your needs.
+To report any issues, share your insights, or suggest improvements, please visit our Issues page on GitHub or reach out to us through the provided communication channels.
+
+Thank you for being a part of our development journey!
 
 ## Installation
 ```console
@@ -170,6 +182,7 @@ alarms_from_n_hours = session.api.alarms.get(from_time=n)
 To get all critical alarms from past `n` hours:
 
 ```python
+from catalystwan.utils.alarm_status import Severity
 n = 48
 critical_alarms = session.api.alarms.get(from_time=n).filter(severity=Severity.CRITICAL)
 ```
@@ -184,6 +197,7 @@ critical_alarms = session.api.alarms.get(from_time=n).filter(severity=Severity.C
 session.api.users.get()
 
 # Create user
+from catalystwan.endpoints.administration_user_and_group import User
 new_user = User(username="new_user", password="new_user", group=["netadmin"], description="new user")
 session.api.users.create(new_user)
 
@@ -288,13 +302,13 @@ api = session.api.tenant_management
 tenants = [
     Tenant(
         name="tenant1",
-        orgName="CiscoDevNet",
-        subDomain="alpha.bravo.net",
+        org_name="CiscoDevNet",
+        subdomain="alpha.bravo.net",
         desc="This is tenant for unit tests",
-        edgeConnectorEnable=True,
-        edgeConnectorSystemIp="172.16.255.81",
-        edgeConnectorTunnelInterfaceName="GigabitEthernet1",
-        wanEdgeForecast=1,
+        edge_connector_enable=True,
+        edge_connector_system_ip="172.16.255.81",
+        edge_connector_tunnel_interface_name="GigabitEthernet1",
+        wan_edge_forecast=1,
     )
 ]
 create_task = api.create(tenants)
@@ -397,11 +411,11 @@ except ManagerHTTPError as error:
 
 ```
 
-## [Supported API endpoints](https://github.com/CiscoDevNet/catalystwan/blob/main/ENDPOINTS.md)
+## [Supported API endpoints](https://github.com/cisco-open/cisco-catalyst-wan-sdk/blob/main/ENDPOINTS.md)
 
 
-## [Contributing, bug reporting and feature requests](https://github.com/CiscoDevNet/catalystwan/blob/main/CONTRIBUTING.md)
+## [Contributing, bug reporting and feature requests](https://github.com/cisco-open/cisco-catalyst-wan-sdk/blob/main/CONTRIBUTING.md)
 
 ## Seeking support
 
-You can contact us by submitting [issues](https://github.com/CiscoDevNet/catalystwan/issues), or directly via mail on vmngclient@cisco.com.
+You can contact us by submitting [issues](https://github.com/cisco-open/cisco-catalyst-wan-sdk/issues), or directly via mail on catalystwan@cisco.com.

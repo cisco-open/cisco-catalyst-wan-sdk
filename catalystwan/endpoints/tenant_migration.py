@@ -2,9 +2,10 @@
 
 # mypy: disable-error-code="empty-body"
 from pathlib import Path
-from urllib.parse import parse_qsl, urlsplit
+from typing import Any
+from urllib.parse import parse_qs, urlsplit
 
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from catalystwan.endpoints import APIEndpoints, CustomPayloadType, PreparedPayload, get, post, versions, view
 from catalystwan.models.tenant import TenantExport
@@ -12,16 +13,27 @@ from catalystwan.utils.session_type import ProviderView, SingleTenantView
 
 
 class MigrationTokenQueryParams(BaseModel):
-    migration_id: str = Field(alias="migrationId")
+    model_config = ConfigDict(populate_by_name=True, extra="allow")
+    migration_id: str = Field(serialization_alias="migrationId", validation_alias="migrationId")
+
+    @model_validator(mode="before")
+    @classmethod
+    def single_migration_id_required(cls, values: Any):
+        migration_id = values.get("migrationId")
+        if isinstance(migration_id, list) and len(migration_id) == 1:
+            values["migrationId"] = migration_id[0]
+        return values
 
 
 class ExportInfo(BaseModel):
-    process_id: str = Field(alias="processId")
+    model_config = ConfigDict(populate_by_name=True)
+    process_id: str = Field(serialization_alias="processId", validation_alias="processId")
 
 
 class ImportInfo(BaseModel):
-    process_id: str = Field(alias="processId")
-    migration_token_url: str = Field(alias="migrationTokenURL")
+    model_config = ConfigDict(populate_by_name=True)
+    process_id: str = Field(serialization_alias="processId", validation_alias="processId")
+    migration_token_url: str = Field(serialization_alias="migrationTokenURL", validation_alias="migrationTokenURL")
 
     @property
     def migration_token_query(self) -> str:
@@ -29,12 +41,12 @@ class ImportInfo(BaseModel):
 
     @property
     def migration_token_query_params(self) -> MigrationTokenQueryParams:
-        query = self.migration_token_query
-        return MigrationTokenQueryParams.parse_obj(parse_qsl(query))
+        return MigrationTokenQueryParams.model_validate(parse_qs(self.migration_token_query))
 
 
 class MigrationInfo(BaseModel):
-    process_id: str = Field(alias="processId")
+    model_config = ConfigDict(populate_by_name=True)
+    process_id: str = Field(serialization_alias="processId", validation_alias="processId")
 
 
 class MigrationFile(CustomPayloadType):

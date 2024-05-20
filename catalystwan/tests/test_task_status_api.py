@@ -307,7 +307,7 @@ class TestTaskStatusApi(unittest.TestCase):
     @patch.object(ConfigurationDashboardStatus, "find_status")
     def test_wait_for_completed_success(self, mock_task_response, mock_validation):
         # Arrange
-        mock_task_response.return_value = TaskData.parse_obj(self.success_response)
+        mock_task_response.return_value = TaskData.model_validate(self.success_response)
 
         # Act
         answer = self.task.wait_for_completed(interval_seconds=1).result
@@ -322,8 +322,8 @@ class TestTaskStatusApi(unittest.TestCase):
 
         # Arrange
         mock_task_response.side_effect = [
-            TaskData.parse_obj(self.empty_data),
-            TaskData.parse_obj(self.success_response),
+            TaskData.model_validate(self.empty_data),
+            TaskData.model_validate(self.success_response),
         ]
 
         # Act
@@ -336,7 +336,7 @@ class TestTaskStatusApi(unittest.TestCase):
     @patch.object(ConfigurationDashboardStatus, "find_status")
     def test_wait_for_completed_with_action_config_as_dict(self, mock_task_response, mock_validation):
         # Arrange
-        mock_task_response.return_value = TaskData.parse_obj(self.response_with_action_config_as_dict)
+        mock_task_response.return_value = TaskData.model_validate(self.response_with_action_config_as_dict)
 
         # Act
         answer = self.task.wait_for_completed(interval_seconds=1).result
@@ -350,7 +350,10 @@ class TestTaskStatusApi(unittest.TestCase):
         # No data in first call, and then response is success
 
         # Arrange
-        mock_task_response.side_effect = [TaskData.parse_obj(self.no_data), TaskData.parse_obj(self.success_response)]
+        mock_task_response.side_effect = [
+            TaskData.model_validate(self.no_data),
+            TaskData.model_validate(self.success_response),
+        ]
 
         # Act
         answer = self.task.wait_for_completed(timeout_seconds=2, interval_seconds=1).result
@@ -361,7 +364,7 @@ class TestTaskStatusApi(unittest.TestCase):
     @patch.object(ConfigurationDashboardStatus, "find_status")
     def test_wait_for_completed_no_validation_field(self, mock_task_response_response):
         # Arrange
-        mock_task_response_response.return_value = TaskData.parse_obj(self.no_validation)
+        mock_task_response_response.return_value = TaskData.model_validate(self.no_validation)
 
         # Act
         answer = self.task.wait_for_completed(interval_seconds=1).result
@@ -372,7 +375,7 @@ class TestTaskStatusApi(unittest.TestCase):
     @patch.object(ConfigurationDashboardStatus, "find_status")
     def test_wait_for_completed_raise_TaskValidationError(self, mock_task_response_response):
         # Arrange
-        mock_task_response_response.return_value = TaskData.parse_obj(self.validation_failure)
+        mock_task_response_response.return_value = TaskData.model_validate(self.validation_failure)
 
         # Act&Assert
         self.assertRaises(TaskValidationError, self.task.wait_for_completed)

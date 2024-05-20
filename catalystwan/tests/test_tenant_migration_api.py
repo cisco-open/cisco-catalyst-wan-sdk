@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+from uuid import uuid4
 
 from packaging.version import Version  # type: ignore
 
@@ -46,19 +47,16 @@ class TestTenantMigrationAPI(unittest.TestCase):
 
     def test_import_tenant(self):
         self.session.api_version = Version("20.12")
-        migration_key = "Cisco12345"
-        migration_id = "dcbed267-eb0d-4dcd-9c12-2536e8562f75"
+        migration_key = "mkey1"
+        migration_id = str(uuid4())
         with tempfile.TemporaryDirectory() as tmpdir:
             import_file = Path(tmpdir) / "tenant.tar.gz"
             with open(import_file, "wb") as f:
                 f.write(b"\xFEtest_data")
             self.session.endpoints.tenant_migration.import_tenant_data = MagicMock(
                 return_value=ImportInfo(
-                    processId="123",
-                    migrationTokenURL=(
-                        "/dataservice/tenantmigration/migrationToken?"
-                        "migrationId=dcbed267-eb0d-4dcd-9c12-2536e8562f75"
-                    ),
+                    process_id="123",
+                    migration_token_url=("/dataservice/tenantmigration/migrationToken?" f"migrationId={migration_id}"),
                 )
             )
             task = self.api.import_tenant(import_file, migration_key)
@@ -67,19 +65,16 @@ class TestTenantMigrationAPI(unittest.TestCase):
 
     def test_import_tenant_with_key(self):
         self.session.api_version = Version("20.13")
-        migration_key = "Cisco12345"
-        migration_id = "dcbed267-eb0d-4dcd-9c12-2536e8562f75"
+        migration_key = "mkey2"
+        migration_id = str(uuid4())
         with tempfile.TemporaryDirectory() as tmpdir:
             import_file = Path(tmpdir) / "tenant.tar.gz"
             with open(import_file, "wb") as f:
                 f.write(b"\xFEtest_data")
             self.session.endpoints.tenant_migration.import_tenant_data_with_key = MagicMock(
                 return_value=ImportInfo(
-                    processId="123",
-                    migrationTokenURL=(
-                        "/dataservice/tenantmigration/migrationToken?"
-                        "migrationId=dcbed267-eb0d-4dcd-9c12-2536e8562f75"
-                    ),
+                    process_id="123",
+                    migration_token_url=("/dataservice/tenantmigration/migrationToken?" f"migrationId={migration_id}"),
                 )
             )
             task = self.api.import_tenant(import_file, migration_key)

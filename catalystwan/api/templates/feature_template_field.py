@@ -115,61 +115,59 @@ class FeatureTemplateField(BaseModel):
             )
             return nest_value_in_output(vip_variable.model_dump(by_alias=True, exclude_none=True))
 
-        else:
-            if value is not None:
-                output["vipType"] = vip_type or FeatureTemplateOptionType.CONSTANT.value
-                if self.children:
-                    children_output = []
-                    for obj in value:  # obj is User, atomic value. Loop every child
-                        obj_json_dump = obj.model_dump(mode="json")
-                        child_payload: dict = {}
-                        for child in self.children:  # Child in schema
-                            obj: FeatureTemplate  # type: ignore
-                            model_tuple = next(
-                                filter(
-                                    lambda f: get_extra_field(f[1], "data_path", []) == child.dataPath
-                                    and (
-                                        f[1].alias == child.key
-                                        or get_extra_field(f[1], "vmanage_key") == child.key
-                                        or f[0] == child.key
-                                    ),
-                                    obj.model_fields.items(),
-                                )
-                            )
-                            model_field = model_tuple[1]
-                            obj_value = getattr(obj, model_tuple[0])
-                            obj_json_value = obj_json_dump.get(model_tuple[0])
-                            po = get_extra_field(model_field, "priority_order")
-                            vip_type = get_extra_field(model_field, "vip_type")
-                            merge(
-                                child_payload,
-                                child.payload_scheme(
-                                    obj_value,
-                                    json_dumped_value=obj_json_value,
-                                    priority_order=po,
-                                    vip_type=vip_type,
-                                ),
-                            )
-                            if priority_order:
-                                child_payload.update({"priority-order": priority_order})
-                        children_output.append(child_payload)
-                    output["vipValue"] = children_output
-                else:
-                    output["vipValue"] = json_dumped_value
-            else:
-                if value is None:
-                    return {}
-                if "default" in self.dataType:
-                    return {}
-                    # output["vipValue"] = self.dataType["default"] if value is None else value
-                    # output["vipType"] = self.defaultOption.value
-                else:
-                    output["vipValue"] = []
-                    output["vipType"] = FeatureTemplateOptionType.IGNORE.value
+        if value is not None and not self.children:
+            output["vipType"] = vip_type or FeatureTemplateOptionType.CONSTANT.value
+            output["vipValue"] = json_dumped_value
+        elif value is not None and self.children:
+            output["vipType"] = vip_type or FeatureTemplateOptionType.CONSTANT.value
+            children_output = []
+            for obj in value:
+                obj_json_dump = obj.model_dump(mode="json")
+                child_payload: dict = {}
+                for child in self.children:  # Child in schema
+                    obj: FeatureTemplate  # type: ignore
 
-        # TODO
-        # DataType to dataclass Model
-        # No default values for everything
+                    # We are searching for the model field that
+                    # corresponds to the child element (field from vManage schema)
+                    # If this line fails, it means that the schema from vManage has more fields than the model
+                    # and the model needs to be updated (add missing fields)
+                    model_tuple = next(
+                        filter(
+                            lambda f: (
+                                f[1].alias == child.key
+                                or get_extra_field(f[1], "vmanage_key") == child.key
+                                or f[0] == child.key
+                            ),
+                            obj.model_fields.items(),
+                        )
+                    )
+                    # We get the pydantic model field and the value from the object
+                    model_field = model_tuple[1]
+                    obj_value = getattr(obj, model_tuple[0])
+                    obj_json_value = obj_json_dump.get(model_tuple[0])
+                    po = get_extra_field(model_field, "priority_order")
+                    vip_type = get_extra_field(model_field, "vip_type")
+                    # After we get the data, we create the payload by populating the schema
+                    # Then we merge the payload to the output
+                    merge(
+                        child_payload,
+                        child.payload_scheme(
+                            obj_value,
+                            json_dumped_value=obj_json_value,
+                            priority_order=po,
+                            vip_type=vip_type,
+                        ),
+                    )
+                    if priority_order:
+                        child_payload.update({"priority-order": priority_order})
+                children_output.append(child_payload)
+            output["vipValue"] = children_output
+        else:
+            if value is None or "default" in self.dataType:
+                return {}
+            else:
+                output["vipValue"] = []
+                output["vipType"] = FeatureTemplateOptionType.IGNORE.value
 
         if self.primaryKeys:
             output["vipPrimaryKey"] = self.primaryKeys

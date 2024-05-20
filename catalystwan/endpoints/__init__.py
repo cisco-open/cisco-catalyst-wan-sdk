@@ -60,8 +60,7 @@ from uuid import UUID
 
 from packaging.specifiers import SpecifierSet  # type: ignore
 from packaging.version import Version  # type: ignore
-from pydantic import BaseModel as BaseModelV2
-from pydantic.v1 import BaseModel as BaseModelV1
+from pydantic import BaseModel
 from typing_extensions import Annotated, get_args, get_origin
 
 from catalystwan.abstractions import APIEndpointClient, APIEndpointClientResponse
@@ -81,12 +80,10 @@ class CustomPayloadType(Protocol):
 
 
 JSON = Union[str, int, float, bool, None, Dict[str, "JSON"], List["JSON"]]
-ModelPayloadType = Union[BaseModelV1, BaseModelV2, Sequence[BaseModelV1], Sequence[BaseModelV2]]
+ModelPayloadType = Union[BaseModel, Sequence[BaseModel]]
 PayloadType = Union[None, JSON, str, bytes, dict, ModelPayloadType, CustomPayloadType]
-ReturnType = Union[
-    None, JSON, bytes, str, dict, BaseModelV1, BaseModelV2, DataSequence[BaseModelV1], DataSequence[BaseModelV2]
-]
-RequestParamsType = Union[Dict[str, str], BaseModelV1, BaseModelV2]
+ReturnType = Union[None, JSON, bytes, str, dict, BaseModel, DataSequence[BaseModel]]
+RequestParamsType = Union[Dict[str, str], BaseModel]
 
 
 @dataclass
@@ -170,7 +167,7 @@ class APIEndpoints:
             return PreparedPayload(data=json.dumps(payload), headers={"content-type": "application/json"})
         if isinstance(payload, (str, bytes)):
             return PreparedPayload(data=payload)
-        elif isinstance(payload, (BaseModelV1, BaseModelV2)):
+        elif isinstance(payload, (BaseModel)):
             return cls._prepare_basemodel_payload(payload)
         elif isinstance(payload, Sequence) and not isinstance(payload, (str, bytes)):
             return cls._prepare_sequence_payload(payload)  # type: ignore[arg-type]
@@ -181,34 +178,25 @@ class APIEndpoints:
             raise APIRequestPayloadTypeError(payload)
 
     @classmethod
-    def _prepare_basemodel_payload(cls, payload: Union[BaseModelV1, BaseModelV2]) -> PreparedPayload:
+    def _prepare_basemodel_payload(cls, payload: BaseModel) -> PreparedPayload:
         """Helper method to prepare BaseModel instance for sending"""
-        if isinstance(payload, BaseModelV1):
-            return PreparedPayload(
-                data=payload.json(exclude_none=True, by_alias=True), headers={"content-type": "application/json"}
-            )
         return PreparedPayload(
             data=payload.model_dump_json(exclude_none=True, by_alias=True), headers={"content-type": "application/json"}
         )
 
     @classmethod
-    def _prepare_sequence_payload(cls, payload: Iterable[Union[BaseModelV1, BaseModelV2]]) -> PreparedPayload:
+    def _prepare_sequence_payload(cls, payload: Iterable[BaseModel]) -> PreparedPayload:
         """Helper method to prepare sequences for sending"""
         items = []
         for item in payload:
-            if isinstance(item, BaseModelV1):
-                items.append(item.dict(exclude_none=True, by_alias=True))
-            elif isinstance(item, BaseModelV2):
-                items.append(item.model_dump(exclude_none=True, by_alias=True))
+            items.append(item.model_dump(exclude_none=True, by_alias=True))
         data = json.dumps(items)
         return PreparedPayload(data=data, headers={"content-type": "application/json"})
 
     @classmethod
     def _prepare_params(cls, params: RequestParamsType) -> Dict[str, Any]:
         """Helper method to prepare params for sending"""
-        if isinstance(params, BaseModelV1):
-            return params.dict(exclude_none=True, by_alias=True)
-        elif isinstance(params, BaseModelV2):
+        if isinstance(params, BaseModel):
             return params.model_dump(exclude_none=True, by_alias=True)
         return params
 
@@ -391,13 +379,13 @@ class request(APIEndpointsDecorator):
                 (type_args := get_args(annotation))
                 and (len(type_args) == 1)
                 and isclass(type_args[0])
-                and issubclass(type_args[0], (BaseModelV1, BaseModelV2))
+                and issubclass(type_args[0], BaseModel)
             ):
                 return TypeSpecifier(True, DataSequence, type_args[0])
             raise APIEndpointError(f"Expected: {ReturnType} but return type {annotation}")
         elif isclass(annotation):
             try:
-                if issubclass(annotation, (bytes, str, dict, BinaryIO, (BaseModelV1, BaseModelV2))):
+                if issubclass(annotation, (bytes, str, dict, BinaryIO, BaseModel)):
                     return TypeSpecifier(True, None, annotation)
                 raise APIEndpointError(f"Expected: {ReturnType} but return type {annotation}")
             except TypeError:
@@ -437,7 +425,7 @@ class request(APIEndpointsDecorator):
 
         # Check if regular class
         if isclass(annotation):
-            if issubclass(annotation, (bytes, str, dict, BinaryIO, BaseModelV1, BaseModelV2, CustomPayloadType)):
+            if issubclass(annotation, (bytes, str, dict, BinaryIO, BaseModel, CustomPayloadType)):
                 return TypeSpecifier(True, None, annotation, None, False, is_optional)
             else:
                 raise APIEndpointError(f"'payload' param must be annotated with supported type: {PayloadType}")
@@ -450,7 +438,7 @@ class request(APIEndpointsDecorator):
                     (type_args := get_args(annotation))
                     and (len(type_args) == 1)
                     and isclass(type_args[0])
-                    and issubclass(type_args[0], (BaseModelV1, BaseModelV2))
+                    and issubclass(type_args[0], BaseModel)
                 ):
                     return TypeSpecifier(True, type_origin, type_args[0], None, False, is_optional)
             # Check if Annnotated[Union[PayloadModelType, ...]], only unions of pydantic models allowed
@@ -460,7 +448,7 @@ class request(APIEndpointsDecorator):
                         if (
                             (type_args := get_args(annotated_origin[0]))
                             and all(isclass(t) for t in type_args)
-                            and all(issubclass(t, (BaseModelV1, BaseModelV2)) for t in type_args)
+                            and all(issubclass(t, BaseModel) for t in type_args)
                         ):
                             return TypeSpecifier.model_union(models=list(type_args))
             # Check if Union[PayloadModelType, ...], only unions of pydantic models allowed
@@ -468,7 +456,7 @@ class request(APIEndpointsDecorator):
                 if (
                     (type_args := get_args(annotation))
                     and all(isclass(t) for t in type_args)
-                    and all(issubclass(t, (BaseModelV1, BaseModelV2)) for t in type_args)
+                    and all(issubclass(t, BaseModel) for t in type_args)
                 ):
                     return TypeSpecifier.model_union(models=list(type_args))
             raise APIEndpointError(f"Expected: {PayloadType} but found payload {annotation}")
@@ -484,10 +472,7 @@ class request(APIEndpointsDecorator):
         parameters = self.sig.parameters
 
         if params_param := parameters.get("params"):
-            if not (
-                isclass(params_param.annotation)
-                and issubclass(params_param.annotation, (BaseModelV1, BaseModelV2, Dict))
-            ):
+            if not (isclass(params_param.annotation) and issubclass(params_param.annotation, (BaseModel, Dict))):
                 raise APIEndpointError(f"'params' param must be annotated with supported type: {RequestParamsType}")
 
         general_purpose_arg_names = {
@@ -578,11 +563,17 @@ class request(APIEndpointsDecorator):
                     return full_json
                 if self.return_spec.payload_type is None:
                     pass
-                elif issubclass(self.return_spec.payload_type, (BaseModelV1, BaseModelV2)):
+                elif issubclass(self.return_spec.payload_type, BaseModel):
                     if self.return_spec.sequence_type == DataSequence:
-                        return response.dataseq(self.return_spec.payload_type, self.resp_json_key)
+                        return response.dataseq(
+                            cls=self.return_spec.payload_type,
+                            sourcekey=self.resp_json_key,
+                            validate=_self._client.validate_responses,
+                        )
                     else:
-                        return response.dataobj(self.return_spec.payload_type, self.resp_json_key)
+                        return response.dataobj(
+                            self.return_spec.payload_type, self.resp_json_key, validate=_self._client.validate_responses
+                        )
                 elif issubclass(self.return_spec.payload_type, str):
                     return response.text
                 elif issubclass(self.return_spec.payload_type, bytes):

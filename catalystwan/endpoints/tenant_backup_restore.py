@@ -3,7 +3,7 @@
 # mypy: disable-error-code="empty-body"
 from typing import List
 
-from pydantic.v1 import BaseModel
+from pydantic import BaseModel
 
 from catalystwan.endpoints import APIEndpoints, get, view
 from catalystwan.utils.session_type import ProviderAsTenantView, TenantView

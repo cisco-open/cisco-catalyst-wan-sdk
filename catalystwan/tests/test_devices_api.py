@@ -10,7 +10,7 @@ from tenacity import RetryError  # type: ignore
 from catalystwan.api.basic_api import DevicesAPI, DeviceStateAPI
 from catalystwan.dataclasses import BfdSessionData, Connection, Device, WanInterface
 from catalystwan.endpoints.endpoints_container import APIEndpointContainter
-from catalystwan.endpoints.monitoring_device_details import DeviceData
+from catalystwan.endpoints.monitoring.device_details import DeviceData
 from catalystwan.endpoints.real_time_monitoring.reboot_history import RebootEntry
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.response import ManagerResponse
@@ -116,7 +116,7 @@ class TestDevicesAPI(TestCase):
         self.edges_dataseq = DataSequence(Device, [create_dataclass(Device, self.devices[3])])
         self.system_ips_list = [device["local-system-ip"] for device in self.devices]
         self.ips_list = [device["deviceId"] for device in self.devices]
-        self.list_all_devices_resp = DataSequence(DeviceData, [DeviceData.parse_obj(dev) for dev in self.devices])
+        self.list_all_devices_resp = DataSequence(DeviceData, [DeviceData.model_validate(dev) for dev in self.devices])
 
     @patch.object(DevicesAPI, "get")
     def test_controllers(self, mock_devices):

@@ -6,10 +6,7 @@ from unittest.mock import patch
 
 from attr import define, field  # type: ignore
 from parameterized import parameterized  # type: ignore
-from pydantic import BaseModel as BaseModelV2
-from pydantic import Field as FieldV2
-from pydantic.v1 import BaseModel as BaseModelV1
-from pydantic.v1 import Field as FieldV1
+from pydantic import BaseModel, Field, ValidationError
 
 from catalystwan.dataclasses import DataclassBase
 from catalystwan.response import ManagerErrorInfo, ManagerResponse
@@ -23,16 +20,15 @@ class ParsedDataTypeAttrs(DataclassBase):
     key3: Optional[float] = field(default=None)
 
 
-class ParsedDataTypePydanticV1(BaseModelV1):
+class ParsedDataTypePydanticV2(BaseModel):
     key1: str
     key2: int
-    key3: Optional[float] = FieldV1(default=None)
+    key3: Optional[float] = Field(default=None)
 
 
-class ParsedDataTypePydanticV2(BaseModelV2):
-    key1: str
-    key2: int
-    key3: Optional[float] = FieldV2(default=None)
+class DataForValidateTest(BaseModel):
+    important: str
+    not_important: ParsedDataTypePydanticV2
 
 
 PARSE_DATASEQ_TEST_DATA: List = [
@@ -65,6 +61,11 @@ PARSE_DATAOBJ_TEST_DATA: List = [
     (True, {"data": [{"key1": "string", "key2": 66}, {"key1": "required", "key2": 18, "key3": 0.1}]}, "data"),
 ]
 
+VALIDATE_DATASEQ_TEST_DATA = [
+    {"important": "correct1", "not_important": {"invalid-key1": "string", "key2": "not int"}},
+    {"important": "correct2", "not_important": {}},
+]
+
 
 class TestResponse(unittest.TestCase):
     @patch("requests.Response")
@@ -87,19 +88,7 @@ class TestResponse(unittest.TestCase):
                 vmng_response.dataseq(ParsedDataTypeAttrs, sourcekey)
 
     @parameterized.expand(PARSE_DATASEQ_TEST_DATA)
-    def test_dataseq_pydantic_v1(self, raises: bool, json: Any, expected_len: int, sourcekey: str):
-        self.response_mock.json.return_value = json
-        vmng_response = ManagerResponse(self.response_mock)
-        if not raises:
-            data_sequence = vmng_response.dataseq(ParsedDataTypePydanticV1, sourcekey)
-            assert isinstance(data_sequence, DataSequence)
-            assert len(data_sequence) == expected_len
-        else:
-            with self.assertRaises(Exception):
-                vmng_response.dataseq(ParsedDataTypePydanticV1, sourcekey)
-
-    @parameterized.expand(PARSE_DATASEQ_TEST_DATA)
-    def test_dataseq_pydantic_v2(self, raises: bool, json: Any, expected_len: int, sourcekey: str):
+    def test_dataseq_pydantic(self, raises: bool, json: Any, expected_len: int, sourcekey: str):
         self.response_mock.json.return_value = json
         vmng_response = ManagerResponse(self.response_mock)
         if not raises:
@@ -122,18 +111,7 @@ class TestResponse(unittest.TestCase):
                 vmng_response.dataobj(ParsedDataTypeAttrs, sourcekey)
 
     @parameterized.expand(PARSE_DATAOBJ_TEST_DATA)
-    def test_dataobj_pydantic_v1(self, raises: bool, json: Any, sourcekey: str):
-        self.response_mock.json.return_value = json
-        vmng_response = ManagerResponse(self.response_mock)
-        if not raises:
-            data_object = vmng_response.dataobj(ParsedDataTypePydanticV1, sourcekey)
-            assert isinstance(data_object, ParsedDataTypePydanticV1)
-        else:
-            with self.assertRaises(Exception):
-                vmng_response.dataobj(ParsedDataTypePydanticV1, sourcekey)
-
-    @parameterized.expand(PARSE_DATAOBJ_TEST_DATA)
-    def test_dataobj_pydantic_v2(self, raises: bool, json: Any, sourcekey: str):
+    def test_dataobj_pydantic(self, raises: bool, json: Any, sourcekey: str):
         self.response_mock.json.return_value = json
         vmng_response = ManagerResponse(self.response_mock)
         if not raises:
@@ -168,3 +146,28 @@ class TestResponse(unittest.TestCase):
             assert error_info.message is None
             assert error_info.details is None
             assert error_info.code is None
+
+    def test_dataobj_optional_validate(self):
+        # Arrange
+        self.response_mock.json.return_value = VALIDATE_DATASEQ_TEST_DATA[0]
+        vmng_response = ManagerResponse(self.response_mock)
+        # Act
+        data = vmng_response.dataobj(DataForValidateTest, sourcekey=None, validate=False)
+        # Assert
+        assert isinstance(data, DataForValidateTest)
+        assert data.important == VALIDATE_DATASEQ_TEST_DATA[0]["important"]
+        with self.assertRaises(ValidationError):
+            vmng_response.dataobj(DataForValidateTest, sourcekey=None, validate=True)
+
+    def test_dataseq_optional_validate(self):
+        self.response_mock.json.return_value = VALIDATE_DATASEQ_TEST_DATA
+        vmng_response = ManagerResponse(self.response_mock)
+        # Act
+        dataseq = vmng_response.dataseq(DataForValidateTest, sourcekey=None, validate=False)
+        # Assert
+        assert isinstance(dataseq, DataSequence)
+        for i, data in enumerate(dataseq):
+            assert isinstance(data, DataForValidateTest)
+            assert data.important == VALIDATE_DATASEQ_TEST_DATA[i]["important"]
+        with self.assertRaises(ValidationError):
+            vmng_response.dataseq(DataForValidateTest, sourcekey=None, validate=True)

@@ -1,23 +1,18 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 # mypy: disable-error-code="empty-body"
+from typing import Literal, Optional
 
-from enum import Enum
-from typing import Optional
-
-from pydantic.v1 import BaseModel
+from pydantic import BaseModel
 
 from catalystwan.endpoints import APIEndpoints, get
 from catalystwan.typed_list import DataSequence
 
-
-class TenancyModeEnum(str, Enum):
-    st = "SingleTenant"
-    mt = "MultiTenant"
+TenancyModes = Literal["SingleTenant", "MultiTenant"]
 
 
 class TenancyMode(BaseModel):
-    mode: TenancyModeEnum
+    mode: TenancyModes
     deploymentmode: str
     domain: Optional[str] = None
     clusterid: Optional[str] = None
