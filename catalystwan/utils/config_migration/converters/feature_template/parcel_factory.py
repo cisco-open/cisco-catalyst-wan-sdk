@@ -3,7 +3,6 @@ import json
 import logging
 from typing import Any, Callable, Dict, cast
 
-
 from catalystwan.api.template_api import FeatureTemplateInformation
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel

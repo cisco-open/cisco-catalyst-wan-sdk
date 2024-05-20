@@ -268,6 +268,10 @@ class UX2ConfigPushReport(BaseModel):
     failed_push_parcels: List[FailedParcel] = Field(
         default_factory=list, serialization_alias="FailedPushParcels", validation_alias="FailedPushParcels"
     )
+    validation_error: Optional[str] = None
+
+    def add_validation_error(self, validation_error: str) -> None:
+        self.validation_error = validation_error
 
     def add_report(self, name: str, uuid: UUID, feature_profiles: List[FeatureProfileBuildReport]) -> None:
         self.config_groups.append(ConfigGroupReport(name=name, uuid=uuid, feature_profiles=feature_profiles))
