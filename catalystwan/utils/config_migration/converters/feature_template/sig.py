@@ -136,7 +136,7 @@ class SIGTemplateConverter:
                     ike_remote_id=normalized_values.get("ike_remote_id"),
                     ipsec_rekey_interval=normalized_values.get("ipsec_rekey_interval"),
                     ipsec_replay_window=normalized_values.get("ipsec_replay_window"),
-                    ipsec_ciphersuite=self.get_ipsec_ciphersuite(interface_value),
+                    ipsec_ciphersuite=self.get_ipsec_ciphersuite(normalized_values),
                     perfect_forward_secrecy=normalized_values.get("perfect_forward_secrecy"),
                     tracker=normalized_values.get("tracker"),
                     track_enable=normalized_values.get("track_enable"),
