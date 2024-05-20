@@ -58,9 +58,7 @@ def find_template_values(
         if template_value is None:
             return template_definition
 
-        if template_definition["vipType"] == "variable":
-            pass
-        elif template_definition["vipObjectType"] == "list":
+        if template_definition["vipObjectType"] == "list":
             current_nesting = get_nested_dict(templated_values, path[:-1])
             current_nesting[field_key] = []
             for item in template_value:
