@@ -21,7 +21,7 @@ from catalystwan.models.policy.policy_definition import (
     LogAction,
     Match,
     MirrorAction,
-    NextHopEntry,
+    NextHopActionEntry,
     PacketLengthEntry,
     PLPEntry,
     PolicerAction,
@@ -129,7 +129,7 @@ class AclPolicySequence(PolicyDefinitionSequenceBase):
 
     @accept_action
     def associate_next_hop_action(self, next_hop: IPv4Address) -> None:
-        self._insert_action_in_set(NextHopEntry(value=next_hop))
+        self._insert_action_in_set(NextHopActionEntry(value=next_hop))
 
     @accept_action
     def associate_mirror_action(self, mirror_list_id: UUID) -> None:

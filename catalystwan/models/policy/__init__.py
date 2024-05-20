@@ -57,6 +57,7 @@ from .definition.intrusion_prevention import IntrusionPreventionPolicy, Intrusio
 from .definition.mesh import MeshPolicy, MeshPolicyGetResponse
 from .definition.qos_map import QoSDropType, QoSMapPolicy, QoSMapPolicyGetResponse
 from .definition.rewrite import RewritePolicy, RewritePolicyGetResponse
+from .definition.route_policy import RoutePolicy, RoutePolicyGetResponse
 from .definition.rule_set import RuleSet, RuleSetGetResponse
 from .definition.security_group import SecurityGroup, SecurityGroupGetResponse
 from .definition.ssl_decryption import SslDecryptionPolicy, SslDecryptionPolicyGetResponse
@@ -98,6 +99,7 @@ AnyPolicyDefinition = Annotated[
         MeshPolicy,
         QoSMapPolicy,
         RewritePolicy,
+        RoutePolicy,
         RuleSet,
         SecurityGroup,
         SslDecryptionPolicy,
@@ -202,6 +204,7 @@ AnyPolicyDefinitionInfo = Annotated[
         MeshPolicyGetResponse,
         QoSMapPolicyGetResponse,
         RewritePolicyGetResponse,
+        RoutePolicyGetResponse,
         RuleSetGetResponse,
         SecurityGroupGetResponse,
         SslDecryptionPolicyGetResponse,
@@ -264,6 +267,7 @@ __all__ = (
     "QoSMapPolicy",
     "RegionList",
     "RewritePolicy",
+    "RoutePolicy",
     "RuleSet",
     "SecurityGroup",
     "SecurityPolicy",

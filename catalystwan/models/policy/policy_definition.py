@@ -2,7 +2,7 @@
 
 import datetime
 from functools import wraps
-from ipaddress import IPv4Address, IPv4Network, IPv6Network
+from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 from typing import Any, Dict, List, MutableSequence, Optional, Sequence, Set, Tuple, Union
 from uuid import UUID
 
@@ -14,11 +14,13 @@ from catalystwan.models.common import (
     ControlPathType,
     EncapType,
     ICMPMessageType,
+    IntStr,
     MultiRegionRole,
     OriginProtocol,
     SequenceIpType,
     ServiceChainNumber,
     ServiceType,
+    SpaceSeparatedPositiveIntList,
     SpaceSeparatedUUIDList,
     TLOCActionType,
     TLOCColor,
@@ -62,6 +64,7 @@ DestinationRegion = Literal[
     "other-region",
 ]
 
+
 PathType = Literal[
     "hierarchical-path",
     "direct-path",
@@ -85,6 +88,7 @@ SequenceType = Literal[
     "deviceaccesspolicy",
     "deviceaccesspolicyv6",
     "sslDecryption",
+    "vedgeRoute",
 ]
 
 
@@ -105,6 +109,10 @@ LossProtectionType = Literal[
 ]
 
 DeviceAccessProtocol = Literal[22, 161]
+
+AdvancedCommunityMatchFlag = Literal["or", "and", "exact"]
+
+MetricType = Literal["type1", "type2"]
 
 
 class Reference(BaseModel):
@@ -268,6 +276,26 @@ class DestinationRegionEntry(BaseModel):
     value: DestinationRegion
 
 
+class AddressEntry(BaseModel):
+    field: Literal["address"] = "address"
+    ref: UUID
+
+
+class AsPathListMatchEntry(BaseModel):
+    field: Literal["asPath"] = "asPath"
+    ref: UUID
+
+
+class AsPathActionEntryValue(BaseModel):
+    prepend: SpaceSeparatedPositiveIntList
+    exclude: SpaceSeparatedPositiveIntList
+
+
+class AsPathActionEntry(BaseModel):
+    field: Literal["asPath"] = "asPath"
+    value: AsPathActionEntryValue
+
+
 class SourceFQDNEntry(BaseModel):
     field: Literal["sourceFqdn"] = "sourceFqdn"
     value: str = Field(max_length=120)
@@ -317,9 +345,14 @@ class FallBackEntry(BaseModel):
     value: str = ""
 
 
-class NextHopEntry(BaseModel):
+class NextHopActionEntry(BaseModel):
     field: Literal["nextHop"] = "nextHop"
-    value: IPv4Address
+    value: Union[IPv4Address, IPv6Address]
+
+
+class NextHopMatchEntry(BaseModel):
+    field: Literal["nextHop"] = "nextHop"
+    ref: UUID
 
 
 class NextHopLooseEntry(BaseModel):
@@ -329,7 +362,7 @@ class NextHopLooseEntry(BaseModel):
 
 class OMPTagEntry(BaseModel):
     field: Literal["ompTag"] = "ompTag"
-    value: str = Field(description="Number in range 0-4294967295")
+    value: IntStr = Field(description="Number in range 0-4294967295", ge=0, le=4294967295)
 
 
 class OriginEntry(BaseModel):
@@ -393,8 +426,17 @@ class TLOCEntry(BaseModel):
 
 
 class CommunityEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     field: Literal["community"] = "community"
-    value: str = Field(description="Example: 1000:10000 or internet or local-AS or no advertise or no-export")
+    value: Optional[str] = Field(
+        default=None, description="Example: 1000:10000 or internet or local-AS or no advertise or no-export"
+    )
+    vip_variable_name: Optional[str] = Field(
+        default=None,
+        serialization_alias="vipVariableName",
+        validation_alias="vipVariableName",
+        description="Example: 1000:10000 or internet or local-AS or no advertise or no-export",
+    )
 
 
 class CommunityAdditiveEntry(BaseModel):
@@ -422,9 +464,82 @@ class NextHeaderEntry(BaseModel):
     value: str = Field(description="0-63 single numbers separate by space")
 
 
+class AggregatorActionEntryValue(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    aggregator: IntStr = Field(description="Number in range 1-4294967295", ge=0, le=4294967295)
+    ip_address: Union[IPv4Address, IPv6Address] = Field(serialization_alias="ipAddress", validation_alias="ipAddress")
+
+
+class AggregatorActionEntry(BaseModel):
+    field: Literal["aggregator"] = "aggregator"
+    value: AggregatorActionEntryValue
+
+
 class TrafficClassEntry(BaseModel):
     field: Literal["trafficClass"] = "trafficClass"
     value: str = Field(description="Number in range 0-63")
+
+
+class LocalPreferenceEntry(BaseModel):
+    field: Literal["localPreference"] = "localPreference"
+    value: IntStr = Field(ge=0, le=4294967295, description="Number in range 0-4294967295")
+
+
+class MetricEntry(BaseModel):
+    field: Literal["metric"] = "metric"
+    value: IntStr = Field(ge=0, le=4294967295, description="Number in range 0-4294967295")
+
+
+class MetricTypeEntry(BaseModel):
+    field: Literal["metricType"] = "metricType"
+    value: MetricType
+
+
+class OspfTagEntry(BaseModel):
+    field: Literal["ospfTag"] = "ospfTag"
+    value: IntStr = Field(ge=0, le=4294967295, description="Number in range 0-4294967295")
+
+
+class PeerEntry(BaseModel):
+    field: Literal["peer"] = "peer"
+    value: Union[IPv4Address, IPv6Address]
+
+
+class AtomicAggregateActionEntry(BaseModel):
+    field: Literal["atomicAggregate"] = "atomicAggregate"
+    value: Literal["true"] = "true"
+
+
+class WeightEntry(BaseModel):
+    field: Literal["weight"] = "weight"
+    value: IntStr = Field(ge=0, le=4294967295, description="Number in range 0-4294967295")
+
+
+class AdvancedCommunityEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    field: Literal["advancedCommunity"] = "advancedCommunity"
+
+    match_flag: AdvancedCommunityMatchFlag = Field(
+        default="or",
+        serialization_alias="matchFlag",
+        validation_alias="matchFlag",
+        description="The 'and' and 'exact' conditions are applicable to only one community list",
+    )
+
+    refs: List[UUID] = []
+
+
+class ExpandedCommunityInLineEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    field: Literal["expandedCommunityInline"] = "expandedCommunityInline"
+    vip_variable_name: str = Field(serialization_alias="vipVariableName", validation_alias="vipVariableName")
+
+
+class ExtendedCommunityEntry(BaseModel):
+    field: Literal["extCommunity"] = "extCommunity"
+    ref: UUID
 
 
 class NATVPNEntry(RootModel):
@@ -752,7 +867,7 @@ ActionSetEntry = Annotated[
         DSCPEntry,
         ForwardingClassEntry,
         LocalTLOCListEntry,
-        NextHopEntry,
+        NextHopActionEntry,
         NextHopLooseEntry,
         OMPTagEntry,
         PolicerListEntry,
@@ -765,6 +880,16 @@ ActionSetEntry = Annotated[
         TLOCListEntry,
         TrafficClassEntry,
         VPNEntry,
+        AggregatorActionEntry,
+        AsPathActionEntry,
+        AtomicAggregateActionEntry,
+        LocalPreferenceEntry,
+        MetricEntry,
+        MetricTypeEntry,
+        OriginEntry,
+        OriginatorEntry,
+        OspfTagEntry,
+        WeightEntry,
     ],
     Field(discriminator="field"),
 ]
@@ -803,8 +928,14 @@ ActionEntry = Annotated[
 
 MatchEntry = Annotated[
     Union[
+        AdvancedCommunityEntry,
+        ExpandedCommunityListEntry,
+        ExpandedCommunityInLineEntry,
+        AddressEntry,
         AppListEntry,
         AppListFlatEntry,
+        AsPathListMatchEntry,
+        LocalPreferenceEntry,
         CarrierEntry,
         ClassMapListEntry,
         ColorListEntry,
@@ -830,6 +961,7 @@ MatchEntry = Annotated[
         GroupIDEntry,
         ICMPMessageEntry,
         NextHeaderEntry,
+        MetricEntry,
         OMPTagEntry,
         OriginatorEntry,
         OriginEntry,
@@ -866,6 +998,10 @@ MatchEntry = Annotated[
         TrafficClassEntry,
         TrafficToEntry,
         VPNListEntry,
+        NextHopMatchEntry,
+        OspfTagEntry,
+        PeerEntry,
+        ExtendedCommunityEntry,
     ],
     Field(discriminator="field"),
 ]
@@ -902,6 +1038,9 @@ class Match(BaseModel):
 
 class Action(BaseModel):
     pass
+
+
+PolicyAcceptRejectActionType = Literal["accept", "reject"]
 
 
 class PolicyDefinitionSequenceBase(BaseModel):
@@ -1008,6 +1147,10 @@ def accept_action(method):
 
 class PolicyActionBase(BaseModel):
     type: str
+
+
+class PolicyAcceptRejectAction(PolicyActionBase):
+    type: PolicyAcceptRejectActionType
 
 
 class BasicPolicyAction(PolicyActionBase):

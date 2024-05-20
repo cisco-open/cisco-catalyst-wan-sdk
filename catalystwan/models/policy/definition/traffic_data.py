@@ -37,7 +37,7 @@ from catalystwan.models.policy.policy_definition import (
     LossProtectionType,
     Match,
     NATAction,
-    NextHopEntry,
+    NextHopActionEntry,
     NextHopLooseEntry,
     PacketLengthEntry,
     PLPEntry,
@@ -231,7 +231,7 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
 
     @accept_action
     def associate_next_hop_action(self, next_hop: IPv4Address, loose: bool = False) -> None:
-        self._insert_action_in_set(NextHopEntry(value=next_hop))
+        self._insert_action_in_set(NextHopActionEntry(value=next_hop))
         self._insert_action_in_set(NextHopLooseEntry(value="true" if loose else "false"))
 
     @accept_action
