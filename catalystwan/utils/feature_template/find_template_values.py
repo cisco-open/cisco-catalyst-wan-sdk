@@ -106,7 +106,6 @@ def process_list_value(item: Any, target_key: str = "vipType", target_key_for_te
             elif item["vipObjectType"] == "tree":
                 return find_template_values(item[target_key_for_template_value])
             else:
-                print("ITEM:", item)
                 return item[target_key_for_template_value]
         else:
             return find_template_values(item)

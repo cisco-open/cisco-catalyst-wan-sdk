@@ -1,7 +1,7 @@
 import logging
 from copy import deepcopy
 from ipaddress import IPv4Interface, IPv6Interface
-from typing import Dict, List, Literal, Optional, Type, Union
+from typing import Dict, List, Literal, Optional, Tuple, Type, Union
 
 from pydantic import BaseModel, IPvAnyAddress
 
@@ -9,7 +9,7 @@ from catalystwan.api.configuration_groups.parcel import (
     Default,
     Global,
     OptionType,
-    ParcelAttribute,
+    Variable,
     as_default,
     as_global,
     as_variable,
@@ -101,34 +101,19 @@ class OmpMappingItem(BaseModel):
 
 
 class BaseTransportAndManagementTemplateConverter:
-    delete_keys = (
-        "ecmp_hash_key",
-        "omp_admin_distance_ipv4",
-        "omp_admin_distance_ipv6",
-        "dns",
-        "host",
-        "ip",
-        "ipv6",
-        "vpn_id",
-        "name",
-    )
-
-    def configure_new_host_mapping(self, values: dict) -> None:
+    def configure_new_host_mapping(self, values: dict) -> Optional[List[NewHostMappingItem]]:
         hosts = values.get("host", [])
         if not hosts:
-            return
-        host_mapping_items = []
-        for host in hosts:
-            host_mapping_items.append(
-                NewHostMappingItem(
-                    host_name=host["hostname"],
-                    list_of_ip=host["ip"],
-                )
+            return None
+        return [
+            NewHostMappingItem(
+                host_name=host["hostname"],
+                list_of_ip=host["ip"],
             )
-        values["new_host_mapping"] = host_mapping_items
-        return host_mapping_items
+            for host in hosts
+        ]
 
-    def configure_dns(self, values: dict) -> None:
+    def configure_dns(self, values: dict) -> Tuple[DnsIpv4, DnsIpv6]:
         dns = values.get("dns", [])
         dns_ipv4 = DnsIpv4()
         dns_ipv6 = DnsIpv6()
@@ -142,14 +127,12 @@ class BaseTransportAndManagementTemplateConverter:
                 dns_ipv6.primary_dns_address_ipv6 = dns_address
             elif dns_entry["role"].value == "secondaryv6":
                 dns_ipv6.secondary_dns_address_ipv6 = dns_address
-        values["dns_ipv4"] = dns_ipv4
-        values["dns_ipv6"] = dns_ipv6
         return dns_ipv4, dns_ipv6
 
-    def configure_route_ipv4(self, values: dict) -> None:
+    def configure_route_ipv4(self, values: dict) -> Optional[List[Ipv4RouteItem]]:
         routes = values.get("ip", {}).get("route", [])
         if not routes:
-            return
+            return None
         static_routes = []
         for route in routes:
             prefix = route.get("prefix")
@@ -182,13 +165,12 @@ class BaseTransportAndManagementTemplateConverter:
             elif "dhcp" in route:
                 ipv4route_item.gateway = as_global("dhcp", Gateway)
             static_routes.append(ipv4route_item)
-        values["ipv4_route"] = static_routes
         return static_routes
 
-    def configure_route_ipv6(self, values: dict) -> None:
+    def configure_route_ipv6(self, values: dict) -> Optional[List[Ipv6RouteItem]]:
         routes = values.get("ipv6", {}).get("route", [])
         if not routes:
-            return
+            return None
         static_routes = []
         for route in routes:
             one_of_ip_route: Union[OneOfIpRouteNull0, OneOfIpRouteNextHopContainer] = OneOfIpRouteNull0()
@@ -210,12 +192,7 @@ class BaseTransportAndManagementTemplateConverter:
                 one_of_ip_route = OneOfIpRouteNull0()
             ipv6route_item = Ipv6RouteItem(prefix=route.get("prefix"), one_of_ip_route=one_of_ip_route)
             static_routes.append(ipv6route_item)
-        values["ipv6_route"] = static_routes
         return static_routes
-
-    def cleanup_keys(self, values: dict) -> None:
-        for key in self.delete_keys:
-            values.pop(key, None)
 
 
 class ManagementVpnTemplateConverter(BaseTransportAndManagementTemplateConverter):
@@ -231,13 +208,23 @@ class ManagementVpnTemplateConverter(BaseTransportAndManagementTemplateConverter
         Returns:
             VPN: The created ManagementVpnParcel.
         """
-        values = deepcopy(template_values)
-        self.configure_dns(values)
-        self.configure_new_host_mapping(values)
-        self.configure_route_ipv4(values)
-        self.configure_route_ipv6(values)
-        self.cleanup_keys(values)
-        return ManagementVpnParcel(parcel_name=name, parcel_description=description, **values)
+        data = deepcopy(template_values)
+
+        dns_ipv4, dns_ipv6 = self.configure_dns(data)
+        ipv4_route = self.configure_route_ipv4(data)
+        ipv6_route = self.configure_route_ipv6(data)
+        new_host_mapping = self.configure_new_host_mapping(data)
+        dns_ipv4, dns_ipv6 = self.configure_dns(data)
+
+        payload = create_dict_without_none(
+            dns_ipv4=dns_ipv4,
+            dns_ipv6=dns_ipv6,
+            new_host_mapping=new_host_mapping,
+            ipv6_route=ipv6_route,
+            ipv4_route=ipv4_route,
+        )
+
+        return ManagementVpnParcel(parcel_name=name, parcel_description=description, **payload)
 
 
 class TransportVpnTemplateConverter(BaseTransportAndManagementTemplateConverter):
@@ -561,7 +548,7 @@ class ServiceVpnTemplateConverter:
         if ipv4_route := values.get("ip", {}).get("route", []):
             ipv4_route_items = []
             for route_i, route in enumerate(ipv4_route):
-                prefix: ParcelAttribute = route.pop("prefix", None)
+                prefix: Union[Global, Variable] = route.pop("prefix", None)
                 if prefix.option_type == OptionType.GLOBAL:
                     interface = IPv4Interface(prefix.value)
                     route_prefix = RoutePrefix(
@@ -745,7 +732,7 @@ class VpnTemplateConverter:
         Returns:
             VPN: The created VPN object.
         """
-        print(template_values)
+
         if 0 == self.get_vpn_id(template_values):
             return TransportVpnTemplateConverter().create_parcel(name, description, template_values)
         elif 512 == self.get_vpn_id(template_values):

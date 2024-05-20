@@ -32,7 +32,6 @@ class BGPTemplateConverter:
         Returns:
             BannerParcel: A BannerParcel object with the provided template values.
         """
-        print(template_values)
 
         parcel_values = {
             "parcel_name": name,

@@ -21,8 +21,6 @@ class AAATemplateConverter:
             AAAParcel: An AAAParcel object with the provided template values.
         """
 
-        print(template_values)
-
         def assign_authorization_servers(auth_server_list: List) -> None:
             for auth_server in auth_server_list:
                 servers = auth_server.get("server", {})

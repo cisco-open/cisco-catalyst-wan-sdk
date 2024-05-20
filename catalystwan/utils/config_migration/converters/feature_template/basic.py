@@ -30,8 +30,6 @@ class SystemToBasicTemplateConverter:
             BasicParcel: A BasicParcel object with the provided template values.
         """
         data = deepcopy(template_values)
-        print(data)
-        # {'host_name': Variable(option_type=<OptionType.VARIABLE: 'variable'>, value='{{host-name}}'), 'system_ip': Variable(option_type=<OptionType.VARIABLE: 'variable'>, value='{{system-ip}}'), 'site_id': Variable(option_type=<OptionType.VARIABLE: 'variable'>, value='{{site-id}}'), 'port_offset': Global[int](option_type=<OptionType.GLOBAL: 'global'>, value=1), 'console_baud_rate': Global[str](option_type=<OptionType.GLOBAL: 'global'>, value='19200')}
 
         track_default_gateway = data.get("track_default_gateway")
         clock = self.parse_clock(data)

@@ -84,7 +84,7 @@ class LanInterfaceEthernetTemplateConverter:
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceEthernetParcel:
         values = deepcopy(template_values)
-        print(values)
+
         self.configure_interface_name(values)
         self.configure_ethernet_description(values)
         self.configure_ipv4_address(values)
