@@ -1,10 +1,11 @@
 from ipaddress import IPv4Address, IPv4Interface
-from typing import List, Optional
+from typing import Any, List, Optional, Union
 
-from catalystwan.api.configuration_groups.parcel import Default, Global
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable
 from catalystwan.models.configuration.feature_profile.sdwan.sig_security.sig_security import (
     Interface,
     InterfacePair,
+    IpsecCiphersuite,
     Service,
     SIGParcel,
     SigProvider,
@@ -135,7 +136,7 @@ class SIGTemplateConverter:
                     ike_remote_id=normalized_values.get("ike_remote_id"),
                     ipsec_rekey_interval=normalized_values.get("ipsec_rekey_interval"),
                     ipsec_replay_window=normalized_values.get("ipsec_replay_window"),
-                    ipsec_ciphersuite=normalized_values.get("ipsec_ciphersuite"),
+                    ipsec_ciphersuite=self.get_ipsec_ciphersuite(normalized_values),
                     perfect_forward_secrecy=normalized_values.get("perfect_forward_secrecy"),
                     tracker=normalized_values.get("tracker"),
                     track_enable=normalized_values.get("track_enable"),
@@ -171,3 +172,20 @@ class SIGTemplateConverter:
             except ValueError:
                 return None
         return None
+
+    def get_ipsec_ciphersuite(
+        self, interface_value: dict
+    ) -> Optional[Union[Default[IpsecCiphersuite], Global[IpsecCiphersuite], Global[Any], Variable]]:
+        """Map unused ipsec ciphersuite values into a default"""
+        OBSOLETE_VALUES = ["null-sha1", "null-sha384", "null-sha256", "null-sha512"]
+        ipsec_ciphersuite = interface_value.get("ipsec_ciphersuite")
+        if ipsec_ciphersuite is None:
+            return None
+        elif isinstance(ipsec_ciphersuite, Variable):
+            return ipsec_ciphersuite
+        else:
+            value = ipsec_ciphersuite.value
+            if value in OBSOLETE_VALUES:
+                return Default[IpsecCiphersuite](value="aes256-cbc-sha512")
+            else:
+                return ipsec_ciphersuite
