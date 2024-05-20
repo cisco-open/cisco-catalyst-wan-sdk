@@ -109,7 +109,7 @@ def to_snake_case(s: str) -> str:
 
 def cast_value_to_global(value: Union[DeviceVariable, str, int, List[str], List[int]]) -> CastedTypes:
     if isinstance(value, DeviceVariable):
-        return as_variable(value.name)
+        return as_variable(value.name.replace(" ", "_"))
     if isinstance(value, list):
         value_type = Global[List[int]] if isinstance(value[0], int) else Global[List[str]]
         return value_type(value=value)  # type: ignore
