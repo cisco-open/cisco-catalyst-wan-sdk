@@ -7,7 +7,7 @@ from uuid import UUID
 from annotated_types import Ge, Le
 from packaging.specifiers import SpecifierSet  # type: ignore
 from packaging.version import Version  # type: ignore
-from pydantic import PlainSerializer, SerializationInfo, ValidationInfo
+from pydantic import PlainSerializer, PositiveInt, SerializationInfo, ValidationInfo
 from pydantic.fields import FieldInfo
 from pydantic.functional_validators import BeforeValidator
 from typing_extensions import Annotated
@@ -144,6 +144,12 @@ def str_as_uuid_list(val: Union[str, Sequence[UUID]]) -> Sequence[UUID]:
     return val
 
 
+def str_as_positive_int_list(val: Union[str, Sequence[PositiveInt]]) -> Sequence[PositiveInt]:
+    if isinstance(val, str):
+        return [PositiveInt(element) for element in val.split()]
+    return val
+
+
 def str_as_str_list(val: Union[str, Sequence[str]]) -> Sequence[str]:
     if isinstance(val, str):
         return val.split()
@@ -162,6 +168,13 @@ SpaceSeparatedUUIDList = Annotated[
     List[UUID],
     PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
     BeforeValidator(str_as_uuid_list),
+]
+
+
+SpaceSeparatedPositiveIntList = Annotated[
+    List[PositiveInt],
+    PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
+    BeforeValidator(str_as_positive_int_list),
 ]
 
 
@@ -295,6 +308,9 @@ OriginProtocol = Literal[
     "isis",
     "isis-level1",
     "isis-level2",
+    "egp",
+    "igp",
+    "incomplete",
 ]
 
 ServiceType = Literal[
