@@ -174,7 +174,7 @@ class ManagerResponse(Response, APIEndpointClientResponse):
             return response_history_debug(self, None)
         return response_debug(self, None)
 
-    def dataseq(self, cls: Type[T], sourcekey: Optional[str] = "data") -> DataSequence[T]:
+    def dataseq(self, cls: Type[T], sourcekey: Optional[str] = "data", validate: bool = True) -> DataSequence[T]:
         """Returns data contents from JSON payload parsed as DataSequence of Dataclass/BaseModel instances
         Args:
             cls: Dataclass/BaseModel subtype (eg. Devices)
@@ -195,10 +195,12 @@ class ManagerResponse(Response, APIEndpointClientResponse):
             sequence = [cast(dict, data)]
 
         if issubclass(cls, BaseModel):
-            return DataSequence(cls, [cls.model_validate(item) for item in sequence])  # type: ignore
+            if validate:
+                return DataSequence(cls, [cls.model_validate(item) for item in sequence])  # type: ignore
+            return DataSequence(cls, [cls.model_construct(**item) for item in sequence])  # type: ignore
         return DataSequence(cls, [create_dataclass(cls, item) for item in sequence])
 
-    def dataobj(self, cls: Type[T], sourcekey: Optional[str] = "data") -> T:
+    def dataobj(self, cls: Type[T], sourcekey: Optional[str] = "data", validate: bool = True) -> T:
         """Returns data contents from JSON payload parsed as Dataclass/BaseModel instance
         Args:
             cls: Dataclass/BaseModel subtype (eg. Devices)
@@ -214,7 +216,9 @@ class ManagerResponse(Response, APIEndpointClientResponse):
             data = self.payload.json.get(sourcekey)
 
         if issubclass(cls, BaseModel):
-            return cls.model_validate(data)  # type: ignore[return-value]
+            if validate:
+                return cls.model_validate(data)  # type: ignore[return-value]
+            return cls.model_construct(**data)  # type: ignore[return-value]
         return create_dataclass(cls, data)
 
     def get_error_info(self) -> ManagerErrorInfo:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from ipaddress import IPv4Address, IPv6Address
 from typing import List, Literal, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_variable
 from catalystwan.models.common import SubnetMask
@@ -555,95 +555,92 @@ class WanRoutingBgpParcel(_ParcelBase):
     )
     as_num: Union[Global[int], Global[str], Variable] = Field(
         default=as_variable("{{lbgp_1_basicConf_asNumber}}"),
-        serialization_alias="asNum",
-        validation_alias="asNum",
+        validation_alias=AliasPath("data", "asNum"),
         description="Set autonomous system number <1..4294967295> or <XX.YY>",
     )
     router_id: Optional[Union[Global[IPv4Address], Variable, Default[None]]] = Field(
         default=None,
-        serialization_alias="routerId",
-        validation_alias="routerId",
+        validation_alias=AliasPath("data", "routerId"),
         description="Configure BGP router identifier",
     )
     propagate_aspath: Optional[Union[Variable, Global[bool], Default[Literal[False]]]] = Field(
         default=None,
-        serialization_alias="propagateAspath",
-        validation_alias="propagateAspath",
+        validation_alias=AliasPath("data", "propagateAspath"),
         description="Propagate AS Path",
     )
     propagate_community: Optional[Union[Variable, Global[bool], Default[Literal[False]]]] = Field(
         default=None,
-        serialization_alias="propagateCommunity",
-        validation_alias="propagateCommunity",
+        validation_alias=AliasPath("data", "propagateCommunity"),
         description="Propagate Community",
     )
     external: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        default=None, description="Set administrative distance for external BGP routes"
+        default=None,
+        description="Set administrative distance for external BGP routes",
+        validation_alias=AliasPath("data", "external"),
     )
     internal: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        default=None, description="Set administrative distance for internal BGP routes"
+        default=None,
+        description="Set administrative distance for internal BGP routes",
+        validation_alias=AliasPath("data", "internal"),
     )
     local: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        default=None, description="Set administrative distance for local BGP routes"
+        default=None,
+        description="Set administrative distance for local BGP routes",
+        validation_alias=AliasPath("data", "local"),
     )
     keepalive: Optional[Union[Global[int], Variable, Default[int]]] = Field(
         default=None,
         description="Interval (seconds) of keepalive messages sent to its BGP peer",
+        validation_alias=AliasPath("data", "keepalive"),
     )
     holdtime: Optional[Union[Global[int], Variable, Default[int]]] = Field(
         default=None,
         description="Interval (seconds) not receiving a keepalive message declares a BGP peer down",
+        validation_alias=AliasPath("data", "holdtime"),
     )
     always_compare: Optional[Union[Variable, Global[bool], Default[Literal[False]]]] = Field(
         default=None,
-        serialization_alias="alwaysCompare",
-        validation_alias="alwaysCompare",
+        validation_alias=AliasPath("data", "alwaysCompare"),
         description="Compare MEDs from all ASs when selecting active BGP paths",
     )
     deterministic: Optional[Union[Variable, Global[bool], Default[Literal[False]]]] = Field(
         default=None,
         description="Compare MEDs from all routes from same AS when selecting active BGP paths",
+        validation_alias=AliasPath("data", "deterministic"),
     )
     missing_as_worst: Optional[Union[Variable, Global[bool], Default[Literal[False]]]] = Field(
         default=None,
-        serialization_alias="missingAsWorst",
-        validation_alias="missingAsWorst",
+        validation_alias=AliasPath("data", "missingAsWorst"),
         description="If path has no MED, consider it to be worst path when selecting active BGP paths",
     )
     compare_router_id: Optional[Union[Variable, Global[bool], Default[Literal[False]]]] = Field(
         default=None,
-        serialization_alias="compareGlobal[ipaddress.IPv4Variable]",
-        validation_alias="compareGlobal[ipaddress.IPv4Variable]",
+        validation_alias=AliasPath("data", "compareGlobal[)ipaddress.IPv4Variable]"),
         description="Compare router IDs when selecting active BGP paths",
     )
     multipath_relax: Optional[Union[Variable, Global[bool], Default[Literal[False]]]] = Field(
         default=None,
-        serialization_alias="multipathRelax",
-        validation_alias="multipathRelax",
+        validation_alias=AliasPath("data", "multipathRelax"),
         description="Ignore AS for multipath selection",
     )
     neighbor: Optional[List[NeighborItem]] = Field(default=None, description="Set BGP IPv4 neighbors")
     ipv6_neighbor: Optional[List[Ipv6NeighborItem]] = Field(
         default=None,
-        serialization_alias="ipv6Neighbor",
-        validation_alias="ipv6Neighbor",
+        validation_alias=AliasPath("data", "ipv6Neighbor"),
         description="Set BGP IPv6 neighbors",
     )
     address_family: Optional[AddressFamily] = Field(
         default=None,
-        serialization_alias="addressFamily",
-        validation_alias="addressFamily",
+        validation_alias=AliasPath("data", "addressFamily"),
         description="Set IPv4 unicast BGP address family",
     )
     ipv6_address_family: Optional[Ipv6AddressFamily] = Field(
         default=None,
-        serialization_alias="ipv6VariableFamily",
-        validation_alias="ipv6VariableFamily",
+        validation_alias=AliasPath("data", "ipv6VariableFamily"),
         description="Set BGP address family",
     )
     mpls_interface: Optional[List[MplsInterfaceItem]] = Field(
         default=None,
-        serialization_alias="mplsInterface",
-        validation_alias="mplsInterface",
+        validation_alias=AliasPath("data", "mplsInterface"),
         description="MPLS BGP Interface",
     )

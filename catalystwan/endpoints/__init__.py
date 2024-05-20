@@ -592,9 +592,15 @@ class request(APIEndpointsDecorator):
                     pass
                 elif issubclass(self.return_spec.payload_type, BaseModel):
                     if self.return_spec.sequence_type == DataSequence:
-                        return response.dataseq(self.return_spec.payload_type, self.resp_json_key)
+                        return response.dataseq(
+                            cls=self.return_spec.payload_type,
+                            sourcekey=self.resp_json_key,
+                            validate=_self._client.validate_response,
+                        )
                     else:
-                        return response.dataobj(self.return_spec.payload_type, self.resp_json_key)
+                        return response.dataobj(
+                            self.return_spec.payload_type, self.resp_json_key, validate=_self._client.validate_response
+                        )
                 elif issubclass(self.return_spec.payload_type, str):
                     return response.text
                 elif issubclass(self.return_spec.payload_type, bytes):

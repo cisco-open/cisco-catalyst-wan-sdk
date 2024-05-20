@@ -24,10 +24,10 @@ class APIEndpointClientResponse(Protocol):
     def content(self) -> bytes:
         ...
 
-    def dataobj(self, cls: Type[T], sourcekey: Optional[str]) -> T:
+    def dataobj(self, cls: Type[T], sourcekey: Optional[str], validate: bool) -> T:
         ...
 
-    def dataseq(self, cls: Type[T], sourcekey: Optional[str]) -> DataSequence[T]:
+    def dataseq(self, cls: Type[T], sourcekey: Optional[str], validate: bool) -> DataSequence[T]:
         ...
 
     def json(self) -> dict:
@@ -51,4 +51,8 @@ class APIEndpointClient(Protocol):
 
     @property
     def session_type(self) -> Optional[SessionType]:
+        ...
+
+    @property
+    def validate_response(self) -> bool:
         ...
