@@ -1,3 +1,4 @@
+from ipaddress import IPv4Address, IPv4Network, IPv6Address
 from typing import List
 
 import pytest
@@ -13,9 +14,73 @@ from catalystwan.models.configuration.feature_profile.sdwan.application_priority
 )
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority.qos_policy import QosPolicyTarget
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority.traffic_policy import (
+    AppqoeOptimization,
+    AppqoeOptimizationAction,
+    BackupSlaPreferredColorAction,
     BaseAction,
+    CflowdAction,
+    Color,
+    CountAction,
+    DestinationIpMatch,
+    DestinationPortMatch,
+    DestinationRegion,
+    DestinationRegionMatch,
     Direction,
+    Dns,
+    DnsMatch,
+    DscpMatch,
+    Encap,
+    FallbackToRoutingAction,
+    IcmpMessageMatch,
+    IcmpMessageValue,
+    LocalTlocList,
+    LogAction,
+    LossCorrection,
+    LossCorrectionAction,
+    LossCorrectionType,
+    Match,
+    Nat,
+    NatAction,
+    NatPoolAction,
+    PacketLengthMatch,
+    PreferredRemoteColor,
+    ProtocolMatch,
+    RedirectDns,
+    RedirectDnsAction,
+    SecureServiceEdgeInstance,
+    SequenceIpType,
+    Sequences,
+    ServiceAreaMatch,
+    ServiceAreaValue,
+    ServiceChain,
+    ServiceChainType,
+    ServiceTloc,
+    ServiceType,
+    SetAction,
+    SetDscp,
+    SetLocalTlocList,
+    SetNextHop,
+    SetNextHopIpv6,
+    SetNextHopLoose,
+    SetPreferredRemoteColor,
+    SetService,
+    SetServiceChain,
+    SetTloc,
+    SetVpn,
+    SigAction,
+    SourceIpMatch,
+    SourcePortMatch,
+    Sse,
+    SseAction,
+    TcpMatch,
+    Tloc,
+    TrafficCategory,
+    TrafficCategoryMatch,
+    TrafficClass,
+    TrafficClassMatch,
     TrafficPolicyTarget,
+    TrafficTo,
+    TrafficToMatch,
 )
 
 
@@ -135,6 +200,141 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
         traffic_policy_parcel = TrafficPolicyParcel(
             name="traffic_policy_test_parcel",
             data_default_action=Global[BaseAction](value="accept"),
+            target=TrafficPolicyTarget(
+                direction=Global[Direction](value="all"), vpn=Global[List[str]](value=["VPN_1"])
+            ),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_id, traffic_policy_parcel).id
+        # Assert
+        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_id, TrafficPolicyParcel, parcel_id).payload
+
+        assert parcel.parcel_name == "traffic_policy_test_parcel"
+
+    def test_create_complex_traffic_policy_parcel(self):
+        sequences = []
+        sequence1 = Sequences(
+            actions=[
+                BackupSlaPreferredColorAction(backup_sla_preferred_color=Global[List[Color]](value=["mpls"])),
+                RedirectDnsAction(redirect_dns=RedirectDns()),
+                AppqoeOptimizationAction(
+                    appqoe_optimization=AppqoeOptimization(
+                        service_node_group=Global[str](value="SNG-APPQOE"),
+                    )
+                ),
+                LossCorrectionAction(
+                    loss_correction=LossCorrection(loss_correction_type=Global[LossCorrectionType](value="fecAdaptive"))
+                ),
+                CountAction(count=Global[str](value="my_counter")),
+                LogAction(log=Global[bool](value=True)),
+                CflowdAction(cflowd=Global[bool](value=True)),
+                NatPoolAction(nat_pool=Global[int](value=1)),
+                FallbackToRoutingAction(fallback_to_routing=Global[bool](value=True)),
+                SseAction(
+                    sse=Sse(
+                        secure_service_edge=Global[Global[bool]](value=Global[bool](value=True)),
+                        secure_service_edge_instance=Global[SecureServiceEdgeInstance](value="zScaler"),
+                    )
+                ),
+                SetAction(
+                    set=[
+                        SetDscp(dscp=Global[int](value=1)),
+                        SetNextHop(next_hop=Global[IPv4Address](value=IPv4Address("10.0.1.1"))),
+                        SetNextHopLoose(next_hop_loose=Global[bool](value=True)),
+                        SetPreferredRemoteColor(
+                            preferred_remote_color=PreferredRemoteColor(color=Global[List[Color]](value=["mpls"]))
+                        ),
+                        SetService(
+                            service=ServiceTloc(
+                                tloc=Tloc(
+                                    color=Global[List[Color]](value=["mpls"]),
+                                    encap=Global[Encap](value="ipsec"),
+                                    ip=Global[IPv4Address](value=IPv4Address("10.0.1.1")),
+                                ),
+                                type=Global[ServiceType](value="FW"),
+                                vpn=Global[int](value=1),
+                            )
+                        ),
+                    ]
+                ),
+            ],
+            base_action=Global[BaseAction](value="accept"),
+            match=Match(
+                entries=[
+                    ServiceAreaMatch(service_area=Global[List[ServiceAreaValue]](value=["common"])),
+                    TrafficCategoryMatch(traffic_category=Global[TrafficCategory](value="all")),
+                    TrafficClassMatch(traffic_class=Global[TrafficClass](value="bronze")),
+                    DscpMatch(dscp=Global[int](value=0)),
+                    PacketLengthMatch(packet_length=Global[str](value="1000")),
+                    ProtocolMatch(protocol=Global[List[str]](value=["1", "16"])),
+                    IcmpMessageMatch(icmp_message=Global[List[IcmpMessageValue]](value=["echo"])),
+                    SourceIpMatch(source_ip=Global[IPv4Network](value=IPv4Network("192.168.1.1/32"))),
+                    SourcePortMatch(source_port=Global[List[str]](value=["22"])),
+                    DestinationIpMatch(destination_ip=Global[IPv4Network](value=IPv4Network("10.0.0.1/32"))),
+                    DestinationPortMatch(destination_port=Global[List[str]](value=["80"])),
+                    TcpMatch(),
+                    DestinationRegionMatch(destination_region=Global[DestinationRegion](value="other-region")),
+                    TrafficToMatch(traffic_to=Global[TrafficTo](value="access")),
+                    DnsMatch(dns=Global[Dns](value="request")),
+                ]
+            ),
+            sequence_id=Global[int](value=1),
+            sequence_ip_type=Global[SequenceIpType](value="ipv4"),
+            sequence_name=Global[str](value="seq1"),
+        )
+        sequence2 = Sequences(
+            actions=[
+                NatAction(nat=Nat(use_vpn=Global[bool](value=True))),
+                SigAction(sig=Global[bool](value=True)),
+                SetAction(
+                    set=[
+                        SetVpn(vpn=Global[int](value=1)),
+                        SetServiceChain(
+                            service_chain=ServiceChain(
+                                local=Global[bool](value=True),
+                                restrict=Global[bool](value=True),
+                                type=Global[ServiceChainType](value="SC1"),
+                            )
+                        ),
+                    ]
+                ),
+            ],
+            base_action=Global[BaseAction](value="accept"),
+            match=Match(entries=[]),
+            sequence_id=Global[int](value=2),
+            sequence_ip_type=Global[SequenceIpType](value="ipv4"),
+            sequence_name=Global[str](value="seq2"),
+        )
+        sequence3 = Sequences(
+            actions=[
+                SetAction(
+                    set=[
+                        SetNextHopIpv6(next_hop_ipv6=Global[IPv6Address](value=IPv6Address("2001::1"))),
+                        SetLocalTlocList(local_tloc_list=LocalTlocList(color=Global[List[Color]](value=["mpls"]))),
+                        SetTloc(
+                            tloc=Tloc(
+                                color=Global[List[Color]](value=["mpls"]),
+                                encap=Global[Encap](value="ipsec"),
+                                ip=Global[IPv4Address](value=IPv4Address("10.0.1.1")),
+                            )
+                        ),
+                    ]
+                ),
+            ],
+            base_action=Global[BaseAction](value="accept"),
+            match=Match(entries=[]),
+            sequence_id=Global[int](value=3),
+            sequence_ip_type=Global[SequenceIpType](value="ipv6"),
+            sequence_name=Global[str](value="seq3"),
+        )
+        sequences.append(sequence1)
+        sequences.append(sequence2)
+        sequences.append(sequence3)
+        traffic_policy_parcel = TrafficPolicyParcel(
+            name="traffic_policy_test_parcel",
+            data_default_action=Global[BaseAction](value="accept"),
+            sequences=sequences,
             target=TrafficPolicyTarget(
                 direction=Global[Direction](value="all"), vpn=Global[List[str]](value=["VPN_1"])
             ),
