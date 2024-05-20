@@ -103,9 +103,11 @@ def normalize_to_model_definition(d: dict, model_fields: Dict[str, FieldInfo]) -
                 return value
 
         if isinstance(value, Global):
-            value = value.value
+            inner_value = value.value
+        else:
+            inner_value = value
         try:
-            casted_value = try_cast(cast_type, value)
+            casted_value = try_cast(cast_type, inner_value)
             if casted_value is None:
                 return value
             return global_type(value=casted_value)
