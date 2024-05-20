@@ -1,4 +1,5 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
+from ipaddress import IPv4Network
 from typing import List, Literal, Optional, Union
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
@@ -216,7 +217,7 @@ class TrafficClassMatch(BaseModel):
 
 class DscpMatch(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    dscp: Global[int] = Field(default=None)
+    dscp: Global[int] = Field(default=None, ge=0, le=63)
 
 
 class PacketLengthMatch(BaseModel):
@@ -261,7 +262,7 @@ class SourceDataIpv6PrefixListMatch(BaseModel):
 
 class SourceIpMatch(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    source_ip: Global[str] = Field(default=None, validation_alias="sourceIp", serialization_alias="sourceIp")
+    source_ip: Global[IPv4Network] = Field(default=None, validation_alias="sourceIp", serialization_alias="sourceIp")
 
 
 class SourceIpv6Match(BaseModel):
@@ -294,7 +295,7 @@ class DestinationDataIpv6PrefixListMatch(BaseModel):
 
 class DestinationIpMatch(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    destination_ip: Global[str] = Field(
+    destination_ip: Global[IPv4Network] = Field(
         default=None, validation_alias="destinationIp", serialization_alias="destinationIp"
     )
 
@@ -315,7 +316,7 @@ class DestinationPortMatch(BaseModel):
 
 class TcpMatch(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    tcp: Global[Literal["syn"]] = Field(default=None)
+    tcp: Global[Literal["syn"]] = Field(default=Global[Literal["syn"]](value="syn"))
 
 
 class DestinationRegionMatch(BaseModel):
@@ -350,8 +351,6 @@ Entries = Union[
     SourceDataPrefixListMatch,
     SourceDataIpv6PrefixListMatch,
     SourceIpMatch,
-    SourceIpv6Match,
-    SourceIpv6Match,
     SourceIpv6Match,
     SourcePortMatch,
     DestinationDataPrefixListMatch,
@@ -501,37 +500,106 @@ class ServiceChain(BaseModel):
     vpn: Optional[Global[int]] = Field(default=None)
 
 
-class Set(BaseModel):
+class SetDscp(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     dscp: Optional[Global[int]] = Field(default=None)
+
+
+class SetForwardingClass(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     forwarding_class: Optional[RefIdItem] = Field(
         default=None, validation_alias="forwardingClass", serialization_alias="forwardingClass"
     )
+
+
+class SetLocalTlocList(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     local_tloc_list: Optional[LocalTlocList] = Field(
         default=None, validation_alias="localTlocList", serialization_alias="localTlocList"
     )
+
+
+class SetNextHop(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     next_hop: Optional[Global[str]] = Field(default=None, validation_alias="nextHop", serialization_alias="nextHop")
+
+
+class SetNextHopIpv6(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     next_hop_ipv6: Optional[Global[str]] = Field(
         default=None, validation_alias="nextHopIpv6", serialization_alias="nextHopIpv6"
     )
+
+
+class SetNextHopLoose(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     next_hop_loose: Optional[Global[bool]] = Field(
         default=None, validation_alias="nextHopLoose", serialization_alias="nextHopLoose"
     )
+
+
+class SetPolicer(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     policer: Optional[RefIdItem] = Field(default=None)
+
+
+class SetPreferredColorGroup(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     preferred_color_group: Optional[RefIdItem] = Field(
         default=None, validation_alias="preferredColorGroup", serialization_alias="preferredColorGroup"
     )
+
+
+class SetPreferredRemoteColor(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     preferred_remote_color: Optional[PreferredRemoteColor] = Field(
         default=None, validation_alias="preferredRemoteColor", serialization_alias="preferredRemoteColor"
     )
+
+
+class SetService(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     service: Optional[Union[ServiceTloc, ServiceTlocList]] = Field(default=None)
+
+
+class SetServiceChain(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     service_chain: Optional[ServiceChain] = Field(
         default=None, validation_alias="serviceChain", serialization_alias="serviceChain"
     )
+
+
+class SetTloc(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     tloc: Optional[Tloc] = Field(default=None)
+
+
+class SetTlocList(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     tloc_list: Optional[RefIdItem] = Field(default=None, validation_alias="tlocList", serialization_alias="tlocList")
+
+
+class SetVpn(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     vpn: Optional[Global[int]] = Field(default=None)
 
+
+Set = Union[
+    SetVpn,
+    SetTlocList,
+    SetDscp,
+    SetTloc,
+    SetForwardingClass,
+    SetLocalTlocList,
+    SetNextHop,
+    SetNextHopIpv6,
+    SetNextHopLoose,
+    SetPolicer,
+    SetPreferredColorGroup,
+    SetPreferredRemoteColor,
+    SetService,
+    SetServiceChain,
+]
 
 RedirectDnsType = Literal[
     "dnsHost",
@@ -735,7 +803,7 @@ class Sequences(BaseModel):
     sequence_id: Optional[Global[int]] = Field(
         default=None, validation_alias="sequenceId", serialization_alias="sequenceId"
     )
-    sequence_ip_type: Optional[Global[SequenceIpType]] = Field(
+    sequence_ip_type: Global[SequenceIpType] = Field(
         default=None, validation_alias="sequenceIpType", serialization_alias="sequenceIpType"
     )
     sequence_name: Optional[Global[str]] = Field(
