@@ -33,7 +33,11 @@ class BGPTemplateConverter:
             BannerParcel: A BannerParcel object with the provided template values.
         """
 
-        parcel_values = {"parcel_name": name, "parcel_description": description, **deepcopy(template_values["bgp"])}
+        parcel_values = {
+            "parcel_name": name,
+            "parcel_description": description,
+            **deepcopy(template_values["bgp"]),
+        }
 
         shutdown = parcel_values.get("shutdown")
         neighbors = cast(List[Dict], parcel_values.get("neighbor", []))
@@ -78,7 +82,10 @@ class BGPTemplateConverter:
                     neighbor["if_name"] = if_name
                     neighbor.pop("update_source")
 
-        for key in ["address_family", "shutdown", "target"]:
+        for key in ["address_family", "shutdown", "target", "timers"]:
             parcel_values.pop(key, None)
 
-        return BGPParcel(**parcel_values)  # type: ignore
+        holdtime = parcel_values.get("timers", {}).get("holdtime")
+        keepalive = parcel_values.get("timers", {}).get("keepalive")
+
+        return BGPParcel(**parcel_values, holdtime=holdtime, keepalive=keepalive)  # type: ignore

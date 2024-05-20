@@ -327,6 +327,7 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
                     exception_message=exception_message,
                     feature_template=ft,
                 )
+
         elif ft.template_type in CLOUD_CREDENTIALS_FEATURE_TEMPLATES:
             cloud_credential_templates.append(ft)
     # Add Cloud Credentials to UX2
@@ -340,17 +341,17 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
             header = TransformHeader(type=policy_parcel._get_parcel_type(), origin=policy_list.list_id)
             ux2.profile_parcels.append(TransformedParcel(header=header, parcel=policy_parcel))
         except CatalystwanConverterCantConvertException as e:
-            error_message = (
+            exception_message = (
                 f"Policy List {policy_list.type} {policy_list.list_id} {policy_list.name} was not converted: {e}"
             )
-            logger.warning(error_message)
+            logger.warning(exception_message)
             transform_result.add_failed_conversion_parcel(
                 exception_message=exception_message,
                 policy=policy_list,
             )
 
     ux2 = merge_parcels(ux2)
-    transform_result.ux2_config = ux2
+    transform_result.ux2_config = UX2Config.model_validate(ux2)
     return transform_result
 
 

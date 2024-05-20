@@ -23,6 +23,10 @@ VPN_ADDITIONAL_TEMPLATES = [
     "vpn-cedge-interface-multilink-controller",
 ]
 
+NO_SUBSTITUTE_ERROR = "NO_SUBSTITUTE_ERROR"
+NO_SUBSTITUTE_VPN_MANAGEMENT_SVI = (
+    "NO_SUBSTITUTE_ERROR: UX1.0 -> We can attach SVI to vpn 512, UX2.0 -> There is no SVI parcel for vpn 512"
+)
 
 MANAGEMENT_VPN_ETHERNET = "management/vpn/interface/ethernet"
 
@@ -41,6 +45,7 @@ LAN_VPN_MULTILINK = "lan/vpn/interface/multilink"
 VPN_TEMPLATE_MAPPINGS: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {
     VPN_MANAGEMENT: {
         "mapping": {
+            "vpn-interface-svi": NO_SUBSTITUTE_VPN_MANAGEMENT_SVI,
             "cisco_vpn_interface": MANAGEMENT_VPN_ETHERNET,
             "vpn-vsmart-interface": MANAGEMENT_VPN_ETHERNET,
             "vpn-vedge-interface": MANAGEMENT_VPN_ETHERNET,

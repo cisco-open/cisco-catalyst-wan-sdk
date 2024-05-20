@@ -586,10 +586,7 @@ Speed = Literal[
     "2500",
 ]
 
-EthernetNatType = Literal[
-    "pool",
-    "loopback",
-]
+EthernetNatType = Literal["pool", "loopback", "interface"]
 
 EthernetDirection = Literal[
     "inside",

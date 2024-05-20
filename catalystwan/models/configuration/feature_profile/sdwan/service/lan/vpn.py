@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, IPvAnyAddress
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask
 
 ProtocolIPv4 = Literal[
@@ -194,7 +194,7 @@ class IPv4RouteGatewayNextHopWithTracker(BaseModel):
 
     address: Union[Variable, Global[str]]
     distance: Union[Variable, Global[int], Default[int]] = Default[int](value=1)
-    tracker: Union[Global[UUID], Default[None]]
+    tracker: Union[Global[UUID], Default[None]] = as_default(None)
 
 
 class NextHopContainer(BaseModel):

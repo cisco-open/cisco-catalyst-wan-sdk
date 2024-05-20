@@ -15,7 +15,6 @@ class PubkeyChainItem(BaseModel):
     key_string: Global[str] = Field(
         validation_alias="keyString",
         serialization_alias="keyString",
-        pattern="^AAAA[0-9A-Za-z+/]+[=]{0,3}$",
         description="Set the RSA key string",
     )
 

@@ -71,6 +71,7 @@ class LanInterfaceEthernetTemplateConverter:
         "pmtu",
         "static_ingress_qos",
         "flow_control",
+        "address",
         "tunnel_interface",  # Not sure if this is correct. There is some data in UX1 that is not transferable to UX2
         "nat66",  # Not sure if this is correct. There is some data in UX1 that is not transferable to UX2
     )
@@ -83,6 +84,7 @@ class LanInterfaceEthernetTemplateConverter:
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceEthernetParcel:
         values = deepcopy(template_values)
+
         self.configure_interface_name(values)
         self.configure_ethernet_description(values)
         self.configure_ipv4_address(values)
@@ -134,6 +136,12 @@ class LanInterfaceEthernetTemplateConverter:
                         dynamic_dhcp_distance=ipv4_address_configuration.get("dhcp_distance", as_global(1))
                     )
                 )
+        if "address" in values:
+            values["interface_ip_address"] = InterfaceStaticIPv4Address(
+                static=StaticIPv4AddressConfig(
+                    primary_ip_address=self.get_static_ipv4_address(values),
+                )
+            )
 
     def get_static_ipv4_address(self, address_configuration: dict) -> StaticIPv4Address:
         address = address_configuration["address"]

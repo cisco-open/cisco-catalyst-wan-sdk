@@ -517,7 +517,7 @@ class EthernetNatAttributesIpv4(BaseModel):
     )
     nat_pool: Optional[EthernetNatPool] = Field(serialization_alias="natPool", validation_alias="natPool", default=None)
     nat_loopback: Optional[Union[Global[str], Variable, Default[None]]] = Field(
-        serialization_alias="natLoopbakc", validation_alias="natLoopba", default=None
+        serialization_alias="natLoopback", validation_alias="natLoopback", default=None
     )
     udp_timeout: Union[Global[int], Variable, Default[int]] = Field(
         serialization_alias="udpTimeout", validation_alias="udpTimeout", default=Default[int](value=1)
