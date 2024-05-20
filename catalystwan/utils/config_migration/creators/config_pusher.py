@@ -3,7 +3,7 @@ import logging
 from typing import Callable, Dict, List, cast
 from uuid import UUID
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from catalystwan.api.builders.feature_profiles.report import FeatureProfileBuildReport
 from catalystwan.endpoints.configuration_group import ProfileId
