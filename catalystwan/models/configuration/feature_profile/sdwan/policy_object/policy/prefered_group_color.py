@@ -16,7 +16,9 @@ PathPreference = Literal[
 
 class Preference(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    color_preference: Global[list] = Field(serialization_alias="colorPreference", validation_alias="colorPreference")
+    color_preference: Global[List[str]] = Field(
+        serialization_alias="colorPreference", validation_alias="colorPreference"
+    )
     path_preference: Global[PathPreference] = Field(
         serialization_alias="pathPreference", validation_alias="pathPreference"
     )
