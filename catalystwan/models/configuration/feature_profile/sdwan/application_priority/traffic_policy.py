@@ -1,8 +1,8 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
-from ipaddress import IPv4Network
+from ipaddress import IPv4Address, IPv4Network, IPv6Address
 from typing import List, Literal, Optional, Union
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
@@ -425,14 +425,14 @@ Encap = Literal[
 
 class LocalTlocList(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    color: Optional[Global[List[Color]]] = Field(default=None)
+    color: Global[List[Color]] = Field(default=None)
     encap: Optional[Global[Encap]] = Field(default=None)
     restrict: Optional[Global[Global[bool]]] = Field(default=None)
 
 
 class PreferredRemoteColor(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    color: Optional[Global[List[Color]]] = Field(default=None)
+    color: Global[List[Color]] = Field(default=None)
     remote_color_restrict: Optional[Global[Global[bool]]] = Field(
         default=None, validation_alias="remoteColorRestrict", serialization_alias="remoteColorRestrict"
     )
@@ -440,9 +440,9 @@ class PreferredRemoteColor(BaseModel):
 
 class Tloc(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    color: Optional[Global[List[Color]]] = Field(default=None)
-    encap: Optional[Global[Encap]] = Field(default=None)
-    ip: Optional[Global[str]] = Field(default=None)
+    color: Global[List[Color]] = Field(default=None)
+    encap: Global[Encap] = Field(default=None)
+    ip: Global[IPv4Address] = Field(default=None)
 
 
 ServiceType = Literal[
@@ -460,8 +460,8 @@ ServiceType = Literal[
 class ServiceTloc(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     tloc: Tloc = Field()
-    type: Optional[Global[ServiceType]] = Field(default=None)
-    vpn: Optional[Global[int]] = Field(default=None)
+    type: Global[ServiceType] = Field(default=None)
+    vpn: Global[int] = Field(default=None)
 
 
 class ServiceTlocList(BaseModel):
@@ -492,11 +492,11 @@ ServiceChainType = Literal[
 
 class ServiceChain(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    local: Optional[Global[bool]] = Field(default=None)
-    restrict: Optional[Global[bool]] = Field(default=None)
+    local: Global[bool] = Field(default=None)
+    restrict: Global[bool] = Field(default=None)
     tloc: Optional[Tloc] = Field(default=None)
     tloc_list: Optional[RefIdItem] = Field(default=None, validation_alias="tlocList", serialization_alias="tlocList")
-    type: Optional[Global[ServiceChainType]] = Field(default=None)
+    type: Global[ServiceChainType] = Field(default=None)
     vpn: Optional[Global[int]] = Field(default=None)
 
 
@@ -521,12 +521,14 @@ class SetLocalTlocList(BaseModel):
 
 class SetNextHop(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    next_hop: Optional[Global[str]] = Field(default=None, validation_alias="nextHop", serialization_alias="nextHop")
+    next_hop: Optional[Global[IPv4Address]] = Field(
+        default=None, validation_alias="nextHop", serialization_alias="nextHop"
+    )
 
 
 class SetNextHopIpv6(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    next_hop_ipv6: Optional[Global[str]] = Field(
+    next_hop_ipv6: Optional[Global[IPv6Address]] = Field(
         default=None, validation_alias="nextHopIpv6", serialization_alias="nextHopIpv6"
     )
 
@@ -623,12 +625,18 @@ class AppqoeOptimization(BaseModel):
     dre_optimization: Optional[Global[bool]] = Field(
         default=None, validation_alias="dreOptimization", serialization_alias="dreOptimization"
     )
-    service_node_group: Optional[Global[str]] = Field(
+    service_node_group: Global[str] = Field(
         default=None, validation_alias="serviceNodeGroup", serialization_alias="serviceNodeGroup"
     )
     tcp_optimization: Optional[Global[bool]] = Field(
         default=None, validation_alias="tcpOptimization", serialization_alias="tcpOptimization"
     )
+
+    @field_validator("service_node_group")
+    @classmethod
+    def check_service_node_group(cls, service_node_group: Global[str]):
+        assert service_node_group.value.startswith("SNG-APPQOE")
+        return service_node_group
 
 
 LossCorrectionType = Literal[
@@ -643,7 +651,7 @@ class LossCorrection(BaseModel):
     loss_correct_fec: Optional[Global[int]] = Field(
         default=None, validation_alias="lossCorrectFec", serialization_alias="lossCorrectFec"
     )
-    loss_correction_type: Optional[Global[LossCorrectionType]] = Field(
+    loss_correction_type: Global[LossCorrectionType] = Field(
         default=None, validation_alias="lossCorrectionType", serialization_alias="lossCorrectionType"
     )
 
@@ -658,7 +666,7 @@ class Nat(BaseModel):
         default=None, validation_alias="diaPool", serialization_alias="diaPool"
     )
     fallback: Optional[Global[bool]] = Field(default=None)
-    use_vpn: Optional[Global[bool]] = Field(default=None, validation_alias="useVpn", serialization_alias="useVpn")
+    use_vpn: Global[bool] = Field(default=None, validation_alias="useVpn", serialization_alias="useVpn")
 
 
 SecureServiceEdgeInstance = Literal[
@@ -669,10 +677,10 @@ SecureServiceEdgeInstance = Literal[
 
 class Sse(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    secure_service_edge: Optional[Global[Global[bool]]] = Field(
+    secure_service_edge: Global[Global[bool]] = Field(
         default=None, validation_alias="secureServiceEdge", serialization_alias="secureServiceEdge"
     )
-    secure_service_edge_instance: Optional[Global[SecureServiceEdgeInstance]] = Field(
+    secure_service_edge_instance: Global[SecureServiceEdgeInstance] = Field(
         default=None, validation_alias="secureServiceEdgeInstance", serialization_alias="secureServiceEdgeInstance"
     )
 
@@ -686,91 +694,85 @@ class SlaClassAction(BaseModel):
 
 class BackupSlaPreferredColorAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    backup_sla_preferred_color: Optional[Global[List[Color]]] = Field(
+    backup_sla_preferred_color: Global[List[Color]] = Field(
         default=None, validation_alias="backupSlaPreferredColor", serialization_alias="backupSlaPreferredColor"
     )
 
 
 class SetAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    set: Optional[List[Set]] = Field(default=None)
+    set: List[Set] = Field(default=None)
 
 
 class RedirectDnsAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    redirect_dns: Optional[RedirectDns] = Field(
-        default=None, validation_alias="redirectDns", serialization_alias="redirectDns"
-    )
+    redirect_dns: RedirectDns = Field(default=None, validation_alias="redirectDns", serialization_alias="redirectDns")
 
 
 class AppqoeOptimizationAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    appqoe_optimization: Optional[AppqoeOptimization] = Field(
+    appqoe_optimization: AppqoeOptimization = Field(
         default=None, validation_alias="appqoeOptimization", serialization_alias="appqoeOptimization"
     )
 
 
 class LossCorrectionAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    loss_correction: Optional[LossCorrection] = Field(
+    loss_correction: LossCorrection = Field(
         default=None, validation_alias="lossCorrection", serialization_alias="lossCorrection"
     )
 
 
 class CountAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    count: Optional[Global[str]] = Field(default=None)
+    count: Global[str] = Field(default=None)
 
 
 class LogAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    log: Optional[Global[bool]] = Field(default=None)
+    log: Global[bool] = Field(default=None)
 
 
 class CloudSaasAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    cloud_saas: Optional[Global[bool]] = Field(
-        default=None, validation_alias="cloudSaas", serialization_alias="cloudSaas"
-    )
+    cloud_saas: Global[bool] = Field(default=None, validation_alias="cloudSaas", serialization_alias="cloudSaas")
 
 
 class CloudProbeAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    cloud_probe: Optional[Global[bool]] = Field(
-        default=None, validation_alias="cloudProbe", serialization_alias="cloudProbe"
-    )
+    cloud_probe: Global[bool] = Field(default=None, validation_alias="cloudProbe", serialization_alias="cloudProbe")
 
 
 class CflowdAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    cflowd: Optional[Global[bool]] = Field(default=None)
+    cflowd: Global[bool] = Field(default=None)
 
 
 class NatPoolAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    nat_pool: Optional[Global[int]] = Field(default=None, validation_alias="natPool", serialization_alias="natPool")
+    nat_pool: Global[int] = Field(default=None, validation_alias="natPool", serialization_alias="natPool")
 
 
 class NatAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    nat: Optional[Nat] = Field(default=None)
+    nat: Nat = Field(default=None)
 
 
 class SigAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    sig: Optional[Global[bool]] = Field(default=None)
+    sig: Global[bool] = Field(default=None)
 
 
-class FallbackToRouting(BaseModel):
+class FallbackToRoutingAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    fallback_to_routing: Optional[Global[bool]] = Field(
+    fallback_to_routing: Global[bool] = Field(
         default=None, validation_alias="fallbackToRouting", serialization_alias="fallbackToRouting"
     )
 
 
 class SseAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    sse: Optional[Sse] = Field(default=None)
+    sse: Sse = Field(default=None)
 
 
 Actions = Union[
@@ -788,7 +790,7 @@ Actions = Union[
     NatPoolAction,
     NatAction,
     SigAction,
-    FallbackToRouting,
+    FallbackToRoutingAction,
     SseAction,
 ]
 
