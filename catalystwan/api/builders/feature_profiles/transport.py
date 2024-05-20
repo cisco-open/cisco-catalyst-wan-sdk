@@ -104,7 +104,7 @@ class TransportAndManagementProfileBuilder:
         """
 
         profile_uuid = self._endpoints.create_transport_feature_profile(self._profile).id
-        self.build_raport = FeatureProfileBuildReport(profile_uuid=profile_uuid, profile_name=self._profile.name)
+        self.build_report = FeatureProfileBuildReport(profile_uuid=profile_uuid, profile_name=self._profile.name)
         for parcel in self._independent_items:
             self._create_parcel(profile_uuid, parcel)
         for vpn_tag, vpn_parcel in self._independent_items_vpns.items():
@@ -112,7 +112,7 @@ class TransportAndManagementProfileBuilder:
             vpn_uuid = self._create_parcel(profile_uuid, vpn_parcel)
             for subparcel in self._dependent_items_on_vpns[vpn_tag]:
                 self._create_parcel(profile_uuid, subparcel, vpn_uuid)
-        return self.build_raport
+        return self.build_report
 
     @handle_build_report
     def _create_parcel(self, profile_uuid: UUID, parcel: AnyTransportParcel, vpn_uuid: Optional[None] = None) -> UUID:

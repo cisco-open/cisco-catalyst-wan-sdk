@@ -1,11 +1,12 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
 from collections import defaultdict
-from typing import Callable
+from typing import Callable, Optional, TypeVar, cast
 from uuid import UUID, uuid4
 
 from pydantic import ValidationError
 
+from catalystwan import PACKAGE_VERSION
 from catalystwan.api.policy_api import POLICY_LIST_ENDPOINTS_MAP
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
 from catalystwan.models.configuration.config_migration import (
@@ -17,8 +18,11 @@ from catalystwan.models.configuration.config_migration import (
     TransformHeader,
     UX1Config,
     UX2Config,
+    UX2RollbackInfo,
+    VersionInfo,
 )
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
+from catalystwan.models.policy import AnyPolicyDefinitionInfo
 from catalystwan.session import ManagerSession
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.feature_template import create_parcel_from_template
@@ -26,7 +30,7 @@ from catalystwan.utils.config_migration.converters.feature_template.cloud_creden
     create_cloud_credentials_from_templates,
 )
 from catalystwan.utils.config_migration.converters.policy.policy_lists import convert as convert_policy_list
-from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigRollback
+from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigPushResult
 from catalystwan.utils.config_migration.reverters.config_reverter import UX2ConfigReverter
 from catalystwan.utils.config_migration.steps.constants import (
     LAN_VPN_ETHERNET,
@@ -43,6 +47,8 @@ from catalystwan.utils.config_migration.steps.constants import (
 from catalystwan.utils.config_migration.steps.transform import merge_parcels, resolve_template_type
 
 logger = logging.getLogger(__name__)
+
+T = TypeVar("T")
 
 SUPPORTED_TEMPLATE_TYPES = [
     "cisco_aaa",
@@ -172,14 +178,20 @@ FEATURE_PROFILE_CLI = [
     "cli-template",
 ]
 
+DEVICE_TYPE_BLOCKLIST = ["vsmart", "vbond", "vmanage"]
+
 
 def log_progress(task: str, completed: int, total: int) -> None:
     logger.info(f"{task} {completed}/{total}")
 
 
+def get_version_info(session: ManagerSession) -> VersionInfo:
+    return VersionInfo(platform=session._platform_version, sdk=PACKAGE_VERSION)
+
+
 def transform(ux1: UX1Config) -> ConfigTransformResult:
     transform_result = ConfigTransformResult()
-    ux2 = UX2Config()
+    ux2 = UX2Config(version=ux1.version)
     subtemplates_mapping = defaultdict(set)
     # Create Feature Profiles and Config Group
     for dt in ux1.templates.device_templates:
@@ -315,6 +327,7 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
                     exception_message=exception_message,
                     feature_template=ft,
                 )
+
         elif ft.template_type in CLOUD_CREDENTIALS_FEATURE_TEMPLATES:
             cloud_credential_templates.append(ft)
     # Add Cloud Credentials to UX2
@@ -327,26 +340,33 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
             policy_parcel = convert_policy_list(policy_list)
             header = TransformHeader(type=policy_parcel._get_parcel_type(), origin=policy_list.list_id)
             ux2.profile_parcels.append(TransformedParcel(header=header, parcel=policy_parcel))
-        except (CatalystwanConverterCantConvertException, ValidationError) as e:
-            error_message = (
+        except CatalystwanConverterCantConvertException as e:
+            exception_message = (
                 f"Policy List {policy_list.type} {policy_list.list_id} {policy_list.name} was not converted: {e}"
             )
-            logger.warning(error_message)
+            logger.warning(exception_message)
             transform_result.add_failed_conversion_parcel(
                 exception_message=exception_message,
                 policy=policy_list,
             )
 
     ux2 = merge_parcels(ux2)
-    transform_result.ux2_config = ux2
+    transform_result.ux2_config = UX2Config.model_validate(ux2)
     return transform_result
 
 
 def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, int], None] = log_progress) -> UX1Config:
-    ux1 = UX1Config()
+    ux1 = UX1Config(version=get_version_info(session))
 
     """Collect Policies"""
     policy_api = session.api.policy
+
+    def guard(func: Callable[..., T], *args, **kwargs) -> Optional[T]:
+        try:
+            return func(*args, **kwargs)
+        except ValidationError as e:
+            logger.warning(f"{args} {kwargs}\n{e}")
+        return None
 
     progress("Collecting Policy Info", 0, 1)
     policy_definition_types_and_ids = [
@@ -356,11 +376,15 @@ def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, in
 
     policy_list_types = POLICY_LIST_ENDPOINTS_MAP.keys()
     for i, policy_list_type in enumerate(policy_list_types):
-        ux1.policies.policy_lists.extend(policy_api.lists.get(policy_list_type))
+        if policy_list := guard(policy_api.lists.get, policy_list_type):
+            ux1.policies.policy_lists.extend(policy_list)
         progress("Collecting Policy Lists", i + 1, len(policy_list_types))
 
     for i, type_and_id in enumerate(policy_definition_types_and_ids):
-        ux1.policies.policy_definitions.append(policy_api.definitions.get(*type_and_id))
+        if _policy_definition := guard(policy_api.definitions.get, *type_and_id):
+            # type checker cannot infer correct signature not knowing arguments (it is overloaded method)
+            policy_definition = cast(AnyPolicyDefinitionInfo, _policy_definition)
+            ux1.policies.policy_definitions.append(policy_definition)
         progress("Collecting Policy Definitions", i + 1, len(policy_definition_types_and_ids))
 
     progress("Collecting Centralized Policies", 0, 1)
@@ -386,7 +410,8 @@ def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, in
     for i, device_template_information in enumerate(device_templates_information):
         device_template = template_api.get_device_template(device_template_information.id)
         device_template_with_info = DeviceTemplateWithInfo.from_merged(device_template, device_template_information)
-        ux1.templates.device_templates.append(device_template_with_info)
+        if device_template_with_info.device_type not in DEVICE_TYPE_BLOCKLIST:
+            ux1.templates.device_templates.append(device_template_with_info)
         progress("Collecting Device Templates", i + 1, len(device_templates_information))
 
     return ux1
@@ -394,15 +419,20 @@ def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, in
 
 def push_ux2_config(
     session: ManagerSession, ux2_config: UX2Config, progress: Callable[[str, int, int], None] = log_progress
-) -> UX2ConfigRollback:
+) -> UX2ConfigPushResult:
+    current_versions = get_version_info(session)
+    if not ux2_config.version.is_compatible(current_versions):
+        logger.warning(
+            f"Pushing UX2 config with versions mismatch\nsource: {ux2_config.version}\ntarget: {current_versions}"
+        )
     config_pusher = UX2ConfigPusher(session, ux2_config, progress)
-    rollback = config_pusher.push()
-    return rollback
+    result = config_pusher.push()
+    return result
 
 
 def rollback_ux2_config(
     session: ManagerSession,
-    rollback_config: UX2ConfigRollback,
+    rollback_config: UX2RollbackInfo,
     progress: Callable[[str, int, int], None] = log_progress,
 ) -> bool:
     config_reverter = UX2ConfigReverter(session)

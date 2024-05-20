@@ -3,8 +3,9 @@ from ipaddress import IPv4Address, IPv6Address
 from typing import List, Literal
 from unittest.mock import patch
 
-from catalystwan.api.configuration_groups.parcel import Global
-from catalystwan.utils.config_migration.converters.feature_template import template_definition_normalization
+from catalystwan.api.configuration_groups.parcel import Global, Variable
+from catalystwan.api.templates.device_variable import DeviceVariable
+from catalystwan.utils.config_migration.converters.feature_template import template_values_normalization
 
 TestLiteral = Literal["castable_literal"]
 
@@ -30,6 +31,9 @@ class TestNormalizer(unittest.TestCase):
             "nested-objects": [{"next-hop": [{"distance": 1}]}],
             "ipv4-address": "10.0.0.2",
             "ipv6addr": "2000:0:2:3::",
+            "ip": {
+                "address": DeviceVariable(name="lan_ip_address_2"),
+            },
         }
         self.expected_result = {
             "key_one": Global[str](value="Simple string !@#$%^&*()-=[';/.,`~]"),
@@ -54,13 +58,14 @@ class TestNormalizer(unittest.TestCase):
             "nested_objects": [{"next_hop": [{"distance": Global[int](value=1)}]}],
             "ipv4_address": Global[IPv4Address](value=IPv4Address("10.0.0.2")),
             "ipv6addr": Global[IPv6Address](value=IPv6Address("2000:0:2:3::")),
+            "ip": {"address": Variable(value="{{lan_ip_address_2}}")},
         }
 
     def test_normalizer_handles_various_types_of_input(self):
         # Arrange
         expected_result = self.expected_result
         # Act
-        returned_result = template_definition_normalization(self.template_values)
+        returned_result = template_values_normalization(self.template_values)
         # Assert
         self.assertDictEqual(expected_result, returned_result)
 
@@ -80,7 +85,7 @@ class TestNormalizer(unittest.TestCase):
         }
 
         # Act
-        returned_result = template_definition_normalization(super_nested_input)
+        returned_result = template_values_normalization(super_nested_input)
 
         # Assert
         self.assertDictEqual(expected_result, returned_result)
@@ -92,7 +97,7 @@ class TestNormalizer(unittest.TestCase):
         expected_result = {"in": Global[TestLiteral](value="castable_literal")}
 
         # Act
-        returned_result = template_definition_normalization(simple_input)
+        returned_result = template_values_normalization(simple_input)
 
         # Assert
         self.assertDictEqual(expected_result, returned_result)

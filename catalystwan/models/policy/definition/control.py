@@ -29,7 +29,8 @@ from catalystwan.models.policy.policy_definition import (
     OriginEntry,
     OriginProtocol,
     PathTypeEntry,
-    PolicyActionBase,
+    PolicyAcceptRejectAction,
+    PolicyAcceptRejectActionType,
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
@@ -101,11 +102,6 @@ AnyControlPolicyTLOCSequenceMatchEntry = Annotated[
 
 ControlPolicyRouteSequenceActions = Any  # TODO
 ControlPolicyTLOCSequenceActions = Any  # TODO
-ControlPolicyBaseActionType = Literal["accept", "reject"]
-
-
-class ControlPolicyBaseAction(PolicyActionBase):
-    type: ControlPolicyBaseActionType
 
 
 class ControlPolicyHeader(PolicyDefinitionBase):
@@ -124,7 +120,7 @@ class ControlPolicyRouteSequence(PolicyDefinitionSequenceBase):
     sequence_type: Literal["route"] = Field(
         default="route", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
-    base_action: ControlPolicyBaseActionType = Field(
+    base_action: PolicyAcceptRejectActionType = Field(
         default="reject", serialization_alias="baseAction", validation_alias="baseAction"
     )
     match: ControlPolicyRouteSequenceMatch = ControlPolicyRouteSequenceMatch()
@@ -141,7 +137,7 @@ class ControlPolicyRouteSequence(PolicyDefinitionSequenceBase):
         self._insert_match(ExpandedCommunityListEntry(ref=expanded_community_list_id))
 
     def match_omp_tag(self, omp_tag: int) -> None:
-        self._insert_match(OMPTagEntry(value=str(omp_tag)))
+        self._insert_match(OMPTagEntry(value=omp_tag))
 
     def match_origin(self, origin: OriginProtocol) -> None:
         self._insert_match(OriginEntry(value=origin))
@@ -197,7 +193,7 @@ class ControlPolicyRouteSequence(PolicyDefinitionSequenceBase):
 
     @accept_action
     def associate_omp_tag_action(self, omp_tag: int) -> None:
-        self._insert_action_in_set(OMPTagEntry(value=str(omp_tag)))
+        self._insert_action_in_set(OMPTagEntry(value=omp_tag))
 
     @accept_action
     def associate_preference_action(self, preference: int) -> None:
@@ -243,7 +239,7 @@ class ControlPolicyTLOCSequence(PolicyDefinitionSequenceBase):
     sequence_type: Literal["tloc"] = Field(
         default="tloc", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
-    base_action: ControlPolicyBaseActionType = Field(
+    base_action: PolicyAcceptRejectActionType = Field(
         default="reject", serialization_alias="baseAction", validation_alias="baseAction"
     )
     match: ControlPolicyTLOCSequenceMatch = ControlPolicyTLOCSequenceMatch()
@@ -263,7 +259,7 @@ class ControlPolicyTLOCSequence(PolicyDefinitionSequenceBase):
         self._insert_match(GroupIDEntry(value=str(group_id)))
 
     def match_omp_tag(self, omp_tag: int) -> None:
-        self._insert_match(OMPTagEntry(value=str(omp_tag)))
+        self._insert_match(OMPTagEntry(value=omp_tag))
 
     def match_originator(self, originator: IPv4Address) -> None:
         self._insert_match(OriginatorEntry(value=originator))
@@ -299,7 +295,7 @@ class ControlPolicyTLOCSequence(PolicyDefinitionSequenceBase):
 
     @accept_action
     def associate_omp_tag_action(self, omp_tag: int) -> None:
-        self._insert_action_in_set(OMPTagEntry(value=str(omp_tag)))
+        self._insert_action_in_set(OMPTagEntry(value=omp_tag))
 
     @accept_action
     def associate_preference_action(self, preference: int) -> None:
@@ -318,15 +314,15 @@ AnyControlPolicySequence = Annotated[
 
 class ControlPolicy(ControlPolicyHeader, DefinitionWithSequencesCommonBase):
     sequences: List[AnyControlPolicySequence] = []
-    default_action: ControlPolicyBaseAction = Field(
-        default=ControlPolicyBaseAction(type="reject"),
+    default_action: PolicyAcceptRejectAction = Field(
+        default=PolicyAcceptRejectAction(type="reject"),
         serialization_alias="defaultAction",
         validation_alias="defaultAction",
     )
     model_config = ConfigDict(populate_by_name=True)
 
     def add_route_sequence(
-        self, name: str = "Route", base_action: ControlPolicyBaseActionType = "reject"
+        self, name: str = "Route", base_action: PolicyAcceptRejectActionType = "reject"
     ) -> ControlPolicyRouteSequence:
         seq = ControlPolicyRouteSequence(
             sequence_name=name,
@@ -337,7 +333,7 @@ class ControlPolicy(ControlPolicyHeader, DefinitionWithSequencesCommonBase):
         return seq
 
     def add_tloc_sequence(
-        self, name: str = "TLOC", base_action: ControlPolicyBaseActionType = "reject"
+        self, name: str = "TLOC", base_action: PolicyAcceptRejectActionType = "reject"
     ) -> ControlPolicyTLOCSequence:
         seq = ControlPolicyTLOCSequence(
             sequence_name=name,

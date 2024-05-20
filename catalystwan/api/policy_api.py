@@ -29,6 +29,7 @@ from catalystwan.endpoints.configuration.policy.definition.intrusion_prevention 
 from catalystwan.endpoints.configuration.policy.definition.mesh import ConfigurationPolicyMeshDefinition
 from catalystwan.endpoints.configuration.policy.definition.qos_map import ConfigurationPolicyQoSMapDefinition
 from catalystwan.endpoints.configuration.policy.definition.rewrite import ConfigurationPolicyRewriteRuleDefinition
+from catalystwan.endpoints.configuration.policy.definition.route_policy import ConfigurationPolicyRouteDefinition
 from catalystwan.endpoints.configuration.policy.definition.rule_set import ConfigurationPolicyRuleSetDefinition
 from catalystwan.endpoints.configuration.policy.definition.security_group import (
     ConfigurationPolicySecurityGroupDefinition,
@@ -56,6 +57,7 @@ from catalystwan.endpoints.configuration.policy.list.community import Configurat
 from catalystwan.endpoints.configuration.policy.list.data_ipv6_prefix import ConfigurationPolicyDataIPv6PrefixList
 from catalystwan.endpoints.configuration.policy.list.data_prefix import ConfigurationPolicyDataPrefixList
 from catalystwan.endpoints.configuration.policy.list.expanded_community import ConfigurationPolicyExpandedCommunityList
+from catalystwan.endpoints.configuration.policy.list.extended_community import ConfigurationPolicyExtendedCommunityList
 from catalystwan.endpoints.configuration.policy.list.fqdn import ConfigurationPolicyFQDNList, FQDNListInfo
 from catalystwan.endpoints.configuration.policy.list.geo_location import ConfigurationPolicyGeoLocationList
 from catalystwan.endpoints.configuration.policy.list.ips_signature import ConfigurationPolicyIPSSignatureList
@@ -110,6 +112,7 @@ from catalystwan.models.policy import (
     DataIPv6PrefixList,
     DataPrefixList,
     ExpandedCommunityList,
+    ExtendedCommunityList,
     FQDNList,
     GeoLocationList,
     IPSSignatureList,
@@ -158,6 +161,7 @@ from catalystwan.models.policy.definition.intrusion_prevention import (
 from catalystwan.models.policy.definition.mesh import MeshPolicy, MeshPolicyGetResponse
 from catalystwan.models.policy.definition.qos_map import QoSMapPolicy, QoSMapPolicyGetResponse
 from catalystwan.models.policy.definition.rewrite import RewritePolicy, RewritePolicyGetResponse
+from catalystwan.models.policy.definition.route_policy import RoutePolicy, RoutePolicyGetResponse
 from catalystwan.models.policy.definition.rule_set import RuleSet, RuleSetGetResponse
 from catalystwan.models.policy.definition.security_group import SecurityGroup, SecurityGroupGetResponse
 from catalystwan.models.policy.definition.ssl_decryption import SslDecryptionPolicy, SslDecryptionPolicyGetResponse
@@ -171,7 +175,11 @@ from catalystwan.models.policy.definition.vpn_membership import VPNMembershipPol
 from catalystwan.models.policy.definition.zone_based_firewall import ZoneBasedFWPolicy, ZoneBasedFWPolicyGetResponse
 from catalystwan.models.policy.list.app_probe import AppProbeClassListInfo
 from catalystwan.models.policy.list.class_map import ClassMapListInfo
-from catalystwan.models.policy.list.communities import CommunityListInfo, ExpandedCommunityListInfo
+from catalystwan.models.policy.list.communities import (
+    CommunityListInfo,
+    ExpandedCommunityListInfo,
+    ExtendedCommunityListInfo,
+)
 from catalystwan.models.policy.list.data_ipv6_prefix import DataIPv6PrefixListInfo
 from catalystwan.models.policy.list.data_prefix import DataPrefixListInfo
 from catalystwan.models.policy.list.geo_location import GeoLocationListInfo
@@ -216,6 +224,7 @@ POLICY_LIST_ENDPOINTS_MAP: Mapping[type, type] = {
     DataIPv6PrefixList: ConfigurationPolicyDataIPv6PrefixList,
     DataPrefixList: ConfigurationPolicyDataPrefixList,
     ExpandedCommunityList: ConfigurationPolicyExpandedCommunityList,
+    ExtendedCommunityList: ConfigurationPolicyExtendedCommunityList,
     FQDNList: ConfigurationPolicyFQDNList,
     GeoLocationList: ConfigurationPolicyGeoLocationList,
     IPSSignatureList: ConfigurationPolicyIPSSignatureList,
@@ -264,6 +273,7 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     UrlFilteringPolicy: ConfigurationPolicyUrlFilteringDefinition,
     DnsSecurityPolicy: ConfigurationPolicyDnsSecurityDefinition,
     CflowdPolicy: ConfigurationPolicyCflowdDefinition,
+    RoutePolicy: ConfigurationPolicyRouteDefinition,
 }
 
 
@@ -439,6 +449,10 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[ExtendedCommunityList]) -> DataSequence[ExtendedCommunityListInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[FQDNList]) -> DataSequence[FQDNListInfo]:
         ...
 
@@ -566,6 +580,10 @@ class PolicyListsAPI:
 
     @overload
     def get(self, type: Type[ExpandedCommunityList], id: UUID) -> ExpandedCommunityListInfo:
+        ...
+
+    @overload
+    def get(self, type: Type[ExtendedCommunityList], id: UUID) -> ExtendedCommunityListInfo:
         ...
 
     @overload
@@ -724,6 +742,10 @@ class PolicyDefinitionsAPI:
         ...
 
     @overload
+    def get(self, type: Type[RoutePolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[RuleSet]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
@@ -810,6 +832,10 @@ class PolicyDefinitionsAPI:
 
     @overload
     def get(self, type: Type[DnsSecurityPolicy], id: UUID) -> DnsSecurityPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[RoutePolicy], id: UUID) -> RoutePolicyGetResponse:
         ...
 
     @overload

@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import logging
 from enum import Enum
+from functools import cached_property
 from pathlib import Path
 from time import monotonic, sleep
-from typing import Any, Callable, ClassVar, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, List, Optional, Union
 from urllib.parse import urljoin, urlparse, urlunparse
 
 from packaging.version import Version  # type: ignore
@@ -15,10 +16,8 @@ from requests.auth import AuthBase
 from requests.exceptions import ConnectionError, HTTPError, RequestException
 
 from catalystwan import USER_AGENT
-from catalystwan.api.api_container import APIContainer
 from catalystwan.endpoints import APIEndpointClient
 from catalystwan.endpoints.client import AboutInfo, ServerInfo
-from catalystwan.endpoints.endpoints_container import APIEndpointContainter
 from catalystwan.exceptions import (
     DefaultPasswordError,
     ManagerHTTPError,
@@ -34,6 +33,10 @@ from catalystwan.version import NullVersion, parse_api_version
 from catalystwan.vmanage_auth import vManageAuth
 
 JSON = Union[Dict[str, "JSON"], List["JSON"], str, int, float, bool, None]
+
+if TYPE_CHECKING:
+    from catalystwan.api.api_container import APIContainer
+    from catalystwan.endpoints.endpoints_container import APIEndpointContainter
 
 
 class UserMode(str, Enum):
@@ -153,6 +156,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         port: Optional[int] = None,
         subdomain: Optional[str] = None,
         auth: Optional[AuthBase] = None,
+        validate_response: bool = True,
     ):
         self.url = url
         self.port = port
@@ -170,13 +174,26 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         super(ManagerSession, self).__init__()
         self.headers.update({"User-Agent": USER_AGENT})
         self.__prepare_session(verify, auth)
-        self.api = APIContainer(self)
-        self.endpoints = APIEndpointContainter(self)
         self._platform_version: str = ""
         self._api_version: Version = NullVersion  # type: ignore
         self._state: ManagerSessionState = ManagerSessionState.OPERATIVE
         self.restart_timeout: int = 1200
         self.polling_requests_timeout: int = 10
+        self._validate_response = validate_response
+
+    @cached_property
+    def api(self) -> APIContainer:
+        from catalystwan.api.api_container import APIContainer
+
+        self._api = APIContainer(self)
+        return self._api
+
+    @cached_property
+    def endpoints(self) -> APIEndpointContainter:
+        from catalystwan.endpoints.endpoints_container import APIEndpointContainter
+
+        self._endpoints = APIEndpointContainter(self)
+        return self._endpoints
 
     @property
     def state(self) -> ManagerSessionState:
@@ -236,7 +253,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         try:
             server_info = self.server()
         except DefaultPasswordError:
-            server_info = ServerInfo.model_validate({})
+            server_info = ServerInfo.model_construct(**{})
 
         self.server_name = server_info.server
 
@@ -311,7 +328,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
                 continue
             except RequestException as exception:
                 self.logger.debug(self.response_trace(exception.response, exception.request))
-                raise ManagerRequestException(request=exception.request, response=exception.response)
+                raise ManagerRequestException(*exception.args)
 
         raise ManagerReadyTimeout(f"Waiting for server ready took longer than {timeout} seconds.")
 
@@ -328,7 +345,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
                 self.state = ManagerSessionState.WAIT_SERVER_READY_AFTER_RESTART
                 return self.request(method, url, *args, **kwargs)
             self.logger.debug(exception)
-            raise ManagerRequestException(request=exception.request, response=exception.response)
+            raise ManagerRequestException(*exception.args, request=exception.request, response=exception.response)
 
         if self.enable_relogin and response.jsessionid_expired and self.state == ManagerSessionState.OPERATIVE:
             self.logger.warning("Logging to session. Reason: expired JSESSIONID detected in response headers")
@@ -343,7 +360,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         except HTTPError as error:
             self.logger.debug(error)
             error_info = response.get_error_info()
-            raise ManagerHTTPError(error_info=error_info, request=error.request, response=error.response)
+            raise ManagerHTTPError(*error.args, error_info=error_info, request=error.request, response=error.response)
         return response
 
     def get_full_url(self, url_path: str) -> str:
@@ -404,7 +421,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         Returns:
             Tenant UUID.
         """
-        tenants = self.get("dataservice/tenant").dataseq(Tenant)
+        tenants = self.get("dataservice/tenant").dataseq(Tenant, validate=False)
         tenant = tenants.filter(subdomain=self.subdomain).single_or_default()
 
         if not tenant or not tenant.tenant_id:
@@ -468,6 +485,14 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
     @property
     def api_version(self) -> Version:
         return self._api_version
+
+    @property
+    def validate_response(self) -> bool:
+        return self._validate_response
+
+    @validate_response.setter
+    def validate_response(self, value: bool):
+        self._validate_response = value
 
     def __str__(self) -> str:
         return f"{self.username}@{self.base_url}"

@@ -70,10 +70,10 @@ class SystemFeatureProfileBuilder:
         """
 
         profile_uuid = self._endpoints.create_sdwan_system_feature_profile(self._profile).id
-        self.build_raport = FeatureProfileBuildReport(profile_uuid=profile_uuid, profile_name=self._profile.name)
+        self.build_report = FeatureProfileBuildReport(profile_uuid=profile_uuid, profile_name=self._profile.name)
         for parcel in self._independent_items:
             self._create_parcels(profile_uuid, parcel)
-        return self.build_raport
+        return self.build_report
 
     @handle_build_report
     def _create_parcels(self, profile_uuid: UUID, parcel: AnySystemParcel) -> UUID:
