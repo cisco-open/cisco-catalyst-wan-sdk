@@ -1,4 +1,4 @@
-from ipaddress import IPv4Address, IPv4Network, IPv6Address
+from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 from typing import List
 
 import pytest
@@ -328,6 +328,14 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
             sequence_ip_type=Global[SequenceIpType](value="ipv6"),
             sequence_name=Global[str](value="seq3"),
         )
+        sequence3.match_tcp()
+        sequence3.match_source_ipv6(IPv6Network("2001::0/64"))
+        sequence3.match_source_ipv6(IPv6Network("2002::0/64"))
+        sequence3.match_protocol("1")
+        sequence3.match_protocol("16")
+        sequence3.match_traffic_category("all")
+        sequence3.match_service_area("skype")
+        sequence3.match_service_area("exchange")
         sequences.append(sequence1)
         sequences.append(sequence2)
         sequences.append(sequence3)

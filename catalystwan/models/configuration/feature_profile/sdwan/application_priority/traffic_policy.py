@@ -1,10 +1,11 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
-from ipaddress import IPv4Address, IPv4Network, IPv6Address
+from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 from typing import List, Literal, Optional, Union
+from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
 from catalystwan.models.common import EncapType, SequenceIpType, ServiceChainNumber, ServiceType, TLOCColor
 from catalystwan.models.configuration.feature_profile.common import Icmp6Msg, IcmpMsg, RefIdItem
 from catalystwan.models.policy.centralized import TrafficDataDirection
@@ -145,7 +146,9 @@ class SourceIpMatch(BaseModel):
 
 class SourceIpv6Match(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    source_ipv6: Global[str] = Field(default=None, validation_alias="sourceIpv6", serialization_alias="sourceIpv6")
+    source_ipv6: Global[IPv6Network] = Field(
+        default=None, validation_alias="sourceIpv6", serialization_alias="sourceIpv6"
+    )
 
 
 class SourcePortMatch(BaseModel):
@@ -227,7 +230,7 @@ Entries = Union[
     PacketLengthMatch,
     ProtocolMatch,
     IcmpMessageMatch,
-    Icmp6Msg,
+    Icmp6MessageMatch,
     SourceDataPrefixListMatch,
     SourceDataIpv6PrefixListMatch,
     SourceIpMatch,
@@ -616,6 +619,190 @@ class Sequences(BaseModel):
     sequence_name: Optional[Global[str]] = Field(
         default=None, validation_alias="sequenceName", serialization_alias="sequenceName"
     )
+
+    def _get_match(self) -> Match:
+        if self.match is None:
+            self.match = Match(entries=[])
+        if self.match.entries is None:
+            self.match.entries = []
+        return self.match
+
+    def _match(self, entry: Entries):
+        self._get_match().entries.append(entry)
+
+    def _get_service_area_entry(self):
+        entries = self._get_match().entries
+        for entry in entries:
+            if type(entry) is ServiceAreaMatch:
+                return entry
+        entry = ServiceAreaMatch()
+        entries.append(entry)
+        return entry
+
+    def _get_protocol_entry(self):
+        entries = self._get_match().entries
+        for entry in entries:
+            if type(entry) is ProtocolMatch:
+                return entry
+        entry = ProtocolMatch()
+        entries.append(entry)
+        return entry
+
+    def _get_icmp_message_entry(self):
+        entries = self._get_match().entries
+        for entry in entries:
+            if type(entry) is IcmpMessageMatch:
+                return entry
+        entry = IcmpMessageMatch()
+        entries.append(entry)
+        return entry
+
+    def _get_icmp6_message_entry(self):
+        entries = self._get_match().entries
+        for entry in entries:
+            if type(entry) is Icmp6MessageMatch:
+                return entry
+        entry = Icmp6MessageMatch()
+        entries.append(entry)
+        return entry
+
+    def _get_source_port_entry(self):
+        entries = self._get_match().entries
+        for entry in entries:
+            if type(entry) is SourcePortMatch:
+                return entry
+        entry = SourcePortMatch()
+        entries.append(entry)
+        return entry
+
+    def _get_destination_port_entry(self):
+        entries = self._get_match().entries
+        for entry in entries:
+            if type(entry) is DestinationPortMatch:
+                return entry
+        entry = DestinationPortMatch()
+        entries.append(entry)
+        return entry
+
+    def match_app_list(self, list_id: UUID):
+        entry = AppListMatch(app_list=RefIdItem(ref_id=as_global(str(list_id))))
+        self._match(entry)
+
+    def match_saas_app_list(self, list_id: UUID):
+        entry = SaasAppListMatch(saas_app_list=RefIdItem(ref_id=as_global(str(list_id))))
+        self._match(entry)
+
+    def match_service_area(self, service_area: ServiceAreaValue):
+        entry = self._get_service_area_entry()
+        if entry.service_area:
+            entry.service_area.value.append(service_area)
+        else:
+            entry.service_area = Global[List[ServiceAreaValue]](value=[service_area])
+
+    def match_traffic_category(self, traffic_category: TrafficCategory):
+        entry = TrafficCategoryMatch(traffic_category=as_global(traffic_category, TrafficCategory))
+        self._match(entry)
+
+    def match_dns_app_list(self, list_id: UUID):
+        entry = DnsAppListMatch(dns_app_list=RefIdItem(ref_id=as_global(str(list_id))))
+        self._match(entry)
+
+    def match_traffic_class(self, traffic_class: TrafficClass):
+        entry = TrafficClassMatch(traffic_class=as_global(traffic_class, TrafficClass))
+        self._match(entry)
+
+    def match_dscp(self, dscp: int):
+        entry = DscpMatch(dscp=as_global(dscp))
+        self._match(entry)
+
+    def match_packet_length(self, packet_length: str):
+        entry = PacketLengthMatch(packet_length=as_global(packet_length))
+        self._match(entry)
+
+    def match_protocol(self, protocol: str):
+        entry = self._get_protocol_entry()
+        if entry.protocol:
+            entry.protocol.value.append(protocol)
+        else:
+            entry.protocol = Global[List[str]](value=[protocol])
+
+    def match_icmp_message(self, message: IcmpMsg):
+        entry = self._get_icmp_message_entry()
+        if entry.icmp_message:
+            entry.icmp_message.value.append(message)
+        else:
+            entry.icmp_message = Global[List[IcmpMsg]](value=[message])
+
+    def match_icmp6_message(self, message: Icmp6Msg):
+        entry = self._get_icmp6_message_entry()
+        if entry.icmp_message:
+            entry.icmp_message.value.append(message)
+        else:
+            entry.icmp_message = Global[List[Icmp6Msg]](value=[message])
+
+    def match_source_data_prefix_list(self, list_id: UUID):
+        entry = SourceDataPrefixListMatch(source_data_prefix_list=RefIdItem(ref_id=as_global(str(list_id))))
+        self._match(entry)
+
+    def match_source_data_ipv6_prefix_list(self, list_id: UUID):
+        entry = SourceDataIpv6PrefixListMatch(source_data_ipv6_prefix_list=RefIdItem(ref_id=as_global(str(list_id))))
+        self._match(entry)
+
+    def match_source_ip(self, ipv4_network: IPv4Network):
+        entry = SourceIpMatch(source_ip=as_global(ipv4_network))
+        self._match(entry)
+
+    def match_source_ipv6(self, ipv6_network: IPv6Network):
+        entry = SourceIpv6Match(source_ipv6=as_global(ipv6_network))
+        self._match(entry)
+
+    def match_source_port(self, source_port: str):
+        entry = self._get_source_port_entry()
+        if entry.source_port:
+            entry.source_port.value.append(source_port)
+        else:
+            entry.source_port = Global[List[str]](value=[source_port])
+
+    def match_destination_data_prefix_list(self, list_id: UUID):
+        entry = DestinationDataPrefixListMatch(destination_data_prefix_list=RefIdItem(ref_id=as_global(str(list_id))))
+        self._match(entry)
+
+    def match_destination_data_ipv6_prefix_list(self, list_id: UUID):
+        entry = DestinationDataIpv6PrefixListMatch(
+            destination_data_ipv6_prefix_list=RefIdItem(ref_id=as_global(str(list_id)))
+        )
+        self._match(entry)
+
+    def match_destination_ip(self, ipv4_network: IPv4Network):
+        entry = DestinationIpMatch(destination_ip=as_global(ipv4_network))
+        self._match(entry)
+
+    def match_destination_ipv6(self, ipv6_network: IPv6Network):
+        entry = DestinationIpv6Match(destination_ipv6=as_global(ipv6_network))
+        self._match(entry)
+
+    def match_destination_port(self, destination_port: str):
+        entry = self._get_destination_port_entry()
+        if entry.destination_port:
+            entry.destination_port.value.append(destination_port)
+        else:
+            entry.destiantion_port = Global[List[str]](value=[destination_port])
+
+    def match_tcp(self):
+        entry = TcpMatch()
+        self._match(entry)
+
+    def match_destination_region(self, destination_region: DestinationRegion):
+        entry = DestinationRegionMatch(destination_region=as_global(destination_region, DestinationRegion))
+        self._match(entry)
+
+    def match_traffic_to(self, traffic_target: TrafficTargetType):
+        entry = TrafficToMatch(traffic_to=as_global(traffic_target, TrafficTargetType))
+        self._match(entry)
+
+    def match_dns(self, dns: DNSEntryType):
+        entry = DnsMatch(dns=as_global(dns, DNSEntryType))
+        self._match(entry)
 
 
 class TrafficPolicyParcel(_ParcelBase):
