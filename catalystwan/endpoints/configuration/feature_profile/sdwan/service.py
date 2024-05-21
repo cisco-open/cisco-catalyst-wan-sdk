@@ -64,3 +64,19 @@ class ServiceFeatureProfile(APIEndpoints):
         self, profile_uuid: UUID, vpn_uuid: UUID, parcel_type: str, payload: ParcelAssociationPayload
     ) -> ParcelCreationResponse:
         ...
+
+    # Ethernet, IPSec, SVI
+    @versions(supported_versions=(">=20.9"), raises=False)
+    @post(
+        "/v1/feature-profile/sdwan/service/{profile_uuid}/lan/vpn/"
+        "{vpn_uuid}/{interface_parcel_type}/{interface_uuid}/dhcp-server"
+    )
+    def associate_dhcp_server_with_vpn_interface(
+        self,
+        profile_uuid: UUID,
+        vpn_uuid: UUID,
+        interface_parcel_type: str,
+        interface_uuid: UUID,
+        payload: ParcelAssociationPayload,
+    ) -> ParcelCreationResponse:
+        ...

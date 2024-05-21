@@ -1,5 +1,6 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
+import traceback
 from collections import defaultdict
 from typing import Callable, Optional, TypeVar, cast
 from uuid import UUID, uuid4
@@ -22,6 +23,7 @@ from catalystwan.models.configuration.config_migration import (
     VersionInfo,
 )
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
+from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
 from catalystwan.models.policy import AnyPolicyDefinitionInfo
 from catalystwan.session import ManagerSession
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
@@ -38,6 +40,7 @@ from catalystwan.utils.config_migration.steps.constants import (
     LAN_VPN_IPSEC,
     LAN_VPN_MULTILINK,
     MANAGEMENT_VPN_ETHERNET,
+    MULTI_PARCEL_FEATURE_TEMPLATES,
     VPN_MANAGEMENT,
     VPN_SERVICE,
     VPN_TRANSPORT,
@@ -45,7 +48,11 @@ from catalystwan.utils.config_migration.steps.constants import (
     WAN_VPN_GRE,
     WAN_VPN_MULTILINK,
 )
-from catalystwan.utils.config_migration.steps.transform import merge_parcels, resolve_template_type
+from catalystwan.utils.config_migration.steps.transform import (
+    handle_multi_parcel_feature_template,
+    merge_parcels,
+    resolve_template_type,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +115,10 @@ SUPPORTED_TEMPLATE_TYPES = [
     MANAGEMENT_VPN_ETHERNET,
     "cli-template",
     "cisco_secure_internet_gateway",
+    "cisco_ospfv3",
+    "dhcp",
+    "cisco_dhcp_server",
+    "dhcp-server",
 ]
 
 
@@ -152,6 +163,7 @@ FEATURE_PROFILE_TRANSPORT = [
     "vpn-interface-ipoe",
     VPN_TRANSPORT,
     VPN_MANAGEMENT,
+    "cisco_ospfv3",
 ]
 
 FEATURE_PROFILE_OTHER = [
@@ -181,6 +193,10 @@ FEATURE_PROFILE_CLI = [
 ]
 
 DEVICE_TYPE_BLOCKLIST = ["vsmart", "vbond", "vmanage"]
+
+TOP_LEVEL_TEMPLATE_TYPES = [
+    "cisco_vpn",
+]
 
 
 def log_progress(task: str, completed: int, total: int) -> None:
@@ -272,9 +288,19 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
                 transformed_fp_cli.header.subelements.add(template_uuid)
             # Map subtemplates
             if len(template.subTemplates) > 0:
-                subtemplates_mapping[template_uuid] = set(
-                    [UUID(subtemplate.templateId) for subtemplate in template.subTemplates]
-                )
+                print(template.subTemplates)
+                print("TOP LVEV", template.name, template.templateType)
+                # Interfaces
+                for subtemplate_level_1 in template.subTemplates:
+                    subtemplates_mapping[template_uuid].add(UUID(subtemplate_level_1.templateId))
+                    print("1 LEVEL", subtemplate_level_1.name, subtemplate_level_1.templateType)
+                    if len(subtemplate_level_1.subTemplates) > 0:
+                        # DHCPs, Trackers
+                        for subtemplate_level_2 in subtemplate_level_1.subTemplates:
+                            print("2 LEVEL", subtemplate_level_2.templateId, subtemplate_level_2.templateType)
+                            subtemplates_mapping[UUID(subtemplate_level_1.templateId)].add(
+                                UUID(subtemplate_level_2.templateId)
+                            )
 
         transformed_cg = TransformedConfigGroup(
             header=TransformHeader(
@@ -299,24 +325,34 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
         ux2.feature_profiles.append(transformed_fp_cli)
         ux2.config_groups.append(transformed_cg)
 
+    # Sort by top level feature templates to avoid any confilics with subtemplates
+    ux1.templates.feature_templates.sort(key=lambda ft: ft.template_type in TOP_LEVEL_TEMPLATE_TYPES, reverse=True)
+
     cloud_credential_templates = []
     for ft in ux1.templates.feature_templates:
+        print(ft.template_type)
+        print(ft.name)
         if ft.template_type in SUPPORTED_TEMPLATE_TYPES:
             try:
-                parcel = create_parcel_from_template(ft)
-                ft_template_uuid = UUID(ft.id)
-                transformed_parcel = TransformedParcel(
-                    header=TransformHeader(
-                        type=parcel._get_parcel_type(),
-                        origin=ft_template_uuid,
-                        subelements=subtemplates_mapping[ft_template_uuid],
-                    ),
-                    parcel=parcel,
-                )
-                # Add to UX2. We can indentify the parcels as subelements of the feature profiles by the UUIDs
-                ux2.profile_parcels.append(transformed_parcel)
-            except CatalystwanConverterCantConvertException as e:
-                exception_message = f"Feature Template ({ft.name}) missing data during conversion: {e}."
+                if ft.template_type in MULTI_PARCEL_FEATURE_TEMPLATES:
+                    transformed_parcels = handle_multi_parcel_feature_template(ft, ux2)
+                    ux2.profile_parcels.extend(transformed_parcels)
+                else:
+                    parcel = cast(AnyParcel, create_parcel_from_template(ft))
+                    ft_template_uuid = UUID(ft.id)
+                    print(parcel.parcel_name)
+                    transformed_parcel = TransformedParcel(
+                        header=TransformHeader(
+                            type=parcel._get_parcel_type(),
+                            origin=ft_template_uuid,
+                            subelements=subtemplates_mapping[ft_template_uuid],
+                        ),
+                        parcel=parcel,
+                    )
+                    # Add to UX2. We can indentify the parcels as subelements of the feature profiles by the UUIDs
+                    ux2.profile_parcels.append(transformed_parcel)
+            except (CatalystwanConverterCantConvertException, ValidationError) as e:
+                exception_message = f"Feature Template ({ft.name}) conversion error: {e}."
                 logger.warning(exception_message)
                 transform_result.add_failed_conversion_parcel(
                     exception_message=exception_message,
@@ -325,6 +361,7 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
             except Exception as e:
                 exception_message = f"Feature Template ({ft.name}) unexpected error during converion: {e}."
                 logger.warning(exception_message)
+                traceback.print_exception(e)
                 transform_result.add_failed_conversion_parcel(
                     exception_message=exception_message,
                     feature_template=ft,
@@ -332,6 +369,7 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
 
         elif ft.template_type in CLOUD_CREDENTIALS_FEATURE_TEMPLATES:
             cloud_credential_templates.append(ft)
+
     # Add Cloud Credentials to UX2
     if cloud_credential_templates:
         ux2.cloud_credentials = create_cloud_credentials_from_templates(cloud_credential_templates)

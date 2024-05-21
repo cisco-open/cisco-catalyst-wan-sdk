@@ -52,6 +52,7 @@ class Ospfv3TemplateConverter:
 
 
 class BaseOspfv3TemplateSubconverter:
+    name_suffix: str
     key_address_family: str
     key_distance: str
     parcel_model: Union[Type[Ospfv3IPv4Parcel], Type[Ospfv3IPv6Parcel]]
@@ -72,6 +73,8 @@ class BaseOspfv3TemplateSubconverter:
     def create_parcel(
         self, name: str, description: str, template_values: dict
     ) -> Union[Ospfv3IPv4Parcel, Ospfv3IPv6Parcel]:
+        name = f"{name}{self.name_suffix}"
+        print(name)
         values = self.get_values(template_values)
         self.configure_basic_ospf_v3_attributes(values)
         self.configure_advanced_ospf_v3_attributes(values)
@@ -138,17 +141,25 @@ class BaseOspfv3TemplateSubconverter:
         )
 
     def configure_max_metric_router_lsa(self, values: dict) -> None:
-        router_lsa = values.get("max_metric", {}).get("router_lsa", [])[0]  # Payload contains only one item
-        if router_lsa == []:
+        max_metric_data = values.get("max_metric", {})
+        router_lsa_data = max_metric_data.get("router_lsa", [])
+
+        if not router_lsa_data:
+            return
+
+        router_lsa = router_lsa_data[0] if router_lsa_data else None
+        if not router_lsa:
             return
 
         action = router_lsa.get("ad_type")
-        if action is not None:
+        if action:
             action = as_global(action.value, MaxMetricRouterLsaAction)
+
+        on_startup_time = router_lsa.get("time")
 
         values["max_metric_router_lsa"] = MaxMetricRouterLsa(
             action=action,
-            on_startup_time=router_lsa.get("time"),
+            on_startup_time=on_startup_time,
         )
 
     def configure_area(self, values: dict) -> None:
@@ -201,6 +212,7 @@ class BaseOspfv3TemplateSubconverter:
 
 
 class Ospfv3Ipv4TemplateSubconverter(BaseOspfv3TemplateSubconverter):
+    name_suffix = "_IPV4"
     key_address_family = "ipv4"
     key_distance = "distance_ipv4"
     parcel_model = Ospfv3IPv4Parcel
@@ -239,6 +251,7 @@ class Ospfv3Ipv4TemplateSubconverter(BaseOspfv3TemplateSubconverter):
 
 
 class Ospfv3Ipv6TemplateSubconverter(BaseOspfv3TemplateSubconverter):
+    name_suffix = "_IPV6"
     key_address_family = "ipv6"
     key_distance = "distance_ipv6"
     parcel_model = Ospfv3IPv6Parcel

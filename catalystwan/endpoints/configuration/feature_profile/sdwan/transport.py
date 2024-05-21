@@ -147,3 +147,14 @@ class TransportFeatureProfile(APIEndpoints):
         self, transport_id: str, payload: CellularControllerParcel
     ) -> ParcelId:
         ...
+
+    #
+    # Cellular controller
+    #
+
+    @versions(supported_versions=(">=20.9"), raises=False)
+    @post("/v1/feature-profile/sdwan/transport/{profile_id}/cellular-controller/{cellular_controler_id}/{parcel_type}")
+    def associate_with_cellular_controller(
+        self, profile_id: UUID, cellular_controler_id: UUID, parcel_type: str, payload: ParcelId
+    ) -> ParcelId:
+        ...

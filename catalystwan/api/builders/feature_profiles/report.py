@@ -1,11 +1,14 @@
 import functools
-from typing import Any, List, Optional, Tuple, Union
+import logging
+from typing import Any, List, Optional, Tuple, Union, cast
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from catalystwan.exceptions import ManagerErrorInfo, ManagerHTTPError
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, ParcelType
+
+logger = logging.getLogger(__name__)
 
 ParcelName = str
 
@@ -82,3 +85,17 @@ class FeatureProfileBuildReport(BaseModel):
                 parcel_name=parcel_name, parcel_type=parcel_type, error_info=error_info, request_details=request
             )
         )
+
+
+def handle_build_report_for_failed_subparcel(
+    build_report: FeatureProfileBuildReport, parent: AnyParcel, subparcel: AnyParcel
+) -> None:
+    parent_failed_to_create_message = (
+        f"Parent parcel: {parent.parcel_name} failed to create. This subparcel is dependent on it."
+    )
+    logger.error(parent_failed_to_create_message)
+    build_report.add_failed_parcel(
+        parcel_name=subparcel.parcel_name,
+        parcel_type=cast(ParcelType, subparcel._get_parcel_type()),
+        error_info=parent_failed_to_create_message,
+    )

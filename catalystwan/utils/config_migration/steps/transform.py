@@ -1,7 +1,7 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
 from typing import List, cast
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from catalystwan.api.templates.device_template.device_template import GeneralTemplate
 from catalystwan.models.configuration.config_migration import TransformedParcel, TransformHeader, UX1Config, UX2Config
@@ -9,6 +9,8 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.multicast im
     MulticastBasicAttributes,
     MulticastParcel,
 )
+from catalystwan.models.templates import FeatureTemplateInformation
+from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.feature_template.parcel_factory import create_parcel_from_template
 from catalystwan.utils.config_migration.steps.constants import (
     NO_SUBSTITUTE_ERROR,
@@ -121,18 +123,25 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
         return
 
     # Get templates that need casting
-    subtemplates_uuids = [
-        st.templateId for st in cisco_vpn_template.subTemplates if st.templateType in VPN_ADDITIONAL_TEMPLATES
-    ]
-    feature_templates_to_differentiate = [
-        t for t in ux1_config.templates.feature_templates if t.id in subtemplates_uuids
+    general_templates_from_device_template = [
+        t for t in cisco_vpn_template.subTemplates if t.templateType in VPN_ADDITIONAL_TEMPLATES
     ]
 
-    if not feature_templates_to_differentiate:
-        # No additional templates that can be casted
+    if len(general_templates_from_device_template) == 0:
+        # No additional templates on VPN, nothing to cast
         return
 
-    for ft in feature_templates_to_differentiate:
+    general_templates_uuids = [gt.templateId for gt in general_templates_from_device_template]
+    feature_templates_to_differentiate = [
+        t for t in ux1_config.templates.feature_templates if t.id in general_templates_uuids
+    ]
+
+    feature_and_general_templates = zip(
+        sorted(feature_templates_to_differentiate, key=lambda t: t.name),
+        sorted(general_templates_from_device_template, key=lambda t: t.name),
+    )
+
+    for ft, gt in feature_and_general_templates:
         new_id = str(uuid4())
         new_name = f"{ft.name}{VPN_TEMPLATE_MAPPINGS[cisco_vpn_template.templateType]['suffix']}"
         new_type = VPN_TEMPLATE_MAPPINGS[cisco_vpn_template.templateType]["mapping"][ft.template_type]  # type: ignore
@@ -151,16 +160,44 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
         ft_copy.name = new_name
 
         ux1_config.templates.feature_templates.append(ft_copy)
-        cisco_vpn_template.subTemplates.append(
-            GeneralTemplate(
-                templateId=new_id,
-                templateType=ft_copy.template_type,
-                name=new_name,
-                subTemplates=[],
+
+        gt.templateId = new_id
+        gt.templateType = new_type
+        gt.name = new_name
+
+
+def handle_multi_parcel_feature_template(
+    feature_template: FeatureTemplateInformation, ux2_config: UX2Config
+) -> List[TransformedParcel]:
+    """
+    Handle feature templates that produce multiple parcels.
+    """
+
+    parcels = create_parcel_from_template(feature_template)
+    if not isinstance(parcels, list):
+        # For type checker...
+        parcels = [parcels]
+    transformed_parcels = []
+    for parcel in parcels:
+        transformed_parcels.append(
+            TransformedParcel(
+                header=TransformHeader(
+                    type=feature_template.template_type,
+                    origin=uuid4(),
+                ),
+                parcel=parcel,
             )
         )
 
-    # Remove old GeneralTemplates
-    cisco_vpn_template.subTemplates = [
-        st for st in cisco_vpn_template.subTemplates if st.templateType not in VPN_ADDITIONAL_TEMPLATES
-    ]
+    parent_feature_template = next(
+        (p for p in ux2_config.profile_parcels if UUID(feature_template.id) in p.header.subelements), None
+    )
+
+    if parent_feature_template:
+        parent_feature_template.header.subelements.remove(UUID(feature_template.id))
+        for transformed_parcel in transformed_parcels:
+            parent_feature_template.header.subelements.add(transformed_parcel.header.origin)
+    else:
+        raise CatalystwanConverterCantConvertException(f"Parent parcel for {feature_template.name} not found.")
+
+    return transformed_parcels

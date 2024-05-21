@@ -13,6 +13,7 @@ from catalystwan.models.configuration.feature_profile.common import (
     FeatureProfileCreationResponse,
     FeatureProfileInfo,
 )
+from catalystwan.models.configuration.feature_profile.parcel import ParcelId
 from catalystwan.models.feature_profile_parcel import FullConfigParcel
 from catalystwan.typed_list import DataSequence
 
@@ -26,10 +27,6 @@ class SchemaTypeQuery(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     schema_type: SchemaType = Field(alias="schemaType")
-
-
-class ParcelId(BaseModel):
-    id: str = Field(alias="parcelId")
 
 
 class GetFeatureProfilesPayload(BaseModel):

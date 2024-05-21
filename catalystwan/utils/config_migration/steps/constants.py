@@ -83,3 +83,7 @@ VPN_TEMPLATE_MAPPINGS: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {
         "suffix": "_SERVICE",
     },
 }
+
+MULTI_PARCEL_FEATURE_TEMPLATES = [
+    "cisco_ospfv3",
+]

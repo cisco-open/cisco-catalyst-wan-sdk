@@ -8,10 +8,15 @@ from uuid import UUID, uuid4
 from pydantic import Field
 from typing_extensions import Annotated
 
-from catalystwan.api.builders.feature_profiles.report import FeatureProfileBuildReport, handle_build_report
+from catalystwan.api.builders.feature_profiles.report import (
+    FeatureProfileBuildReport,
+    handle_build_report,
+    handle_build_report_for_failed_subparcel,
+)
 from catalystwan.api.feature_profile_api import ServiceFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
+from catalystwan.models.configuration.feature_profile.parcel import ParcelAssociationPayload
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
     AnyServiceParcel,
     AppqoeParcel,
@@ -55,6 +60,7 @@ class ServiceFeatureProfileBuilder:
         self._independent_items: List[IndependedParcels] = []
         self._independent_items_vpns: Dict[UUID, LanVpnParcel] = {}
         self._depended_items_on_vpns: Dict[UUID, List[DependedVpnSubparcels]] = defaultdict(list)
+        self._interfaces_with_attached_dhcp_server: Dict[str, LanVpnDhcpServerParcel] = {}
 
     def add_profile_name_and_description(self, feature_profile: FeatureProfileCreationPayload) -> None:
         """
@@ -102,13 +108,27 @@ class ServiceFeatureProfileBuilder:
 
         Args:
             vpn_tag (UUID): The UUID of the VPN.
-            parcel (DependedInterfaceParcels): The interface parcel to add.
+            parcel (DependedVpnSubparcels): The interface parcel to add.
 
         Returns:
             None
         """
         logger.debug(f"Adding subparcel parcel {parcel.parcel_name} to VPN {vpn_tag}")
         self._depended_items_on_vpns[vpn_tag].append(parcel)
+
+    def add_parcel_dhcp_server(self, interface_parcel_name: str, parcel: LanVpnDhcpServerParcel) -> None:
+        """
+        Adds a DHCP server parcel to the builder.
+
+        Args:
+            interface_tag (UUID): The UUID of the interface.
+            parcel (LanVpnDhcpServerParcel): The DHCP server parcel to add.
+
+        Returns:
+            UUID: The UUID tag of the added DHCP server parcel.
+        """
+        logger.debug(f"Adding DHCP server parcel {parcel.parcel_name} to interface {interface_parcel_name}")
+        self._interfaces_with_attached_dhcp_server[interface_parcel_name] = parcel
 
     def build(self) -> FeatureProfileBuildReport:
         """
@@ -124,21 +144,30 @@ class ServiceFeatureProfileBuilder:
             self._create_parcel(profile_uuid, parcel)
         for vpn_tag, vpn_parcel in self._independent_items_vpns.items():
             vpn_uuid = self._create_parcel(profile_uuid, vpn_parcel)
-            if vpn_uuid is None:
-                for sub_parcel in self._depended_items_on_vpns[vpn_tag]:
-                    subparcel_fail_message = (
-                        f"Parent parcel: {vpn_parcel.parcel_name} failed to create. This subparcel is dependent on it."
+            for sub_parcel in self._depended_items_on_vpns[vpn_tag]:
+                if vpn_uuid is None:
+                    handle_build_report_for_failed_subparcel(self.build_report, vpn_parcel, sub_parcel)
+                else:
+                    parcel_uuid = self._create_parcel(profile_uuid, sub_parcel, vpn_uuid)
+                    dhcp_server = self._interfaces_with_attached_dhcp_server.get(sub_parcel.parcel_name)
+
+                    if dhcp_server is None:
+                        # The interface does not have a DHCP server attached
+                        continue
+
+                    dhcp_server_uuid = self._create_parcel(profile_uuid, dhcp_server)
+
+                    if dhcp_server_uuid is None:
+                        # The DHCP server could not be created
+                        continue
+
+                    self._endpoints.associate_dhcp_server_with_vpn_interface(
+                        profile_uuid=profile_uuid,
+                        vpn_uuid=vpn_uuid,
+                        interface_parcel_type=sub_parcel._get_parcel_type().replace("lan/vpn/", ""),
+                        interface_uuid=parcel_uuid,
+                        payload=ParcelAssociationPayload(parcel_id=dhcp_server_uuid),
                     )
-                    self.build_report.add_failed_parcel(
-                        sub_parcel.parcel_name,
-                        sub_parcel._get_parcel_type(),  # type: ignore
-                        subparcel_fail_message
-                        # incompatible type "str"; expected ParcelType, we will fix _get_parcel_type()
-                        # to return ParcelType but for now it gives circular import
-                    )
-            else:
-                for sub_parcel in self._depended_items_on_vpns[vpn_tag]:
-                    self._create_parcel(profile_uuid, sub_parcel, vpn_uuid)
 
         return self.build_report
 

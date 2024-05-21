@@ -46,10 +46,7 @@ class UX2ConfigPusher:
         )
 
     def push(self) -> UX2ConfigPushResult:
-        try:
-            self._create_cloud_credentials()
-        except ManagerHTTPError as e:
-            logger.error(f"Error occured during credentials migration: {e.info}")
+        self._create_cloud_credentials()
         self._create_config_groups()
         self._push_result.report.set_failed_push_parcels_flat_list()
         logger.debug(f"Configuration push completed. Rollback configuration {self._push_result}")
@@ -59,7 +56,10 @@ class UX2ConfigPusher:
         cloud_credentials = self._ux2_config.cloud_credentials
         if cloud_credentials is None:
             return
-        self._session.endpoints.configuration_settings.create_cloud_credentials(cloud_credentials)
+        try:
+            self._session.endpoints.configuration_settings.create_cloud_credentials(cloud_credentials)
+        except ManagerHTTPError as e:
+            logger.error(f"Error occured during credentials migration: {e.info}")
 
     def _create_config_groups(self):
         config_groups = self._ux2_config.config_groups
@@ -88,7 +88,7 @@ class UX2ConfigPusher:
 
     def _create_feature_profile_and_parcels(self, feature_profiles_ids: List[UUID]) -> List[FeatureProfileBuildReport]:
         feature_profiles: List[FeatureProfileBuildReport] = []
-        for i, feature_profile_id in enumerate(feature_profiles_ids):
+        for feature_profile_id in feature_profiles_ids:
             transformed_feature_profile = self._config_map.feature_profile_map[feature_profile_id]
             logger.debug(
                 f"Creating feature profile: {transformed_feature_profile.feature_profile.name} "

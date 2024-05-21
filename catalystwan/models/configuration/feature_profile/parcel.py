@@ -102,6 +102,7 @@ ParcelType = Literal[
     "wan/vpn/interface/multilink",
     "wan/vpn/interface/serial",
     "wirelesslan",
+    "cellular-profile",
 ]
 
 
@@ -175,4 +176,5 @@ class ParcelAssociationPayload(BaseModel):
 
 
 class ParcelId(BaseModel):
-    id: str = Field(alias="parcelId")
+    model_config = ConfigDict(populate_by_name=True)
+    id: UUID = Field(serialization_alias="parcelId", validation_alias="parcelId")
