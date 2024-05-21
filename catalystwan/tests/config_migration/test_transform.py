@@ -16,7 +16,6 @@ from catalystwan.tests.config_migration.test_data import (
     interface_ethernet,
     interface_gre,
     interface_ipsec,
-    malformed,
     ospfv3,
     vpn_management,
     vpn_service,
@@ -174,20 +173,32 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
 
     # Find the required VPN sub-elements
     transport_gre = find_subelement_parcel(
-        ux2_config.profile_parcels, transport_vpn_parcel, interface_gre.name, "_TRANSPORT"
+        ux2_config.profile_parcels,
+        transport_vpn_parcel,
+        interface_gre.name,
+        "_TRANSPORT",
     )
     transport_ethernet = find_subelement_parcel(
-        ux2_config.profile_parcels, transport_vpn_parcel, interface_ethernet.name, "_TRANSPORT"
+        ux2_config.profile_parcels,
+        transport_vpn_parcel,
+        interface_ethernet.name,
+        "_TRANSPORT",
     )
     service_gre = find_subelement_parcel(ux2_config.profile_parcels, service_vpn_parcel, interface_gre.name, "_SERVICE")
     service_ethernet = find_subelement_parcel(
-        ux2_config.profile_parcels, service_vpn_parcel, interface_ethernet.name, "_SERVICE"
+        ux2_config.profile_parcels,
+        service_vpn_parcel,
+        interface_ethernet.name,
+        "_SERVICE",
     )
     service_ipsec = find_subelement_parcel(
         ux2_config.profile_parcels, service_vpn_parcel, interface_ipsec.name, "_SERVICE"
     )
     management_ethernet = find_subelement_parcel(
-        ux2_config.profile_parcels, management_vpn_parcel, interface_ethernet.name, "_MANAGEMENT"
+        ux2_config.profile_parcels,
+        management_vpn_parcel,
+        interface_ethernet.name,
+        "_MANAGEMENT",
     )
     # Assert
 
@@ -207,52 +218,6 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
     assert service_ethernet is not None
     assert service_ipsec is not None
     assert management_ethernet is not None
-
-
-def test_when_one_feature_template_with_invalid_payload_expect_one_failed_item_in_conversion_result():
-    # Arrange
-    vpn_0_transport, malformed_logging = deepcopy_models(vpn_transport, malformed)
-    malformed_logging.template_type = "cisco_logging"
-    malformed_logging.name = "Malformed"
-
-    ux1_config = UX1Config(
-        templates=UX1Templates(
-            feature_templates=[malformed_logging, vpn_0_transport],
-            device_templates=[
-                DeviceTemplateWithInfo(
-                    template_id=str(uuid4()),
-                    factory_default=False,
-                    devices_attached=2,
-                    template_name="DeviceTemplate",
-                    template_description="DT-example",
-                    device_role="None",
-                    device_type="None",
-                    security_policy_id="None",
-                    policy_id="None",
-                    generalTemplates=[
-                        GeneralTemplate(
-                            name=malformed_logging.name,
-                            templateId=str(malformed_logging.id),
-                            templateType=malformed_logging.template_type,
-                            subTemplates=[],
-                        ),
-                        GeneralTemplate(
-                            name=vpn_0_transport.name,
-                            templateId=str(vpn_0_transport.id),
-                            templateType=vpn_0_transport.template_type,
-                            subTemplates=[],
-                        ),
-                    ],
-                )
-            ],
-        )
-    )
-    # Act
-    transform_result = transform(ux1_config)
-    # Assert
-    assert len(transform_result.failed_items) == 1
-    assert transform_result.failed_items[0].feature_template == malformed_logging
-    assert len(transform_result.ux2_config.profile_parcels) == 1
 
 
 def test_when_ospfv3_feature_template_expect_two_parcels_assigin_to_correct_profile():

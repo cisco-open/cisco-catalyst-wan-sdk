@@ -288,16 +288,12 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
                 transformed_fp_cli.header.subelements.add(template_uuid)
             # Map subtemplates
             if len(template.subTemplates) > 0:
-                print(template.subTemplates)
-                print("TOP LVEV", template.name, template.templateType)
                 # Interfaces
                 for subtemplate_level_1 in template.subTemplates:
                     subtemplates_mapping[template_uuid].add(UUID(subtemplate_level_1.templateId))
-                    print("1 LEVEL", subtemplate_level_1.name, subtemplate_level_1.templateType)
                     if len(subtemplate_level_1.subTemplates) > 0:
                         # DHCPs, Trackers
                         for subtemplate_level_2 in subtemplate_level_1.subTemplates:
-                            print("2 LEVEL", subtemplate_level_2.templateId, subtemplate_level_2.templateType)
                             subtemplates_mapping[UUID(subtemplate_level_1.templateId)].add(
                                 UUID(subtemplate_level_2.templateId)
                             )
@@ -330,8 +326,6 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
 
     cloud_credential_templates = []
     for ft in ux1.templates.feature_templates:
-        print(ft.template_type)
-        print(ft.name)
         if ft.template_type in SUPPORTED_TEMPLATE_TYPES:
             try:
                 if ft.template_type in MULTI_PARCEL_FEATURE_TEMPLATES:
@@ -340,7 +334,6 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
                 else:
                     parcel = cast(AnyParcel, create_parcel_from_template(ft))
                     ft_template_uuid = UUID(ft.id)
-                    print(parcel.parcel_name)
                     transformed_parcel = TransformedParcel(
                         header=TransformHeader(
                             type=parcel._get_parcel_type(),
