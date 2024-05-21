@@ -19,25 +19,23 @@ from catalystwan.models.configuration.feature_profile.sdwan.application_priority
     BackupSlaPreferredColorAction,
     BaseAction,
     CflowdAction,
-    Color,
     CountAction,
     DestinationIpMatch,
     DestinationPortMatch,
     DestinationRegion,
     DestinationRegionMatch,
-    Direction,
-    Dns,
+    DNSEntryType,
     DnsMatch,
     DscpMatch,
-    Encap,
+    EncapType,
     FallbackToRoutingAction,
     IcmpMessageMatch,
-    IcmpMessageValue,
+    IcmpMsg,
     LocalTlocList,
     LogAction,
     LossCorrection,
     LossCorrectionAction,
-    LossCorrectionType,
+    LossProtectionType,
     Match,
     Nat,
     NatAction,
@@ -53,7 +51,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.application_priority
     ServiceAreaMatch,
     ServiceAreaValue,
     ServiceChain,
-    ServiceChainType,
+    ServiceChainNumber,
     ServiceTloc,
     ServiceType,
     SetAction,
@@ -74,12 +72,14 @@ from catalystwan.models.configuration.feature_profile.sdwan.application_priority
     SseAction,
     TcpMatch,
     Tloc,
+    TLOCColor,
     TrafficCategory,
     TrafficCategoryMatch,
     TrafficClass,
     TrafficClassMatch,
+    TrafficDataDirection,
     TrafficPolicyTarget,
-    TrafficTo,
+    TrafficTargetType,
     TrafficToMatch,
 )
 
@@ -201,7 +201,7 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
             name="traffic_policy_test_parcel",
             data_default_action=Global[BaseAction](value="accept"),
             target=TrafficPolicyTarget(
-                direction=Global[Direction](value="all"), vpn=Global[List[str]](value=["VPN_1"])
+                direction=Global[TrafficDataDirection](value="all"), vpn=Global[List[str]](value=["VPN_1"])
             ),
         )
         # Act
@@ -216,7 +216,7 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
         sequences = []
         sequence1 = Sequences(
             actions=[
-                BackupSlaPreferredColorAction(backup_sla_preferred_color=Global[List[Color]](value=["mpls"])),
+                BackupSlaPreferredColorAction(backup_sla_preferred_color=Global[List[TLOCColor]](value=["mpls"])),
                 RedirectDnsAction(redirect_dns=RedirectDns()),
                 AppqoeOptimizationAction(
                     appqoe_optimization=AppqoeOptimization(
@@ -224,7 +224,7 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
                     )
                 ),
                 LossCorrectionAction(
-                    loss_correction=LossCorrection(loss_correction_type=Global[LossCorrectionType](value="fecAdaptive"))
+                    loss_correction=LossCorrection(loss_correction_type=Global[LossProtectionType](value="fecAdaptive"))
                 ),
                 CountAction(count=Global[str](value="my_counter")),
                 LogAction(log=Global[bool](value=True)),
@@ -243,13 +243,13 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
                         SetNextHop(next_hop=Global[IPv4Address](value=IPv4Address("10.0.1.1"))),
                         SetNextHopLoose(next_hop_loose=Global[bool](value=True)),
                         SetPreferredRemoteColor(
-                            preferred_remote_color=PreferredRemoteColor(color=Global[List[Color]](value=["mpls"]))
+                            preferred_remote_color=PreferredRemoteColor(color=Global[List[TLOCColor]](value=["mpls"]))
                         ),
                         SetService(
                             service=ServiceTloc(
                                 tloc=Tloc(
-                                    color=Global[List[Color]](value=["mpls"]),
-                                    encap=Global[Encap](value="ipsec"),
+                                    color=Global[List[TLOCColor]](value=["mpls"]),
+                                    encap=Global[EncapType](value="ipsec"),
                                     ip=Global[IPv4Address](value=IPv4Address("10.0.1.1")),
                                 ),
                                 type=Global[ServiceType](value="FW"),
@@ -268,15 +268,15 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
                     DscpMatch(dscp=Global[int](value=0)),
                     PacketLengthMatch(packet_length=Global[str](value="1000")),
                     ProtocolMatch(protocol=Global[List[str]](value=["1", "16"])),
-                    IcmpMessageMatch(icmp_message=Global[List[IcmpMessageValue]](value=["echo"])),
+                    IcmpMessageMatch(icmp_message=Global[List[IcmpMsg]](value=["echo"])),
                     SourceIpMatch(source_ip=Global[IPv4Network](value=IPv4Network("192.168.1.1/32"))),
                     SourcePortMatch(source_port=Global[List[str]](value=["22"])),
                     DestinationIpMatch(destination_ip=Global[IPv4Network](value=IPv4Network("10.0.0.1/32"))),
                     DestinationPortMatch(destination_port=Global[List[str]](value=["80"])),
                     TcpMatch(),
                     DestinationRegionMatch(destination_region=Global[DestinationRegion](value="other-region")),
-                    TrafficToMatch(traffic_to=Global[TrafficTo](value="access")),
-                    DnsMatch(dns=Global[Dns](value="request")),
+                    TrafficToMatch(traffic_to=Global[TrafficTargetType](value="access")),
+                    DnsMatch(dns=Global[DNSEntryType](value="request")),
                 ]
             ),
             sequence_id=Global[int](value=1),
@@ -294,7 +294,7 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
                             service_chain=ServiceChain(
                                 local=Global[bool](value=True),
                                 restrict=Global[bool](value=True),
-                                type=Global[ServiceChainType](value="SC1"),
+                                type=Global[ServiceChainNumber](value="SC1"),
                             )
                         ),
                     ]
@@ -311,11 +311,11 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
                 SetAction(
                     set=[
                         SetNextHopIpv6(next_hop_ipv6=Global[IPv6Address](value=IPv6Address("2001::1"))),
-                        SetLocalTlocList(local_tloc_list=LocalTlocList(color=Global[List[Color]](value=["mpls"]))),
+                        SetLocalTlocList(local_tloc_list=LocalTlocList(color=Global[List[TLOCColor]](value=["mpls"]))),
                         SetTloc(
                             tloc=Tloc(
-                                color=Global[List[Color]](value=["mpls"]),
-                                encap=Global[Encap](value="ipsec"),
+                                color=Global[List[TLOCColor]](value=["mpls"]),
+                                encap=Global[EncapType](value="ipsec"),
                                 ip=Global[IPv4Address](value=IPv4Address("10.0.1.1")),
                             )
                         ),
@@ -336,7 +336,7 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
             data_default_action=Global[BaseAction](value="accept"),
             sequences=sequences,
             target=TrafficPolicyTarget(
-                direction=Global[Direction](value="all"), vpn=Global[List[str]](value=["VPN_1"])
+                direction=Global[TrafficDataDirection](value="all"), vpn=Global[List[str]](value=["VPN_1"])
             ),
         )
         # Act
@@ -352,13 +352,13 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
             name="traffic_policy_test_parcel",
             data_default_action=Global[BaseAction](value="accept"),
             target=TrafficPolicyTarget(
-                direction=Global[Direction](value="all"), vpn=Global[List[str]](value=["VPN_1"])
+                direction=Global[TrafficDataDirection](value="all"), vpn=Global[List[str]](value=["VPN_1"])
             ),
         )
         parcel_id = self.api.create_parcel(self.profile_id, traffic_policy_parcel).id
         parcel = self.api.get_parcel(self.profile_id, TrafficPolicyParcel, parcel_id).payload
         parcel.target = TrafficPolicyTarget(
-            direction=Global[Direction](value="service"), vpn=Global[List[str]](value=["VPN_2"])
+            direction=Global[TrafficDataDirection](value="service"), vpn=Global[List[str]](value=["VPN_2"])
         )
         # Act
         self.api.update_parcel(self.profile_id, parcel, parcel_id)
@@ -366,7 +366,7 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
 
         # Assert
         assert parcel.target == TrafficPolicyTarget(
-            direction=Global[Direction](value="service"), vpn=Global[List[str]](value=["VPN_2"])
+            direction=Global[TrafficDataDirection](value="service"), vpn=Global[List[str]](value=["VPN_2"])
         )
 
     def test_delete_traffic_policy_parcel(self):
@@ -374,7 +374,7 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
             name="traffic_policy_test_parcel",
             data_default_action=Global[BaseAction](value="accept"),
             target=TrafficPolicyTarget(
-                direction=Global[Direction](value="all"), vpn=Global[List[str]](value=["VPN_1"])
+                direction=Global[TrafficDataDirection](value="all"), vpn=Global[List[str]](value=["VPN_1"])
             ),
         )
         parcel_id = self.api.create_parcel(self.profile_id, traffic_policy_parcel).id

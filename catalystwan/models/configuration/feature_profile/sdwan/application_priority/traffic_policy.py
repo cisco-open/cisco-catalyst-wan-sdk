@@ -5,31 +5,28 @@ from typing import List, Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase
-from catalystwan.models.configuration.feature_profile.common import RefIdItem
+from catalystwan.models.common import EncapType, SequenceIpType, ServiceChainNumber, ServiceType, TLOCColor
+from catalystwan.models.configuration.feature_profile.common import Icmp6Msg, IcmpMsg, RefIdItem
+from catalystwan.models.policy.centralized import TrafficDataDirection
+from catalystwan.models.policy.policy_definition import (
+    DestinationRegion,
+    DNSEntryType,
+    DNSTypeEntryType,
+    LossProtectionType,
+    TrafficTargetType,
+)
 
 BaseAction = Literal[
     "accept",
     "drop",
 ]
 
-Direction = Literal[
-    "all",
-    "service",
-    "tunnel",
-]
-
 
 class TrafficPolicyTarget(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    direction: Global[Direction]
+    direction: Global[TrafficDataDirection]
     vpn: Global[List[str]]
 
-
-SequenceIpType = Literal[
-    "all",
-    "ipv4",
-    "ipv6",
-]
 
 ServiceAreaValue = Literal[
     "common",
@@ -57,125 +54,6 @@ TrafficClass = Literal[
     "gold-transactional-data",
     "gold-voip-telephony",
     "silver",
-]
-
-IcmpMessageValue = Literal[
-    "administratively-prohibited",
-    "dod-host-prohibited",
-    "dod-net-prohibited",
-    "echo",
-    "echo-reply",
-    "echo-reply-no-error",
-    "extended-echo",
-    "extended-echo-reply",
-    "general-parameter-problem",
-    "host-isolated",
-    "host-precedence-unreachable",
-    "host-redirect",
-    "host-tos-redirect",
-    "host-tos-unreachable",
-    "host-unknown",
-    "host-unreachable",
-    "interface-error",
-    "malformed-query",
-    "multiple-interface-match",
-    "net-redirect",
-    "net-tos-redirect",
-    "net-tos-unreachable",
-    "net-unreachable",
-    "network-unknown",
-    "no-room-for-option",
-    "option-missing",
-    "packet-too-big",
-    "parameter-problem",
-    "photuris",
-    "port-unreachable",
-    "precedence-unreachable",
-    "protocol-unreachable",
-    "reassembly-timeout",
-    "redirect",
-    "router-advertisement",
-    "router-solicitation",
-    "source-route-failed",
-    "table-entry-error",
-    "time-exceeded",
-    "timestamp-reply",
-    "timestamp-request",
-    "ttl-exceeded",
-    "unreachable",
-]
-
-Icmp6MessageValue = Literal[
-    "beyond-scope",
-    "cp-advertisement",
-    "cp-solicitation",
-    "destination-unreachable",
-    "dhaad-reply",
-    "dhaad-request",
-    "echo-reply",
-    "echo-request",
-    "header",
-    "hop-limit",
-    "ind-advertisement",
-    "ind-solicitation",
-    "mld-query",
-    "mld-reduction",
-    "mld-report",
-    "mldv2-report",
-    "mpd-advertisement",
-    "mpd-solicitation",
-    "mr-advertisement",
-    "mr-solicitation",
-    "mr-termination",
-    "nd-na",
-    "nd-ns",
-    "next-header-type",
-    "ni-query",
-    "ni-query-name",
-    "ni-query-v4-address",
-    "ni-query-v6-address",
-    "ni-response",
-    "ni-response-qtype-unknown",
-    "ni-response-refuse",
-    "ni-response-success",
-    "no-admin",
-    "no-route",
-    "packet-too-big",
-    "parameter-option",
-    "parameter-problem",
-    "port-unreachable",
-    "reassembly-timeout",
-    "redirect",
-    "reject-route",
-    "renum-command",
-    "renum-result",
-    "renum-seq-number",
-    "router-advertisement",
-    "router-renumbering",
-    "router-solicitation",
-    "rpl-control",
-    "source-policy",
-    "source-route-header",
-    "time-exceeded",
-    "unreachable",
-]
-
-
-DestinationRegion = Literal[
-    "other-region",
-    "primary-region",
-    "secondary-region",
-]
-
-TrafficTo = Literal[
-    "access",
-    "core",
-    "service",
-]
-
-Dns = Literal[
-    "request",
-    "response",
 ]
 
 
@@ -234,14 +112,14 @@ class ProtocolMatch(BaseModel):
 
 class IcmpMessageMatch(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    icmp_message: Global[List[IcmpMessageValue]] = Field(
+    icmp_message: Global[List[IcmpMsg]] = Field(
         default=None, validation_alias="icmpMessage", serialization_alias="icmpMessage"
     )
 
 
 class Icmp6MessageMatch(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    icmp6_message: Global[List[Icmp6MessageValue]] = Field(
+    icmp6_message: Global[List[Icmp6Msg]] = Field(
         default=None, validation_alias="icmp6Message", serialization_alias="icmp6Message"
     )
 
@@ -328,12 +206,14 @@ class DestinationRegionMatch(BaseModel):
 
 class TrafficToMatch(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    traffic_to: Global[TrafficTo] = Field(default=None, validation_alias="trafficTo", serialization_alias="trafficTo")
+    traffic_to: Global[TrafficTargetType] = Field(
+        default=None, validation_alias="trafficTo", serialization_alias="trafficTo"
+    )
 
 
 class DnsMatch(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    dns: Global[Dns] = Field(default=None)
+    dns: Global[DNSEntryType] = Field(default=None)
 
 
 Entries = Union[
@@ -347,7 +227,7 @@ Entries = Union[
     PacketLengthMatch,
     ProtocolMatch,
     IcmpMessageMatch,
-    Icmp6MessageValue,
+    Icmp6Msg,
     SourceDataPrefixListMatch,
     SourceDataIpv6PrefixListMatch,
     SourceIpMatch,
@@ -370,44 +250,18 @@ class Match(BaseModel):
     entries: List[Entries]
 
 
-Color = Literal[
-    "3g",
-    "biz-internet",
-    "blue",
-    "bronze",
-    "custom1",
-    "custom2",
-    "custom3",
-    "default",
-    "gold",
-    "green",
-    "lte",
-    "metro-ethernet",
-    "mpls",
-    "private1",
-    "private2",
-    "private3",
-    "private4",
-    "private5",
-    "private6",
-    "public-internet",
-    "red",
-    "silver",
-]
-
-
 class SlaClass(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     fallback_to_best_path: Optional[Global[bool]] = Field(
         default=None, validation_alias="fallbackToBestPath", serialization_alias="fallbackToBestPath"
     )
-    preferred_color: Optional[Global[List[Color]]] = Field(
+    preferred_color: Optional[Global[List[TLOCColor]]] = Field(
         default=None, validation_alias="preferredColor", serialization_alias="preferredColor"
     )
     preferred_color_group: Optional[RefIdItem] = Field(
         default=None, validation_alias="preferredColorGroup", serialization_alias="preferredColorGroup"
     )
-    preferred_remote_color: Optional[Global[List[Color]]] = Field(
+    preferred_remote_color: Optional[Global[List[TLOCColor]]] = Field(
         default=None, validation_alias="preferredRemoteColor", serialization_alias="preferredRemoteColor"
     )
     remote_color_restrict: Optional[Global[bool]] = Field(
@@ -417,22 +271,16 @@ class SlaClass(BaseModel):
     strict: Optional[Global[bool]] = Field(default=None)
 
 
-Encap = Literal[
-    "gre",
-    "ipsec",
-]
-
-
 class LocalTlocList(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    color: Global[List[Color]] = Field(default=None)
-    encap: Optional[Global[Encap]] = Field(default=None)
+    color: Global[List[TLOCColor]] = Field(default=None)
+    encap: Optional[Global[EncapType]] = Field(default=None)
     restrict: Optional[Global[Global[bool]]] = Field(default=None)
 
 
 class PreferredRemoteColor(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    color: Global[List[Color]] = Field(default=None)
+    color: Global[List[TLOCColor]] = Field(default=None)
     remote_color_restrict: Optional[Global[Global[bool]]] = Field(
         default=None, validation_alias="remoteColorRestrict", serialization_alias="remoteColorRestrict"
     )
@@ -440,21 +288,9 @@ class PreferredRemoteColor(BaseModel):
 
 class Tloc(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    color: Global[List[Color]] = Field(default=None)
-    encap: Global[Encap] = Field(default=None)
+    color: Global[List[TLOCColor]] = Field(default=None)
+    encap: Global[EncapType] = Field(default=None)
     ip: Global[IPv4Address] = Field(default=None)
-
-
-ServiceType = Literal[
-    "FW",
-    "IDP",
-    "IDS",
-    "appqoe",
-    "netsvc1",
-    "netsvc2",
-    "netsvc3",
-    "netsvc4",
-]
 
 
 class ServiceTloc(BaseModel):
@@ -471,32 +307,13 @@ class ServiceTlocList(BaseModel):
     vpn: Optional[Global[int]] = Field(default=None)
 
 
-ServiceChainType = Literal[
-    "SC1",
-    "SC10",
-    "SC11",
-    "SC12",
-    "SC13",
-    "SC14",
-    "SC15",
-    "SC16",
-    "SC2",
-    "SC4",
-    "SC5",
-    "SC6",
-    "SC7",
-    "SC8",
-    "SC9",
-]
-
-
 class ServiceChain(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     local: Global[bool] = Field(default=None)
     restrict: Global[bool] = Field(default=None)
     tloc: Optional[Tloc] = Field(default=None)
     tloc_list: Optional[RefIdItem] = Field(default=None, validation_alias="tlocList", serialization_alias="tlocList")
-    type: Global[ServiceChainType] = Field(default=None)
+    type: Global[ServiceChainNumber] = Field(default=None)
     vpn: Optional[Global[int]] = Field(default=None)
 
 
@@ -608,16 +425,11 @@ RedirectDnsType = Literal[
     "ipAddress",
 ]
 
-RedirectDnsValue = Literal[
-    "host",
-    "umbrella",
-]
-
 
 class RedirectDns(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     field: Optional[Global[RedirectDnsType]] = Field(default=None)
-    value: Optional[Global[Union[RedirectDnsValue, str]]] = Field(default=None)
+    value: Optional[Global[Union[DNSTypeEntryType, str]]] = Field(default=None)
 
 
 class AppqoeOptimization(BaseModel):
@@ -639,19 +451,12 @@ class AppqoeOptimization(BaseModel):
         return service_node_group
 
 
-LossCorrectionType = Literal[
-    "fecAdaptive",
-    "fecAlways",
-    "packetDuplication",
-]
-
-
 class LossCorrection(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     loss_correct_fec: Optional[Global[int]] = Field(
         default=None, validation_alias="lossCorrectFec", serialization_alias="lossCorrectFec"
     )
-    loss_correction_type: Global[LossCorrectionType] = Field(
+    loss_correction_type: Global[LossProtectionType] = Field(
         default=None, validation_alias="lossCorrectionType", serialization_alias="lossCorrectionType"
     )
 
@@ -694,7 +499,7 @@ class SlaClassAction(BaseModel):
 
 class BackupSlaPreferredColorAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    backup_sla_preferred_color: Global[List[Color]] = Field(
+    backup_sla_preferred_color: Global[List[TLOCColor]] = Field(
         default=None, validation_alias="backupSlaPreferredColor", serialization_alias="backupSlaPreferredColor"
     )
 
