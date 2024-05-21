@@ -179,6 +179,7 @@ def handle_multi_parcel_feature_template(
         parcels = [parcels]
     transformed_parcels = []
     for parcel in parcels:
+        print(parcel)
         transformed_parcels.append(
             TransformedParcel(
                 header=TransformHeader(

@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import List, Optional, Tuple, Type, Union, cast, get_args
+from typing import List, Optional, Type, Union, get_args
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, as_global
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask
@@ -39,16 +39,12 @@ class Ospfv3TemplateConverter:
 
     def create_parcel(
         self, name: str, description: str, template_values: dict
-    ) -> Tuple[Ospfv3IPv4Parcel, Ospfv3IPv6Parcel]:
+    ) -> List[Union[Ospfv3IPv4Parcel, Ospfv3IPv6Parcel]]:
         if template_values.get("ospfv3") is None:
             raise CatalystwanConverterCantConvertException("Feature Template does not contain OSPFv3 configuration")
-        ospfv3ipv4 = cast(
-            Ospfv3IPv4Parcel, Ospfv3Ipv4TemplateSubconverter().create_parcel(name, description, template_values)
-        )
-        ospfv3ipv6 = cast(
-            Ospfv3IPv6Parcel, Ospfv3Ipv6TemplateSubconverter().create_parcel(name, description, template_values)
-        )
-        return ospfv3ipv4, ospfv3ipv6
+        ospfv3ipv4 = Ospfv3Ipv4TemplateSubconverter().create_parcel(name, description, template_values)
+        ospfv3ipv6 = Ospfv3Ipv6TemplateSubconverter().create_parcel(name, description, template_values)
+        return [ospfv3ipv4, ospfv3ipv6]
 
 
 class BaseOspfv3TemplateSubconverter:
