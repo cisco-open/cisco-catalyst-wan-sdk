@@ -100,7 +100,13 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
                             name=vpn_management.name,
                             templateId=vpn_management.id,
                             templateType=vpn_management.template_type,
-                            subTemplates=[],
+                            subTemplates=[
+                                GeneralTemplate(
+                                    name=ethernet.name,
+                                    templateId=ethernet.id,
+                                    templateType=ethernet.template_type,
+                                ),
+                            ],
                         ),
                         GeneralTemplate(
                             name=vpn_0_transport.name,
@@ -160,6 +166,9 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
     # Find the transformed VPN parcels
     transport_vpn_parcel = next(p for p in ux2_config.profile_parcels if p.parcel.parcel_name == vpn_0_transport.name)
     service_vpn_parcel = next(p for p in ux2_config.profile_parcels if p.parcel.parcel_name == vpn_1_service.name)
+    management_vpn_parcel = next(
+        p for p in ux2_config.profile_parcels if p.parcel.parcel_name == vpn_512_management.name
+    )
 
     # Find the required VPN sub-elements
     transport_gre = find_subelement_parcel(
@@ -175,7 +184,9 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
     service_ipsec = find_subelement_parcel(
         ux2_config.profile_parcels, service_vpn_parcel, interface_ipsec.name, "_SERVICE"
     )
-
+    management_ethernet = find_subelement_parcel(
+        ux2_config.profile_parcels, management_vpn_parcel, interface_ethernet.name, "_MANAGEMENT"
+    )
     # Assert
 
     # Assert Feature Profiles have correct VPNs
@@ -193,6 +204,7 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
     assert service_gre is not None
     assert service_ethernet is not None
     assert service_ipsec is not None
+    assert management_ethernet is not None
 
 
 def test_when_one_feature_template_with_invalid_payload_expect_one_failed_item_in_conversion_result():
