@@ -49,6 +49,7 @@ ParcelType = Literal[
     "lan/vpn/interface/svi",
     "logging",
     "management/vpn",
+    "management/vpn/interface/ethernet",
     "mesh",
     "mirror",
     "mrf",

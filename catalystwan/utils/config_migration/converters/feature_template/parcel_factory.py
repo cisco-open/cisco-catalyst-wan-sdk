@@ -20,6 +20,7 @@ from .cellular_controller import CellularControllerTemplateConverter
 from .cellular_profile import CellularProfileTemplateConverter
 from .cli import CliTemplateConverter
 from .dhcp import DhcpTemplateConverter
+from .ethernet import ManagementInterfaceEthernetTemplateConverter
 from .global_ import GlobalTemplateConverter
 from .gps import GpsTemplateConverter
 from .lan.ethernet import LanInterfaceEthernetTemplateConverter
@@ -105,6 +106,7 @@ available_converters = [
     WanInterfaceEthernetTemplateConverter,
     SIGTemplateConverter,
     WanMultilinkTemplateConverter,
+    ManagementInterfaceEthernetTemplateConverter,
 ]
 
 

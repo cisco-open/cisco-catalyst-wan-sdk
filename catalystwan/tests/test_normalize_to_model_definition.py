@@ -218,3 +218,16 @@ class TestNormalizeToModelDefinition(unittest.TestCase):
         normalized_definition = normalize_to_model_definition(definition, ExampleParcel.model_fields)
 
         self.assertDictEqual(normalized_definition, expected)
+
+    @parameterized.expand(
+        [
+            (
+                {"model_field": [{"field_1": Variable(value="{{variable}}")}]},
+                {"model_field": [{"field_1": Variable(value="{{variable}}")}]},
+            ),
+        ]
+    )
+    def test_skip_variable(self, definition, expected):
+        normalized_definition = normalize_to_model_definition(definition, ExampleParcel.model_fields)
+
+        self.assertDictEqual(normalized_definition, expected)
