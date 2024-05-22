@@ -191,7 +191,7 @@ def get_version_info(session: ManagerSession) -> VersionInfo:
     return VersionInfo(platform=session._platform_version, sdk=PACKAGE_VERSION)
 
 
-def transform(ux1: UX1Config) -> ConfigTransformResult:
+def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
     transform_result = ConfigTransformResult()
     ux2 = UX2Config(version=ux1.version)
     subtemplates_mapping = defaultdict(set)
@@ -353,7 +353,10 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
             )
 
     ux2 = merge_parcels(ux2)
-    transform_result.ux2_config = UX2Config.model_validate(ux2)
+    transform_result.ux2_config = ux2
+    if add_suffix:
+        transform_result.add_suffix_to_names()
+    transform_result.ux2_config = UX2Config.model_validate(transform_result.ux2_config)
     return transform_result
 
 
