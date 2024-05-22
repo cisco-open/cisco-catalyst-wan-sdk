@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Address, IPv6Address, IPv6Interface
 from typing import Iterator, List, Literal, Optional, Tuple, Union
 
@@ -5,6 +6,7 @@ from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
 from catalystwan.models.common import SubnetMask
+from catalystwan.models.configuration.feature_profile.common import DNSIPv4, DNSIPv6, HostMapping
 
 Gateway = Literal["nextHop", "dhcp", "null0"]
 Nat = Literal["NAT64", "NAT66"]
@@ -14,57 +16,6 @@ UnitIPv4Address = Union[Variable, Global[IPv4Address]]
 UnitDistance = Union[Variable, Global[int]]
 
 RouteHop = Union[Tuple[UnitIPv4Address, UnitDistance], UnitIPv4Address]
-
-
-class DnsIpv4(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    primary_dns_address_ipv4: Optional[Union[Variable, Global[IPv4Address], Default[None]]] = Field(
-        default=None,
-        serialization_alias="primaryDnsAddressIpv4",
-        validation_alias="primaryDnsAddressIpv4",
-        description="Primary DNS Address (IPv4)",
-    )
-    secondary_dns_address_ipv4: Optional[Union[Variable, Global[IPv4Address], Default[None]]] = Field(
-        default=None,
-        serialization_alias="secondaryDnsAddressIpv4",
-        validation_alias="secondaryDnsAddressIpv4",
-        description="Secondary DNS Address (IPv4)",
-    )
-
-
-class DnsIpv6(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    primary_dns_address_ipv6: Optional[Union[Variable, Global[IPv6Address], Default[None]]] = Field(
-        default=None,
-        serialization_alias="primaryDnsAddressIpv6",
-        validation_alias="primaryDnsAddressIpv6",
-        description="Primary DNS Address (IPv6)",
-    )
-    secondary_dns_address_ipv6: Optional[Union[Variable, Global[IPv6Address], Default[None]]] = Field(
-        default=None,
-        serialization_alias="secondaryDnsAddressIpv6",
-        validation_alias="secondaryDnsAddressIpv6",
-        description="Secondary DNS Address (IPv6)",
-    )
-
-
-class NewHostMappingItem(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    host_name: Union[Variable, Global[str]] = Field(
-        ..., serialization_alias="hostName", validation_alias="hostName", description="Hostname"
-    )
-    list_of_ip: Union[Variable, Global[List[str]]] = Field(
-        ..., serialization_alias="listOfIp", validation_alias="listOfIp", description="List of IP"
-    )
 
 
 class Prefix(BaseModel):
@@ -221,9 +172,9 @@ class ManagementVpnParcel(_ParcelBase):
         frozen=True,
         description="Management VPN, which will always be 512",
     )
-    dns_ipv4: Optional[DnsIpv4] = Field(default=None, validation_alias=AliasPath("data", "dnsIpv4"))
-    dns_ipv6: Optional[DnsIpv6] = Field(default=None, validation_alias=AliasPath("data", "dnsIpv6"))
-    new_host_mapping: Optional[List[NewHostMappingItem]] = Field(
+    dns_ipv4: Optional[DNSIPv4] = Field(default=None, validation_alias=AliasPath("data", "dnsIpv4"))
+    dns_ipv6: Optional[DNSIPv6] = Field(default=None, validation_alias=AliasPath("data", "dnsIpv6"))
+    new_host_mapping: Optional[List[HostMapping]] = Field(
         default=None, validation_alias=AliasPath("data", "newHostMapping")
     )
     ipv4_route: List[Ipv4RouteItem] = Field(
@@ -246,9 +197,9 @@ class TransportVpnParcel(_ParcelBase):
         frozen=True,
         description="Transport VPN, which will always be 0",
     )
-    dns_ipv4: Optional[DnsIpv4] = Field(default=None, validation_alias=AliasPath("data", "dnsIpv4"))
-    dns_ipv6: Optional[DnsIpv6] = Field(default=None, validation_alias=AliasPath("data", "dnsIpv6"))
-    new_host_mapping: Optional[List[NewHostMappingItem]] = Field(
+    dns_ipv4: Optional[DNSIPv4] = Field(default=None, validation_alias=AliasPath("data", "dnsIpv4"))
+    dns_ipv6: Optional[DNSIPv6] = Field(default=None, validation_alias=AliasPath("data", "dnsIpv6"))
+    new_host_mapping: Optional[List[HostMapping]] = Field(
         default=None, validation_alias=AliasPath("data", "newHostMapping")
     )
     ipv4_route: List[Ipv4RouteItem] = Field(
@@ -272,7 +223,7 @@ class TransportVpnParcel(_ParcelBase):
     def set_dns_ipv4(
         self,
         primary_ipv4: Union[Variable, Global[IPv4Address]],
-        secondary_ipv4: Optional[Union[Variable, Global[IPv4Address]]] = None,
+        secondary_ipv4: Union[Variable, Global[IPv4Address], Default[None]] = as_default(None),
     ) -> None:
         """
         Set the DNS server IP addresses for IPv4.
@@ -282,11 +233,11 @@ class TransportVpnParcel(_ParcelBase):
 
         Args:
             primary (Union[Variable, Global[IPv4Address]]): The IP address of the primary DNS server.
-            secondary (Optional[Union[Variable, Global[IPv4Address]], optional): The IP address of the
+            secondary (Union[Variable, Global[IPv4Address], Default[None]]): The IP address of the
                 secondary DNS server.
                 Defaults to None, which means no secondary DNS server is set.
         """
-        self.dns_ipv4 = DnsIpv4(primary_dns_address_ipv4=primary_ipv4, secondary_dns_address_ipv4=secondary_ipv4)
+        self.dns_ipv4 = DNSIPv4(primary_dns_address_ipv4=primary_ipv4, secondary_dns_address_ipv4=secondary_ipv4)
 
     def add_ipv4_route(
         self,

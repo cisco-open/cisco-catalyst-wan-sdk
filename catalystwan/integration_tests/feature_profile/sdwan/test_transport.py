@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Address, IPv6Address, IPv6Interface
 from typing import List, Literal
 from uuid import UUID
@@ -27,11 +28,12 @@ from catalystwan.models.configuration.feature_profile.common import AclQos
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask as CommonPrefix
 from catalystwan.models.configuration.feature_profile.common import AdvancedGre, AllowService
 from catalystwan.models.configuration.feature_profile.common import Arp as CommonArp
-from catalystwan.models.configuration.feature_profile.common import ChannelGroup
+from catalystwan.models.configuration.feature_profile.common import ChannelGroup, DNSIPv4, DNSIPv6
 from catalystwan.models.configuration.feature_profile.common import (
     EthernetNatAttributesIpv4 as EthernetNatAttributesIpv4,
 )
 from catalystwan.models.configuration.feature_profile.common import (
+    HostMapping,
     InterfaceStaticIPv4Address,
     MultilinkAuthenticationType,
     MultilinkClockSource,
@@ -74,12 +76,9 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1contro
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import (
     Address64V4PoolItem,
-    DnsIpv4,
-    DnsIpv6,
     Ipv4RouteItem,
     Ipv6RouteItem,
     ManagementVpnParcel,
-    NewHostMappingItem,
     NextHopItem,
     OneOfIpRouteNull0,
     Prefix,
@@ -169,18 +168,18 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
         management_vpn_parcel = ManagementVpnParcel(
             parcel_name="FullySpecifiedManagementVpnParcel",
             description="Description",
-            dns_ipv6=DnsIpv6(
+            dns_ipv6=DNSIPv6(
                 primary_dns_address_ipv6=as_global(IPv6Address("67ca:c2df:edfe:c8ec:b6cb:f9f4:eab0:ece6")),
                 secondary_dns_address_ipv6=as_global(IPv6Address("8989:8d33:c00a:4d13:324d:8b23:8d77:a289")),
             ),
-            dns_ipv4=DnsIpv4(
+            dns_ipv4=DNSIPv4(
                 primary_dns_address_ipv4=as_global(IPv4Address("68.138.29.222")),
                 secondary_dns_address_ipv4=as_global(IPv4Address("122.89.114.112")),
             ),
             new_host_mapping=[
-                NewHostMappingItem(
+                HostMapping(
                     host_name=as_global("FullySpecifiedHost"),
-                    list_of_ip=as_global(
+                    list_of_ips=as_global(
                         [
                             "165.16.181.116",
                             "7a4c:1d87:8587:a6ec:21a6:48a7:00e8:1fef",
@@ -362,18 +361,18 @@ class TestTransportFeatureProfileTransportVpn(TestFeatureProfileModels):
         transport_vpn_parcel = TransportVpnParcel(
             parcel_name="FullySpecifiedTransportVpnParcel",
             description="Description",
-            dns_ipv6=DnsIpv6(
+            dns_ipv6=DNSIPv6(
                 primary_dns_address_ipv6=as_global(IPv6Address("67ca:c2df:edfe:c8ec:b6cb:f9f4:eab0:ece6")),
                 secondary_dns_address_ipv6=as_global(IPv6Address("8989:8d33:c00a:4d13:324d:8b23:8d77:a289")),
             ),
-            dns_ipv4=DnsIpv4(
+            dns_ipv4=DNSIPv4(
                 primary_dns_address_ipv4=as_global(IPv4Address("68.138.29.222")),
                 secondary_dns_address_ipv4=as_global(IPv4Address("122.89.114.112")),
             ),
             new_host_mapping=[
-                NewHostMappingItem(
+                HostMapping(
                     host_name=as_global("FullySpecifiedHost"),
-                    list_of_ip=as_global(
+                    list_of_ips=as_global(
                         [
                             "165.16.181.116",
                             "7a4c:1d87:8587:a6ec:21a6:48a7:00e8:1fef",

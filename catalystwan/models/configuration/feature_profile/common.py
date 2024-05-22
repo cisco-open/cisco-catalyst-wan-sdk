@@ -1,7 +1,7 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from datetime import datetime
-from ipaddress import IPv4Address, IPv4Interface, IPv6Interface
+from ipaddress import IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
 from typing import List, Literal, Optional, Union
 from uuid import UUID
 
@@ -26,9 +26,6 @@ from catalystwan.models.common import (
     check_fields_exclusive,
 )
 from catalystwan.models.configuration.common import Solution
-
-IPV4Address = str
-IPv6Address = str
 
 ProfileType = Literal[
     "transport",
@@ -126,26 +123,46 @@ class GetReferenceCountFeatureProfilesPayload(GetFeatureProfilesPayload):
 
 
 class DNSIPv4(BaseModel):
-    primary_dns_address_ipv4: Union[Default[None], Global[str], Variable] = Field(
-        default=Default[None](value=None), alias="primaryDnsAddressIpv4"
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
     )
-    secondary_dns_address_ipv4: Union[Default[None], Global[str], Variable] = Field(
-        default=Default[None](value=None), alias="secondaryDnsAddressIpv4"
+    primary_dns_address_ipv4: Union[Default[None], Global[str], Global[IPv4Address], Variable] = Field(
+        default=Default[None](value=None),
+        serialization_alias="primaryDnsAddressIpv4",
+        validation_alias="primaryDnsAddressIpv4",
+    )
+    secondary_dns_address_ipv4: Union[Default[None], Global[str], Global[IPv4Address], Variable] = Field(
+        default=Default[None](value=None),
+        serialization_alias="secondaryDnsAddressIpv4",
+        validation_alias="secondaryDnsAddressIpv4",
     )
 
 
 class DNSIPv6(BaseModel):
-    primary_dns_address_ipv6: Union[Default[None], Global[str], Variable] = Field(
-        default=Default[None](value=None), alias="primaryDnsAddressIpv6"
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
     )
-    secondary_dns_address_ipv6: Union[Default[None], Global[str], Variable] = Field(
-        default=Default[None](value=None), alias="secondaryDnsAddressIpv6"
+    primary_dns_address_ipv6: Union[Default[None], Global[str], Global[IPv6Address], Variable] = Field(
+        default=Default[None](value=None),
+        serialization_alias="primaryDnsAddressIpv6",
+        validation_alias="primaryDnsAddressIpv6",
+    )
+    secondary_dns_address_ipv6: Union[Default[None], Global[str], Global[IPv6Address], Variable] = Field(
+        default=Default[None](value=None),
+        serialization_alias="secondaryDnsAddressIpv6",
+        validation_alias="secondaryDnsAddressIpv6",
     )
 
 
 class HostMapping(BaseModel):
-    host_name: Union[Global[str], Variable] = Field(alias="hostName")
-    list_of_ips: Union[Global[List[str]], Variable] = Field(alias="listOfIp")
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+    host_name: Union[Global[str], Variable] = Field(serialization_alias="hostName", validation_alias="hostName")
+    list_of_ips: Union[Global[List[str]], Variable] = Field(serialization_alias="listOfIp", validation_alias="listOfIp")
 
 
 class NextHop(BaseModel):
@@ -154,7 +171,7 @@ class NextHop(BaseModel):
 
 
 class IPv4Prefix(BaseModel):
-    ip_address: Union[Global[IPV4Address], Variable] = Field()
+    ip_address: Union[Global[IPv4Address], Variable] = Field()
     subnet_mask: Union[Global[str], Variable] = Field()
 
 

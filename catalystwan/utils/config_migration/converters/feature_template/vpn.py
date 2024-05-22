@@ -1,26 +1,17 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
 from copy import deepcopy
 from ipaddress import IPv4Interface, IPv6Interface
 from typing import Dict, List, Literal, Optional, Tuple, Type, Union
 
-from pydantic import BaseModel, IPvAnyAddress
+from pydantic import BaseModel
 
-from catalystwan.api.configuration_groups.parcel import (
-    Default,
-    Global,
-    OptionType,
-    Variable,
-    as_default,
-    as_global,
-    as_variable,
-)
+from catalystwan.api.configuration_groups.parcel import Default, Global, OptionType, Variable, as_default, as_global
 from catalystwan.models.common import SubnetMask
-from catalystwan.models.configuration.feature_profile.common import AddressWithMask
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask, DNSIPv4, DNSIPv6, HostMapping
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import (
     DHCP,
     Direction,
-    DnsIPv4,
-    HostMapping,
     InterfaceIPv6Container,
     InterfaceRouteIPv6Container,
     IPv4Prefix,
@@ -58,13 +49,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn impo
     StaticRouteVPN,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import (
-    DnsIpv4,
-    DnsIpv6,
     Gateway,
     Ipv4RouteItem,
     Ipv6RouteItem,
     ManagementVpnParcel,
-    NewHostMappingItem,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import (
     NextHopContainer as TransportNextHopContainer,
@@ -101,22 +89,36 @@ class OmpMappingItem(BaseModel):
 
 
 class BaseTransportAndManagementTemplateConverter:
-    def configure_new_host_mapping(self, values: dict) -> Optional[List[NewHostMappingItem]]:
+    def parse_host_mapping(self, values: dict) -> Optional[List[HostMapping]]:
         hosts = values.get("host", [])
         if not hosts:
             return None
+
+        hosts_cleared = [h for h in hosts if self.is_host_mapping_parsable(h)]
+
         return [
-            NewHostMappingItem(
+            HostMapping(
                 host_name=host["hostname"],
-                list_of_ip=host["ip"],
+                list_of_ips=self.parse_list_of_ip(host),
             )
-            for host in hosts
+            for host in hosts_cleared
         ]
 
-    def configure_dns(self, values: dict) -> Tuple[DnsIpv4, DnsIpv6]:
+    def parse_list_of_ip(self, host: Dict) -> Union[Variable, Global[List[str]]]:
+        list_of_ips = host["ip"]
+        if isinstance(list_of_ips, Variable):
+            return list_of_ips
+
+        # ["34.199.1.194"," 34.204.213.179], extra space before the ip is a bug in the feature template
+        return Global[List[str]](value=[ip.strip() for ip in list_of_ips.value])
+
+    def is_host_mapping_parsable(self, host: Dict) -> bool:
+        return "ip" in host and "hostname" in host
+
+    def parse_dns(self, values: dict) -> Tuple[DNSIPv4, DNSIPv6]:
         dns = values.get("dns", [])
-        dns_ipv4 = DnsIpv4()
-        dns_ipv6 = DnsIpv6()
+        dns_ipv4 = DNSIPv4()
+        dns_ipv6 = DNSIPv6()
         for dns_entry in dns:
             dns_address = dns_entry.get("dns_addr", Default[None](value=None))
             if dns_entry["role"].value == "primary":
@@ -129,7 +131,7 @@ class BaseTransportAndManagementTemplateConverter:
                 dns_ipv6.secondary_dns_address_ipv6 = dns_address
         return dns_ipv4, dns_ipv6
 
-    def configure_route_ipv4(self, values: dict) -> Optional[List[Ipv4RouteItem]]:
+    def parse_route_ipv4(self, values: dict) -> Optional[List[Ipv4RouteItem]]:
         routes = values.get("ip", {}).get("route", [])
         if not routes:
             return None
@@ -167,7 +169,7 @@ class BaseTransportAndManagementTemplateConverter:
             static_routes.append(ipv4route_item)
         return static_routes
 
-    def configure_route_ipv6(self, values: dict) -> Optional[List[Ipv6RouteItem]]:
+    def parse_route_ipv6(self, values: dict) -> Optional[List[Ipv6RouteItem]]:
         routes = values.get("ipv6", {}).get("route", [])
         if not routes:
             return None
@@ -210,11 +212,11 @@ class ManagementVpnTemplateConverter(BaseTransportAndManagementTemplateConverter
         """
         data = deepcopy(template_values)
 
-        dns_ipv4, dns_ipv6 = self.configure_dns(data)
-        ipv4_route = self.configure_route_ipv4(data)
-        ipv6_route = self.configure_route_ipv6(data)
-        new_host_mapping = self.configure_new_host_mapping(data)
-        dns_ipv4, dns_ipv6 = self.configure_dns(data)
+        dns_ipv4, dns_ipv6 = self.parse_dns(data)
+        ipv4_route = self.parse_route_ipv4(data)
+        ipv6_route = self.parse_route_ipv6(data)
+        new_host_mapping = self.parse_host_mapping(data)
+        dns_ipv4, dns_ipv6 = self.parse_dns(data)
 
         payload = create_dict_without_none(
             dns_ipv4=dns_ipv4,
@@ -242,10 +244,10 @@ class TransportVpnTemplateConverter(BaseTransportAndManagementTemplateConverter)
         """
         data = deepcopy(template_values)
 
-        ipv4_route = self.configure_route_ipv4(data)
-        ipv6_route = self.configure_route_ipv6(data)
-        new_host_mapping = self.configure_new_host_mapping(data)
-        dns_ipv4, dns_ipv6 = self.configure_dns(data)
+        ipv4_route = self.parse_route_ipv4(data)
+        ipv6_route = self.parse_route_ipv6(data)
+        new_host_mapping = self.parse_host_mapping(data)
+        dns_ipv4, dns_ipv6 = self.parse_dns(data)
         service = self.parse_service(data.get("service", []))
         enhance_ecmp_keying = data.get("enhance_ecmp_keying", {}).get("layer4")
 
@@ -277,22 +279,6 @@ class ServiceVpnTemplateConverter:
     A class for converting template values into a LanVpnParcel object.
     """
 
-    delete_keys = (
-        "ecmp_hash_key",
-        "ip",
-        "omp",
-        "nat",
-        "nat64",
-        "dns",
-        "host",
-        "ipv6",
-        "name",
-        "route_import_from",
-        "route_import",
-        "route_export",
-        "tcp_optimization",
-    )
-
     route_leaks_mapping = {
         "route_import": RouteLeakMappingItem(ux2_model=RouteLeakFromGlobal, ux2_field="route_leak_from_global"),
         "route_export": RouteLeakMappingItem(ux2_model=RouteLeakFromService, ux2_field="route_leak_from_service"),
@@ -318,43 +304,6 @@ class ServiceVpnTemplateConverter:
         ),
     }
 
-    # Default Values - IPv4 Route
-    ipv4_route_prefix_network_address = "{{{{lan_vpn_ipv4Route_{}_prefix_networkAddress}}}}"
-    ipv4_route_prefix_subnet_mask = "{{{{lan_vpn_ipv4Route_{}_prefix_subnetMask}}}}"
-    ipv4_route_next_hop_address = "{{{{lan_vpn_ipv4Route_{}_nextHop_{}_address}}}}"
-    ipv4_route_next_hop_administrative_distance = "{{{{lan_vpn_ipv4Route_{}_nextHop_{}_administrativeDistance}}}}"
-
-    # Default Values - Service
-    service_ipv4_addresses = "{{{{lan_vpn_service_{}_ipv4Addresses}}}}"
-
-    # Default Values - NAT
-    nat_natpool_name = "{{{{lan_vpn_nat_{}_natpoolName}}}}"
-    nat_prefix_length = "{{{{lan_vpn_nat_{}_prefixLength}}}}"
-    nat_range_start = "{{{{lan_vpn_nat_{}_rangeStart}}}}"
-    nat_range_end = "{{{{lan_vpn_nat_{}_rangeEnd}}}}"
-    nat_overload = "{{{{lan_vpn_nat_{}_overload}}}}"
-    nat_direction = "{{{{lan_vpn_nat_{}_direction}}}}"
-
-    # Default Values - Port Forwarding
-    nat_port_foward_natpool_name = "{{{{lan_vpn_natPortForward_{}_natpoolName}}}}"
-    nat_port_foward_translate_port = "{{{{lan_vpn_natPortForward_{}_translatePort}}}}"
-    nat_port_foward_translated_source_ip = "{{{{lan_vpn_natPortForward_{}_translatedSourceIp}}}}"
-    nat_port_foward_source_port = "{{{{lan_vpn_natPortForward_{}_sourcePort}}}}"
-    nat_port_foward_source_ip = "{{{{lan_vpn_natPortForward_{}_sourceIp}}}}"
-    nat_port_foward_protocol = "{{{{lan_vpn_natPortForward_{}_protocol}}}}"
-
-    # Default Values - Static NAT
-    static_nat_pool_name = "{{{{lan_vpn__staticNat_{}_poolName}}}}"
-    static_nat_source_ip = "{{{{lan_vpn_staticNat_{}_sourceIp}}}}"
-    static_nat_translated_source_ip = "{{{{lan_vpn_staticNat_{}_translatedSourceIp}}}}"
-    static_nat_direction = "{{{{lan_vpn_staticNat_{}_direction}}}}"
-
-    # Default Values - NAT64
-    nat64_v4_pool_name = "{{{{lan_vpn_nat64_{}_v4_poolName}}}}"
-    nat64_v4_pool_range_start = "{{{{lan_vpn_nat64_{}_v4_poolRangeStart}}}}"
-    nat64_v4_pool_range_end = "{{{{lan_vpn_nat64_{}_v4_poolRangeEnd}}}}"
-    nat64_v4_pool_overload = "{{{{lan_vpn_nat64_{}_v4_poolOverload}}}}"
-
     def create_parcel(self, name: str, description: str, template_values: dict) -> LanVpnParcel:
         """
         Creates a parcel from VPN family object based on the provided parameters.
@@ -367,259 +316,313 @@ class ServiceVpnTemplateConverter:
         Returns:
             VPN: The created VPN object.
         """
-        values = deepcopy(template_values)
-        self.configure_vpn_id(values)
-        self.configure_vpn_name(values)
-        self.configure_natpool(values)
-        self.configure_port_forwarding(values)
-        self.configure_static_nat(values)
-        self.configure_nat64(values)
-        self.configure_omp(values)
-        self.configure_dns(values)
-        self.configure_hostname_mapping(values)
-        self.configure_service(values)
-        self.configure_ipv4_route(values)
-        self.configure_ipv6_route(values)
-        self.configure_routes(values)
-        self.configure_route_leaks(values)
-        self.cleanup_keys(values)
-        return LanVpnParcel(**self.prepare_parcel_values(name, description, values))  # type: ignore
+        data = deepcopy(template_values)
 
-    def prepare_parcel_values(self, name: str, description: str, values: dict) -> dict:
-        return {
-            "parcel_name": name,
-            "parcel_description": description,
-            **values,
-        }
+        vpn_name = data.get("name")
+        vpn_id = data.get("vpn_id")
+        omp_admin_distance_ipv4 = data.get("omp_admin_distance_ipv4")
+        omp_admin_distance_ipv6 = data.get("omp_admin_distance_ipv6")
+        dns_ipv4, dns_ipv6 = self.parse_dns(data.get("dns", []))
+        new_host_mapping = self.parse_host_mapping(data.get("host", []))
+        net_port_forwarding = self.parse_port_forwarding(data.get("nat", {}).get("port_forward", []))
+        nat_pool = self.parse_natpool(data.get("nat", {}).get("natpool", []))
+        static_nat = self.parse_static_nat(data.get("nat", {}).get("static", []))
+        nat_64_v4_pool = self.parse_nat64_v4_pool(data.get("nat64", {}).get("v4", {}).get("pool", []))
+        service = self.parse_service(data.get("service", []))
 
-    def cleanup_keys(self, values: dict) -> None:
-        for key in self.delete_keys:
-            values.pop(key, None)
+        self.parse_omp(data)
+        self.parse_ipv4_route(data)
+        self.parse_ipv6_route(data)
+        self.parse_routes(data)
+        self.parse_route_leaks(data)
 
-    def configure_vpn_name(self, values: dict) -> None:
-        if vpn_name := values.get("name", None):
-            values["vpn_name"] = vpn_name
+        omp_advertise_ipv4 = data.get("omp_advertise_ipv4")
+        omp_advertise_ipv6 = data.get("omp_advertise_ipv6")
+        route_gre = data.get("route_gre")
+        route_service = data.get("route_service")
+        ipsec_route = data.get("ipsec_route")
+        route_leak_from_global = data.get("route_leak_from_global")
+        route_leak_from_service = data.get("route_leak_from_service")
+        route_leak_between_services = data.get("route_leak_between_services")
+        mpls_vpn_ipv4_route_target = data.get("mpls_vpn_ipv4_route_target")
+        mpls_vpn_ipv6_route_target = data.get("mpls_vpn_ipv6_route_target")
+        enable_sdra = data.get("enable_sdra")
+        ipv6_route = data.get("ipv6_route")
+        ipv4_route = data.get("ipv4_route")
 
-    def configure_vpn_id(self, values: dict) -> None:
-        if vpn_id := values.get("vpn_id"):
-            vpn_id_value = int(vpn_id.value)
-            values["vpn_id"] = as_global(vpn_id_value)
+        payload = create_dict_without_none(
+            parcel_name=name,
+            parcel_description=description,
+            vpn_name=vpn_name,
+            vpn_id=vpn_id,
+            omp_admin_distance_ipv4=omp_admin_distance_ipv4,
+            omp_admin_distance_ipv6=omp_admin_distance_ipv6,
+            dns_ipv4=dns_ipv4,
+            dns_ipv6=dns_ipv6,
+            new_host_mapping=new_host_mapping,
+            net_port_forwarding=net_port_forwarding,
+            nat_pool=nat_pool,
+            static_nat=static_nat,
+            nat_64_v4_pool=nat_64_v4_pool,
+            service=service,
+            omp_advertise_ipv4=omp_advertise_ipv4,
+            omp_advertise_ipv6=omp_advertise_ipv6,
+            route_gre=route_gre,
+            route_service=route_service,
+            ipsec_route=ipsec_route,
+            route_leak_from_global=route_leak_from_global,
+            route_leak_from_service=route_leak_from_service,
+            route_leak_between_services=route_leak_between_services,
+            mpls_vpn_ipv4_route_target=mpls_vpn_ipv4_route_target,
+            mpls_vpn_ipv6_route_target=mpls_vpn_ipv6_route_target,
+            enable_sdra=enable_sdra,
+            ipv6_route=ipv6_route,
+            ipv4_route=ipv4_route,
+        )
 
-    def configure_dns(self, values: dict) -> None:
-        if dns := values.get("dns", []):
-            dns_ipv4 = DnsIPv4()
-            for entry in dns:
-                if entry["role"] == "primary":
-                    dns_ipv4.primary_dns_address_ipv4 = entry["dns_addr"]
-                elif entry["role"] == "secondary":
-                    dns_ipv4.secondary_dns_address_ipv4 = entry["dns_addr"]
-            values["dns"] = dns_ipv4
+        return LanVpnParcel(**payload)
 
-    def configure_hostname_mapping(self, values: dict) -> None:
-        if host := values.get("host", []):
-            host_mapping_items = []
-            for entry in host:
-                host_mapping_item = HostMapping(
-                    host_name=entry["hostname"],
-                    list_of_ip=self._get_list_of_ips(entry),
+    def parse_dns(self, dns: dict) -> Tuple[DNSIPv4, DNSIPv6]:
+        dns_ipv4 = DNSIPv4()
+        dns_ipv6 = DNSIPv6()
+        for dns_entry in dns:
+            dns_address = dns_entry.get("dns_addr", Default[None](value=None))
+            if dns_entry["role"].value == "primary":
+                dns_ipv4.primary_dns_address_ipv4 = dns_address
+            elif dns_entry["role"].value == "secondary":
+                dns_ipv4.secondary_dns_address_ipv4 = dns_address
+            elif dns_entry["role"].value == "primaryv6":
+                dns_ipv6.primary_dns_address_ipv6 = dns_address
+            elif dns_entry["role"].value == "secondaryv6":
+                dns_ipv6.secondary_dns_address_ipv6 = dns_address
+        return dns_ipv4, dns_ipv6
+
+    def parse_host_mapping(self, hosts: List[Dict]) -> Optional[List[HostMapping]]:
+        if not hosts:
+            return None
+
+        hosts_cleared = [h for h in hosts if self.is_host_mapping_parsable(h)]
+
+        return [
+            HostMapping(
+                host_name=host["hostname"],
+                list_of_ips=self.parse_list_of_ip(host),
+            )
+            for host in hosts_cleared
+        ]
+
+    def parse_list_of_ip(self, host: Dict) -> Union[Variable, Global[List[str]]]:
+        list_of_ips = host["ip"]
+        if isinstance(list_of_ips, Variable):
+            return list_of_ips
+
+        # ["34.199.1.194"," 34.204.213.179], extra space before the ip is a bug in the feature template
+        return Global[List[str]](value=[ip.strip() for ip in list_of_ips.value])
+
+    def is_host_mapping_parsable(self, host: Dict) -> bool:
+        return "ip" in host and "hostname" in host
+
+    def parse_service(self, service: List[Dict]) -> Optional[list[Service]]:
+        if not service:
+            return None
+        service_items = []
+        for entry in service:
+            service_type = entry.get("svc_type")
+            if isinstance(service_type, Global):
+                service_type = as_global(service_type.value, ServiceType)
+            service_item = Service(
+                service_type=service_type,
+                ipv4_addresses=entry.get("address"),  # type: ignore
+                tracking=entry.get("track_enable", as_default(True)),
+            )
+            service_items.append(service_item)
+        return service_items
+
+    def parse_natpool(self, natpool: List[Dict]) -> Optional[List[NatPool]]:
+        if not natpool:
+            return None
+        nat_items = []
+        for entry in natpool:
+            direction = entry.get("direction")
+            nat_pool_name = entry.get("name")
+            prefix_length = entry.get("prefix_length")
+            range_start = entry.get("range_start")
+            range_end = entry.get("range_end")
+            overload = entry.get("overload", as_default(True))
+
+            if (
+                nat_pool_name is None
+                or prefix_length is None
+                or range_start is None
+                or range_end is None
+                or direction is None
+            ):
+                continue
+
+            if isinstance(direction, Global):
+                direction = as_global(str(direction.value), Direction)
+
+            nat_items.append(
+                NatPool(
+                    nat_pool_name=nat_pool_name,
+                    prefix_length=prefix_length,
+                    range_start=range_start,
+                    range_end=range_end,
+                    overload=overload,
+                    direction=direction,
                 )
-                host_mapping_items.append(host_mapping_item)
-            values["new_host_mapping"] = host_mapping_items
+            )
+        return nat_items
 
-    def _get_list_of_ips(self, entry) -> Global[List[IPvAnyAddress]]:
-        # Feature Template payload has space in ip string, so we need to strip it
-        list_of_ips = entry.get("ip", Global[List[str]](value=[])).value
-        return Global[List[IPvAnyAddress]](value=[IPvAnyAddress(ip.strip()) for ip in list_of_ips])
-
-    def configure_service(self, values: dict) -> None:
-        if service := values.get("service", []):
-            service_items = []
-            for service_i, entry in enumerate(service):
-                service_item = Service(
-                    service_type=as_global(entry["svc_type"].value, ServiceType),
-                    ipv4_addresses=entry.get("address", as_variable(self.service_ipv4_addresses.format(service_i + 1))),
-                    tracking=entry.get("track_enable", as_default(True)),
-                )
-                service_items.append(service_item)
-            values["service"] = service_items
-
-    def configure_natpool(self, values: dict) -> None:
-        if natpool := values.get("nat", {}).get("natpool", []):
-            nat_items = []
-            for nat_i, entry in enumerate(natpool):
-                direction = entry.get("direction")
-                if direction:
-                    direction = as_global(direction.value, Direction)
-                else:
-                    direction = as_variable(self.nat_direction.format(nat_i + 1))
-                nat_items.append(
-                    NatPool(
-                        nat_pool_name=entry.get("name", as_variable(self.nat_natpool_name.format(nat_i + 1))),
-                        prefix_length=entry.get("prefix_length", as_variable(self.nat_prefix_length.format(nat_i + 1))),
-                        range_start=entry.get("range_start", as_variable(self.nat_range_start.format(nat_i + 1))),
-                        range_end=entry.get("range_end", as_variable(self.nat_range_end.format(nat_i + 1))),
-                        overload=entry.get("overload", as_default(True)),
-                        direction=direction,
-                    )
-                )
-            values["nat_pool"] = nat_items
-
-    def configure_port_forwarding(self, values: dict) -> None:
-        if port_forward := values.get("nat", {}).get("port_forward", []):
-            nat_port_forwarding_items = []
-            for net_port_foward_i, entry in enumerate(port_forward):
-                protocol = entry.get("proto")
-                if protocol:
-                    protocol = as_global(protocol.value.upper(), NATPortForwardProtocol)
-                else:
-                    protocol = as_variable(self.nat_port_foward_protocol.format(net_port_foward_i + 1))
-                nat_port_forwarding_items.append(
-                    NatPortForward(
-                        nat_pool_name=entry.get(
-                            "pool_name", as_variable(self.nat_port_foward_natpool_name.format(net_port_foward_i + 1))
-                        ),
-                        source_port=entry.get(
-                            "source_port", as_variable(self.nat_port_foward_source_port.format(net_port_foward_i + 1))
-                        ),
+    def parse_port_forwarding(self, port_forward: List[Dict]) -> Optional[List[NatPortForward]]:
+        if not port_forward:
+            return None
+        nat_port_forwarding_items = []
+        for entry in port_forward:
+            protocol = entry.get("proto")
+            if isinstance(protocol, Global):
+                protocol = as_global(protocol.value.upper(), NATPortForwardProtocol)
+            nat_port_forwarding_items.append(
+                NatPortForward(
+                    **create_dict_without_none(
+                        nat_pool_name=entry.get("pool_name"),
+                        source_port=entry.get("source_port"),
                         translate_port=entry.get(
                             "translate_port",
-                            as_variable(self.nat_port_foward_translate_port.format(net_port_foward_i + 1)),
                         ),
-                        source_ip=entry.get(
-                            "source_ip", as_variable(self.nat_port_foward_source_ip.format(net_port_foward_i + 1))
-                        ),
+                        source_ip=entry.get("source_ip"),
                         translated_source_ip=entry.get(
                             "translate_ip",
-                            as_variable(self.nat_port_foward_translated_source_ip.format(net_port_foward_i + 1)),
                         ),
                         protocol=protocol,
                     )
                 )
-            values["nat_port_forwarding"] = nat_port_forwarding_items
+            )
+        return nat_port_forwarding_items
 
-    def configure_static_nat(self, values: dict) -> None:
-        if static_nat := values.get("nat", {}).get("static", []):
-            static_nat_items = []
-            for static_nat_i, entry in enumerate(static_nat):
-                static_nat_direction = entry.get("static_nat_direction")
-                if static_nat_direction:
-                    static_nat_direction = as_global(static_nat_direction.value, Direction)
-                else:
-                    static_nat_direction = as_variable(self.static_nat_direction.format(static_nat_i + 1))
-                static_nat_items.append(
-                    StaticNat(
-                        nat_pool_name=entry.get(
-                            "pool_name", as_variable(self.static_nat_pool_name.format(static_nat_i + 1))
-                        ),
-                        source_ip=entry.get(
-                            "source_ip", as_variable(self.static_nat_source_ip.format(static_nat_i + 1))
-                        ),
-                        translated_source_ip=entry.get(
-                            "translate_ip", as_variable(self.static_nat_translated_source_ip.format(static_nat_i + 1))
-                        ),
-                        static_nat_direction=static_nat_direction,
-                    )
+    def parse_static_nat(self, static_nat: List[Dict]) -> Optional[List[StaticNat]]:
+        if not static_nat:
+            return None
+        static_nat_items = []
+        for entry in static_nat:
+            static_nat_direction = entry.get("static_nat_direction")
+            nat_pool_name = entry.get("pool_name")
+            source_ip = entry.get("source_ip")
+            translated_source_ip = entry.get("translate_ip")
+
+            if (
+                static_nat_direction is None
+                or nat_pool_name is None
+                or source_ip is None
+                or translated_source_ip is None
+            ):
+                continue
+
+            if isinstance(static_nat_direction, Global):
+                static_nat_direction = as_global(static_nat_direction.value, Direction)
+
+            static_nat_items.append(
+                StaticNat(
+                    nat_pool_name=nat_pool_name,
+                    source_ip=source_ip,
+                    translated_source_ip=translated_source_ip,
+                    direction=static_nat_direction,
+                )  # type: ignore
+            )
+        return static_nat_items
+
+    def parse_nat64_v4_pool(self, nat64pool: List[Dict]) -> Optional[List[Nat64v4Pool]]:
+        if not nat64pool:
+            return None
+        return [
+            Nat64v4Pool(
+                **create_dict_without_none(
+                    nat64_v4_pool_name=entry.get("name"),
+                    nat64_v4_pool_range_start=entry.get("start_address"),
+                    nat64_v4_pool_range_end=entry.get("end_address"),
+                    nat64_v4_pool_overload=entry.get("overload", as_default(False)),
                 )
-            values["static_nat"] = static_nat_items
+            )
+            for entry in nat64pool  # type: ignore
+        ]
 
-    def configure_nat64(self, values: dict) -> None:
-        if nat64pool := values.get("nat64", {}).get("v4", {}).get("pool", []):
-            nat64_items = []
-            for nat64pool_i, entry in enumerate(nat64pool):
-                nat64_items.append(
-                    Nat64v4Pool(
-                        nat64_v4_pool_name=entry.get(
-                            "name", as_variable(self.nat64_v4_pool_name.format(nat64pool_i + 1))
-                        ),
-                        nat64_v4_pool_range_start=entry.get(
-                            "start_address", as_variable(self.nat64_v4_pool_range_start.format(nat64pool_i + 1))
-                        ),
-                        nat64_v4_pool_range_end=entry.get(
-                            "end_address", as_variable(self.nat64_v4_pool_range_end.format(nat64pool_i + 1))
-                        ),
-                        nat64_v4_pool_overload=entry.get(
-                            "overload", as_variable(self.nat64_v4_pool_overload.format(nat64pool_i + 1))
-                        ),
-                    )
+    def parse_ipv4_route(self, values: dict) -> None:
+        ipv4_route = values.get("ip", {}).get("route", [])
+        if not ipv4_route:
+            return
+        if len(ipv4_route) == 1 and ipv4_route[0] == {}:
+            # Sometimes it parses as a list with an empty dictionary
+            return
+
+        ipv4_route_items = []
+        for route in ipv4_route:
+            prefix: Union[Global, Variable] = route.pop("prefix", None)
+            if prefix.option_type == OptionType.GLOBAL:
+                interface = IPv4Interface(prefix.value)
+                route_prefix = RoutePrefix(
+                    ip_address=as_global(interface.network.network_address),
+                    subnet_mask=as_global(str(interface.netmask)),
                 )
-            values["nat64_v4_pool"] = nat64_items
 
-    def configure_ipv4_route(self, values: dict) -> None:
-        if ipv4_route := values.get("ip", {}).get("route", []):
-            ipv4_route_items = []
-            for route_i, route in enumerate(ipv4_route):
-                prefix: Union[Global, Variable] = route.pop("prefix", None)
-                if prefix.option_type == OptionType.GLOBAL:
-                    interface = IPv4Interface(prefix.value)
-                    route_prefix = RoutePrefix(
-                        ip_address=as_global(interface.network.network_address),
-                        subnet_mask=as_global(str(interface.netmask)),
-                    )
+            elif prefix.option_type == OptionType.VARIABLE:
+                route_prefix = RoutePrefix(
+                    ip_address=prefix,
+                    subnet_mask=as_global("0.0.0.0"),
+                )
+            ip_route_item = None
+            if "next_hop" in route:
+                next_hop_items = []
+                for next_hop in route.pop("next_hop", []):
+                    address = next_hop.pop("address", None)
+                    distance = next_hop.pop("distance", as_default(1))
+                    if address is None:
+                        continue
 
-                elif prefix.option_type == OptionType.VARIABLE:
-                    route_prefix = RoutePrefix(
-                        ip_address=prefix,
-                        subnet_mask=as_global("0.0.0.0"),
-                    )
-                ip_route_item = None
-                if "next_hop" in route:
-                    next_hop_items = []
-                    for next_hop_i, next_hop in enumerate(route.pop("next_hop", [])):
-                        next_hop_items.append(
-                            IPv4RouteGatewayNextHop(
-                                address=next_hop.pop(
-                                    "address",
-                                    as_variable(self.ipv4_route_next_hop_address.format(route_i + 1, next_hop_i + 1)),
-                                ),
-                                distance=next_hop.pop(
-                                    "distance",
-                                    as_variable(
-                                        self.ipv4_route_next_hop_administrative_distance.format(
-                                            route_i + 1, next_hop_i + 1
-                                        )
-                                    ),
-                                ),
-                            )
+                    next_hop_items.append(
+                        IPv4RouteGatewayNextHop(
+                            address=address,
+                            distance=distance,
                         )
-                    ip_route_item = NextHopRouteContainer(next_hop_container=NextHopContainer(next_hop=next_hop_items))
-                elif "next_hop_with_track" in route:
-                    next_hop_with_track_items = []
-                    for next_hop_with_track in route.pop("next_hop_with_track", []):
-                        tracker = next_hop_with_track.pop("tracker")
-                        if tracker:
-                            logger.warning(
-                                f"Tracker can be any value in UX1.0, but must be UUID in UX2.0. Current value {tracker}"
-                            )
-
-                        payload = create_dict_without_none(
-                            address=next_hop_with_track.pop("address", None),
-                            distance=next_hop_with_track.pop("distance", None),
+                    )
+                ip_route_item = NextHopRouteContainer(next_hop_container=NextHopContainer(next_hop=next_hop_items))
+            elif "next_hop_with_track" in route:
+                next_hop_with_track_items = []
+                for next_hop_with_track in route.pop("next_hop_with_track", []):
+                    tracker = next_hop_with_track.pop("tracker")
+                    if tracker:
+                        logger.warning(
+                            f"Tracker can be any value in UX1.0, but must be UUID in UX2.0. Current value {tracker}"
                         )
 
-                        next_hop_with_track_items.append(IPv4RouteGatewayNextHopWithTracker(**payload))
+                    address = next_hop_with_track.pop("address", None)
+                    distance = next_hop_with_track.pop("distance", as_default(1))
+                    if address is None:
+                        continue
 
-                    ip_route_item = NextHopRouteContainer(
-                        next_hop_container=NextHopContainer(next_hop_with_tracker=next_hop_with_track_items)
+                    next_hop_with_track_items.append(
+                        IPv4RouteGatewayNextHopWithTracker(address=address, distance=distance)
                     )
-                elif "vpn" in route:
-                    ip_route_item = StaticRouteVPN(  # type: ignore
-                        vpn=as_global(True),
-                    )
-                elif "dhcp" in route:
-                    ip_route_item = DHCP(  # type: ignore
-                        dhcp=as_global(True),
-                    )
-                else:
-                    # Let's assume it's a static route with enabled VPN
-                    ip_route_item = StaticRouteVPN(  # type: ignore
-                        vpn=as_global(True),
-                    )
-                ipv4_route_items.append(
-                    StaticRouteIPv4(prefix=route_prefix, one_of_ip_route=ip_route_item)  # type: ignore
+
+                ip_route_item = NextHopRouteContainer(
+                    next_hop_container=NextHopContainer(next_hop_with_tracker=next_hop_with_track_items)
                 )
-            values["ipv4_route"] = ipv4_route_items
+            elif "vpn" in route:
+                ip_route_item = StaticRouteVPN(  # type: ignore
+                    vpn=as_global(True),
+                )
+            elif "dhcp" in route:
+                ip_route_item = DHCP(  # type: ignore
+                    dhcp=as_global(True),
+                )
+            else:
+                # Let's assume it's a static route with enabled VPN
+                ip_route_item = StaticRouteVPN(  # type: ignore
+                    vpn=as_global(True),
+                )
+            ipv4_route_items.append(StaticRouteIPv4(prefix=route_prefix, one_of_ip_route=ip_route_item))  # type: ignore
+        values["ipv4_route"] = ipv4_route_items
 
-    def configure_ipv6_route(self, values: dict) -> None:
+    def parse_ipv6_route(self, values: dict) -> None:
         if ipv6_route := values.get("ipv6", {}).get("route", []):
             ipv6_route_items = []
             for route in ipv6_route:
@@ -636,15 +639,15 @@ class ServiceVpnTemplateConverter:
                 ipv6_route_items.append(StaticRouteIPv6(prefix=route_prefix, one_of_ip_route=ipv6_route_item))
             values["ipv6_route"] = ipv6_route_items
 
-    def configure_omp(self, values: dict) -> None:
+    def parse_omp(self, values: dict) -> None:
         for omp in self.omp_mapping.keys():
             if omp_advertises := values.get("omp", {}).get(omp, []):
                 pydantic_model_omp = self.omp_mapping[omp].ux2_model_omp
                 pydantic_model_prefix = self.omp_mapping[omp].ux2_model_prefix
                 pydantic_field = self.omp_mapping[omp].ux2_field
-                self._configure_omp(values, omp_advertises, pydantic_model_omp, pydantic_model_prefix, pydantic_field)
+                self._parse_omp(values, omp_advertises, pydantic_model_omp, pydantic_model_prefix, pydantic_field)
 
-    def _configure_omp(
+    def _parse_omp(
         self, values: dict, omp_advertises: list, pydantic_model_omp, pydantic_model_prefix, pydantic_field
     ) -> None:
         omp_advertise_items = []
@@ -670,14 +673,14 @@ class ServiceVpnTemplateConverter:
             )
         values[pydantic_field] = omp_advertise_items
 
-    def configure_routes(self, values: dict) -> None:
+    def parse_routes(self, values: dict) -> None:
         for route in self.routes_mapping.keys():
             if routes := values.get("ip", {}).get(route, []):
                 pydantic_model = self.routes_mapping[route].ux2_model
                 pydantic_field = self.routes_mapping[route].ux2_field
-                self._configure_route(values, routes, pydantic_model, pydantic_field)
+                self._parse_route(values, routes, pydantic_model, pydantic_field)
 
-    def _configure_route(self, values: dict, routes: list, pydantic_model, pydantic_field) -> None:
+    def _parse_route(self, values: dict, routes: list, pydantic_model, pydantic_field) -> None:
         items = []
         for route in routes:
             ipv4_interface = IPv4Interface(route.get("prefix").value)
@@ -688,14 +691,14 @@ class ServiceVpnTemplateConverter:
             items.append(pydantic_model(prefix=service_prefix, vpn=route.get("vpn")))
         values[pydantic_field] = items
 
-    def configure_route_leaks(self, values: dict) -> None:
+    def parse_route_leaks(self, values: dict) -> None:
         for leak in self.route_leaks_mapping.keys():
             if route_leaks := values.get(leak, []):
                 pydantic_model = self.route_leaks_mapping[leak].ux2_model
                 pydantic_field = self.route_leaks_mapping[leak].ux2_field
-                self._configure_leak(values, route_leaks, pydantic_model, pydantic_field)
+                self._parse_leak(values, route_leaks, pydantic_model, pydantic_field)
 
-    def _configure_leak(self, values: dict, route_leaks: list, pydantic_model, pydantic_field) -> None:
+    def _parse_leak(self, values: dict, route_leaks: list, pydantic_model, pydantic_field) -> None:
         items = []
         for rl in route_leaks:
             redistribute_items = []

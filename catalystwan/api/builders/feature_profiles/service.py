@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from __future__ import annotations
 
 import logging
@@ -153,6 +154,11 @@ class ServiceFeatureProfileBuilder:
 
                     if dhcp_server is None:
                         # The interface does not have a DHCP server attached
+                        continue
+
+                    if parcel_uuid is None:
+                        # The parent could not be created
+                        handle_build_report_for_failed_subparcel(self.build_report, sub_parcel, dhcp_server)
                         continue
 
                     dhcp_server_uuid = self._create_parcel(profile_uuid, dhcp_server)
