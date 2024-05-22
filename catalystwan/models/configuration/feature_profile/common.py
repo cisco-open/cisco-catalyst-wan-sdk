@@ -36,12 +36,13 @@ ProfileType = Literal[
     "cli",
     "service",
     "application-priority",
-    "policy-object",
+    "policy-object",  # automatically created default policy object feature profile
     "embedded-security",
     "other",
     "uc-voice",
     "global",  # automatically created global cellulargateway feature profile
     "sig-security",
+    "topology",
 ]
 
 SchemaType = Literal[
