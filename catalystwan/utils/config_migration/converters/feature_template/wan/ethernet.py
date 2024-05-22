@@ -1,3 +1,5 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
+import logging
 from copy import deepcopy
 from typing import Dict, List, Optional, Union
 
@@ -30,6 +32,8 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
 from catalystwan.utils.config_migration.steps.constants import WAN_VPN_ETHERNET
 
+logger = logging.getLogger(__name__)
+
 
 class WanInterfaceEthernetTemplateConverter:
     supported_template_types = (WAN_VPN_ETHERNET,)
@@ -39,7 +43,9 @@ class WanInterfaceEthernetTemplateConverter:
 
         encapsulation = self.parse_encapsulations(data.get("tunnel_interface", {}).get("encapsulation", []))
         interface_name = data["if_name"]
-        interface_description = data.get("description")
+        interface_description = data.get(
+            "description", as_global(description)
+        )  # Edge case where model doesn't have description but its required
         interface_ip_address = self.parse_interface_ip_address(data)
         tunnel_interface = self.parse_tunnel_interface(data)
         shutdown = data.get("shutdown")
@@ -60,8 +66,8 @@ class WanInterfaceEthernetTemplateConverter:
         tunnel = self.parse_tunnel(data)
 
         payload = create_dict_without_none(
-            name=name,
-            description=description,
+            parcel_name=name,
+            parcel_description=description,
             encapsulation=encapsulation,
             interface_name=interface_name,
             interface_description=interface_description,
@@ -107,7 +113,7 @@ class WanInterfaceEthernetTemplateConverter:
     def parse_interface_ip_address(self, data: Dict) -> Union[InterfaceDynamicIPv4Address, InterfaceStaticIPv4Address]:
         ip_address = data.get("ip", {})
 
-        if "address" in ip_address:
+        if "address" in ip_address and ip_address["address"].value != "":
             return InterfaceStaticIPv4Address(
                 static=StaticIPv4AddressConfig(
                     primary_ip_address=self.get_static_ipv4_address(ip_address),
@@ -115,7 +121,7 @@ class WanInterfaceEthernetTemplateConverter:
                 )
             )
 
-        if "dhcp_client" in ip_address:
+        elif "dhcp_client" in ip_address:
             return InterfaceDynamicIPv4Address(
                 dynamic=DynamicDhcpDistance(dynamic_dhcp_distance=ip_address.get("dhcp_distance", as_default(1)))
             )
@@ -162,6 +168,8 @@ class WanInterfaceEthernetTemplateConverter:
                 nat_type = Global[EthernetNatType](value="pool")
             else:
                 nat_type = Global[EthernetNatType](value="loopback")
+
+        nat_type = as_global(nat_type.value, EthernetNatType)
 
         payload = create_dict_without_none(
             nat_type=nat_type,

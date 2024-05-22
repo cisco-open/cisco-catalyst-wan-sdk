@@ -1,8 +1,9 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from copy import deepcopy
 from typing import Dict, List, Optional
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_default, as_global, as_variable
-from catalystwan.models.common import EthernetDuplexMode
+from catalystwan.models.common import EthernetDuplexMode, EthernetNatType
 from catalystwan.models.configuration.feature_profile.common import (
     Arp,
     DynamicIPv6Dhcp,
@@ -267,9 +268,17 @@ class LanInterfaceEthernetTemplateConverter:
         if nat := values.get("nat"):
             if isinstance(nat, dict):
                 # Nat can be straight up Global[bool] or a dict with more values
-                nat_type = nat.get("nat_choice", as_variable(self.nat_attribute_nat_choice))
-                if nat_type.value.lower() == "interface":
+                nat_type = nat.get("nat_choice")
+
+                if nat_type is None:
+                    nat_type = as_global("loopback", EthernetNatType)
+
+                elif nat_type.value.lower() == "interface":
                     nat_type = as_variable(self.nat_attribute_nat_choice)
+
+                elif not isinstance(nat_type, Variable):
+                    nat_type = as_global(nat_type.value, EthernetNatType)
+
                 values["nat_attributes_ipv4"] = EthernetNatAttributesIpv4(
                     nat_type=nat_type,
                     nat_pool=self.get_nat_pool(nat),

@@ -343,16 +343,10 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
                     )
                     # Add to UX2. We can indentify the parcels as subelements of the feature profiles by the UUIDs
                     ux2.profile_parcels.append(transformed_parcel)
-            except (CatalystwanConverterCantConvertException, ValidationError) as e:
-                exception_message = f"Feature Template ({ft.name}) conversion error: {e}."
+            except (CatalystwanConverterCantConvertException, ValidationError, Exception) as e:
+                exception_message = f"Feature Template ({ft.name})[{ft.template_type}] conversion error: {e}."
                 logger.warning(exception_message)
-                transform_result.add_failed_conversion_parcel(
-                    exception_message=exception_message,
-                    feature_template=ft,
-                )
-            except Exception as e:
-                exception_message = f"Feature Template ({ft.name}) unexpected error during converion: {e}."
-                logger.warning(exception_message)
+                ft.device_type = [""]  # This takes to much space in the logs
                 transform_result.add_failed_conversion_parcel(
                     exception_message=exception_message,
                     feature_template=ft,
