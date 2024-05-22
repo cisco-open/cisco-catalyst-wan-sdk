@@ -122,16 +122,12 @@ class FeatureTemplate(FeatureTemplateValidator, ABC):
 
         feature_template_model = choose_model(type_value=template_info.template_type)
 
-        device_specific_variables: Dict[str, DeviceVariable] = {}
-        values_from_template_definition = find_template_values(
-            template_definition_as_dict, device_specific_variables=device_specific_variables
-        )
+        values_from_template_definition = find_template_values(template_definition_as_dict)
         flattened_values = flatten_dict(values_from_template_definition)
 
         return feature_template_model(
             template_name=template_info.name,
             template_description=template_info.description,
             device_models=[model for model in template_info.device_type],
-            device_specific_variables=device_specific_variables,
             **flattened_values,
         )
