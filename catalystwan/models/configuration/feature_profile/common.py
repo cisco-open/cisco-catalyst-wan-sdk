@@ -132,8 +132,8 @@ class DNSIPv4(BaseModel):
         serialization_alias="primaryDnsAddressIpv4",
         validation_alias="primaryDnsAddressIpv4",
     )
-    secondary_dns_address_ipv4: Union[Default[None], Global[str], Global[IPv4Address], Variable] = Field(
-        default=Default[None](value=None),
+    secondary_dns_address_ipv4: Optional[Union[Default[None], Global[str], Global[IPv4Address], Variable]] = Field(
+        default=None,
         serialization_alias="secondaryDnsAddressIpv4",
         validation_alias="secondaryDnsAddressIpv4",
     )
@@ -149,8 +149,8 @@ class DNSIPv6(BaseModel):
         serialization_alias="primaryDnsAddressIpv6",
         validation_alias="primaryDnsAddressIpv6",
     )
-    secondary_dns_address_ipv6: Union[Default[None], Global[str], Global[IPv6Address], Variable] = Field(
-        default=Default[None](value=None),
+    secondary_dns_address_ipv6: Optional[Union[Default[None], Global[str], Global[IPv6Address], Variable]] = Field(
+        default=None,
         serialization_alias="secondaryDnsAddressIpv6",
         validation_alias="secondaryDnsAddressIpv6",
     )

@@ -422,7 +422,7 @@ class ServiceVpnTemplateConverter:
     def is_host_mapping_parsable(self, host: Dict) -> bool:
         return "ip" in host and "hostname" in host
 
-    def parse_service(self, service: List[Dict]) -> Optional[list[Service]]:
+    def parse_service(self, service: List[Dict]) -> Optional[List[Service]]:
         if not service:
             return None
         service_items = []
@@ -526,7 +526,7 @@ class ServiceVpnTemplateConverter:
                     nat_pool_name=nat_pool_name,
                     source_ip=source_ip,
                     translated_source_ip=translated_source_ip,
-                    direction=static_nat_direction,
+                    static_nat_direction=static_nat_direction,
                 )  # type: ignore
             )
         return static_nat_items
