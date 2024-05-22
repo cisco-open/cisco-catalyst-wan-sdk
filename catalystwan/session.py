@@ -421,7 +421,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         Returns:
             Tenant UUID.
         """
-        tenants = self.get("dataservice/tenant").dataseq(Tenant, validate=False)
+        tenants = self.get("dataservice/tenant").dataseq(Tenant)
         tenant = tenants.filter(subdomain=self.subdomain).single_or_default()
 
         if not tenant or not tenant.tenant_id:

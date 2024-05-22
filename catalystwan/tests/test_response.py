@@ -7,6 +7,7 @@ from unittest.mock import patch
 from attr import define, field  # type: ignore
 from parameterized import parameterized  # type: ignore
 from pydantic import BaseModel, Field, ValidationError
+from requests.exceptions import JSONDecodeError
 
 from catalystwan.dataclasses import DataclassBase
 from catalystwan.response import ManagerErrorInfo, ManagerResponse
@@ -173,3 +174,12 @@ class TestResponse(unittest.TestCase):
             assert data.important == VALIDATE_DATASEQ_TEST_DATA[i]["important"]
         with self.assertRaises(ValidationError):
             vmng_response.dataseq(DataForValidateTest, sourcekey=None, validate=True)
+
+    def test_dataseq_with_misisng_data(self):
+        self.response_mock.json.side_effect = JSONDecodeError("test", "test", 1)
+        vmng_response = ManagerResponse(self.response_mock)
+        # Act
+        dataseq = vmng_response.dataseq(DataForValidateTest, sourcekey="data", validate=True)
+        # Assert
+        assert isinstance(dataseq, DataSequence)
+        assert len(dataseq) == 0

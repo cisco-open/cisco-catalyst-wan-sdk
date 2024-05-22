@@ -1,7 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from packaging.version import Version
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -210,12 +210,21 @@ class UX2Config(BaseModel):
 
 
 class ConfigTransformResult(BaseModel):
+    # https://docs.pydantic.dev/2.0/usage/models/#fields-with-dynamic-default-values
+    uuid: UUID = Field(default_factory=uuid4)
     ux2_config: UX2Config = Field(
         default_factory=lambda: UX2Config(), serialization_alias="ux2Config", validation_alias="ux2Config"
     )
     failed_items: List[FailedConversionItem] = Field(
         default_factory=list, serialization_alias="failedConversionItems", validation_alias="failedConversionItems"
     )
+
+    def add_suffix_to_names(self):
+        suffix = str(self.uuid)[:7]
+        for config_group in self.ux2_config.config_groups:
+            config_group.config_group.name = f"{config_group.config_group.name}_{suffix}"
+        for feature_profile in self.ux2_config.feature_profiles:
+            feature_profile.feature_profile.name = f"{feature_profile.feature_profile.name}_{suffix}"
 
     def add_failed_conversion_parcel(
         self,

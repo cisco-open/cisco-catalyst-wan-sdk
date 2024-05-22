@@ -16,7 +16,9 @@ PathPreference = Literal[
 
 class Preference(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    color_preference: Global[list] = Field(serialization_alias="colorPreference", validation_alias="colorPreference")
+    color_preference: Global[List[TLOCColor]] = Field(
+        serialization_alias="colorPreference", validation_alias="colorPreference"
+    )
     path_preference: Global[PathPreference] = Field(
         serialization_alias="pathPreference", validation_alias="pathPreference"
     )
@@ -49,7 +51,7 @@ class PreferredColorGroupParcel(_ParcelBase):
         self.entries.append(
             PreferredColorGroupEntry(
                 primary_preference=Preference(
-                    color_preference=as_global(color_preference),
+                    color_preference=Global[List[TLOCColor]](value=color_preference),
                     path_preference=as_global(path_preference, PathPreference),
                 ),
                 secondary_preference=None,
@@ -60,11 +62,13 @@ class PreferredColorGroupParcel(_ParcelBase):
     def add_secondary(self, color_preference: List[TLOCColor], path_preference: PathPreference):
         preferred_color = self.entries[0]
         preferred_color.secondary_preference = Preference(
-            color_preference=as_global(color_preference), path_preference=as_global(path_preference, PathPreference)
+            color_preference=Global[List[TLOCColor]](value=color_preference),
+            path_preference=as_global(path_preference, PathPreference),
         )
 
     def add_tertiary(self, color_preference: List[TLOCColor], path_preference: PathPreference):
         preferred_color = self.entries[0]
         preferred_color.tertiary_preference = Preference(
-            color_preference=as_global(color_preference), path_preference=as_global(path_preference, PathPreference)
+            color_preference=Global[List[TLOCColor]](value=color_preference),
+            path_preference=as_global(path_preference, PathPreference),
         )
