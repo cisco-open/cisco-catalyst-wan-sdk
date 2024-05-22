@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
 from collections import defaultdict
 from typing import Dict, Iterator, List, cast
@@ -27,7 +28,7 @@ def iterate_over_subparcels(
     parent: TransformedParcel, all_parcels: Dict[UUID, TransformedParcel]
 ) -> Iterator[TransformedParcel]:
     if not parent.header.subelements:
-        return iter([])
+        yield from ()
 
     for element in parent.header.subelements:
         transformed_subparcel = all_parcels.get(element)

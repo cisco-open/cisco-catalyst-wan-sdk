@@ -1,6 +1,5 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
-import traceback
 from collections import defaultdict
 from typing import Callable, Optional, TypeVar, cast
 from uuid import UUID, uuid4
@@ -354,7 +353,6 @@ def transform(ux1: UX1Config) -> ConfigTransformResult:
             except Exception as e:
                 exception_message = f"Feature Template ({ft.name}) unexpected error during converion: {e}."
                 logger.warning(exception_message)
-                traceback.print_exception(e)
                 transform_result.add_failed_conversion_parcel(
                     exception_message=exception_message,
                     feature_template=ft,

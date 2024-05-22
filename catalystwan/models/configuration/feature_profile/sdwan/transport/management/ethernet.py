@@ -101,7 +101,7 @@ class InterfaceEthernetParcel(_ParcelBase):
         validation_alias=AliasPath("data", "intfIpAddress")
     )
     shutdown: Union[Variable, Global[bool], Default[bool]] = Field(
-        default=Default[bool](value=False), validation_alias=AliasPath("data", "shutdown")
+        default=Default[bool](value=True), validation_alias=AliasPath("data", "shutdown")
     )
     arp: Optional[List[Arp]] = Field(
         default=None, validation_alias=AliasPath("data", "arp"), description="Configure ARP entries"
