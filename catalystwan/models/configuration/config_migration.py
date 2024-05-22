@@ -210,7 +210,8 @@ class UX2Config(BaseModel):
 
 
 class ConfigTransformResult(BaseModel):
-    uuid: UUID = Field(default=uuid4())
+    # https://docs.pydantic.dev/2.0/usage/models/#fields-with-dynamic-default-values
+    uuid: UUID = Field(default_factory=uuid4)
     ux2_config: UX2Config = Field(
         default_factory=lambda: UX2Config(), serialization_alias="ux2Config", validation_alias="ux2Config"
     )
