@@ -70,7 +70,6 @@ class BaseOspfv3TemplateSubconverter:
         self, name: str, description: str, template_values: dict
     ) -> Union[Ospfv3IPv4Parcel, Ospfv3IPv6Parcel]:
         name = f"{name}{self.name_suffix}"
-        print(name)
         values = self.get_values(template_values)
         self.configure_basic_ospf_v3_attributes(values)
         self.configure_advanced_ospf_v3_attributes(values)

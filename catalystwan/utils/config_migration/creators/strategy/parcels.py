@@ -33,7 +33,7 @@ def iterate_over_subparcels(
     for element in parent.header.subelements:
         transformed_subparcel = all_parcels.get(element)
         if transformed_subparcel is None:
-            logger.error(f"Parent {parent}: subparcel {element} not found in all parcels. Skipping.")
+            logger.error(f"Parent {parent.header.origin}: subparcel {element} not found in all parcels. Skipping.")
             continue
         yield transformed_subparcel
 
