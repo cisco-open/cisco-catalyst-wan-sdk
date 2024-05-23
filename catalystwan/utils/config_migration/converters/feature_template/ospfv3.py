@@ -1,10 +1,11 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from copy import deepcopy
 from typing import List, Optional, Type, Union, get_args
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, as_global
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask
-from catalystwan.models.configuration.feature_profile.sdwan.service import Ospfv3IPv4Parcel
-from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 import (
+from catalystwan.models.configuration.feature_profile.sdwan.routing import RoutingOspfv3IPv4Parcel
+from catalystwan.models.configuration.feature_profile.sdwan.routing.ospfv3 import (
     AdvancedOspfv3Attributes,
     BasicOspfv3Attributes,
     DefaultArea,
@@ -16,11 +17,11 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 impor
     Ospfv3InterfaceParametres,
     Ospfv3IPv4Area,
     Ospfv3IPv6Area,
-    Ospfv3IPv6Parcel,
     RedistributedRoute,
     RedistributedRouteIPv6,
     RedistributeProtocol,
     RedistributeProtocolIPv6,
+    RoutingOspfv3IPv6Parcel,
     SpfTimers,
     StubArea,
     SummaryRoute,
@@ -31,7 +32,7 @@ from catalystwan.utils.config_migration.converters.exceptions import Catalystwan
 
 class Ospfv3TemplateConverter:
     """
-    Warning: This class returns a tuple of Ospfv3IPv4Parcel and Ospfv3IPv6Parcel objects,
+    Warning: This class returns a tuple of RoutingOspfv3IPv4Parcel and RoutingOspfv3IPv6Parcel objects,
     because the Feature Template has two definitions inside one for IPv4 and one for IPv6.
     """
 
@@ -39,7 +40,7 @@ class Ospfv3TemplateConverter:
 
     def create_parcel(
         self, name: str, description: str, template_values: dict
-    ) -> List[Union[Ospfv3IPv4Parcel, Ospfv3IPv6Parcel]]:
+    ) -> List[Union[RoutingOspfv3IPv4Parcel, RoutingOspfv3IPv6Parcel]]:
         if template_values.get("ospfv3") is None:
             raise CatalystwanConverterCantConvertException("Feature Template does not contain OSPFv3 configuration")
         ospfv3ipv4 = Ospfv3Ipv4TemplateSubconverter().create_parcel(name, description, template_values)
@@ -51,7 +52,7 @@ class BaseOspfv3TemplateSubconverter:
     name_suffix: str
     key_address_family: str
     key_distance: str
-    parcel_model: Union[Type[Ospfv3IPv4Parcel], Type[Ospfv3IPv6Parcel]]
+    parcel_model: Union[Type[RoutingOspfv3IPv4Parcel], Type[RoutingOspfv3IPv6Parcel]]
     area_model: Union[Type[Ospfv3IPv4Area], Type[Ospfv3IPv6Area]]
 
     delete_keys = (
@@ -68,7 +69,7 @@ class BaseOspfv3TemplateSubconverter:
 
     def create_parcel(
         self, name: str, description: str, template_values: dict
-    ) -> Union[Ospfv3IPv4Parcel, Ospfv3IPv6Parcel]:
+    ) -> Union[RoutingOspfv3IPv4Parcel, RoutingOspfv3IPv6Parcel]:
         name = f"{name}{self.name_suffix}"
         values = self.get_values(template_values)
         self.configure_basic_ospf_v3_attributes(values)
@@ -210,7 +211,7 @@ class Ospfv3Ipv4TemplateSubconverter(BaseOspfv3TemplateSubconverter):
     name_suffix = "_IPV4"
     key_address_family = "ipv4"
     key_distance = "distance_ipv4"
-    parcel_model = Ospfv3IPv4Parcel
+    parcel_model = RoutingOspfv3IPv4Parcel
     area_model = Ospfv3IPv4Area
 
     def _set_range(self, area_value: dict) -> Optional[List[SummaryRoute]]:
@@ -249,7 +250,7 @@ class Ospfv3Ipv6TemplateSubconverter(BaseOspfv3TemplateSubconverter):
     name_suffix = "_IPV6"
     key_address_family = "ipv6"
     key_distance = "distance_ipv6"
-    parcel_model = Ospfv3IPv6Parcel
+    parcel_model = RoutingOspfv3IPv6Parcel
     area_model = Ospfv3IPv6Area
 
     def _set_range(self, area_value: dict) -> Optional[List[SummaryRouteIPv6]]:

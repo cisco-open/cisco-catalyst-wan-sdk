@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from typing import List, Union
 
 from pydantic import Field
@@ -14,8 +15,6 @@ from .lan.multilink import InterfaceMultilinkParcel
 from .lan.svi import InterfaceSviParcel
 from .lan.vpn import LanVpnParcel
 from .multicast import MulticastParcel
-from .ospf import OspfParcel
-from .ospfv3 import Ospfv3IPv4Parcel, Ospfv3IPv6Parcel
 from .route_policy import RoutePolicyParcel
 from .switchport import SwitchportParcel
 from .wireless_lan import WirelessLanParcel
@@ -25,9 +24,6 @@ AnyTopLevelServiceParcel = Annotated[
         LanVpnDhcpServerParcel,
         AppqoeParcel,
         LanVpnParcel,
-        OspfParcel,
-        Ospfv3IPv4Parcel,
-        Ospfv3IPv6Parcel,
         RoutePolicyParcel,
         EigrpParcel,
         SwitchportParcel,

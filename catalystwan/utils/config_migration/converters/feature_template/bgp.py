@@ -1,13 +1,13 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
 from copy import deepcopy
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 from uuid import UUID
 
 from catalystwan.api.configuration_groups.parcel import Global, Variable, as_global
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask, RefIdItem
-from catalystwan.models.configuration.feature_profile.sdwan.transport import RoutingBgpParcel
-from catalystwan.models.configuration.feature_profile.sdwan.transport.bgp import (
+from catalystwan.models.configuration.feature_profile.sdwan.routing import RoutingBgpParcel
+from catalystwan.models.configuration.feature_profile.sdwan.routing.bgp import (
     AddressFamily,
     AggregateAddres,
     Ipv6NeighborItem,
@@ -16,7 +16,6 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.bgp import
     Protocol,
     RedistributeItem,
 )
-from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
 from catalystwan.utils.config_migration.steps.constants import LAN_BGP, WAN_BGP
 
@@ -25,9 +24,6 @@ logger = logging.getLogger(__name__)
 
 class BgpRoutingTemplateConverter:
     supported_template_types = (WAN_BGP, LAN_BGP)
-
-    device_specific_ipv4_neighbor_address = "{{{{lbgp_1_neighbor_{index}_address}}}}"
-    device_specific_ipv6_neighbor_address = "{{{{lbgp_1_ipv6_neighbor_{index}_address}}}}"
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> RoutingBgpParcel:
         """
@@ -79,7 +75,7 @@ class BgpRoutingTemplateConverter:
             missing_as_worst=data.get("missing_as_worst"),
             compare_router_id=data.get("compare_router_id"),
             multipath_relax=data.get("multipath_relax"),
-            address_family=self.parse_address_family(data.get("address_family")),
+            address_family=self.parse_address_family(data.get("address_family", [])),
             neighbor=self.parse_neighbor(data.get("neighbor", [])),
             ipv6_neighbor=self.parse_neighbor_ipv6(data.get("ipv6_neighbor", [])),
         )
@@ -93,15 +89,16 @@ class BgpRoutingTemplateConverter:
         items = []
         for neighbor in neighbors:
             address = neighbor.get("address")
-            if not address:
+            remote_as = neighbor.get("remote_as")
+            if not address or not remote_as:
                 # Skip to not lose whole conversion
                 continue
 
             ni = NeighborItem(
-                address=neighbor.get("address"),
+                address=address,
                 description=neighbor.get("description"),
                 shutdown=neighbor.get("shutdown"),
-                remote_as=neighbor.get("remote_as"),
+                remote_as=remote_as,
                 local_as=neighbor.get("local_as"),
                 keepalive=neighbor.get("timers", {}).get("keepalive"),
                 holdtime=neighbor.get("timers", {}).get("holdtime"),
@@ -127,15 +124,16 @@ class BgpRoutingTemplateConverter:
         items = []
         for neighbor in neighbors:
             address = neighbor.get("address")
-            if not address:
+            remote_as = neighbor.get("remote_as")
+            if not address or not remote_as:
                 # Skip to not lose whole conversion
                 continue
 
             ni = Ipv6NeighborItem(
-                address=neighbor.get("address"),
+                address=address,
                 description=neighbor.get("description"),
                 shutdown=neighbor.get("shutdown"),
-                remote_as=neighbor.get("remote_as"),
+                remote_as=remote_as,
                 local_as=neighbor.get("local_as"),
                 keepalive=neighbor.get("timers", {}).get("keepalive"),
                 holdtime=neighbor.get("holdtime"),
@@ -172,22 +170,22 @@ class BgpRoutingTemplateConverter:
         if not data:
             return None
 
-        return [
-            RedistributeItem(
-                protocol=self.parse_protocol(item.get("protocol")),
+        items = []
+        for item in data:
+            protocol = item.get("protocol")
+            if not protocol:
+                continue
+            if isinstance(protocol, Global):
+                protocol = as_global(protocol.value, Protocol)
+
+            ri = RedistributeItem(
+                protocol=protocol,
                 route_policy=self.parse_route_policy(item.get("route_policy")),
             )
-            for item in data
-        ]
+            items.append(ri)
+        return items
 
-    def parse_protocol(self, protocol: Dict) -> Optional[Union[Global[Protocol], Variable]]:
-        if not protocol:
-            raise CatalystwanConverterCantConvertException("Protocol is required")
-        if isinstance(protocol, Variable):
-            return protocol
-        return as_global(protocol.value, Protocol)
-
-    def parse_route_policy(self, route_policy: Dict) -> Optional[RefIdItem]:
+    def parse_route_policy(self, route_policy: Optional[Dict]) -> Optional[RefIdItem]:
         if isinstance(route_policy, Global):
             try:
                 UUID(route_policy.value)
@@ -196,33 +194,46 @@ class BgpRoutingTemplateConverter:
                 )
             except ValueError:
                 pass
+
         return None
 
     def parse_aggregate_address(self, data: List[Dict]) -> Optional[List[AggregateAddres]]:
         if not data:
             return None
 
-        return [
-            AggregateAddres(
-                prefix=self.parse_prefix(item),
+        items = []
+        for item in data:
+            prefix = item.get("prefix")
+            if not prefix:
+                continue
+            aa = AggregateAddres(
+                prefix=prefix,
                 as_set=item.get("as_set"),
                 summary_only=item.get("summary_only"),
             )
-            for item in data
-        ]
+            items.append(aa)
+        return items
 
     def parse_network_item(self, data: List[Dict]) -> Optional[List[NetworkItem]]:
         if not data:
             return None
-        return [
-            NetworkItem(
-                prefix=self.parse_prefix(item),
-            )
-            for item in data
-        ]
 
-    def parse_prefix(self, data: Dict) -> AddressWithMask:
+        items = []
+        for item in data:
+            prefix = self.parse_prefix(item)
+            if not prefix:
+                continue
+            ni = NetworkItem(
+                prefix=prefix,
+            )
+            items.append(ni)
+        return items
+
+    def parse_prefix(self, data: Dict) -> Optional[AddressWithMask]:
         address = data.get("prefix")
+        if not address:
+            return None
+
         if isinstance(address, Variable):
             return AddressWithMask(address=address, mask=address)
 

@@ -117,7 +117,7 @@ class RedistributedRoute(BaseModel):
     )
 
 
-class OspfParcel(_ParcelBase):
+class RoutingOspfParcel(_ParcelBase):
     type_: Literal["routing/ospf"] = Field(default="routing/ospf", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 

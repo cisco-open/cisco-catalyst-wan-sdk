@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 from typing import List, Literal, Union
 from uuid import UUID
@@ -5,7 +6,7 @@ from uuid import UUID
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Global, Variable, _ParcelBase
-from catalystwan.models.configuration.feature_profile.sdwan.transport.bgp import RefIdItem
+from catalystwan.models.configuration.feature_profile.common import RefIdItem
 
 PredefinedZone = Literal["self", "default", "untrusted"]
 SettingOn = Literal["on"]

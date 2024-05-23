@@ -122,6 +122,9 @@ SUPPORTED_TEMPLATE_TYPES = [
     "dhcp",
     "cisco_dhcp_server",
     "dhcp-server",
+    "cellular-cedge-profile",
+    "cellular-cedge-controller",
+    "cellular-cedge-gps-controller",
 ]
 
 
@@ -166,6 +169,9 @@ FEATURE_PROFILE_TRANSPORT = [
     VPN_MANAGEMENT,
     WAN_BGP,
     "cisco_ospfv3",
+    "cellular-cedge-profile",
+    "cellular-cedge-controller",
+    "cellular-cedge-gps-controller",
 ]
 
 FEATURE_PROFILE_OTHER = [
