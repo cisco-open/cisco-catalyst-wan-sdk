@@ -37,6 +37,7 @@ ParcelType = Literal[
     "dhcp-server",
     "dns",
     "expanded-community",
+    "ext-community",
     "global",
     "gps",
     "hubspoke",

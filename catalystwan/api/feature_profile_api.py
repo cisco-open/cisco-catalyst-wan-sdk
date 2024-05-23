@@ -75,6 +75,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
     ColorParcel,
     DataPrefixParcel,
     ExpandedCommunityParcel,
+    ExtendedCommunityParcel,
     FowardingClassParcel,
     FQDNDomainParcel,
     GeoLocationListParcel,
@@ -799,6 +800,10 @@ class PolicyObjectFeatureProfileAPI:
         ...
 
     @overload
+    def get(self, profile_id: UUID, parcel_type: Type[ExtendedCommunityParcel]) -> DataSequence[Parcel[Any]]:
+        ...
+
+    @overload
     def get(self, profile_id: UUID, parcel_type: Type[FowardingClassParcel]) -> DataSequence[Parcel[Any]]:
         ...
 
@@ -893,6 +898,12 @@ class PolicyObjectFeatureProfileAPI:
     @overload
     def get(
         self, profile_id: UUID, parcel_type: Type[ExpandedCommunityParcel], parcel_id: UUID
+    ) -> DataSequence[Parcel[Any]]:
+        ...
+
+    @overload
+    def get(
+        self, profile_id: UUID, parcel_type: Type[ExtendedCommunityParcel], parcel_id: UUID
     ) -> DataSequence[Parcel[Any]]:
         ...
 
@@ -1048,6 +1059,10 @@ class PolicyObjectFeatureProfileAPI:
 
     @overload
     def delete(self, profile_id: UUID, parcel_type: Type[ExpandedCommunityParcel], list_object_id: UUID) -> None:
+        ...
+
+    @overload
+    def delete(self, profile_id: UUID, parcel_type: Type[ExtendedCommunityParcel], list_object_id: UUID) -> None:
         ...
 
     @overload
