@@ -62,11 +62,12 @@ from uuid import UUID
 from packaging.specifiers import SpecifierSet  # type: ignore
 from packaging.version import Version  # type: ignore
 from pydantic import BaseModel
-from typing_extensions import Annotated, get_args, get_origin
+from typing_extensions import get_args, get_origin
 
 from catalystwan.abstractions import APIEndpointClient, APIEndpointClientResponse
 from catalystwan.exceptions import APIEndpointError, APIRequestPayloadTypeError, APIVersionError, APIViewError
 from catalystwan.typed_list import DataSequence
+from catalystwan.utils.model import resolve_nested_base_model_unions
 from catalystwan.utils.session_type import SessionType
 
 BASE_PATH: Final[str] = "/dataservice"
@@ -115,43 +116,11 @@ class TypeSpecifier:
         return TypeSpecifier(present=True, payload_union_model_types=models)
 
     @classmethod
-    def resolve_nested_base_model_unions(
-        cls, annotation: Any, models_types: List[Type[BaseModel]]
-    ) -> List[Type[BaseModel]]:
-        type_origin = get_origin(annotation)
-        if isclass(annotation):
-            try:
-                if issubclass(annotation, BaseModel):
-                    return [annotation]
-                raise APIEndpointError(f"Expected: {PayloadType}")
-            except TypeError:
-                raise APIEndpointError(f"Expected: {PayloadType}")
-        # Check if Annnotated[Union[PayloadModelType, ...]], only unions of pydantic models allowed
-        elif type_origin == Annotated:
-            if annotated_origin := get_args(annotation):
-                if (len(annotated_origin) >= 1) and get_origin(annotated_origin[0]) == Union:
-                    type_args = get_args(annotated_origin[0])
-                    if all(isclass(t) for t in type_args) and all(issubclass(t, BaseModel) for t in type_args):
-                        models_types.extend(list(type_args))
-                        return models_types
-                    else:
-                        non_models = [t for t in type_args if not isclass(t)]
-                        for non_model in non_models:
-                            models_types.extend(cls.resolve_nested_base_model_unions(non_model, models_types))
-                        return models_types
-
-        # Check if Union[PayloadModelType, ...], only unions of pydantic models allowed
-        elif type_origin == Union:
-            type_args = get_args(annotation)
-            if all(isclass(t) for t in type_args) and all(issubclass(t, BaseModel) for t in type_args):
-                models_types.extend(list(type_args))
-                return models_types
-            else:
-                non_models = [t for t in type_args if not isclass(t)]
-                for non_model in non_models:
-                    models_types.extend(cls.resolve_nested_base_model_unions(non_model, models_types))
-                return models_types
-        raise APIEndpointError(f"Expected: {PayloadType}")
+    def resolve_nested(cls, annotation: Any, models_types: List[Type[BaseModel]]) -> List[Type[BaseModel]]:
+        try:
+            return resolve_nested_base_model_unions(annotation)
+        except TypeError:
+            raise APIEndpointError(f"Expected: {PayloadType}")
 
 
 @dataclass
@@ -486,7 +455,7 @@ class request(APIEndpointsDecorator):
                 ):
                     return TypeSpecifier(True, type_origin, type_args[0], None, False, is_optional)
             else:
-                models = TypeSpecifier.resolve_nested_base_model_unions(annotation, [])
+                models = TypeSpecifier.resolve_nested(annotation, [])
                 return TypeSpecifier.model_union(models)
         raise APIEndpointError(f"'payload' param must be annotated with supported type: {PayloadType}")
 
