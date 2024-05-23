@@ -66,8 +66,8 @@ class SecurityGroup(PolicyDefinitionBase):
 
     @model_validator(mode="after")
     def validate_by_sequence_ip_type(self):
-        if (self.sequence_ip_type == "ipv4" and isinstance(self.definition, SecurityGroupIPv6Definition)) or (
-            self.sequence_ip_type == "ipv6" and isinstance(self.definition, SecurityGroupIPv4Definition)
+        if (self.sequence_ip_type == "ipv6" and not isinstance(self.definition, SecurityGroupIPv6Definition)) or (
+            self.sequence_ip_type == "ipv4" and not isinstance(self.definition, SecurityGroupIPv4Definition)
         ):
             raise ValueError(f"Incompatible definition for {self.sequence_ip_type} sequence")
         return self

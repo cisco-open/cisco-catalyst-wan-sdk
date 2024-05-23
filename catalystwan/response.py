@@ -120,8 +120,9 @@ def parse_cookies_to_dict(cookies: str) -> Dict[str, str]:
 
 
 class JsonPayload:
-    def __init__(self, json: Any = None):
+    def __init__(self, json: Any = None, empty: bool = False):
         self.json = json
+        self.empty = empty
         self.data = None
         self.error = None
         self.headers = None
@@ -141,7 +142,7 @@ class ManagerResponse(Response, APIEndpointClientResponse):
         try:
             self.payload = JsonPayload(response.json())
         except JSONDecodeError:
-            self.payload = JsonPayload()
+            self.payload = JsonPayload(empty=True)
 
     def _detect_expired_jsessionid(self) -> bool:
         """Determines if server sent expired JSESSIONID"""
@@ -184,6 +185,9 @@ class ManagerResponse(Response, APIEndpointClientResponse):
             DataSequence[T] of given type T which is subclassing from Dataclass/BaseModel,
             in case JSON payload was containing a single Object - sequence with one element is returned
         """
+        if self.payload.empty:
+            return DataSequence(cls, [])
+
         if sourcekey is None:
             data = self.payload.json
         else:

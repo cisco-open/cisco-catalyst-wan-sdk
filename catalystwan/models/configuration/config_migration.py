@@ -1,7 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from packaging.version import Version
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -213,12 +213,21 @@ class UX2Config(BaseModel):
 
 
 class ConfigTransformResult(BaseModel):
+    # https://docs.pydantic.dev/2.0/usage/models/#fields-with-dynamic-default-values
+    uuid: UUID = Field(default_factory=uuid4)
     ux2_config: UX2Config = Field(
         default_factory=lambda: UX2Config(), serialization_alias="ux2Config", validation_alias="ux2Config"
     )
     failed_items: List[FailedConversionItem] = Field(
         default_factory=list, serialization_alias="failedConversionItems", validation_alias="failedConversionItems"
     )
+
+    def add_suffix_to_names(self):
+        suffix = str(self.uuid)[:7]
+        for config_group in self.ux2_config.config_groups:
+            config_group.config_group.name = f"{config_group.config_group.name}_{suffix}"
+        for feature_profile in self.ux2_config.feature_profiles:
+            feature_profile.feature_profile.name = f"{feature_profile.feature_profile.name}_{suffix}"
 
     def add_failed_conversion_parcel(
         self,
@@ -268,6 +277,11 @@ class UX2ConfigPushReport(BaseModel):
     config_groups: List[ConfigGroupReport] = Field(
         default_factory=list, serialization_alias="ConfigGroups", validation_alias="ConfigGroups"
     )
+    standalone_feature_profiles: List[FeatureProfileBuildReport] = Field(
+        default_factory=list,
+        serialization_alias="StandaloneFeatureProfiles",
+        validation_alias="StandaloneFeatureProfiles",
+    )
     failed_push_parcels: List[FailedParcel] = Field(
         default_factory=list, serialization_alias="FailedPushParcels", validation_alias="FailedPushParcels"
     )
@@ -275,12 +289,24 @@ class UX2ConfigPushReport(BaseModel):
     def add_report(self, name: str, uuid: UUID, feature_profiles: List[FeatureProfileBuildReport]) -> None:
         self.config_groups.append(ConfigGroupReport(name=name, uuid=uuid, feature_profiles=feature_profiles))
 
+    def add_feature_profiles_not_assosiated_with_config_group(
+        self, feature_profiles: List[FeatureProfileBuildReport]
+    ) -> None:
+        """This happends when config group failes to create but we have to store created feature profiles in report"""
+        self.standalone_feature_profiles.extend(feature_profiles)
+
     def set_failed_push_parcels_flat_list(self):
         failed_parcels = []
+
         for config_group in self.config_groups:
             for feature_profile in config_group.feature_profiles:
                 for failed_parcel in feature_profile.failed_parcels:
                     failed_parcels.append(failed_parcel)
+
+        for s_feature_profile in self.standalone_feature_profiles:
+            for failed_parcel in s_feature_profile.failed_parcels:
+                failed_parcels.append(failed_parcel)
+
         self.failed_push_parcels = failed_parcels
 
     @property

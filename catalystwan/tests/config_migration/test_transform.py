@@ -154,7 +154,7 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
         )
     )
     # Act
-    ux2_config = transform(ux1_config).ux2_config
+    ux2_config = transform(ux1_config, add_suffix=False).ux2_config
     # There must be feature profiles named DeviceTemplate_service and DeviceTemplate_transport_and_management
     service_profile = None
     transport_and_management_profile = None
