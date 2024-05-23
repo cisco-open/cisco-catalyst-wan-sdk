@@ -34,6 +34,7 @@ from catalystwan.utils.config_migration.converters.policy.policy_lists import co
 from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigPushResult
 from catalystwan.utils.config_migration.reverters.config_reverter import UX2ConfigReverter
 from catalystwan.utils.config_migration.steps.constants import (
+    LAN_BGP,
     LAN_VPN_ETHERNET,
     LAN_VPN_GRE,
     LAN_VPN_IPSEC,
@@ -43,6 +44,7 @@ from catalystwan.utils.config_migration.steps.constants import (
     VPN_MANAGEMENT,
     VPN_SERVICE,
     VPN_TRANSPORT,
+    WAN_BGP,
     WAN_VPN_ETHERNET,
     WAN_VPN_GRE,
     WAN_VPN_MULTILINK,
@@ -112,6 +114,8 @@ SUPPORTED_TEMPLATE_TYPES = [
     LAN_VPN_ETHERNET,
     LAN_VPN_IPSEC,
     MANAGEMENT_VPN_ETHERNET,
+    WAN_BGP,
+    LAN_BGP,
     "cli-template",
     "cisco_secure_internet_gateway",
     "cisco_ospfv3",
@@ -146,8 +150,6 @@ FEATURE_PROFILE_SYSTEM = [
     "omp-vsmart",
     "cisco_ntp",
     "ntp",
-    "bgp",
-    "cisco_bgp",
     "cisco_snmp",
 ]
 
@@ -162,6 +164,7 @@ FEATURE_PROFILE_TRANSPORT = [
     "vpn-interface-ipoe",
     VPN_TRANSPORT,
     VPN_MANAGEMENT,
+    WAN_BGP,
     "cisco_ospfv3",
 ]
 
@@ -185,6 +188,7 @@ FEATURE_PROFILE_SERVICE = [
     "cedge_multicast",
     "cedge_pim",
     VPN_SERVICE,
+    LAN_BGP,
 ]
 
 FEATURE_PROFILE_CLI = [
@@ -287,7 +291,7 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
                 transformed_fp_cli.header.subelements.add(template_uuid)
             # Map subtemplates
             if len(template.subTemplates) > 0:
-                # Interfaces
+                # Interfaces, BGP, OSPF, etc
                 for subtemplate_level_1 in template.subTemplates:
                     subtemplates_mapping[template_uuid].add(UUID(subtemplate_level_1.templateId))
                     if len(subtemplate_level_1.subTemplates) > 0:

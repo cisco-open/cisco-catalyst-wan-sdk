@@ -151,6 +151,7 @@ class TransportAndManagementProfileBuilder:
         self.build_report = FeatureProfileBuildReport(profile_uuid=profile_uuid, profile_name=self._profile.name)
         for parcel in self._independent_items:
             self._create_parcel(profile_uuid, parcel)
+
         for vpn_tag, vpn_parcel in self._independent_items_vpns.items():
             vpn_uuid = self._create_parcel(profile_uuid, vpn_parcel)
             for vpn_subparcel in self._dependent_items_on_vpns[vpn_tag]:
@@ -158,6 +159,7 @@ class TransportAndManagementProfileBuilder:
                     handle_build_report_for_failed_subparcel(self.build_report, vpn_parcel, vpn_subparcel)
                 else:
                     self._create_parcel(profile_uuid, vpn_subparcel, vpn_uuid)
+
         for cellular_controller_tag, cellular_controller_parcel in self._independent_items_cellular_controllers.items():
             controller_uuid = self._create_parcel(profile_uuid, cellular_controller_parcel)
             for cellular_subparcel in self._dependent_items_on_cellular_controllers[cellular_controller_tag]:

@@ -198,7 +198,7 @@ def handle_multi_parcel_feature_template(
         transformed_parcels.append(
             TransformedParcel(
                 header=TransformHeader(
-                    type=feature_template.template_type,
+                    type=parcel._get_parcel_type(),
                     origin=uuid4(),
                 ),
                 parcel=parcel,

@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from ipaddress import IPv4Address, IPv6Interface
@@ -261,7 +262,7 @@ class BasicOspfv3Attributes(BaseModel):
     )
 
 
-class Ospfv3IPv4Parcel(_ParcelBase):
+class RoutingOspfv3IPv4Parcel(_ParcelBase):
     type_: Literal["routing/ospfv3/ipv4"] = Field(default="routing/ospfv3/ipv4", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
@@ -276,7 +277,7 @@ class Ospfv3IPv4Parcel(_ParcelBase):
     area: List[Ospfv3IPv4Area] = Field(validation_alias=AliasPath("data", "area"))
 
 
-class Ospfv3IPv6Parcel(_ParcelBase):
+class RoutingOspfv3IPv6Parcel(_ParcelBase):
     type_: Literal["routing/ospfv3/ipv6"] = Field(default="routing/ospfv3/ipv6", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 

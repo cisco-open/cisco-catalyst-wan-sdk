@@ -104,12 +104,10 @@ class ServiceParcelPusher(ParcelPusher):
                     for element_level_2 in iterate_over_subparcels(element_level_1, all_parcels):
                         if isinstance(element_level_2.parcel, LanVpnDhcpServerParcel):
                             logger.info(
-                                f"Interface {element_level_1.parcel.parcel_name}: "
-                                "Adding DHCP server parcel {element_level_2.parcel.parcel_name}"
+                                f"Interface {parcel.parcel_name}: "
+                                f"Adding DHCP server parcel {element_level_2.parcel.parcel_name}"
                             )
-                            self.builder.add_parcel_dhcp_server(
-                                element_level_1.parcel.parcel_name, element_level_2.parcel
-                            )
+                            self.builder.add_parcel_dhcp_server(parcel.parcel_name, element_level_2.parcel)
 
         self.builder.add_profile_name_and_description(feature_profile)
         return self.builder.build()

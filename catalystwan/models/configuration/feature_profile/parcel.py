@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from typing import Generic, List, Literal, TypeVar, Union
 from uuid import UUID
 
@@ -10,6 +11,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.dns_security import 
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import AnyEmbeddedSecurityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.other import AnyOtherParcel
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
+from catalystwan.models.configuration.feature_profile.sdwan.routing import AnyRoutingParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
 from catalystwan.models.configuration.feature_profile.sdwan.sig_security import AnySIGSecurityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system import AnySystemParcel
@@ -119,6 +121,7 @@ AnyParcel = Annotated[
         AnySIGSecurityParcel,
         AnyApplicationPriorityParcel,
         AnyTopologyParcel,
+        AnyRoutingParcel,
     ],
     Field(discriminator="type_"),
 ]

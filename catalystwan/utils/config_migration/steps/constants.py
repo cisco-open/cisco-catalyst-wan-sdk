@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from typing import Dict, Union
 
 VPN_MANAGEMENT = "cisco_vpn_management"
@@ -21,6 +22,8 @@ VPN_ADDITIONAL_TEMPLATES = [
     "vpn-vmanage-interface",
     "vpn-vedge-interface-ipsec",
     "vpn-cedge-interface-multilink-controller",
+    "cisco_bgp",
+    "bgp",
 ]
 
 NO_SUBSTITUTE_ERROR = "NO_SUBSTITUTE_ERROR"
@@ -30,12 +33,14 @@ NO_SUBSTITUTE_VPN_MANAGEMENT_SVI = (
 
 MANAGEMENT_VPN_ETHERNET = "management/vpn/interface/ethernet"
 
+WAN_BGP = "WAN_BGP"
 WAN_VPN_GRE = "wan/vpn/interface/gre"
 WAN_VPN_IPSEC = "wan/vpn/interface/ipsec"
 WAN_VPN_SVI = "wan/vpn/interface/svi"
 WAN_VPN_ETHERNET = "wan/vpn/interface/ethernet"
 WAN_VPN_MULTILINK = "wan/vpn/interface/multilink"
 
+LAN_BGP = "LAN_BGP"
 LAN_VPN_GRE = "lan/vpn/interface/gre"
 LAN_VPN_IPSEC = "lan/vpn/interface/ipsec"
 LAN_VPN_SVI = "lan/vpn/interface/svi"
@@ -55,6 +60,8 @@ VPN_TEMPLATE_MAPPINGS: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {
     },
     VPN_TRANSPORT: {
         "mapping": {
+            "cisco_bgp": WAN_BGP,
+            "bgp": WAN_BGP,
             "vpn-vedge-interface-gre": WAN_VPN_GRE,
             "cisco_vpn_interface_gre": WAN_VPN_GRE,
             "cisco_vpn_interface_ipsec": WAN_VPN_IPSEC,
@@ -69,6 +76,8 @@ VPN_TEMPLATE_MAPPINGS: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {
     },
     VPN_SERVICE: {
         "mapping": {
+            "cisco_bgp": LAN_BGP,
+            "bgp": LAN_BGP,
             "vpn-vedge-interface-gre": LAN_VPN_GRE,
             "cisco_vpn_interface": LAN_VPN_ETHERNET,
             "vpn-vsmart-interface": LAN_VPN_ETHERNET,

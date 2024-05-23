@@ -15,7 +15,7 @@ from .banner import BannerTemplateConverter
 from .base import FeatureTemplateConverter
 from .basic import SystemToBasicTemplateConverter
 from .bfd import BFDTemplateConverter
-from .bgp import BGPTemplateConverter
+from .bgp import BgpRoutingTemplateConverter
 from .cellular_controller import CellularControllerTemplateConverter
 from .cellular_profile import CellularProfileTemplateConverter
 from .cli import CliTemplateConverter
@@ -71,7 +71,7 @@ available_converters = [
     LoggingTemplateConverter,
     OMPTemplateConverter,
     NtpTemplateConverter,
-    BGPTemplateConverter,
+    BgpRoutingTemplateConverter,
     ThousandEyesTemplateConverter,
     UcseTemplateConverter,
     DhcpTemplateConverter,

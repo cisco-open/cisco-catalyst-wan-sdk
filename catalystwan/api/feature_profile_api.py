@@ -30,7 +30,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_cont
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport import AnyTransportParcel
-from catalystwan.models.configuration.feature_profile.sdwan.transport.bgp import WanRoutingBgpParcel
+from catalystwan.models.configuration.feature_profile.sdwan.transport.bgp import RoutingBgpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_controller import (
     CellularControllerParcel,
 )
@@ -252,8 +252,8 @@ class TransportFeatureProfileAPI:
 
     @overload
     def get_parcel(
-        self, profile_id: UUID, parcel_type: Type[WanRoutingBgpParcel], parcel_id: UUID
-    ) -> Parcel[WanRoutingBgpParcel]:
+        self, profile_id: UUID, parcel_type: Type[RoutingBgpParcel], parcel_id: UUID
+    ) -> Parcel[RoutingBgpParcel]:
         ...
 
     @overload
