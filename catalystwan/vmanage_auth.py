@@ -118,7 +118,10 @@ class vManageAuth(AuthBase):
             headers=headers,
         )
         self.logger.debug(self._auth_request_debug(response))
-        return response.text
+        token = response.text
+        if response.status_code != 200 or "<html>" in token:
+            raise CatalystwanException("Failed to get XSRF token")
+        return token
 
     def __call__(self, prepared_request: PreparedRequest) -> PreparedRequest:
         if self.expiration_time is None:
