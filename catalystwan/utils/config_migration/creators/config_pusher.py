@@ -46,10 +46,7 @@ class UX2ConfigPusher:
         )
 
     def push(self) -> UX2ConfigPushResult:
-        try:
-            self._create_cloud_credentials()
-        except ManagerHTTPError as e:
-            logger.error(f"Error occured during credentials migration: {e.info}")
+        self._create_cloud_credentials()
         self._create_config_groups()
         self._push_result.report.set_failed_push_parcels_flat_list()
         logger.debug(f"Configuration push completed. Rollback configuration {self._push_result}")
@@ -59,7 +56,10 @@ class UX2ConfigPusher:
         cloud_credentials = self._ux2_config.cloud_credentials
         if cloud_credentials is None:
             return
-        self._session.endpoints.configuration_settings.create_cloud_credentials(cloud_credentials)
+        try:
+            self._session.endpoints.configuration_settings.create_cloud_credentials(cloud_credentials)
+        except ManagerHTTPError as e:
+            logger.error(f"Error occured during credentials migration: {e.info}")
 
     def _create_config_groups(self):
         config_groups = self._ux2_config.config_groups
@@ -78,33 +78,46 @@ class UX2ConfigPusher:
             config_group_payload = transformed_config_group.config_group
             created_profiles = self._create_feature_profile_and_parcels(transformed_config_group.header.subelements)
             config_group_payload.profiles = [ProfileId(id=profile.profile_uuid) for profile in created_profiles]
-            cg_id = self._session.endpoints.configuration_group.create_config_group(config_group_payload).id
-            self._push_result.rollback.add_config_group(cg_id)
-            self._push_result.report.add_report(
-                name=transformed_config_group.config_group.name,
-                uuid=cg_id,
-                feature_profiles=created_profiles,
-            )
+            try:
+                cg_id = self._session.endpoints.configuration_group.create_config_group(config_group_payload).id
+            except ManagerHTTPError as e:
+                logger.error(f"Error occured during config group creation: {e.info}")
+                self._push_result.report.add_feature_profiles_not_assosiated_with_config_group(
+                    feature_profiles=created_profiles
+                )
+            else:
+                self._push_result.rollback.add_config_group(cg_id)
+                self._push_result.report.add_report(
+                    name=transformed_config_group.config_group.name,
+                    uuid=cg_id,
+                    feature_profiles=created_profiles,
+                )
 
     def _create_feature_profile_and_parcels(self, feature_profiles_ids: List[UUID]) -> List[FeatureProfileBuildReport]:
         feature_profiles: List[FeatureProfileBuildReport] = []
-        for i, feature_profile_id in enumerate(feature_profiles_ids):
+        for feature_profile_id in feature_profiles_ids:
             transformed_feature_profile = self._config_map.feature_profile_map[feature_profile_id]
+            fp_name = transformed_feature_profile.feature_profile.name
             logger.debug(
-                f"Creating feature profile: {transformed_feature_profile.feature_profile.name} "
+                f"Creating feature profile: {fp_name} "
                 f"with origin uuid: {transformed_feature_profile.header.origin} "
                 f"and parcels: {transformed_feature_profile.header.subelements}"
             )
             profile_type = cast(ProfileType, transformed_feature_profile.header.type)
             if profile_type in ["policy-object", "sig-security"]:
                 # TODO: Add builders for those profiles
-                logger.debug(f"Skipping profile: {transformed_feature_profile.feature_profile.name}")
+                logger.debug(f"Skipping profile: {fp_name}")
                 continue
             pusher = ParcelPusherFactory.get_pusher(self._session, profile_type)
             parcels = self._create_parcels_list(transformed_feature_profile)
-            profile = pusher.push(transformed_feature_profile.feature_profile, parcels, self._config_map.parcel_map)
-            feature_profiles.append(profile)
-            self._push_result.rollback.add_feature_profile(profile.profile_uuid, profile_type)
+            try:
+                profile = pusher.push(transformed_feature_profile.feature_profile, parcels, self._config_map.parcel_map)
+                feature_profiles.append(profile)
+                self._push_result.rollback.add_feature_profile(profile.profile_uuid, profile_type)
+            except ManagerHTTPError as e:
+                logger.error(f"Error occured during [{fp_name}] feature profile creation: {e.info}")
+            except Exception:
+                logger.critical(f"Unexpected error occured during [{fp_name}] feature profile creation", exc_info=True)
         return feature_profiles
 
     def _create_parcels_list(self, transformed_feature_profile: TransformedFeatureProfile) -> List[TransformedParcel]:
@@ -114,7 +127,7 @@ class UX2ConfigPusher:
             transformed_parcel = self._config_map.parcel_map.get(element_uuid)
             if not transformed_parcel:
                 # Device templates can have assigned feature templates but when we download the
-                # featrue templates from the enpoint some templates don't exist in the response
+                # feature templates from the enpoint some templates don't exist in the response
                 logger.error(f"Parcel with origin uuid {element_uuid} not found in the config map")
             else:
                 parcels.append(transformed_parcel)

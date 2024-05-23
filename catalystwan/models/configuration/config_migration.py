@@ -274,6 +274,11 @@ class UX2ConfigPushReport(BaseModel):
     config_groups: List[ConfigGroupReport] = Field(
         default_factory=list, serialization_alias="ConfigGroups", validation_alias="ConfigGroups"
     )
+    standalone_feature_profiles: List[FeatureProfileBuildReport] = Field(
+        default_factory=list,
+        serialization_alias="StandaloneFeatureProfiles",
+        validation_alias="StandaloneFeatureProfiles",
+    )
     failed_push_parcels: List[FailedParcel] = Field(
         default_factory=list, serialization_alias="FailedPushParcels", validation_alias="FailedPushParcels"
     )
@@ -281,12 +286,24 @@ class UX2ConfigPushReport(BaseModel):
     def add_report(self, name: str, uuid: UUID, feature_profiles: List[FeatureProfileBuildReport]) -> None:
         self.config_groups.append(ConfigGroupReport(name=name, uuid=uuid, feature_profiles=feature_profiles))
 
+    def add_feature_profiles_not_assosiated_with_config_group(
+        self, feature_profiles: List[FeatureProfileBuildReport]
+    ) -> None:
+        """This happends when config group failes to create but we have to store created feature profiles in report"""
+        self.standalone_feature_profiles.extend(feature_profiles)
+
     def set_failed_push_parcels_flat_list(self):
         failed_parcels = []
+
         for config_group in self.config_groups:
             for feature_profile in config_group.feature_profiles:
                 for failed_parcel in feature_profile.failed_parcels:
                     failed_parcels.append(failed_parcel)
+
+        for s_feature_profile in self.standalone_feature_profiles:
+            for failed_parcel in s_feature_profile.failed_parcels:
+                failed_parcels.append(failed_parcel)
+
         self.failed_push_parcels = failed_parcels
 
     @property
