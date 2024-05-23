@@ -16,6 +16,7 @@ from catalystwan.tests.config_migration.test_data import (
     interface_ethernet,
     interface_gre,
     interface_ipsec,
+    interface_multilink,
     ospfv3,
     vpn_management,
     vpn_service,
@@ -283,11 +284,13 @@ def test_when_nested_feature_templates_with_interfaces_and_dhcp_servers_expect_c
     VPN can have interfaces and interfaces can have DHCP servers."""
 
     # Arrange
-    vpn_service_, ethernet, dhcp = deepcopy_models(vpn_service, interface_ethernet, dhcp_server)
+    vpn_service_, ethernet, multilink, dhcp = deepcopy_models(
+        vpn_service, interface_ethernet, interface_multilink, dhcp_server
+    )
 
     ux1_config = UX1Config(
         templates=UX1Templates(
-            feature_templates=[vpn_service_, ethernet, dhcp],
+            feature_templates=[vpn_service_, ethernet, multilink, dhcp],
             device_templates=[
                 DeviceTemplateWithInfo(
                     template_id=str(uuid4()),
@@ -317,6 +320,11 @@ def test_when_nested_feature_templates_with_interfaces_and_dhcp_servers_expect_c
                                         ),
                                     ],
                                 ),
+                                GeneralTemplate(
+                                    name=multilink.name,
+                                    templateId=multilink.id,
+                                    templateType=multilink.template_type,
+                                ),
                             ],
                         ),
                     ],
@@ -328,6 +336,11 @@ def test_when_nested_feature_templates_with_interfaces_and_dhcp_servers_expect_c
     ux2_config = transform(ux1_config).ux2_config
     # Find the transformed Ethernet parcel
     ethernet_parcel = next(p for p in ux2_config.profile_parcels if p.parcel.parcel_name == f"{ethernet.name}_SERVICE")
+    multilink_parcel = next(
+        p for p in ux2_config.profile_parcels if p.parcel.parcel_name == f"{multilink.name}_SERVICE"
+    )
     # Assert
     assert ethernet_parcel is not None
     assert ethernet_parcel.header.subelements == {UUID(dhcp.id)}
+    assert multilink_parcel is not None
+    assert multilink_parcel.header.subelements == set()

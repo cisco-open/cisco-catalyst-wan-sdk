@@ -1,6 +1,6 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
-from typing import List, cast
+from typing import List, Tuple, cast
 from uuid import UUID, uuid4
 
 from catalystwan.api.templates.device_template.device_template import GeneralTemplate
@@ -118,10 +118,6 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
         f"Resolved Cisco VPN {target_feature_template.name} template to type {cisco_vpn_template.templateType}"
     )
 
-    if not cisco_vpn_template.subTemplates:
-        # No additional templates on VPN, nothing to cast
-        return
-
     # Get templates that need casting
     general_templates_from_device_template = [
         t for t in cisco_vpn_template.subTemplates if t.templateType in VPN_ADDITIONAL_TEMPLATES
@@ -131,14 +127,8 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
         # No additional templates on VPN, nothing to cast
         return
 
-    general_templates_uuids = [gt.templateId for gt in general_templates_from_device_template]
-    feature_templates_to_differentiate = [
-        t for t in ux1_config.templates.feature_templates if t.id in general_templates_uuids
-    ]
-
-    feature_and_general_templates = zip(
-        sorted(feature_templates_to_differentiate, key=lambda t: t.name),
-        sorted(general_templates_from_device_template, key=lambda t: t.name),
+    feature_and_general_templates = create_feature_template_and_general_template_pairs(
+        general_templates_from_device_template, ux1_config.templates.feature_templates
     )
 
     for ft, gt in feature_and_general_templates:
@@ -164,6 +154,32 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
         gt.templateId = new_id
         gt.templateType = new_type
         gt.name = new_name
+
+
+def create_feature_template_and_general_template_pairs(
+    general_templates: List[GeneralTemplate], feature_templates: List[FeatureTemplateInformation]
+) -> List[Tuple[FeatureTemplateInformation, GeneralTemplate]]:
+    """Create pairs of Feature Template and General Template based on the provided General Templates list.
+
+    General Templates come from Device Templates and they contain information
+    about structure of a configuration and dependencies.
+
+    Feature Templates are list of all available templates with definitions.
+
+    We create a one to one mapping between General Template and Feature Template.
+    To then be able to cast the Feature Template to a new type and change it in both places.
+    """
+
+    pairs: List[Tuple[FeatureTemplateInformation, GeneralTemplate]] = []
+    for gt in general_templates:
+        feature_template = next((ft for ft in feature_templates if ft.id == gt.templateId), None)
+
+        if not feature_template:
+            logger.error(f"Feature template with UUID [{gt.templateId}] not found in Feature Templates list.")
+            continue
+
+        pairs.append((feature_template, gt))
+    return pairs
 
 
 def handle_multi_parcel_feature_template(
