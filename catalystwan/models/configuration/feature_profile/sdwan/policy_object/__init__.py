@@ -46,7 +46,6 @@ AnyPolicyObjectParcel = Annotated[
     Union[
         AdvancedInspectionProfileParcel,
         AdvancedMalwareProtectionParcel,
-        URLParcel,
         ApplicationListParcel,
         AppProbeParcel,
         AsPathParcel,
@@ -76,6 +75,7 @@ AnyPolicyObjectParcel = Annotated[
         SslDecryptionProfileParcel,
         StandardCommunityParcel,
         TlocParcel,
+        URLParcel,
     ],
     Field(discriminator="type_"),
 ]

@@ -127,7 +127,7 @@ T = TypeVar("T", bound=AnyParcel)
 
 
 class Parcel(BaseModel, Generic[T]):
-    parcel_id: str = Field(alias="parcelId")
+    parcel_id: Union[str, UUID] = Field(alias="parcelId")
     parcel_type: ParcelType = Field(alias="parcelType")
     created_by: str = Field(alias="createdBy")
     last_updated_by: str = Field(alias="lastUpdatedBy")
