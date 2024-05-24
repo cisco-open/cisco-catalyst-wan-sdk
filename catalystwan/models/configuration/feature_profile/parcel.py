@@ -1,5 +1,4 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
-from typing import Generic, List, Literal, TypeVar, Union
 from functools import lru_cache
 from typing import Any, Generic, List, Literal, Type, TypeVar, Union
 from uuid import UUID
@@ -185,7 +184,6 @@ class ParcelAssociationPayload(BaseModel):
 class ParcelId(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: UUID = Field(serialization_alias="parcelId", validation_alias="parcelId")
-
 
 
 @lru_cache
