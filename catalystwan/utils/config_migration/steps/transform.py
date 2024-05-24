@@ -125,7 +125,8 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
     cisco_vpn_template.name = new_vpn_name
 
     logger.debug(
-        f"Resolved Cisco VPN {target_feature_template.name} template to type {cisco_vpn_template.templateType} and changed name to new name {new_vpn_name}"
+        f"Resolved Cisco VPN {target_feature_template.name} "
+        f"template to type {cisco_vpn_template.templateType} and changed name to new name {new_vpn_name}"
     )
 
     # Get templates that need casting
