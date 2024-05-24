@@ -1,19 +1,23 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from uuid import UUID, uuid4
 
 from packaging.version import Version
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from catalystwan import PACKAGE_VERSION
-from catalystwan.api.builders.feature_profiles.report import FailedParcel, FeatureProfileBuildReport
-from catalystwan.api.configuration_groups.parcel import _ParcelBase
+from catalystwan.api.builders.feature_profiles.report import (
+    FailedParcel,
+    FailedRequestDetails,
+    FeatureProfileBuildReport,
+)
 from catalystwan.api.templates.device_template.device_template import DeviceTemplate, GeneralTemplate
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
 from catalystwan.endpoints.configuration_settings import CloudCredentials
+from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
-from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
+from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
 from catalystwan.models.configuration.topology_group import TopologyGroup
 from catalystwan.models.policy import AnyPolicyDefinitionInfo, AnyPolicyListInfo
@@ -21,7 +25,6 @@ from catalystwan.models.policy.centralized import CentralizedPolicyInfo
 from catalystwan.models.policy.localized import LocalizedPolicyInfo
 from catalystwan.models.policy.security import AnySecurityPolicyInfo
 from catalystwan.models.templates import FeatureTemplateInformation, TemplateInformation
-from catalystwan.utils.model import resolve_nested_base_model_unions
 from catalystwan.version import parse_api_version
 
 
@@ -235,8 +238,8 @@ class ConfigTransformResult(BaseModel):
             feature_profile.feature_profile.name += suffix
         for profile_parcel in self.ux2_config.profile_parcels:
             profile_parcel.header.origname = profile_parcel.parcel.parcel_name
-            parcel_types = resolve_nested_base_model_unions(AnyPolicyObjectParcel)
-            if profile_parcel.header.type in [t.model_fields.get("type_").default for t in parcel_types]:
+            parcel_types = list_types(AnyPolicyObjectParcel)
+            if profile_parcel.header.type in [t._get_parcel_type() for t in parcel_types]:
                 # build lookup by parcel name to find duplicates
                 name = profile_parcel.header.origname
                 if not parcel_name_lookup.get(name):
@@ -246,6 +249,7 @@ class ConfigTransformResult(BaseModel):
 
         for name, parcels in parcel_name_lookup.items():
             # policy object parcel names are restricted to 32 characters and needs to be unique
+            maxlen = 32
             for i, parcel in enumerate(parcels):
                 if i > 0:
                     # replace last 3-digit of suffix (can handle 4096 duplicates)
@@ -253,7 +257,6 @@ class ConfigTransformResult(BaseModel):
                     parcel.parcel_name = name[:-3] + hex(suffix_num)[-3:]
                     continue
                 # add suffix
-                maxlen = 32
                 if len(name) >= (maxlen - 6):
                     name = name[maxlen - 7 :]
                 name = name + suffix
@@ -302,6 +305,28 @@ class ConfigGroupReport(BaseModel):
     )
 
 
+class GroupsOfInterestBuildReport(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    created_parcels: List[Tuple[str, UUID]] = Field(
+        default_factory=list, serialization_alias="createdParcels", validation_alias="createdParcels"
+    )
+    failed_parcels: List[FailedParcel] = Field(
+        default_factory=list, serialization_alias="failedParcels", validation_alias="failedParcels"
+    )
+
+    def add_created(self, name: str, id_: UUID):
+        self.created_parcels.append((name, id_))
+
+    def add_failed(self, parcel: AnyParcel, error: ManagerHTTPError):
+        failed_parcel = FailedParcel(
+            parcel_name=parcel.parcel_name,
+            parcel_type=parcel._get_parcel_type(),
+            error_info=error.info,
+            request_details=FailedRequestDetails.from_response(ManagerHTTPError.response),
+        )
+        self.failed_parcels.append(failed_parcel)
+
+
 class UX2ConfigPushReport(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     config_groups: List[ConfigGroupReport] = Field(
@@ -311,6 +336,9 @@ class UX2ConfigPushReport(BaseModel):
         default_factory=list,
         serialization_alias="StandaloneFeatureProfiles",
         validation_alias="StandaloneFeatureProfiles",
+    )
+    groups_of_interest: GroupsOfInterestBuildReport = Field(
+        default=GroupsOfInterestBuildReport(), serialization_alias="groupsOfIterest", validation_alias="groupsOfIterest"
     )
     failed_push_parcels: List[FailedParcel] = Field(
         default_factory=list, serialization_alias="FailedPushParcels", validation_alias="FailedPushParcels"
@@ -326,18 +354,14 @@ class UX2ConfigPushReport(BaseModel):
         self.standalone_feature_profiles.extend(feature_profiles)
 
     def set_failed_push_parcels_flat_list(self):
-        failed_parcels = []
-
         for config_group in self.config_groups:
             for feature_profile in config_group.feature_profiles:
                 for failed_parcel in feature_profile.failed_parcels:
-                    failed_parcels.append(failed_parcel)
+                    self.failed_push_parcels.append(failed_parcel)
 
         for s_feature_profile in self.standalone_feature_profiles:
             for failed_parcel in s_feature_profile.failed_parcels:
-                failed_parcels.append(failed_parcel)
-
-        self.failed_push_parcels = failed_parcels
+                self.failed_push_parcels.append(failed_parcel)
 
     @property
     def get_summary(self) -> str:
@@ -361,9 +385,9 @@ class DefaultPolicyObjectProfile(BaseModel):
     profile_id: UUID = Field(
         serialization_alias="defaultPolicyObjectProfileId", validation_alias="defaultPolicyObjectProfileId"
     )
-    parcels: List[Tuple[UUID, Type[_ParcelBase]]] = Field(default_factory=list)
+    parcels: List[Tuple[UUID, str]] = Field(default_factory=list)
 
-    def add_parcel(self, parcel_type: Type[AnyPolicyObjectParcel], parcel_id: UUID):
+    def add_parcel(self, parcel_type: str, parcel_id: UUID):
         self.parcels.append((parcel_id, parcel_type))
 
 

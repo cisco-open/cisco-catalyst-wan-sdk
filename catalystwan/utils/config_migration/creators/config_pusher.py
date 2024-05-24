@@ -15,12 +15,11 @@ from catalystwan.models.configuration.config_migration import (
     UX2ConfigPushResult,
 )
 from catalystwan.models.configuration.feature_profile.common import ProfileType
-from catalystwan.models.configuration.feature_profile.parcel import Parcel
+from catalystwan.models.configuration.feature_profile.parcel import Parcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
 from catalystwan.session import ManagerSession
 from catalystwan.typed_list import DataSequence
 from catalystwan.utils.config_migration.factories.parcel_pusher import ParcelPusherFactory
-from catalystwan.utils.model import resolve_nested_base_model_unions
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +49,9 @@ class UX2ConfigPusher:
         )
 
     def push(self) -> UX2ConfigPushResult:
-        self._insert_groups_of_interest_in_default_policy_object_profile()
         self._create_cloud_credentials()
         self._create_config_groups()
+        self._insert_groups_of_interest_in_default_policy_object_profile()
         self._push_result.report.set_failed_push_parcels_flat_list()
         logger.debug(f"Configuration push completed. Rollback configuration {self._push_result}")
         return self._push_result
@@ -103,32 +102,47 @@ class UX2ConfigPusher:
         profile_id = api.get_profiles().find(solution="sdwan", created_by="system").profile_id
         profile_rollback = self._push_result.rollback.add_default_policy_object_profile(profile_id)
 
-        # system created parcels id by type and name
+        # will hold system created parcels id by type and name when detected
         existing_parcels: Dict[AnyPolicyObjectParcel, Dict[str, UUID]] = {}
 
-        for any_transformed_parcel in self._ux2_config.profile_parcels:
-            parcel = any_transformed_parcel.parcel
-            header = any_transformed_parcel.header
-            parcel_type: AnyPolicyObjectParcel = type(parcel)
-            if parcel_type in resolve_nested_base_model_unions(AnyPolicyObjectParcel):
-                # update existing system created parcels
-                if not existing_parcels.get(parcel_type):
-                    existing_parcels[parcel_type] = {}
-                    exsisting_parcel_list = cast(
-                        DataSequence[Parcel[AnyPolicyObjectParcel]],
-                        api.get(profile_id, parcel_type).filter(created_by="system"),
-                    )
-                    for ep in exsisting_parcel_list:
-                        if not isinstance(ep.parcel_id, UUID):
-                            id_ = UUID(ep.parcel_id)
-                        else:
-                            id_ = ep.parcel_id
-                        existing_parcels[parcel_type][ep.payload.parcel_name] = id_
+        transformed_policy_parcels = [
+            any_transformed_parcel
+            for any_transformed_parcel in self._ux2_config.profile_parcels
+            if type(any_transformed_parcel.parcel) in list_types(AnyPolicyObjectParcel)
+        ]
 
-                # if parcel with given name exists we skip it
-                if not existing_parcels[parcel_type].get(header.origname):
+        for i, transformed_policy_parcel in enumerate(transformed_policy_parcels):
+            parcel = transformed_policy_parcel.parcel
+            header = transformed_policy_parcel.header
+            parcel_type: AnyPolicyObjectParcel = type(parcel)
+            # update existing system created parcels
+            if not existing_parcels.get(parcel_type):
+                existing_parcels[parcel_type] = {}
+                exsisting_parcel_list = cast(
+                    DataSequence[Parcel[AnyPolicyObjectParcel]],
+                    api.get(profile_id, parcel_type).filter(created_by="system"),
+                )
+                for ep in exsisting_parcel_list:
+                    if not isinstance(ep.parcel_id, UUID):
+                        id_ = UUID(ep.parcel_id)
+                    else:
+                        id_ = ep.parcel_id
+                    existing_parcels[parcel_type][ep.payload.parcel_name] = id_
+
+            # if parcel with given name exists we skip it
+            if not existing_parcels[parcel_type].get(header.origname):
+                try:
                     parcel_id = api.create(profile_id=profile_id, payload=parcel).id
-                    profile_rollback.add_parcel(parcel_type, parcel_id)
+                    profile_rollback.add_parcel(parcel.type_, parcel_id)
+                    self._push_result.report.groups_of_interest.add_created(parcel.parcel_name, parcel_id)
+                    self._progress(
+                        f"Creating Policy Object Parcel: {parcel.parcel_name}",
+                        i + 1,
+                        len(transformed_policy_parcels),
+                    )
+                except ManagerHTTPError as e:
+                    logger.error(f"Error occured during config group creation: {e.info}")
+                    self._push_result.report.groups_of_interest.add_failed(parcel, e)
 
     def _create_feature_profile_and_parcels(self, feature_profiles_ids: List[UUID]) -> List[FeatureProfileBuildReport]:
         feature_profiles: List[FeatureProfileBuildReport] = []
