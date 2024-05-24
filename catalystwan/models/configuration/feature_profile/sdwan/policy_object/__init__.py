@@ -19,7 +19,7 @@ from .policy.mirror import MirrorParcel
 from .policy.policer import PolicerEntry, PolicerParcel
 from .policy.prefered_group_color import Preference, PreferredColorGroupEntry, PreferredColorGroupParcel
 from .policy.prefix_list import PrefixListEntry, PrefixListParcel
-from .policy.sla_class import SLAAppProbeClass, SLAClassCriteria, SLAClassListEntry, SLAClassParcel
+from .policy.sla_class import SLAClassListEntry, SLAClassParcel
 from .policy.standard_community import StandardCommunityEntry, StandardCommunityParcel
 from .policy.tloc_list import TlocEntry, TlocParcel
 from .security.aip import AdvancedInspectionProfileParcel
@@ -46,7 +46,6 @@ AnyPolicyObjectParcel = Annotated[
     Union[
         AdvancedInspectionProfileParcel,
         AdvancedMalwareProtectionParcel,
-        URLParcel,
         ApplicationListParcel,
         AppProbeParcel,
         AsPathParcel,
@@ -76,6 +75,7 @@ AnyPolicyObjectParcel = Annotated[
         SslDecryptionProfileParcel,
         StandardCommunityParcel,
         TlocParcel,
+        URLParcel,
     ],
     Field(discriminator="type_"),
 ]

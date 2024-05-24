@@ -116,8 +116,8 @@ class SchemaTypeQuery(BaseModel):
 
 
 class GetFeatureProfilesPayload(BaseModel):
-    limit: Optional[int]
-    offset: Optional[int]
+    limit: Optional[int] = None
+    offset: Optional[int] = None
 
 
 class GetReferenceCountFeatureProfilesPayload(GetFeatureProfilesPayload):
