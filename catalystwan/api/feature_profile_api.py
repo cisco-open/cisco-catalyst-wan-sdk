@@ -19,6 +19,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.application_priority
     AnyApplicationPriorityParcel,
     PolicySettingsParcel,
     QosPolicyParcel,
+    TrafficPolicyParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.other import AnyOtherParcel
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.policy.as_path import AsPathParcel
@@ -1506,6 +1507,14 @@ class ApplicationPriorityFeatureProfileAPI:
     ) -> DataSequence[Parcel[PolicySettingsParcel]]:
         ...
 
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[TrafficPolicyParcel],
+    ) -> DataSequence[Parcel[TrafficPolicyParcel]]:
+        ...
+
     def get_parcels(
         self,
         profile_id: UUID,
@@ -1523,6 +1532,15 @@ class ApplicationPriorityFeatureProfileAPI:
         parcel_type: Type[PolicySettingsParcel],
         parcel_id: UUID,
     ) -> Parcel[PolicySettingsParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[TrafficPolicyParcel],
+        parcel_id: UUID,
+    ) -> Parcel[TrafficPolicyParcel]:
         ...
 
     @overload

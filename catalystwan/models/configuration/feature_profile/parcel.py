@@ -33,7 +33,6 @@ ParcelType = Literal[
     "class",
     "color",
     "config",
-    "config",
     "custom-control",
     "data-ipv6-prefix",
     "data-prefix",
@@ -104,6 +103,7 @@ ParcelType = Literal[
     "wan/vpn/interface/ethernet",
     "wan/vpn/interface/gre",
     "wan/vpn/interface/multilink",
+    "traffic-policy",
     "wan/vpn/interface/serial",
     "wirelesslan",
 ]
