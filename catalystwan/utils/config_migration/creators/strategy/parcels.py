@@ -9,6 +9,12 @@ from catalystwan.api.builders.feature_profiles.service import ServiceFeatureProf
 from catalystwan.api.builders.feature_profiles.transport import TransportAndManagementProfileBuilder
 from catalystwan.models.configuration.config_migration import TransformedParcel
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
+from catalystwan.models.configuration.feature_profile.sdwan.routing.bgp import RoutingBgpParcel
+from catalystwan.models.configuration.feature_profile.sdwan.routing.ospf import RoutingOspfParcel
+from catalystwan.models.configuration.feature_profile.sdwan.routing.ospfv3 import (
+    RoutingOspfv3IPv4Parcel,
+    RoutingOspfv3IPv6Parcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyAssociatoryParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import LanVpnDhcpServerParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
@@ -98,16 +104,25 @@ class ServiceParcelPusher(ParcelPusher):
                 vpn_tag = self.builder.add_parcel_vpn(parcel)  # type: ignore
 
                 for element_level_1 in iterate_over_subparcels(transformed_parcel, all_parcels):
-                    parcel = self._resolve_parcel_naming(element_level_1)
-                    self.builder.add_parcel_vpn_subparcel(vpn_tag, parcel)  # type: ignore
+                    resolved_parcel = self._resolve_parcel_naming(element_level_1)
 
-                    for element_level_2 in iterate_over_subparcels(element_level_1, all_parcels):
-                        if isinstance(element_level_2.parcel, LanVpnDhcpServerParcel):
-                            logger.info(
-                                f"Interface {parcel.parcel_name}: "
-                                f"Adding DHCP server parcel {element_level_2.parcel.parcel_name}"
-                            )
-                            self.builder.add_parcel_dhcp_server(parcel.parcel_name, element_level_2.parcel)
+                    if isinstance(
+                        resolved_parcel,
+                        (RoutingBgpParcel, RoutingOspfParcel, RoutingOspfv3IPv6Parcel, RoutingOspfv3IPv4Parcel),
+                    ):
+                        # Routing global parcels
+                        self.builder.add_parcel_routing_attached(vpn_tag, resolved_parcel)
+                    else:
+                        # Interfaces
+                        self.builder.add_parcel_vpn_subparcel(vpn_tag, resolved_parcel)  # type: ignore
+
+                        for element_level_2 in iterate_over_subparcels(element_level_1, all_parcels):
+                            if isinstance(element_level_2.parcel, LanVpnDhcpServerParcel):
+                                logger.info(
+                                    f"Interface {parcel.parcel_name}: "
+                                    f"Adding DHCP server parcel {element_level_2.parcel.parcel_name}"
+                                )
+                                self.builder.add_parcel_dhcp_server(parcel.parcel_name, element_level_2.parcel)
 
         self.builder.add_profile_name_and_description(feature_profile)
         return self.builder.build()
@@ -145,7 +160,15 @@ class TransportAndManagementParcelPusher(ParcelPusher):
             if isinstance(parcel, (ManagementVpnParcel, TransportVpnParcel)):
                 vpn_tag = self.builder.add_parcel_vpn(parcel)
                 for element in iterate_over_subparcels(transformed_parcel, all_parcels):
-                    self.builder.add_vpn_subparcel(vpn_tag, cast(AnyTransportVpnSubParcel, element.parcel))
+                    if isinstance(
+                        element.parcel,
+                        (RoutingBgpParcel, RoutingOspfParcel, RoutingOspfv3IPv6Parcel, RoutingOspfv3IPv4Parcel),
+                    ):
+                        # Routing global parcels
+                        self.builder.add_parcel_routing_attached(vpn_tag, element.parcel)
+                    else:
+                        # Interfaces
+                        self.builder.add_vpn_subparcel(vpn_tag, cast(AnyTransportVpnSubParcel, element.parcel))
             elif isinstance(parcel, CellularControllerParcel):
                 cellular_tag = self.builder.add_parcel_cellular_controller(parcel)
                 for element in iterate_over_subparcels(transformed_parcel, all_parcels):

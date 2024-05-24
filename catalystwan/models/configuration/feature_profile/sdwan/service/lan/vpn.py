@@ -1,10 +1,10 @@
-# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from ipaddress import IPv4Address, IPv6Address, IPv6Interface
 from typing import List, Literal, Optional, Union
 from uuid import UUID
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask, DNSIPv4, DNSIPv6, HostMapping
@@ -205,8 +205,6 @@ class NextHopRouteIPv6Container(BaseModel):
 
 
 class Null0(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
     null0: Union[Global[bool], Default[bool]] = Default[bool](value=True)
     distance: Union[Variable, Global[int], Default[int]] = Default[int](value=1)
 
@@ -224,15 +222,11 @@ class NAT(BaseModel):
 
 
 class DHCP(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
     dhcp: Union[Global[bool], Default[bool]] = Default[bool](value=True)
 
 
 class StaticRouteVPN(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
-    vpn: Union[Global[bool], Default[bool]] = Default[bool](value=True)
+    vpn: Union[Global[bool], Default[bool]] = Field(default=Default[bool](value=True))
 
 
 class NextHopInterfaceRoute(BaseModel):
@@ -302,12 +296,26 @@ class InterfaceRouteIPv6Container(BaseModel):
 
 
 class StaticRouteIPv4(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True)
 
     prefix: RoutePrefix
     one_of_ip_route: Union[NextHopRouteContainer, Null0, DHCP, StaticRouteVPN, InterfaceRouteContainer] = Field(
         serialization_alias="oneOfIpRoute", validation_alias="oneOfIpRoute"
     )
+
+    @field_validator("one_of_ip_route", mode="before")
+    @classmethod
+    def validate_one_of_ip_route(
+        cls, value: Union[dict, NextHopRouteContainer, Null0, DHCP, StaticRouteVPN, InterfaceRouteContainer]
+    ):
+        # https://github.com/pydantic/pydantic/issues/6830
+        # For some reason the Null0 is always created from dict
+        if isinstance(value, dict):
+            if value.get("vpn"):
+                return StaticRouteVPN(**value)
+            if value.get("nextHopContainer"):
+                return NextHopRouteContainer(**value)
+        return value
 
 
 class StaticRouteIPv6(BaseModel):

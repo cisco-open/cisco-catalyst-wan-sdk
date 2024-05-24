@@ -1,4 +1,4 @@
-# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from typing import Literal, Optional, Union
 
@@ -12,7 +12,9 @@ ConfigTypeValue = Literal["non-eSim"]
 class ControllerConfig(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
     id: Union[Variable, Global[str]] = Field(description="Cellular ID", examples=["0/2/0"])
-    slot: Optional[Union[Variable, Global[int], Default[int]]] = Field(default=None, description="Set primary SIM slot")
+    slot: Optional[Union[Variable, Global[int], Default[int]]] = Field(
+        default=None, description="Set primary SIM slot. 0 or 1"
+    )
     max_retry: Optional[Union[Variable, Global[int], Default[None]]] = Field(
         default=None,
         description="Set SIM failover retries",

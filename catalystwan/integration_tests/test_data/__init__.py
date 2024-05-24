@@ -1,7 +1,17 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Address
 from typing import List, Literal
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, as_global
+from catalystwan.models.configuration.feature_profile.sdwan.routing.bgp import RoutingBgpParcel
+from catalystwan.models.configuration.feature_profile.sdwan.routing.ospf import RoutingOspfParcel
+from catalystwan.models.configuration.feature_profile.sdwan.routing.ospfv3 import (
+    Ospfv3InterfaceParametres,
+    Ospfv3IPv4Area,
+    Ospfv3IPv6Area,
+    RoutingOspfv3IPv4Parcel,
+    RoutingOspfv3IPv6Parcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_controller import (
     CellularControllerParcel,
     ControllerConfig,
@@ -60,10 +70,46 @@ gps_parcel = GpsParcel(
 )
 
 
+ospf_parcel = RoutingOspfParcel(
+    parcel_name="TestRoutingOspfParcel",
+    parcel_description="Test Ospf Parcel",
+)
+ospfv3ipv4_parcel = RoutingOspfv3IPv4Parcel(
+    parcel_name="TestOspfv3ipv4",
+    parcel_description="Test Ospfv3ipv4 Parcel",
+    area=[
+        Ospfv3IPv4Area(
+            area_number=as_global(5),
+            interfaces=[Ospfv3InterfaceParametres(name=as_global("GigabitEthernet0/0/0"))],
+        )
+    ],
+)
+ospfv3ipv6_parcel = RoutingOspfv3IPv6Parcel(
+    parcel_name="TestOspfv3ipv6",
+    parcel_description="Test Ospfv3ipv6 Parcel",
+    area=[
+        Ospfv3IPv6Area(
+            area_number=as_global(7),
+            interfaces=[Ospfv3InterfaceParametres(name=as_global("GigabitEthernet0/0/0"))],
+        )
+    ],
+)
+
+bgp_parcel = RoutingBgpParcel(
+    parcel_name="TestRoutingBgpParcel",
+    parcel_description="Test Bgp Parcel",
+    as_num=as_global(30),
+)
+
+
 __all__ = [
     "cellular_controller_parcel",
     "cellular_profile_parcel",
     "gps_parcel",
+    "ospf_parcel",
+    "ospfv3ipv4_parcel",
+    "ospfv3ipv6_parcel",
+    "bgp_parcel",
 ]
 
 

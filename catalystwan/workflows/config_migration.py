@@ -35,6 +35,8 @@ from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigP
 from catalystwan.utils.config_migration.reverters.config_reverter import UX2ConfigReverter
 from catalystwan.utils.config_migration.steps.constants import (
     LAN_BGP,
+    LAN_OSPF,
+    LAN_OSPFV3,
     LAN_VPN_ETHERNET,
     LAN_VPN_GRE,
     LAN_VPN_IPSEC,
@@ -45,6 +47,8 @@ from catalystwan.utils.config_migration.steps.constants import (
     VPN_SERVICE,
     VPN_TRANSPORT,
     WAN_BGP,
+    WAN_OSPF,
+    WAN_OSPFV3,
     WAN_VPN_ETHERNET,
     WAN_VPN_GRE,
     WAN_VPN_MULTILINK,
@@ -52,6 +56,7 @@ from catalystwan.utils.config_migration.steps.constants import (
 from catalystwan.utils.config_migration.steps.transform import (
     handle_multi_parcel_feature_template,
     merge_parcels,
+    remove_not_casted_duplicates,
     resolve_template_type,
 )
 
@@ -125,6 +130,10 @@ SUPPORTED_TEMPLATE_TYPES = [
     "cellular-cedge-profile",
     "cellular-cedge-controller",
     "cellular-cedge-gps-controller",
+    LAN_OSPF,
+    WAN_OSPF,
+    LAN_OSPFV3,
+    WAN_OSPFV3,
 ]
 
 
@@ -332,6 +341,7 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
 
     # Sort by top level feature templates to avoid any confilics with subtemplates
     ux1.templates.feature_templates.sort(key=lambda ft: ft.template_type in TOP_LEVEL_TEMPLATE_TYPES, reverse=True)
+    remove_not_casted_duplicates(ux1)
 
     cloud_credential_templates = []
     for ft in ux1.templates.feature_templates:

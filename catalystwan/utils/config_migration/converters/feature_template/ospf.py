@@ -12,10 +12,11 @@ from catalystwan.models.configuration.feature_profile.sdwan.routing.ospf import 
     SummaryPrefix,
     SummaryRoute,
 )
+from catalystwan.utils.config_migration.steps.constants import LAN_OSPF, WAN_OSPF
 
 
 class OspfTemplateConverter:
-    supported_template_types = ("cisco_ospf",)
+    supported_template_types = (LAN_OSPF, WAN_OSPF)
 
     delete_keys = ("max_metric", "timers", "distance", "auto_cost", "default_information", "compatible")
 

@@ -174,7 +174,6 @@ class ParcelCreationResponse(BaseModel):
 
 class ParcelAssociationPayload(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
     parcel_id: UUID = Field(serialization_alias="parcelId", validation_alias="parcelId")
 
 

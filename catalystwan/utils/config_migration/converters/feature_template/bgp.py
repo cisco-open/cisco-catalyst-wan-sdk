@@ -1,7 +1,8 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
 from copy import deepcopy
-from typing import Dict, List, Optional
+from ipaddress import IPv4Interface
+from typing import Dict, List, Optional, Union
 from uuid import UUID
 
 from catalystwan.api.configuration_groups.parcel import Global, Variable, as_global
@@ -203,9 +204,10 @@ class BgpRoutingTemplateConverter:
 
         items = []
         for item in data:
-            prefix = item.get("prefix")
+            prefix = self.parse_prefix(item.get("prefix"))
             if not prefix:
                 continue
+
             aa = AggregateAddres(
                 prefix=prefix,
                 as_set=item.get("as_set"),
@@ -220,7 +222,7 @@ class BgpRoutingTemplateConverter:
 
         items = []
         for item in data:
-            prefix = self.parse_prefix(item)
+            prefix = self.parse_prefix(item.get("prefix"))
             if not prefix:
                 continue
             ni = NetworkItem(
@@ -229,8 +231,7 @@ class BgpRoutingTemplateConverter:
             items.append(ni)
         return items
 
-    def parse_prefix(self, data: Dict) -> Optional[AddressWithMask]:
-        address = data.get("prefix")
+    def parse_prefix(self, address: Optional[Union[Variable, Global[IPv4Interface]]]) -> Optional[AddressWithMask]:
         if not address:
             return None
 

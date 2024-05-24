@@ -28,6 +28,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.routing.ospfv3 impor
     SummaryRouteIPv6,
 )
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
+from catalystwan.utils.config_migration.steps.constants import LAN_OSPFV3, WAN_OSPFV3
 
 
 class Ospfv3TemplateConverter:
@@ -36,7 +37,7 @@ class Ospfv3TemplateConverter:
     because the Feature Template has two definitions inside one for IPv4 and one for IPv6.
     """
 
-    supported_template_types = ("cisco_ospfv3",)
+    supported_template_types = (WAN_OSPFV3, LAN_OSPFV3)
 
     def create_parcel(
         self, name: str, description: str, template_values: dict
@@ -227,7 +228,8 @@ class Ospfv3Ipv4TemplateSubconverter(BaseOspfv3TemplateSubconverter):
     def _set_summary_prefix(self, range_: dict) -> None:
         if address := range_.pop("address"):
             range_["network"] = AddressWithMask(
-                address=as_global(str(address.value.network)), mask=as_global(str(address.value.netmask))
+                address=as_global(str(address.value.network.network_address)),
+                mask=as_global(str(address.value.netmask)),
             )
 
     def configure_redistribute(self, values: dict) -> None:

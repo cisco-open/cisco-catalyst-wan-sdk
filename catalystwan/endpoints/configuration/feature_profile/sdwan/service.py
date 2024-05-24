@@ -80,3 +80,10 @@ class ServiceFeatureProfile(APIEndpoints):
         payload: ParcelAssociationPayload,
     ) -> ParcelCreationResponse:
         ...
+
+    @versions(supported_versions=(">=20.9"), raises=False)
+    @post("/v1/feature-profile/sdwan/service/{profile_id}/lan/vpn/{vpn_id}/{parcel_type}")
+    def associate_with_vpn(
+        self, profile_id: UUID, vpn_id: UUID, parcel_type: str, payload: ParcelAssociationPayload
+    ) -> ParcelCreationResponse:
+        ...

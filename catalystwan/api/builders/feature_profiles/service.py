@@ -18,6 +18,7 @@ from catalystwan.api.feature_profile_api import ServiceFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.service import ServiceFeatureProfile
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.configuration.feature_profile.parcel import ParcelAssociationPayload
+from catalystwan.models.configuration.feature_profile.sdwan.routing import AnyRoutingParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
     AnyServiceParcel,
     AppqoeParcel,
@@ -60,7 +61,8 @@ class ServiceFeatureProfileBuilder:
         self._endpoints = ServiceFeatureProfile(session)
         self._independent_items: List[IndependedParcels] = []
         self._independent_items_vpns: Dict[UUID, LanVpnParcel] = {}
-        self._depended_items_on_vpns: Dict[UUID, List[DependedVpnSubparcels]] = defaultdict(list)
+        self._dependent_items_on_vpns: Dict[UUID, List[DependedVpnSubparcels]] = defaultdict(list)
+        self._dependent_routing_items_on_vpns: Dict[UUID, List[AnyRoutingParcel]] = defaultdict(list)
         self._interfaces_with_attached_dhcp_server: Dict[str, LanVpnDhcpServerParcel] = {}
 
     def add_profile_name_and_description(self, feature_profile: FeatureProfileCreationPayload) -> None:
@@ -103,6 +105,20 @@ class ServiceFeatureProfileBuilder:
         self._independent_items_vpns[vpn_tag] = parcel
         return vpn_tag
 
+    def add_parcel_routing_attached(self, vpn_tag: UUID, parcel: AnyRoutingParcel) -> None:
+        """
+        Adds a routing parcel to the builder.
+
+        Args:
+            vpn_tag (UUID): The UUID of the VPN.
+            parcel (AnyServiceParcel): The routing parcel to add.
+
+        Returns:
+            None
+        """
+        logger.debug(f"Adding routing parcel {parcel.parcel_name} to VPN {vpn_tag}")
+        self._dependent_routing_items_on_vpns[vpn_tag].append(parcel)
+
     def add_parcel_vpn_subparcel(self, vpn_tag: UUID, parcel: DependedVpnSubparcels) -> None:
         """
         Adds an subparcel parcel dependent on a VPN to the builder.
@@ -115,7 +131,7 @@ class ServiceFeatureProfileBuilder:
             None
         """
         logger.debug(f"Adding subparcel parcel {parcel.parcel_name} to VPN {vpn_tag}")
-        self._depended_items_on_vpns[vpn_tag].append(parcel)
+        self._dependent_items_on_vpns[vpn_tag].append(parcel)
 
     def add_parcel_dhcp_server(self, interface_parcel_name: str, parcel: LanVpnDhcpServerParcel) -> None:
         """
@@ -145,7 +161,22 @@ class ServiceFeatureProfileBuilder:
             self._create_parcel(profile_uuid, parcel)
         for vpn_tag, vpn_parcel in self._independent_items_vpns.items():
             vpn_uuid = self._create_parcel(profile_uuid, vpn_parcel)
-            for sub_parcel in self._depended_items_on_vpns[vpn_tag]:
+
+            for routing_parcel in self._dependent_routing_items_on_vpns[vpn_tag]:
+                if vpn_uuid is None:
+                    handle_build_report_for_failed_subparcel(self.build_report, vpn_parcel, routing_parcel)
+                else:
+                    routing_uuid = self._create_parcel(profile_uuid, routing_parcel)
+                    if not routing_uuid:
+                        continue
+                    self._endpoints.associate_with_vpn(
+                        profile_uuid,
+                        vpn_uuid,
+                        routing_parcel._get_parcel_type(),
+                        payload=ParcelAssociationPayload(parcel_id=routing_uuid),
+                    )
+
+            for sub_parcel in self._dependent_items_on_vpns[vpn_tag]:
                 if vpn_uuid is None:
                     handle_build_report_for_failed_subparcel(self.build_report, vpn_parcel, sub_parcel)
                 else:

@@ -77,9 +77,6 @@ class LanInterfaceEthernetTemplateConverter:
         "nat66",  # Not sure if this is correct. There is some data in UX1 that is not transferable to UX2
     )
 
-    # Default Values - Interface Name
-    basic_conf_intf_name = "{{vpn23_1_basicConf_intfName}}"
-
     # Default Values - NAT Attribute
     nat_attribute_nat_choice = "{{natAttr_natChoice}}"
 
@@ -117,14 +114,13 @@ class LanInterfaceEthernetTemplateConverter:
     def configure_interface_name(self, values: dict) -> None:
         if if_name := values.get("if_name"):
             values["interface_name"] = if_name
-        values["interface_name"] = as_variable(self.basic_conf_intf_name)
 
     def configure_ethernet_description(self, values: dict) -> None:
         values["ethernet_description"] = values.get("description")
 
     def configure_ipv4_address(self, values: dict) -> None:
         if ipv4_address_configuration := values.get("ip"):
-            if "address" in ipv4_address_configuration:
+            if "address" in ipv4_address_configuration and ipv4_address_configuration["address"].value != "":
                 values["interface_ip_address"] = InterfaceStaticIPv4Address(
                     static=StaticIPv4AddressConfig(
                         primary_ip_address=self.get_static_ipv4_address(ipv4_address_configuration),

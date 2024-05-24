@@ -1,7 +1,9 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Address
 
 from catalystwan.api.configuration_groups.parcel import Global, as_global
 from catalystwan.integration_tests.profile_builder.base import TestFeatureProfileBuilder
+from catalystwan.integration_tests.test_data import bgp_parcel, ospf_parcel, ospfv3ipv4_parcel, ospfv3ipv6_parcel
 from catalystwan.models.common import SubnetMask
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import (
@@ -46,6 +48,23 @@ class TestServiceFeatureProfileBuilder(TestFeatureProfileBuilder):
         vpn_tag = self.builder.add_parcel_vpn(service_vpn_parcel)
         self.builder.add_parcel_vpn_subparcel(vpn_tag, ethernet_parcel)
         self.builder.add_parcel_dhcp_server(ethernet_parcel.parcel_name, dhcp_server_parcel)
+        # Act
+        report = self.builder.build()
+        # Assert
+        assert len(report.failed_parcels) == 0
+
+    def test_when_build_profile_with_vpn_and_routing_attached_expect_success(self):
+        # Arrange
+        service_vpn_parcel = LanVpnParcel(
+            parcel_name="MinimumSpecifiedServiceVpnParcel",
+            description="Description",
+            vpn_id=as_global(50),
+        )
+        vpn_tag = self.builder.add_parcel_vpn(service_vpn_parcel)
+        self.builder.add_parcel_routing_attached(vpn_tag, ospf_parcel)
+        self.builder.add_parcel_routing_attached(vpn_tag, ospfv3ipv4_parcel)
+        self.builder.add_parcel_routing_attached(vpn_tag, ospfv3ipv6_parcel)
+        self.builder.add_parcel_routing_attached(vpn_tag, bgp_parcel)
         # Act
         report = self.builder.build()
         # Assert

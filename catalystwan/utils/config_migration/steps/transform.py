@@ -114,8 +114,18 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
     else:
         cisco_vpn_template.templateType = VPN_SERVICE
 
+    new_vpn_id = str(uuid4())
+    new_vpn_name = f"{target_feature_template.name}_{new_vpn_id[:5]}"
+    vpn = target_feature_template.model_copy(deep=True)
+    vpn.id = new_vpn_id
+    vpn.name = new_vpn_name
+
+    ux1_config.templates.feature_templates.append(vpn)
+    cisco_vpn_template.templateId = new_vpn_id
+    cisco_vpn_template.name = new_vpn_name
+
     logger.debug(
-        f"Resolved Cisco VPN {target_feature_template.name} template to type {cisco_vpn_template.templateType}"
+        f"Resolved Cisco VPN {target_feature_template.name} template to type {cisco_vpn_template.templateType} and changed name to new name {new_vpn_name}"
     )
 
     # Get templates that need casting
@@ -133,7 +143,7 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
 
     for ft, gt in feature_and_general_templates:
         new_id = str(uuid4())
-        new_name = f"{ft.name}{VPN_TEMPLATE_MAPPINGS[cisco_vpn_template.templateType]['suffix']}"
+        new_name = f"{ft.name}_{new_id[:5]}{VPN_TEMPLATE_MAPPINGS[cisco_vpn_template.templateType]['suffix']}"
         new_type = VPN_TEMPLATE_MAPPINGS[cisco_vpn_template.templateType]["mapping"][ft.template_type]  # type: ignore
 
         if NO_SUBSTITUTE_ERROR in new_type:
@@ -217,3 +227,15 @@ def handle_multi_parcel_feature_template(
         raise CatalystwanConverterCantConvertException(f"Parent parcel for {feature_template.name} not found.")
 
     return transformed_parcels
+
+
+def remove_not_casted_duplicates(ux1: UX1Config):
+    """Remove duplicates from UX1Config. This is needed because we are copying and
+    casting routing templates to match correct feature profile and we need to remove the old ones."""
+    to_remove = [
+        t
+        for t in ux1.templates.feature_templates
+        if t.template_type in ["cisco_bgp", "bgp", "cisco_ospfv3", "cisco_ospf"]
+    ]
+    for t in to_remove:
+        ux1.templates.feature_templates.remove(t)

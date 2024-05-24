@@ -14,7 +14,8 @@ from catalystwan.api.builders.feature_profiles.report import (
 from catalystwan.api.feature_profile_api import TransportFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
-from catalystwan.models.configuration.feature_profile.parcel import ParcelId
+from catalystwan.models.configuration.feature_profile.parcel import ParcelAssociationPayload
+from catalystwan.models.configuration.feature_profile.sdwan.routing import AnyRoutingParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport import (
     AnyTransportParcel,
     AnyTransportSuperParcel,
@@ -53,6 +54,7 @@ class TransportAndManagementProfileBuilder:
         self._independent_items_vpns: Dict[UUID, AnyTransportVpnParcel] = {}
         self._independent_items_cellular_controllers: Dict[UUID, CellularControllerParcel] = {}
         self._dependent_items_on_vpns: Dict[UUID, List[AnyTransportVpnSubParcel]] = defaultdict(list)
+        self._dependent_routing_items_on_vpns: Dict[UUID, List[AnyRoutingParcel]] = defaultdict(list)
         self._dependent_items_on_cellular_controllers: Dict[
             UUID, List[Union[CellularProfileParcel, GpsParcel]]
         ] = defaultdict(list)
@@ -81,6 +83,19 @@ class TransportAndManagementProfileBuilder:
             None
         """
         self._independent_items.append(parcel)
+
+    def add_parcel_routing_attached(self, vpn_tag: UUID, parcel: AnyRoutingParcel) -> None:
+        """
+        Adds a routing parcel to the feature profile.
+
+        Args:
+            parcel (AnyRoutingParcel): The parcel to add.
+
+        Returns:
+            None
+        """
+        logger.debug(f"Attaching routing {parcel.parcel_name} with to VPN with tag {vpn_tag}")
+        self._dependent_routing_items_on_vpns[vpn_tag].append(parcel)
 
     def add_parcel_vpn(self, parcel: AnyTransportVpnParcel) -> UUID:
         """
@@ -160,6 +175,20 @@ class TransportAndManagementProfileBuilder:
                 else:
                     self._create_parcel(profile_uuid, vpn_subparcel, vpn_uuid)
 
+            for routing_parcel in self._dependent_routing_items_on_vpns[vpn_tag]:
+                if vpn_uuid is None:
+                    handle_build_report_for_failed_subparcel(self.build_report, vpn_parcel, routing_parcel)
+                else:
+                    routing_uuid = self._create_parcel(profile_uuid, routing_parcel)
+                    if not routing_uuid:
+                        continue
+                    self._endpoints.associate_with_vpn(
+                        profile_uuid,
+                        vpn_uuid,
+                        routing_parcel._get_parcel_type(),
+                        payload=ParcelAssociationPayload(parcel_id=routing_uuid),
+                    )
+
         for cellular_controller_tag, cellular_controller_parcel in self._independent_items_cellular_controllers.items():
             controller_uuid = self._create_parcel(profile_uuid, cellular_controller_parcel)
             for cellular_subparcel in self._dependent_items_on_cellular_controllers[cellular_controller_tag]:
@@ -169,8 +198,13 @@ class TransportAndManagementProfileBuilder:
                     )
                 else:
                     parcel_uuid = self._create_parcel(profile_uuid, cellular_subparcel)
+                    if not parcel_uuid:
+                        continue
                     self._endpoints.associate_with_cellular_controller(
-                        profile_uuid, controller_uuid, cellular_subparcel._get_parcel_type(), ParcelId(id=parcel_uuid)
+                        profile_uuid,
+                        controller_uuid,
+                        cellular_subparcel._get_parcel_type(),
+                        ParcelAssociationPayload(parcel_id=parcel_uuid),
                     )
 
         return self.build_report
