@@ -1,5 +1,5 @@
 from inspect import isclass
-from typing import Any, List, OrderedDict, Type, Union
+from typing import Any, List, Type, Union
 
 from pydantic import BaseModel
 from typing_extensions import Annotated, get_args, get_origin
@@ -21,7 +21,7 @@ def resolve_nested_base_model_unions(
         List[Type[BaseModel]]: flat list of subclasses of BaseModel present in input
     """
 
-    models_types = list(OrderedDict.fromkeys(models_types))
+    models_types = list(set(models_types))
 
     if isclass(annotation):
         if issubclass(annotation, BaseModel):

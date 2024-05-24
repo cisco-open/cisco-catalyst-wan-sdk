@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Mapping, Type
+from typing import Any, Callable, Dict, Mapping, Type, cast
 
 from catalystwan.models.common import int_range_serializer
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import (
@@ -28,6 +28,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
     URLAllowParcel,
     URLBlockParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.policy.sla_class import SLAClassCriteria
 from catalystwan.models.policy import (
     AnyPolicyList,
     AppList,
@@ -62,24 +63,23 @@ def _get_parcel_name_desc(policy_list: AnyPolicyList) -> Dict[str, Any]:
     return dict(parcel_name=policy_list.name, parcel_description=policy_list.description)
 
 
-def app_probe(in_: AppProbeClassList, **context) -> AppProbeParcel:
+def app_probe(in_: AppProbeClassList, context) -> AppProbeParcel:
     out = AppProbeParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_fowarding_class(entry.forwarding_class)
     return out
 
 
-def app_list(in_: AppList, **context) -> ApplicationListParcel:
+def app_list(in_: AppList, context) -> ApplicationListParcel:
     out = ApplicationListParcel(**_get_parcel_name_desc(in_))
-    for entry in in_.entries:
-        if entry.app is not None:
-            out.add_application(entry.app)
-        if entry.app_family is not None:
-            out.add_application_family(entry.app_family)
+    for app in set(in_.list_all_app()):
+        out.add_application(app)
+    for app_family in set(in_.list_all_app_family()):
+        out.add_application_family(app_family)
     return out
 
 
-def as_path(in_: ASPathList, **context) -> AsPathParcel:
+def as_path(in_: ASPathList, context) -> AsPathParcel:
     if not context:
         raise CatalystwanConverterCantConvertException(f"Additional context required for {ASPathList.__name__}")
     out = AsPathParcel(**_get_parcel_name_desc(in_))
@@ -88,55 +88,55 @@ def as_path(in_: ASPathList, **context) -> AsPathParcel:
     return out
 
 
-def class_map(in_: ClassMapList, **context) -> FowardingClassParcel:
+def class_map(in_: ClassMapList, context) -> FowardingClassParcel:
     out = FowardingClassParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_queue(entry.queue)
     return out
 
 
-def color(in_: ColorList, **context) -> ColorParcel:
+def color(in_: ColorList, context) -> ColorParcel:
     out = ColorParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_color(entry.color)
     return out
 
 
-def community(in_: CommunityList, **context) -> StandardCommunityParcel:
+def community(in_: CommunityList, context) -> StandardCommunityParcel:
     out = StandardCommunityParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out._add_community(entry.community)
     return out
 
 
-def data_prefix_ipv6(in_: DataIPv6PrefixList, **context) -> IPv6DataPrefixParcel:
+def data_prefix_ipv6(in_: DataIPv6PrefixList, context) -> IPv6DataPrefixParcel:
     out = IPv6DataPrefixParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_prefix(entry.ipv6_prefix)
     return out
 
 
-def data_prefix(in_: DataPrefixList, **context) -> DataPrefixParcel:
+def data_prefix(in_: DataPrefixList, context) -> DataPrefixParcel:
     out = DataPrefixParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_data_prefix(entry.ip_prefix)
     return out
 
 
-def expanded_community(in_: ExpandedCommunityList, **context) -> ExpandedCommunityParcel:
+def expanded_community(in_: ExpandedCommunityList, context) -> ExpandedCommunityParcel:
     out = ExpandedCommunityParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_community(entry.community)
     return out
 
 
-def fqdn(in_: FQDNList, **context) -> FQDNDomainParcel:
+def fqdn(in_: FQDNList, context) -> FQDNDomainParcel:
     out = FQDNDomainParcel(**_get_parcel_name_desc(in_))
     out.from_fqdns([entry.pattern for entry in in_.entries])
     return out
 
 
-def geo_location(in_: GeoLocationList, **context) -> GeoLocationListParcel:
+def geo_location(in_: GeoLocationList, context) -> GeoLocationListParcel:
     out = GeoLocationListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         if entry.country is not None:
@@ -146,14 +146,14 @@ def geo_location(in_: GeoLocationList, **context) -> GeoLocationListParcel:
     return out
 
 
-def ips_signature(in_: IPSSignatureList, **context) -> IPSSignatureParcel:
+def ips_signature(in_: IPSSignatureList, context) -> IPSSignatureParcel:
     out = IPSSignatureParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_signature(f"{entry.generator_id}:{entry.signature_id}")
     return out
 
 
-def prefix_ipv6(in_: IPv6PrefixList, **context) -> IPv6PrefixListParcel:
+def prefix_ipv6(in_: IPv6PrefixList, context) -> IPv6PrefixListParcel:
     out = IPv6PrefixListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_prefix(ipv6_network=entry.ipv6_prefix, ge=entry.ge, le=entry.le)
@@ -161,28 +161,28 @@ def prefix_ipv6(in_: IPv6PrefixList, **context) -> IPv6PrefixListParcel:
 
 
 # TODO: def local_app(in_: LocalAppList):
-def local_domain(in_: LocalDomainList, **context) -> LocalDomainParcel:
+def local_domain(in_: LocalDomainList, context) -> LocalDomainParcel:
     out = LocalDomainParcel(**_get_parcel_name_desc(in_))
     out.from_local_domains([entry.name_server for entry in in_.entries])
     return out
 
 
 # TODO: def mirror_list(in_: MirrorList):
-def policer(in_: PolicerList, **context) -> PolicerParcel:
+def policer(in_: PolicerList, context) -> PolicerParcel:
     out = PolicerParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_entry(burst=entry.burst, exceed=entry.exceed, rate=entry.rate)
     return out
 
 
-def port(in_: PortList, **context) -> SecurityPortParcel:
+def port(in_: PortList, context) -> SecurityPortParcel:
     out = SecurityPortParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out._add_port(int_range_serializer(entry.port))
     return out
 
 
-def preferred_color_group(in_: PreferredColorGroupList, **context) -> PreferredColorGroupParcel:
+def preferred_color_group(in_: PreferredColorGroupList, context) -> PreferredColorGroupParcel:
     out = PreferredColorGroupParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_primary(
@@ -202,14 +202,14 @@ def preferred_color_group(in_: PreferredColorGroupList, **context) -> PreferredC
     return out
 
 
-def prefix(in_: PrefixList, **context) -> PrefixListParcel:
+def prefix(in_: PrefixList, context) -> PrefixListParcel:
     out = PrefixListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_prefix(entry.ip_prefix)
     return out
 
 
-def protocol(in_: ProtocolNameList, **context) -> ProtocolListParcel:
+def protocol(in_: ProtocolNameList, context) -> ProtocolListParcel:
     out = ProtocolListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_protocol(entry.protocol_name)
@@ -218,13 +218,37 @@ def protocol(in_: ProtocolNameList, **context) -> ProtocolListParcel:
 
 # TODO: def region(in_: RegionList):
 # TODO: def site(in_: SiteList):
-def sla_class(in_: SLAClassList, **context) -> SLAClassParcel:
+def sla_class(in_: SLAClassList, context) -> SLAClassParcel:
     out = SLAClassParcel(**_get_parcel_name_desc(in_))
-    # TODO: requires app probe id
+    for entry in in_.entries:
+        # TODO: modernize SLAClassList model (UX1)
+        jitter = int(entry.jitter) if entry.jitter is not None else None
+        latency = int(entry.latency) if entry.latency is not None else None
+        loss = int(entry.loss) if entry.loss is not None else None
+        out.add_entry(
+            app_probe_class_id=entry.app_probe_class,
+            loss=loss,
+            jitter=jitter,
+            latency=latency,
+        )
+        if entry.fallback_best_tunnel is not None:
+            # TODO: modernize SLAClassList model (UX1)
+            fallback = entry.fallback_best_tunnel
+            criteria = cast(SLAClassCriteria, fallback.criteria)
+            jitter = int(fallback.jitter_variance) if fallback.jitter_variance is not None else None
+            latency = int(fallback.latency_variance) if fallback.latency_variance is not None else None
+            loss = int(fallback.loss_variance) if fallback.loss_variance is not None else None
+
+            out.add_fallback(
+                criteria=criteria,
+                jitter_variance=jitter,
+                latency_variance=latency,
+                loss_variance=loss,
+            )
     return out
 
 
-def tloc(in_: TLOCList, **context) -> TlocParcel:
+def tloc(in_: TLOCList, context) -> TlocParcel:
     out = TlocParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         _preference = str(entry.preference) if entry.preference is not None else None
@@ -232,14 +256,14 @@ def tloc(in_: TLOCList, **context) -> TlocParcel:
     return out
 
 
-def url_allow(in_: URLAllowList, **context) -> URLAllowParcel:
+def url_allow(in_: URLAllowList, context) -> URLAllowParcel:
     out = URLAllowParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_url(entry.pattern)
     return out
 
 
-def url_block(in_: URLBlockList, **context) -> URLBlockParcel:
+def url_block(in_: URLBlockList, context) -> URLBlockParcel:
     out = URLBlockParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_url(entry.pattern)
@@ -247,7 +271,7 @@ def url_block(in_: URLBlockList, **context) -> URLBlockParcel:
 
 
 # TODO: def vpn(in_: VPNList): needs to be converted to item from service profile
-def zone(in_: ZoneList, **context) -> SecurityZoneListParcel:
+def zone(in_: ZoneList, context) -> SecurityZoneListParcel:
     out = SecurityZoneListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         if entry.interface is not None:
@@ -296,5 +320,7 @@ def _find_converter(in_: Input) -> Callable[..., Output]:
     raise CatalystwanConverterCantConvertException(f"No converter found for {type(in_).__name__}")
 
 
-def convert(in_: Input, **context) -> Output:
-    return _find_converter(in_)(in_, **context)
+def convert(in_: Input, context) -> Output:
+    result = _find_converter(in_)(in_, context)
+    result.model_validate(result)
+    return result

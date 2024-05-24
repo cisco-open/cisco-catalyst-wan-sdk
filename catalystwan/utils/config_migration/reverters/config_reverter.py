@@ -3,11 +3,12 @@ from venv import logger
 
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.models.configuration.config_migration import UX2RollbackInfo
+from catalystwan.session import ManagerSession
 from catalystwan.utils.config_migration.factories.feature_profile_api import FeatureProfileAPIFactory
 
 
 class UX2ConfigReverter:
-    def __init__(self, session) -> None:
+    def __init__(self, session: ManagerSession) -> None:
         self._session = session
 
     def rollback(self, rollback_info: UX2RollbackInfo, progress: Callable[[str, int, int], None]) -> bool:
@@ -31,4 +32,17 @@ class UX2ConfigReverter:
             except CatalystwanException as e:
                 all_deleted = False
                 logger.error(f"Error occured during deleting feature profile {feature_profile_id}: {e}")
+
+        if rollback_info.default_policy_object_profile is not None:
+            profile_id = rollback_info.default_policy_object_profile.profile_id
+            api = self._session.api.sdwan_feature_profiles.policy_object
+            for i, parcel in enumerate(rollback_info.default_policy_object_profile.parcels):
+                parcel_id, parcel_type = parcel
+                try:
+                    api.delete(profile_id, parcel_type, parcel_id)  # type: ignore [call-overload, arg-type]
+                    # need to ignore until delete handles all items types
+                except CatalystwanException as e:
+                    all_deleted = False
+                    logger.error(f"Error occured during deleting feature profile {feature_profile_id}: {e}")
+
         return all_deleted
