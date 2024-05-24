@@ -3,6 +3,8 @@ from catalystwan.models.configuration.feature_profile.sdwan.system import (
     BannerParcel,
     BasicParcel,
     BFDParcel,
+    DeviceAccessIPv4Parcel,
+    DeviceAccessIPv6Parcel,
     GlobalParcel,
     LoggingParcel,
     MRFParcel,
@@ -281,3 +283,71 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
         parcel_id = self.api.create_parcel(self.profile_uuid, omp_parcel).id
         # Assert
         assert parcel_id
+
+    def test_when_default_values_device_access_parcel_expect_successful_post(self):
+        device_access_parcel = DeviceAccessIPv4Parcel(
+            parcel_name="DeviceAccessDefault",
+            parcel_description="DeviceAccessDefault",
+        )
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, device_access_parcel).id
+
+        assert parcel_id
+
+        self.api.delete_parcel(self.profile_uuid, DeviceAccessIPv4Parcel, parcel_id)
+
+    def test_when_fully_specified_device_access_parcel_expect_successful_post(self):
+        device_access_parcel = DeviceAccessIPv4Parcel(
+            parcel_name="DeviceAccessDefault",
+            parcel_description="DeviceAccessDefault",
+        )
+        for i in range(2):
+            sequence = device_access_parcel.add_sequence(
+                sequence_id=i + 1,
+                sequence_name=f"sequence_{i+1}",
+                destination_port=22,
+                base_action="accept",
+            )
+            sequence.match_destination_data_prefix(["10.0.0.1/32", "10.0.0.0/16"])
+            sequence.match_source_data_prefix(["10.0.0.1/32", "10.0.0.0/16"])
+            sequence.match_source_ports([1, 2, 3])
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, device_access_parcel).id
+
+        assert parcel_id
+
+        self.api.delete_parcel(self.profile_uuid, DeviceAccessIPv4Parcel, parcel_id)
+
+    def test_when_default_values_device_access_ipv6_parcel_expect_successful_post(self):
+        device_access_ipv6_parcel = DeviceAccessIPv6Parcel(
+            parcel_name="DeviceAccessDefault",
+            parcel_description="DeviceAccessDefault",
+        )
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, device_access_ipv6_parcel).id
+
+        assert parcel_id
+
+        self.api.delete_parcel(self.profile_uuid, DeviceAccessIPv6Parcel, parcel_id)
+
+    def test_when_fully_specified_device_access_ipv6_parcel_expect_successful_post(self):
+        device_access_ipv6_parcel = DeviceAccessIPv6Parcel(
+            parcel_name="DeviceAccessDefault",
+            parcel_description="DeviceAccessDefault",
+        )
+        for i in range(2):
+            sequence = device_access_ipv6_parcel.add_sequence(
+                sequence_id=i + 1,
+                sequence_name=f"sequence_{i+1}",
+                destination_port=22,
+                base_action="accept",
+            )
+            sequence.match_destination_data_prefix(["::250/100", "::54a/64"])
+            sequence.match_source_data_prefix(["::250/100", "::54a/64"])
+            sequence.match_source_ports([1, 2, 3])
+
+        parcel_id = self.api.create_parcel(self.profile_uuid, device_access_ipv6_parcel).id
+
+        assert parcel_id
+
+        self.api.delete_parcel(self.profile_uuid, DeviceAccessIPv6Parcel, parcel_id)
