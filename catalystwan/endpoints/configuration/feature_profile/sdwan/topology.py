@@ -20,29 +20,29 @@ from catalystwan.typed_list import DataSequence
 
 
 class TopologyFeatureProfile(APIEndpoints):
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @post("/v1/feature-profile/sdwan/topology")
     def create_topology_feature_profile(self, payload: FeatureProfileCreationPayload) -> FeatureProfileCreationResponse:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sdwan/topology")
     def get_topology_feature_profiles(self, params: GetFeatureProfilesPayload) -> DataSequence[FeatureProfileInfo]:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sdwan/topology/{profile_id}")
     def get_topology_feature_profile(self, profile_id: str, params: GetFeatureProfilesPayload) -> FeatureProfileDetail:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @put("/v1/feature-profile/sdwan/topology/{profile_id}")
     def edit_topology_feature_profile(
         self, profile_id: str, payload: FeatureProfileEditPayload
     ) -> FeatureProfileCreationResponse:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @delete("/v1/feature-profile/sdwan/topology/{profile_id}")
     def delete_topology_feature_profile(self, profile_id: str) -> None:
         ...
@@ -51,7 +51,7 @@ class TopologyFeatureProfile(APIEndpoints):
     # Create/Delete/Get Any Topology Parcel
     #
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @post("/v1/feature-profile/sdwan/topology/{profile_id}/{parcel_type}")
     def create_any_parcel(
         self, profile_id: UUID, parcel_type: str, payload: AnyTopologyParcel

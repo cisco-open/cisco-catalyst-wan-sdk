@@ -1,4 +1,4 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 # mypy: disable-error-code="empty-body"
 from enum import Enum
@@ -102,32 +102,32 @@ class ConfigurationFeatureProfile(APIEndpoints):
 
 
 class SDRoutingConfigurationFeatureProfile(APIEndpoints):
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @post("/v1/feature-profile/sd-routing/cli")
     def create_cli_feature_profile(self, payload: FeatureProfileCreationPayload) -> FeatureProfileCreationResponse:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @post("/v1/feature-profile/sd-routing/cli/{cli_fp_id}/full-config")
     def create_cli_full_config_parcel(self, cli_fp_id: str, payload: FullConfigParcel) -> ParcelId:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @delete("/v1/feature-profile/sd-routing/cli/{cli_fp_id}")
     def delete_cli_feature_profile(self, cli_fp_id: str) -> None:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @delete("/v1/feature-profile/sd-routing/cli/{cli_fp_id}/full-config/{parcel_id}")
     def delete_cli_full_config_parcel(self, cli_fp_id: str, parcel_id: str) -> None:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @put("/v1/feature-profile/sd-routing/cli/{cli_fp_id}/full-config/{parcel_id}")
     def edit_cli_full_config_parcel(self, cli_fp_id: str, parcel_id: str, payload: FullConfigParcel) -> None:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sd-routing/cli")
     def get_cli_feature_profiles(
         self, payload: Optional[GetFeatureProfilesPayload]

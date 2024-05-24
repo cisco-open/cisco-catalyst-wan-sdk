@@ -1,7 +1,7 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Address
 
-from catalystwan.api.configuration_groups.parcel import Global, as_global
+from catalystwan.api.configuration_groups.parcel import Global, as_global, as_variable
 from catalystwan.integration_tests.profile_builder.base import TestFeatureProfileBuilder
 from catalystwan.integration_tests.test_data import bgp_parcel, ospf_parcel, ospfv3ipv4_parcel, ospfv3ipv6_parcel
 from catalystwan.models.common import SubnetMask
@@ -36,6 +36,7 @@ class TestServiceFeatureProfileBuilder(TestFeatureProfileBuilder):
             parcel_description="Test Ethernet Parcel",
             interface_name=as_global("HundredGigE"),
             ethernet_description=as_global("Test Ethernet Description"),
+            shutdown=as_variable("{{vpn1_gi3_lan_ip_192.168.X.1/24_}}"),
         )
         dhcp_server_parcel = LanVpnDhcpServerParcel(
             parcel_name="DhcpServerDefault",

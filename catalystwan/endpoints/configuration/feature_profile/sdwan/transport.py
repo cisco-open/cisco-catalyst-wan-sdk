@@ -30,64 +30,64 @@ from catalystwan.typed_list import DataSequence
 
 
 class TransportFeatureProfile(APIEndpoints):
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @post("/v1/feature-profile/sdwan/transport")
     def create_transport_feature_profile(
         self, payload: FeatureProfileCreationPayload
     ) -> FeatureProfileCreationResponse:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sdwan/transport")
     def get_transport_feature_profiles(self, params: GetFeatureProfilesPayload) -> DataSequence[FeatureProfileInfo]:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sdwan/transport/{profile_id}")
     def get_transport_feature_profile(
         self, profile_id: UUID, params: GetFeatureProfilesPayload
     ) -> FeatureProfileDetail:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @put("/v1/feature-profile/sdwan/transport/{profile_id}")
     def edit_transport_feature_profile(
         self, profile_id: UUID, payload: FeatureProfileEditPayload
     ) -> FeatureProfileCreationResponse:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @delete("/v1/feature-profile/sdwan/transport/{profile_id}")
     def delete_transport_feature_profile(self, profile_id: UUID) -> None:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @post("/v1/feature-profile/sdwan/transport/{profile_id}/{parcel_type}")
     def create_transport_parcel(
         self, profile_id: UUID, parcel_type: str, payload: _ParcelBase
     ) -> ParcelCreationResponse:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @post("/v1/feature-profile/sdwan/transport/{profile_id}/wan/vpn/{vpn_id}/{parcel_type}")
     def create_transport_vpn_sub_parcel(
         self, profile_id: UUID, vpn_id: UUID, parcel_type: str, payload: _ParcelBase
     ) -> ParcelCreationResponse:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @post("/v1/feature-profile/sdwan/transport/{profile_id}/management/vpn/{vpn_id}/{parcel_type}")
     def create_management_vpn_sub_parcel(
         self, profile_id: UUID, vpn_id: UUID, parcel_type: str, payload: _ParcelBase
     ) -> ParcelCreationResponse:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sdwan/transport/{profile_id}/{parcel_type}")
     def get_transport_parcels(self, profile_id: UUID, parcel_type: str) -> DataSequence[Parcel[AnyTransportParcel]]:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sdwan/transport/{profile_id}/{parcel_type}/{parcel_id}")
     def get_transport_parcel(self, profile_id: UUID, parcel_type: str, parcel_id: UUID) -> Parcel[AnyTransportParcel]:
         ...
@@ -95,29 +95,29 @@ class TransportFeatureProfile(APIEndpoints):
     #
     # ManagementVPN parcel
     #
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @post("/v1/feature-profile/sdwan/transport/{profile_id}/management/vpn")
     def create_management_vpn_parcel(self, profile_id: UUID, payload: _ParcelBase) -> ParcelCreationResponse:
         ...
 
-    # @versions(supported_versions=(">=20.13"), raises=False)
+    # @versions(supported_versions=(">=20.12"), raises=False)
     # @get("/v1/feature-profile/sdwan/transport/{profile_id}/management/vpn")
     # def get_management_vpn_parcels(self, profile_id: UUID) -> ParcelSequence[ManagementVPN]:
     #     ...
 
-    # @versions(supported_versions=(">=20.13"), raises=False)
+    # @versions(supported_versions=(">=20.12"), raises=False)
     # @get("/v1/feature-profile/sdwan/transport/{profile_id}/management/vpn/{parcel_id}")
     # def get_management_vpn_parcel(self, profile_id: UUID, parcel_id: str) -> Parcel[ManagementVPN]:
     #     ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @put("/v1/feature-profile/sdwan/transport/{profile_id}/management/vpn/{parcel_id}")
     def edit_management_vpn_parcel(
         self, profile_id: UUID, parcel_id: str, payload: ManagementVpnParcel
     ) -> ParcelCreationResponse:
         ...
 
-    @versions(supported_versions=(">=20.13"), raises=False)
+    @versions(supported_versions=(">=20.12"), raises=False)
     @delete("/v1/feature-profile/sdwan/transport/{profile_id}/management/vpn/{parcel_id}")
     def delete_management_vpn_parcel(self, profile_id: UUID, parcel_id: str) -> None:
         ...
