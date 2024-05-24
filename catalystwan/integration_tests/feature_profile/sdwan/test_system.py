@@ -302,15 +302,15 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
             parcel_description="DeviceAccessDefault",
         )
         for i in range(2):
-            match_entries = device_access_parcel.create_match_entries(
+            sequence = device_access_parcel.add_sequence(
+                sequence_id=i + 1,
+                sequence_name=f"sequence_{i+1}",
                 destination_port=22,
-                destination_prefix=["10.0.0.1/32", "10.0.0.0/16"],
-                source_prefix=["10.0.0.1/32", "10.0.0.0/16"],
-                source_ports=[1, 2, 3],
+                base_action="accept",
             )
-            device_access_parcel.add_sequences(
-                sequence_id=i + 1, sequence_name=f"sequence_{i+1}", match_entries=match_entries, base_action="accept"
-            )
+            sequence.match_destination_data_prefix(["10.0.0.1/32", "10.0.0.0/16"])
+            sequence.match_source_data_prefix(["10.0.0.1/32", "10.0.0.0/16"])
+            sequence.match_source_ports([1, 2, 3])
 
         parcel_id = self.api.create_parcel(self.profile_uuid, device_access_parcel).id
 
@@ -336,15 +336,15 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
             parcel_description="DeviceAccessDefault",
         )
         for i in range(2):
-            match_entries = device_access_ipv6_parcel.create_match_entries(
+            sequence = device_access_ipv6_parcel.add_sequence(
+                sequence_id=i + 1,
+                sequence_name=f"sequence_{i+1}",
                 destination_port=22,
-                destination_prefix=["::250/100", "::54a/64"],
-                source_prefix=["::250/100", "::54a/64"],
-                source_ports=[1, 2, 3],
+                base_action="accept",
             )
-            device_access_ipv6_parcel.add_sequences(
-                sequence_id=i + 1, sequence_name=f"sequence_{i+1}", match_entries=match_entries, base_action="accept"
-            )
+            sequence.match_destination_data_prefix(["::250/100", "::54a/64"])
+            sequence.match_source_data_prefix(["::250/100", "::54a/64"])
+            sequence.match_source_ports([1, 2, 3])
 
         parcel_id = self.api.create_parcel(self.profile_uuid, device_access_ipv6_parcel).id
 

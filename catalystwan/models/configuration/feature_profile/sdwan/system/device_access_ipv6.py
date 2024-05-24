@@ -1,10 +1,11 @@
 from ipaddress import IPv6Interface
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union, overload
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
+from catalystwan.utils.type_check import is_str_uuid
 
 BaseAction = Literal[
     "accept",
@@ -46,7 +47,7 @@ class DestinationIPPrefix(BaseModel):
 
 
 class MatchEntries(BaseModel):
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    model_config = ConfigDict(extra="forbid", populate_by_name=True, validate_assignment=True)
 
     destination_data_prefix: Optional[Union[DestinationIPPrefix, DestinationDataPrefix]] = Field(
         default=None, validation_alias="destinationDataPrefix", serialization_alias="destinationDataPrefix"
@@ -62,8 +63,8 @@ class MatchEntries(BaseModel):
     )
 
 
-class Sequences(BaseModel):
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+class Sequence(BaseModel):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True, validate_assignment=True)
 
     base_action: Union[Global[BaseAction], Default[Literal[BaseAction]]] = Field(
         default=Default[Literal[BaseAction]](value="accept"),
@@ -76,6 +77,66 @@ class Sequences(BaseModel):
     sequence_id: Global[int] = Field(validation_alias="sequenceId", serialization_alias="sequenceId")
     sequence_name: Global[str] = Field(validation_alias="sequenceName", serialization_alias="sequenceName")
 
+    def set_base_action(self, base_action: BaseAction):
+        self.base_action = Global[BaseAction](value=base_action)
+
+    @overload
+    def match_destination_data_prefix(self, destination_prefix: str):
+        ...
+
+    @overload
+    def match_destination_data_prefix(self, destination_prefix: List[str]):
+        ...
+
+    @overload
+    def match_destination_data_prefix(self, destination_prefix: List[IPv6Interface]):
+        ...
+
+    def match_destination_data_prefix(self, destination_prefix):
+        if isinstance(destination_prefix, str):
+            if is_str_uuid(destination_prefix):
+                self.match_entries.destination_data_prefix = DestinationDataPrefix(
+                    destination_data_prefix_list=RefIdItem(ref_id=Global[str](value=destination_prefix))
+                )
+            else:
+                self.match_entries.destination_data_prefix = DestinationIPPrefix(
+                    destination_ip_prefix_list=Variable(value=destination_prefix)
+                )
+        else:
+            self.match_entries.destination_data_prefix = DestinationIPPrefix(
+                destination_ip_prefix_list=Global[List[IPv6Interface]](value=destination_prefix)
+            )
+
+    @overload
+    def match_source_data_prefix(self, source_prefix: str):
+        ...
+
+    @overload
+    def match_source_data_prefix(self, source_prefix: List[str]):
+        ...
+
+    @overload
+    def match_source_data_prefix(self, source_prefix: List[IPv6Interface]):
+        ...
+
+    def match_source_data_prefix(self, source_prefix):
+        if isinstance(source_prefix, str):
+            if is_str_uuid(source_prefix):
+                self.match_entries.source_data_prefix = SourceDataPrefix(
+                    source_data_prefix_list=RefIdItem(ref_id=Global[str](value=source_prefix))
+                )
+            else:
+                self.match_entries.source_data_prefix = SourceIPPrefix(
+                    source_ip_prefix_list=Variable(value=source_prefix)
+                )
+        else:
+            self.match_entries.source_data_prefix = SourceIPPrefix(
+                source_ip_prefix_list=Global[List[IPv6Interface]](value=source_prefix)
+            )
+
+    def match_source_ports(self, ports: List[int]):
+        self.match_entries.source_ports = Global[List[int]](value=ports)
+
 
 class DeviceAccessIPv6Parcel(_ParcelBase):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
@@ -85,63 +146,28 @@ class DeviceAccessIPv6Parcel(_ParcelBase):
     default_action: Union[Global[BaseAction], Default[BaseAction]] = Field(
         default=Default[BaseAction](value="drop"), validation_alias=AliasPath("data", "defaultAction")
     )
-    sequences: List[Sequences] = Field(
+    sequences: List[Sequence] = Field(
         default=[], validation_alias=AliasPath("data", "sequences"), description="Device Access Control List"
     )
 
-    def add_sequences(
+    def set_default_action(self, default_action: BaseAction) -> None:
+        self.default_action = Global[BaseAction](value=default_action)
+
+    def add_sequence(
         self,
         sequence_id: int,
         sequence_name: str,
-        match_entries: MatchEntries,
+        destination_port: DestinationPort,
         base_action: Optional[BaseAction] = None,
-    ) -> Sequences:
+    ) -> Sequence:
         payload: Dict[str, Any] = {
             "sequence_id": Global[int](value=sequence_id),
             "sequence_name": Global[str](value=sequence_name),
-            "match_entries": match_entries,
+            "match_entries": MatchEntries(destination_port=Global[DestinationPort](value=destination_port)),
         }
         if base_action is not None:
             payload["base_action"] = Global[BaseAction](value=base_action)
 
-        sequences = Sequences(**payload)
+        sequences = Sequence(**payload)
         self.sequences.append(sequences)
         return sequences
-
-    def create_match_entries(
-        self,
-        destination_port: DestinationPort,
-        destination_prefix: Optional[Union[RefIdItem, List[str], List[IPv6Interface], Variable]] = None,
-        source_prefix: Optional[Union[RefIdItem, List[str], List[IPv6Interface], Variable]] = None,
-        source_ports: Optional[List[int]] = None,
-    ) -> MatchEntries:
-        def resolve_ip_prefix_list(
-            prefix_list: Union[List[str], List[IPv6Interface], Variable]
-        ) -> Union[Global[List[IPv6Interface]], Variable]:
-            if isinstance(prefix_list, list):
-                return Global[List[IPv6Interface]](value=prefix_list)  # type: ignore
-            else:
-                return prefix_list
-
-        destination_data_prefix: Optional[Union[DestinationDataPrefix, DestinationIPPrefix]] = None
-        if destination_prefix is not None:
-            if isinstance(destination_prefix, RefIdItem):
-                destination_data_prefix = DestinationDataPrefix(destination_data_prefix_list=destination_prefix)
-            else:
-                destination_data_prefix = DestinationIPPrefix(
-                    destination_ip_prefix_list=resolve_ip_prefix_list(destination_prefix)
-                )
-
-        source_data_prefix: Optional[Union[SourceDataPrefix, SourceIPPrefix]] = None
-        if source_prefix is not None:
-            if isinstance(source_prefix, RefIdItem):
-                source_data_prefix = SourceDataPrefix(source_data_prefix_list=source_prefix)
-            else:
-                source_data_prefix = SourceIPPrefix(source_ip_prefix_list=resolve_ip_prefix_list(source_prefix))
-
-        return MatchEntries(
-            destination_port=Global[DestinationPort](value=destination_port),
-            destination_data_prefix=destination_data_prefix,
-            source_data_prefix=source_data_prefix,
-            source_ports=Global[List[int]](value=source_ports) if source_ports is not None else None,
-        )
