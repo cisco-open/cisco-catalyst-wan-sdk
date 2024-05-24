@@ -1,8 +1,9 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from copy import deepcopy
 from typing import Dict, List, Optional
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_default, as_global, as_variable
-from catalystwan.models.common import EthernetDuplexMode
+from catalystwan.models.common import EthernetDuplexMode, EthernetNatType
 from catalystwan.models.configuration.feature_profile.common import (
     Arp,
     DynamicIPv6Dhcp,
@@ -76,9 +77,6 @@ class LanInterfaceEthernetTemplateConverter:
         "nat66",  # Not sure if this is correct. There is some data in UX1 that is not transferable to UX2
     )
 
-    # Default Values - Interface Name
-    basic_conf_intf_name = "{{vpn23_1_basicConf_intfName}}"
-
     # Default Values - NAT Attribute
     nat_attribute_nat_choice = "{{natAttr_natChoice}}"
 
@@ -116,14 +114,13 @@ class LanInterfaceEthernetTemplateConverter:
     def configure_interface_name(self, values: dict) -> None:
         if if_name := values.get("if_name"):
             values["interface_name"] = if_name
-        values["interface_name"] = as_variable(self.basic_conf_intf_name)
 
     def configure_ethernet_description(self, values: dict) -> None:
         values["ethernet_description"] = values.get("description")
 
     def configure_ipv4_address(self, values: dict) -> None:
         if ipv4_address_configuration := values.get("ip"):
-            if "address" in ipv4_address_configuration:
+            if "address" in ipv4_address_configuration and ipv4_address_configuration["address"].value != "":
                 values["interface_ip_address"] = InterfaceStaticIPv4Address(
                     static=StaticIPv4AddressConfig(
                         primary_ip_address=self.get_static_ipv4_address(ipv4_address_configuration),
@@ -267,9 +264,17 @@ class LanInterfaceEthernetTemplateConverter:
         if nat := values.get("nat"):
             if isinstance(nat, dict):
                 # Nat can be straight up Global[bool] or a dict with more values
-                nat_type = nat.get("nat_choice", as_variable(self.nat_attribute_nat_choice))
-                if nat_type.value.lower() == "interface":
+                nat_type = nat.get("nat_choice")
+
+                if nat_type is None:
+                    nat_type = as_global("loopback", EthernetNatType)
+
+                elif nat_type.value.lower() == "interface":
                     nat_type = as_variable(self.nat_attribute_nat_choice)
+
+                elif not isinstance(nat_type, Variable):
+                    nat_type = as_global(nat_type.value, EthernetNatType)
+
                 values["nat_attributes_ipv4"] = EthernetNatAttributesIpv4(
                     nat_type=nat_type,
                     nat_pool=self.get_nat_pool(nat),

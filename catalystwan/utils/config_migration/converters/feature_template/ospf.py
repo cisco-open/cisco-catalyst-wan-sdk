@@ -1,24 +1,26 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from copy import deepcopy
 from typing import List, Optional
 
 from catalystwan.api.configuration_groups.parcel import Global, as_global
-from catalystwan.models.configuration.feature_profile.sdwan.service.ospf import (
+from catalystwan.models.configuration.feature_profile.sdwan.routing.ospf import (
     AreaType,
     OspfArea,
     OspfInterfaceParametres,
-    OspfParcel,
     RouterLsa,
+    RoutingOspfParcel,
     SummaryPrefix,
     SummaryRoute,
 )
+from catalystwan.utils.config_migration.steps.constants import LAN_OSPF, WAN_OSPF
 
 
 class OspfTemplateConverter:
-    supported_template_types = ("cisco_ospf",)
+    supported_template_types = (LAN_OSPF, WAN_OSPF)
 
     delete_keys = ("max_metric", "timers", "distance", "auto_cost", "default_information", "compatible")
 
-    def create_parcel(self, name: str, description: str, template_values: dict) -> OspfParcel:
+    def create_parcel(self, name: str, description: str, template_values: dict) -> RoutingOspfParcel:
         """
         Creates a BannerParcel object based on the provided template values.
 
@@ -40,7 +42,7 @@ class OspfTemplateConverter:
         self.configure_area(values)
         self.configure_route_policy(values)
         self.cleanup_keys(values)
-        return OspfParcel(parcel_name=name, parcel_description=description, **values)
+        return RoutingOspfParcel(parcel_name=name, parcel_description=description, **values)
 
     def configure_router_lsa(self, values: dict) -> None:
         if router_lsa := values.get("max_metric", {}).get("router_lsa"):

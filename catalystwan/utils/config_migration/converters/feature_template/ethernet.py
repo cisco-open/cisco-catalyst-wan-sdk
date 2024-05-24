@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv6Interface
 from typing import Dict, List, Optional, Union
 
@@ -50,7 +51,7 @@ class ManagementInterfaceEthernetTemplateConverter:
     ) -> Optional[Union[InterfaceDynamicIPv4Address, InterfaceStaticIPv4Address]]:
         ip_address = data.get("ip", {})
 
-        if "address" in ip_address:
+        if "address" in ip_address and ip_address["address"].value != "":
             return InterfaceStaticIPv4Address(
                 static=StaticIPv4AddressConfig(
                     primary_ip_address=self.get_static_ipv4_address(ip_address),

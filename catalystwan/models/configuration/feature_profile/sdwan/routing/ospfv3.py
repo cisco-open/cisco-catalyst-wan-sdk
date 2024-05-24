@@ -1,4 +1,4 @@
-# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from ipaddress import IPv4Address, IPv6Interface
 from typing import List, Literal, Optional, Union
@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
 from catalystwan.models.common import MetricType
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask
 
@@ -108,7 +108,7 @@ class SummaryRoute(BaseModel):
     network: Optional[AddressWithMask] = None
     cost: Optional[Union[Global[int], Variable, Default[None]]] = None
     no_advertise: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(
-        serialization_alias="noAdvertise", validation_alias="noAdvertise", default=None
+        serialization_alias="noAdvertise", validation_alias="noAdvertise", default=as_default(False)
     )
 
 
@@ -220,8 +220,12 @@ class SpfTimers(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     delay: Optional[Union[Global[int], Variable, Default[int]]] = None
-    initial_hold: Optional[Union[Global[int], Variable, Default[int]]] = None
-    max_hold: Optional[Union[Global[int], Variable, Default[int]]] = None
+    initial_hold: Optional[Union[Global[int], Variable, Default[int]]] = Field(
+        default=None, validation_alias="initialHold", serialization_alias="initialHold"
+    )
+    max_hold: Optional[Union[Global[int], Variable, Default[int]]] = Field(
+        default=None, validation_alias="maxHold", serialization_alias="maxHold"
+    )
 
 
 class AdvancedOspfv3Attributes(BaseModel):
@@ -261,7 +265,7 @@ class BasicOspfv3Attributes(BaseModel):
     )
 
 
-class Ospfv3IPv4Parcel(_ParcelBase):
+class RoutingOspfv3IPv4Parcel(_ParcelBase):
     type_: Literal["routing/ospfv3/ipv4"] = Field(default="routing/ospfv3/ipv4", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
@@ -276,7 +280,7 @@ class Ospfv3IPv4Parcel(_ParcelBase):
     area: List[Ospfv3IPv4Area] = Field(validation_alias=AliasPath("data", "area"))
 
 
-class Ospfv3IPv6Parcel(_ParcelBase):
+class RoutingOspfv3IPv6Parcel(_ParcelBase):
     type_: Literal["routing/ospfv3/ipv6"] = Field(default="routing/ospfv3/ipv6", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 

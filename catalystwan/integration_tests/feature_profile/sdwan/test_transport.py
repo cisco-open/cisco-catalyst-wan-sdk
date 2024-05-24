@@ -1,9 +1,11 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Address, IPv6Address, IPv6Interface
 from typing import List, Literal
 from uuid import UUID
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
+from catalystwan.integration_tests.test_data import cellular_controller_parcel, cellular_profile_parcel, gps_parcel
 from catalystwan.models.common import (
     CableLengthLongValue,
     CarrierType,
@@ -26,11 +28,12 @@ from catalystwan.models.configuration.feature_profile.common import AclQos
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask as CommonPrefix
 from catalystwan.models.configuration.feature_profile.common import AdvancedGre, AllowService
 from catalystwan.models.configuration.feature_profile.common import Arp as CommonArp
-from catalystwan.models.configuration.feature_profile.common import ChannelGroup
+from catalystwan.models.configuration.feature_profile.common import ChannelGroup, DNSIPv4, DNSIPv6
 from catalystwan.models.configuration.feature_profile.common import (
     EthernetNatAttributesIpv4 as EthernetNatAttributesIpv4,
 )
 from catalystwan.models.configuration.feature_profile.common import (
+    HostMapping,
     InterfaceStaticIPv4Address,
     MultilinkAuthenticationType,
     MultilinkClockSource,
@@ -48,18 +51,6 @@ from catalystwan.models.configuration.feature_profile.common import (
     StaticNat,
     TunnelSourceType,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_controller import (
-    CellularControllerParcel,
-    ControllerConfig,
-)
-from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_profile import (
-    Authentication,
-    CellularProfileParcel,
-    NeedAuthentication,
-    ProfileConfig,
-    ProfileInfo,
-)
-from catalystwan.models.configuration.feature_profile.sdwan.transport.gps import GpsParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.management.ethernet import (
     Advanced as ManagementEthernetAdvanced,
 )
@@ -85,12 +76,9 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1contro
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import (
     Address64V4PoolItem,
-    DnsIpv4,
-    DnsIpv6,
     Ipv4RouteItem,
     Ipv6RouteItem,
     ManagementVpnParcel,
-    NewHostMappingItem,
     NextHopItem,
     OneOfIpRouteNull0,
     Prefix,
@@ -180,18 +168,18 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
         management_vpn_parcel = ManagementVpnParcel(
             parcel_name="FullySpecifiedManagementVpnParcel",
             description="Description",
-            dns_ipv6=DnsIpv6(
+            dns_ipv6=DNSIPv6(
                 primary_dns_address_ipv6=as_global(IPv6Address("67ca:c2df:edfe:c8ec:b6cb:f9f4:eab0:ece6")),
                 secondary_dns_address_ipv6=as_global(IPv6Address("8989:8d33:c00a:4d13:324d:8b23:8d77:a289")),
             ),
-            dns_ipv4=DnsIpv4(
+            dns_ipv4=DNSIPv4(
                 primary_dns_address_ipv4=as_global(IPv4Address("68.138.29.222")),
                 secondary_dns_address_ipv4=as_global(IPv4Address("122.89.114.112")),
             ),
             new_host_mapping=[
-                NewHostMappingItem(
+                HostMapping(
                     host_name=as_global("FullySpecifiedHost"),
-                    list_of_ip=as_global(
+                    list_of_ips=as_global(
                         [
                             "165.16.181.116",
                             "7a4c:1d87:8587:a6ec:21a6:48a7:00e8:1fef",
@@ -293,61 +281,18 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
         assert parcel_id
 
     def test_when_fully_specifed_gps_parcel_expect_successful_post(self):
-        # Arrange
-        gps_parcel = GpsParcel(
-            parcel_name="GpsParcel",
-            parcel_description="Description",
-            destination_address=Global[IPv4Address](value=IPv4Address("66.22.1.2")),
-            destination_port=Global[int](value=266),
-            enable=Global[bool](value=True),
-            mode=Global[Literal["ms-based", "standalone"]](value="standalone"),
-            nmea=Global[bool](value=True),
-            source_address=Global[IPv4Address](value=IPv4Address("76.22.3.9")),
-        )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, gps_parcel).id
         # Assert
         assert parcel_id
 
     def test_when_fully_specifed_cellular_controller_expect_successful_post(self):
-        cellular_controller_parcel = CellularControllerParcel(
-            parcel_name="CellularControllerParcel",
-            description="Description",
-            controller_config=ControllerConfig(
-                id=as_global("0/2/0"),
-                slot=as_global(1),
-                max_retry=as_global(3),
-                failover_timer=as_global(4),
-                auto_sim=as_global(True),
-            ),
-        )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, cellular_controller_parcel).id
         # Assert
         assert parcel_id
 
     def test_when_fully_specifed_cellular_profile_expect_successful_post(self):
-        # Arrange
-        cellular_profile_parcel = CellularProfileParcel(
-            parcel_name="CellularProfileParcel",
-            parcel_description="Description",
-            profile_config=ProfileConfig(
-                id=Global[int](value=2),
-                profile_info=ProfileInfo(
-                    apn=Global[str](value="KvqJrCD"),
-                    authentication=Authentication(
-                        need_authentication=NeedAuthentication(
-                            password=Global[str](value="HfBBBHZlFH"),
-                            type=Global[Literal["chap", "pap", "pap_chap"]](value="chap"),
-                            username=Global[str](value="BABBBBBBV"),
-                        )
-                    ),
-                    no_overwrite=Global[bool](value=False),
-                    pdn_type=Global[Literal["ipv4", "ipv4v6", "ipv6"]](value="ipv4"),
-                ),
-            ),
-            config_type=Default[Literal["non-eSim"]](value="non-eSim"),
-        )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, cellular_profile_parcel).id
         # Assert
@@ -416,18 +361,18 @@ class TestTransportFeatureProfileTransportVpn(TestFeatureProfileModels):
         transport_vpn_parcel = TransportVpnParcel(
             parcel_name="FullySpecifiedTransportVpnParcel",
             description="Description",
-            dns_ipv6=DnsIpv6(
+            dns_ipv6=DNSIPv6(
                 primary_dns_address_ipv6=as_global(IPv6Address("67ca:c2df:edfe:c8ec:b6cb:f9f4:eab0:ece6")),
                 secondary_dns_address_ipv6=as_global(IPv6Address("8989:8d33:c00a:4d13:324d:8b23:8d77:a289")),
             ),
-            dns_ipv4=DnsIpv4(
+            dns_ipv4=DNSIPv4(
                 primary_dns_address_ipv4=as_global(IPv4Address("68.138.29.222")),
                 secondary_dns_address_ipv4=as_global(IPv4Address("122.89.114.112")),
             ),
             new_host_mapping=[
-                NewHostMappingItem(
+                HostMapping(
                     host_name=as_global("FullySpecifiedHost"),
-                    list_of_ip=as_global(
+                    list_of_ips=as_global(
                         [
                             "165.16.181.116",
                             "7a4c:1d87:8587:a6ec:21a6:48a7:00e8:1fef",

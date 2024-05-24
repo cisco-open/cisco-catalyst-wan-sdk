@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from typing import Dict, Union
 
 VPN_MANAGEMENT = "cisco_vpn_management"
@@ -21,6 +22,10 @@ VPN_ADDITIONAL_TEMPLATES = [
     "vpn-vmanage-interface",
     "vpn-vedge-interface-ipsec",
     "vpn-cedge-interface-multilink-controller",
+    "cisco_bgp",
+    "bgp",
+    "cisco_ospfv3",
+    "cisco_ospf",
 ]
 
 NO_SUBSTITUTE_ERROR = "NO_SUBSTITUTE_ERROR"
@@ -30,12 +35,18 @@ NO_SUBSTITUTE_VPN_MANAGEMENT_SVI = (
 
 MANAGEMENT_VPN_ETHERNET = "management/vpn/interface/ethernet"
 
+WAN_BGP = "WAN_BGP"
+WAN_OSPF = "WAN_OSPF"
+WAN_OSPFV3 = "WAN_OSPFV3"
 WAN_VPN_GRE = "wan/vpn/interface/gre"
 WAN_VPN_IPSEC = "wan/vpn/interface/ipsec"
 WAN_VPN_SVI = "wan/vpn/interface/svi"
 WAN_VPN_ETHERNET = "wan/vpn/interface/ethernet"
 WAN_VPN_MULTILINK = "wan/vpn/interface/multilink"
 
+LAN_BGP = "LAN_BGP"
+LAN_OSPF = "LAN_OSPF"
+LAN_OSPFV3 = "LAN_OSPFV3"
 LAN_VPN_GRE = "lan/vpn/interface/gre"
 LAN_VPN_IPSEC = "lan/vpn/interface/ipsec"
 LAN_VPN_SVI = "lan/vpn/interface/svi"
@@ -55,6 +66,10 @@ VPN_TEMPLATE_MAPPINGS: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {
     },
     VPN_TRANSPORT: {
         "mapping": {
+            "cisco_bgp": WAN_BGP,
+            "bgp": WAN_BGP,
+            "cisco_ospf": WAN_OSPF,
+            "cisco_ospfv3": WAN_OSPFV3,
             "vpn-vedge-interface-gre": WAN_VPN_GRE,
             "cisco_vpn_interface_gre": WAN_VPN_GRE,
             "cisco_vpn_interface_ipsec": WAN_VPN_IPSEC,
@@ -69,6 +84,10 @@ VPN_TEMPLATE_MAPPINGS: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {
     },
     VPN_SERVICE: {
         "mapping": {
+            "cisco_bgp": LAN_BGP,
+            "bgp": LAN_BGP,
+            "cisco_ospf": LAN_OSPF,
+            "cisco_ospfv3": LAN_OSPFV3,
             "vpn-vedge-interface-gre": LAN_VPN_GRE,
             "cisco_vpn_interface": LAN_VPN_ETHERNET,
             "vpn-vsmart-interface": LAN_VPN_ETHERNET,
@@ -83,3 +102,5 @@ VPN_TEMPLATE_MAPPINGS: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {
         "suffix": "_SERVICE",
     },
 }
+
+MULTI_PARCEL_FEATURE_TEMPLATES = [WAN_OSPFV3, LAN_OSPFV3]

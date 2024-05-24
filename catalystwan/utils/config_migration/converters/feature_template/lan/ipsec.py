@@ -1,7 +1,8 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from copy import deepcopy
 from ipaddress import IPv4Address, IPv4Interface, IPv6Address
 
-from catalystwan.api.configuration_groups.parcel import Default, as_default, as_global, as_variable
+from catalystwan.api.configuration_groups.parcel import Default, Variable, as_default, as_global, as_variable
 from catalystwan.models.common import IkeGroup
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask, TunnelApplication
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import InterfaceIpsecParcel
@@ -91,10 +92,22 @@ class LanInterfaceIpsecTemplateConverter:
                     address=tunnel_destination,
                     mask=as_global("0.0.0.0"),
                 )
+            elif isinstance(tunnel_destination, Variable):
+                values["tunnel_destination"] = AddressWithMask(
+                    address=tunnel_destination,
+                    mask=as_global("0.0.0.0"),
+                )
 
             elif isinstance(tunnel_destination.value, IPv6Address):
-                values.pop("tunnel_destination")
-                values["tunnel_destination_v6"] = tunnel_destination
+                # 20.12, 20.13 dont have tunnel_destination_v6
+                # TODO: pass version to converter
+                values["tunnel_destination"] = AddressWithMask(
+                    address=as_variable(value="ipsec_tunnelDestination_addr"),
+                    mask=as_global("0.0.0.0"),
+                )
+
+                # values.pop("tunnel_destination")
+                # values["tunnel_destination_v6"] = tunnel_destination
 
     def configure_tunnel_source(self, values: dict) -> None:
         if tunnel_source := values.get("tunnel_source"):

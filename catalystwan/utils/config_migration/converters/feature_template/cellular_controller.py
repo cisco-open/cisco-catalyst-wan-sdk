@@ -1,6 +1,8 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from copy import deepcopy
 from typing import Dict
 
+from catalystwan.api.configuration_groups.parcel import Global, as_global
 from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_controller import (
     CellularControllerParcel,
     ControllerConfig,
@@ -31,6 +33,10 @@ class CellularControllerTemplateConverter:
         sim = lte.get("sim", {})
         primary = sim.get("primary", {})
         slot = primary.get("slot")
+        if isinstance(slot, Global):
+            if slot.value not in (0, 1):
+                slot = as_global(0)
+
         max_retry = sim.get("max_retry")
         failovertimer = lte.get("failovertimer")
 

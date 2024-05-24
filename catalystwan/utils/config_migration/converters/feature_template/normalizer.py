@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from ipaddress import AddressValueError, IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
 from typing import List, Optional, Union, get_args
 
@@ -16,17 +17,17 @@ from catalystwan.models.common import (
     VrrpTrackerAction,
 )
 from catalystwan.models.configuration.feature_profile.common import TunnelApplication
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet import MediaType
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import GreTunnelMode
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import IpsecTunnelMode
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import Direction
-from catalystwan.models.configuration.feature_profile.sdwan.service.ospf import (
+from catalystwan.models.configuration.feature_profile.sdwan.routing.ospf import (
     AdvertiseType,
     AreaType,
     AuthenticationType,
     RedistributeProtocolOspf,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 import NetworkType
+from catalystwan.models.configuration.feature_profile.sdwan.routing.ospfv3 import NetworkType
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet import MediaType
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import GreTunnelMode
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import IpsecTunnelMode
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import Direction
 from catalystwan.models.configuration.feature_profile.sdwan.service.switchport import (
     ControlDirection,
     Duplex,

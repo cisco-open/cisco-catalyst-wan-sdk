@@ -20,8 +20,8 @@ class InterfaceMultilinkParcel(_ParcelBase):
         extra="forbid",
         populate_by_name=True,
     )
-    type_: Literal["lan/vpn/interface/multilink/"] = Field(
-        default="lan/vpn/interface/multilink/", frozen=True, exclude=True
+    type_: Literal["lan/vpn/interface/multilink"] = Field(
+        default="lan/vpn/interface/multilink", frozen=True, exclude=True
     )
 
     group_number: Union[Global[int], Variable] = Field(validation_alias=AliasPath("data", "groupNumber"))

@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from functools import lru_cache
 from typing import Any, Generic, List, Literal, Type, TypeVar, Union
 from uuid import UUID
@@ -12,6 +13,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.dns_security import 
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import AnyEmbeddedSecurityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.other import AnyOtherParcel
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
+from catalystwan.models.configuration.feature_profile.sdwan.routing import AnyRoutingParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
 from catalystwan.models.configuration.feature_profile.sdwan.sig_security import AnySIGSecurityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system import AnySystemParcel
@@ -99,13 +101,14 @@ ParcelType = Literal[
     "wan/vpn/interface/dsl-ipoe",
     "wan/vpn/interface/dsl-pppoa",
     "wan/vpn/interface/dsl-pppoe",
-    "wan/vpn/interface/eth-pppoe",
     "wan/vpn/interface/ethernet",
     "wan/vpn/interface/gre",
     "wan/vpn/interface/multilink",
     "traffic-policy",
     "wan/vpn/interface/serial",
     "wirelesslan",
+    "cellular-profile",
+    "wan/vpn/interface/ethpppoe",
 ]
 
 
@@ -122,6 +125,7 @@ AnyParcel = Annotated[
         AnySIGSecurityParcel,
         AnyApplicationPriorityParcel,
         AnyTopologyParcel,
+        AnyRoutingParcel,
     ],
     Field(discriminator="type_"),
 ]
@@ -174,12 +178,12 @@ class ParcelCreationResponse(BaseModel):
 
 class ParcelAssociationPayload(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
     parcel_id: UUID = Field(serialization_alias="parcelId", validation_alias="parcelId")
 
 
 class ParcelId(BaseModel):
-    id: str = Field(alias="parcelId")
+    model_config = ConfigDict(populate_by_name=True)
+    id: UUID = Field(serialization_alias="parcelId", validation_alias="parcelId")
 
 
 @lru_cache

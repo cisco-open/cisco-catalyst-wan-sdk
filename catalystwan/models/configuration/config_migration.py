@@ -58,7 +58,10 @@ class DeviceTemplateWithInfo(DeviceTemplate):
 
     def get_flattened_general_templates(self) -> List[GeneralTemplate]:
         """
-        Flatten the representation but leave cisco vpn templates as they are.
+        Flatten the representation but leave cisco vpn templates and
+        cellular cedge controller as they are, because they have subtemplates
+        that need to have the same parent template in UX2.0. For example cisco_system
+        also have subtemplates but they have flat structure in UX2.0.
 
         Returns:
             A list of GeneralTemplate objects representing the flattened templates list.
@@ -66,7 +69,7 @@ class DeviceTemplateWithInfo(DeviceTemplate):
         result = []
         for template in self.general_templates:
             subtemplates = template.subTemplates
-            if subtemplates and template.templateType != "cisco_vpn":
+            if subtemplates and template.templateType not in ["cisco_vpn", "cellular-cedge-controller"]:
                 template.subTemplates = []
                 for subtemplate in subtemplates:
                     result.append(subtemplate)

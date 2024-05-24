@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from typing import List, Union
@@ -5,7 +6,6 @@ from typing import List, Union
 from pydantic import Field
 from typing_extensions import Annotated
 
-from .bgp import WanRoutingBgpParcel as BGPParcel
 from .cellular_controller import CellularControllerParcel
 from .cellular_profile import CellularProfileParcel
 from .gps import GpsParcel
@@ -45,7 +45,6 @@ AnyTransportSuperParcel = Annotated[
         T1E1ControllerParcel,
         CellularControllerParcel,
         CellularProfileParcel,
-        BGPParcel,
         T1E1ControllerParcel,
         GpsParcel,
     ],
@@ -61,7 +60,7 @@ AnyTransportParcel = Annotated[
 ]
 
 __all__ = [
-    "BGPParcel",
+    "RoutingBgpParcel",
     "CellularControllerParcel",
     "ManagementVpnParcel",
     "TransportVpnParcel",

@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Address, IPv6Interface
 from typing import Literal
 from uuid import UUID
@@ -24,6 +25,14 @@ from catalystwan.models.configuration.feature_profile.common import (
     MultilinkMethod,
     MultilinkNimList,
     MultilinkTxExName,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.routing.ospf import RoutingOspfParcel
+from catalystwan.models.configuration.feature_profile.sdwan.routing.ospfv3 import (
+    Ospfv3InterfaceParametres,
+    Ospfv3IPv4Area,
+    Ospfv3IPv6Area,
+    RoutingOspfv3IPv4Parcel,
+    RoutingOspfv3IPv6Parcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.acl import Ipv4AclParcel, Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import (
@@ -61,14 +70,6 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.multicast im
     SsmFlag,
     StaticJoin,
     StaticRpAddress,
-)
-from catalystwan.models.configuration.feature_profile.sdwan.service.ospf import OspfParcel
-from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 import (
-    Ospfv3InterfaceParametres,
-    Ospfv3IPv4Area,
-    Ospfv3IPv4Parcel,
-    Ospfv3IPv6Area,
-    Ospfv3IPv6Parcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.switchport import (
@@ -131,8 +132,8 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
 
     def test_when_default_values_ospf_parcel_expect_successful_post(self):
         # Arrange
-        ospf_parcel = OspfParcel(
-            parcel_name="TestOspfParcel",
+        ospf_parcel = RoutingOspfParcel(
+            parcel_name="TestRoutingOspfParcel",
             parcel_description="Test Ospf Parcel",
         )
         # Act
@@ -142,7 +143,7 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
 
     def test_when_default_ospfv3_ipv4_expect_successful_post(self):
         # Arrange
-        ospfv3ipv4_parcel = Ospfv3IPv4Parcel(
+        ospfv3ipv4_parcel = RoutingOspfv3IPv4Parcel(
             parcel_name="TestOspfv3ipv4",
             parcel_description="Test Ospfv3ipv4 Parcel",
             area=[
@@ -159,7 +160,7 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
 
     def test_when_default_ospfv3_ipv6_expect_successful_post(self):
         # Arrange
-        ospfv3ipv4_parcel = Ospfv3IPv6Parcel(
+        ospfv3ipv6_parcel = RoutingOspfv3IPv6Parcel(
             parcel_name="TestOspfv3ipv6",
             parcel_description="Test Ospfv3ipv6 Parcel",
             area=[
@@ -170,7 +171,7 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
             ],
         )
         # Act
-        parcel_id = self.api.create_parcel(self.profile_uuid, ospfv3ipv4_parcel).id
+        parcel_id = self.api.create_parcel(self.profile_uuid, ospfv3ipv6_parcel).id
         # Assert
         assert parcel_id
 

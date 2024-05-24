@@ -1,10 +1,11 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from copy import deepcopy
-from typing import List, Optional, Tuple, Type, Union, cast, get_args
+from typing import List, Optional, Type, Union, get_args
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, as_global
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask
-from catalystwan.models.configuration.feature_profile.sdwan.service import Ospfv3IPv4Parcel
-from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 import (
+from catalystwan.models.configuration.feature_profile.sdwan.routing import RoutingOspfv3IPv4Parcel
+from catalystwan.models.configuration.feature_profile.sdwan.routing.ospfv3 import (
     AdvancedOspfv3Attributes,
     BasicOspfv3Attributes,
     DefaultArea,
@@ -16,45 +17,43 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 impor
     Ospfv3InterfaceParametres,
     Ospfv3IPv4Area,
     Ospfv3IPv6Area,
-    Ospfv3IPv6Parcel,
     RedistributedRoute,
     RedistributedRouteIPv6,
     RedistributeProtocol,
     RedistributeProtocolIPv6,
+    RoutingOspfv3IPv6Parcel,
     SpfTimers,
     StubArea,
     SummaryRoute,
     SummaryRouteIPv6,
 )
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
+from catalystwan.utils.config_migration.steps.constants import LAN_OSPFV3, WAN_OSPFV3
 
 
 class Ospfv3TemplateConverter:
     """
-    Warning: This class returns a tuple of Ospfv3IPv4Parcel and Ospfv3IPv6Parcel objects,
+    Warning: This class returns a tuple of RoutingOspfv3IPv4Parcel and RoutingOspfv3IPv6Parcel objects,
     because the Feature Template has two definitions inside one for IPv4 and one for IPv6.
     """
 
-    supported_template_types = ("cisco_ospfv3",)
+    supported_template_types = (WAN_OSPFV3, LAN_OSPFV3)
 
     def create_parcel(
         self, name: str, description: str, template_values: dict
-    ) -> Tuple[Ospfv3IPv4Parcel, Ospfv3IPv6Parcel]:
+    ) -> List[Union[RoutingOspfv3IPv4Parcel, RoutingOspfv3IPv6Parcel]]:
         if template_values.get("ospfv3") is None:
             raise CatalystwanConverterCantConvertException("Feature Template does not contain OSPFv3 configuration")
-        ospfv3ipv4 = cast(
-            Ospfv3IPv4Parcel, Ospfv3Ipv4TemplateSubconverter().create_parcel(name, description, template_values)
-        )
-        ospfv3ipv6 = cast(
-            Ospfv3IPv6Parcel, Ospfv3Ipv6TemplateSubconverter().create_parcel(name, description, template_values)
-        )
-        return ospfv3ipv4, ospfv3ipv6
+        ospfv3ipv4 = Ospfv3Ipv4TemplateSubconverter().create_parcel(name, description, template_values)
+        ospfv3ipv6 = Ospfv3Ipv6TemplateSubconverter().create_parcel(name, description, template_values)
+        return [ospfv3ipv4, ospfv3ipv6]
 
 
 class BaseOspfv3TemplateSubconverter:
+    name_suffix: str
     key_address_family: str
     key_distance: str
-    parcel_model: Union[Type[Ospfv3IPv4Parcel], Type[Ospfv3IPv6Parcel]]
+    parcel_model: Union[Type[RoutingOspfv3IPv4Parcel], Type[RoutingOspfv3IPv6Parcel]]
     area_model: Union[Type[Ospfv3IPv4Area], Type[Ospfv3IPv6Area]]
 
     delete_keys = (
@@ -71,7 +70,8 @@ class BaseOspfv3TemplateSubconverter:
 
     def create_parcel(
         self, name: str, description: str, template_values: dict
-    ) -> Union[Ospfv3IPv4Parcel, Ospfv3IPv6Parcel]:
+    ) -> Union[RoutingOspfv3IPv4Parcel, RoutingOspfv3IPv6Parcel]:
+        name = f"{name}{self.name_suffix}"
         values = self.get_values(template_values)
         self.configure_basic_ospf_v3_attributes(values)
         self.configure_advanced_ospf_v3_attributes(values)
@@ -138,17 +138,25 @@ class BaseOspfv3TemplateSubconverter:
         )
 
     def configure_max_metric_router_lsa(self, values: dict) -> None:
-        router_lsa = values.get("max_metric", {}).get("router_lsa", [])[0]  # Payload contains only one item
-        if router_lsa == []:
+        max_metric_data = values.get("max_metric", {})
+        router_lsa_data = max_metric_data.get("router_lsa", [])
+
+        if not router_lsa_data:
+            return
+
+        router_lsa = router_lsa_data[0] if router_lsa_data else None
+        if not router_lsa:
             return
 
         action = router_lsa.get("ad_type")
-        if action is not None:
+        if action:
             action = as_global(action.value, MaxMetricRouterLsaAction)
+
+        on_startup_time = router_lsa.get("time")
 
         values["max_metric_router_lsa"] = MaxMetricRouterLsa(
             action=action,
-            on_startup_time=router_lsa.get("time"),
+            on_startup_time=on_startup_time,
         )
 
     def configure_area(self, values: dict) -> None:
@@ -201,9 +209,10 @@ class BaseOspfv3TemplateSubconverter:
 
 
 class Ospfv3Ipv4TemplateSubconverter(BaseOspfv3TemplateSubconverter):
+    name_suffix = "_IPV4"
     key_address_family = "ipv4"
     key_distance = "distance_ipv4"
-    parcel_model = Ospfv3IPv4Parcel
+    parcel_model = RoutingOspfv3IPv4Parcel
     area_model = Ospfv3IPv4Area
 
     def _set_range(self, area_value: dict) -> Optional[List[SummaryRoute]]:
@@ -219,7 +228,8 @@ class Ospfv3Ipv4TemplateSubconverter(BaseOspfv3TemplateSubconverter):
     def _set_summary_prefix(self, range_: dict) -> None:
         if address := range_.pop("address"):
             range_["network"] = AddressWithMask(
-                address=as_global(str(address.value.network)), mask=as_global(str(address.value.netmask))
+                address=as_global(str(address.value.network.network_address)),
+                mask=as_global(str(address.value.netmask)),
             )
 
     def configure_redistribute(self, values: dict) -> None:
@@ -239,9 +249,10 @@ class Ospfv3Ipv4TemplateSubconverter(BaseOspfv3TemplateSubconverter):
 
 
 class Ospfv3Ipv6TemplateSubconverter(BaseOspfv3TemplateSubconverter):
+    name_suffix = "_IPV6"
     key_address_family = "ipv6"
     key_distance = "distance_ipv6"
-    parcel_model = Ospfv3IPv6Parcel
+    parcel_model = RoutingOspfv3IPv6Parcel
     area_model = Ospfv3IPv6Area
 
     def _set_range(self, area_value: dict) -> Optional[List[SummaryRouteIPv6]]:

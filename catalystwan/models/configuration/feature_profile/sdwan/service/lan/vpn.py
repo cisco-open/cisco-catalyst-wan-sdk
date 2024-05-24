@@ -1,13 +1,13 @@
-# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from ipaddress import IPv4Address, IPv6Address, IPv6Interface
 from typing import List, Literal, Optional, Union
 from uuid import UUID
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field, IPvAnyAddress
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
-from catalystwan.models.configuration.feature_profile.common import AddressWithMask
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask, DNSIPv4, DNSIPv6, HostMapping
 
 ProtocolIPv4 = Literal[
     "bgp",
@@ -92,41 +92,6 @@ RedistributeToGlobalProtocol = Literal[
     "bgp",
     "ospf",
 ]
-
-
-class DnsIPv4(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
-    primary_dns_address_ipv4: Union[Variable, Global[str], Default[None]] = Field(
-        default=Default[None](value=None),
-        serialization_alias="primaryDnsAddressIpv4",
-        validation_alias="primaryDnsAddressIpv4",
-    )
-    secondary_dns_address_ipv4: Union[Variable, Global[str], Default[None]] = Field(
-        default=Default[None](value=None),
-        serialization_alias="secondaryDnsAddressIpv4",
-        validation_alias="secondaryDnsAddressIpv4",
-    )
-
-
-class DnsIPv6(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
-    primary_dns_address_ipv6: Union[Variable, Global[str], Default[None]] = Field(
-        serialization_alias="primaryDnsAddressIpv6", validation_alias="primaryDnsAddressIpv6"
-    )
-    secondary_dns_address_ipv6: Union[Variable, Global[str], Default[None]] = Field(
-        serialization_alias="secondaryDnsAddressIpv6", validation_alias="secondaryDnsAddressIpv6"
-    )
-
-
-class HostMapping(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
-    host_name: Union[Variable, Global[str]] = Field(serialization_alias="hostName", validation_alias="hostName")
-    list_of_ip: Union[Variable, Global[List[IPvAnyAddress]]] = Field(
-        serialization_alias="listOfIp", validation_alias="listOfIp"
-    )
 
 
 class RoutePrefix(BaseModel):
@@ -240,8 +205,6 @@ class NextHopRouteIPv6Container(BaseModel):
 
 
 class Null0(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
     null0: Union[Global[bool], Default[bool]] = Default[bool](value=True)
     distance: Union[Variable, Global[int], Default[int]] = Default[int](value=1)
 
@@ -259,15 +222,11 @@ class NAT(BaseModel):
 
 
 class DHCP(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
     dhcp: Union[Global[bool], Default[bool]] = Default[bool](value=True)
 
 
 class StaticRouteVPN(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
-    vpn: Union[Global[bool], Default[bool]] = Default[bool](value=True)
+    vpn: Union[Global[bool], Default[bool]] = Field(default=Default[bool](value=True))
 
 
 class NextHopInterfaceRoute(BaseModel):
@@ -337,12 +296,26 @@ class InterfaceRouteIPv6Container(BaseModel):
 
 
 class StaticRouteIPv4(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True)
 
     prefix: RoutePrefix
     one_of_ip_route: Union[NextHopRouteContainer, Null0, DHCP, StaticRouteVPN, InterfaceRouteContainer] = Field(
         serialization_alias="oneOfIpRoute", validation_alias="oneOfIpRoute"
     )
+
+    @field_validator("one_of_ip_route", mode="before")
+    @classmethod
+    def validate_one_of_ip_route(
+        cls, value: Union[dict, NextHopRouteContainer, Null0, DHCP, StaticRouteVPN, InterfaceRouteContainer]
+    ):
+        # https://github.com/pydantic/pydantic/issues/6830
+        # For some reason the Null0 is always created from dict
+        if isinstance(value, dict):
+            if value.get("vpn"):
+                return StaticRouteVPN(**value)
+            if value.get("nextHopContainer"):
+                return NextHopRouteContainer(**value)
+        return value
 
 
 class StaticRouteIPv6(BaseModel):
@@ -593,8 +566,8 @@ class LanVpnParcel(_ParcelBase):
     omp_admin_distance_ipv6: Optional[Union[Variable, Global[int], Default[None]]] = Field(
         validation_alias=AliasPath("data", "ompAdminDistanceIpv6"), default=None
     )
-    dns_ipv4: Optional[DnsIPv4] = Field(validation_alias=AliasPath("data", "dnsIpv4"), default=None)
-    dns_ipv6: Optional[DnsIPv6] = Field(validation_alias=AliasPath("data", "dnsIpv6"), default=None)
+    dns_ipv4: Optional[DNSIPv4] = Field(validation_alias=AliasPath("data", "dnsIpv4"), default=None)
+    dns_ipv6: Optional[DNSIPv6] = Field(validation_alias=AliasPath("data", "dnsIpv6"), default=None)
     new_host_mapping: Optional[List[HostMapping]] = Field(
         validation_alias=AliasPath("data", "newHostMapping"), default=None
     )

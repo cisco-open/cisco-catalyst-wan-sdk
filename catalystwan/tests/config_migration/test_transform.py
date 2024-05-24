@@ -12,10 +12,12 @@ from catalystwan.models.configuration.config_migration import (
 )
 from catalystwan.models.templates import FeatureTemplateInformation
 from catalystwan.tests.config_migration.test_data import (
+    dhcp_server,
     interface_ethernet,
     interface_gre,
     interface_ipsec,
-    malformed,
+    interface_multilink,
+    ospfv3,
     vpn_management,
     vpn_service,
     vpn_transport,
@@ -164,38 +166,62 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
             transport_and_management_profile = profile
 
     # Find the transformed VPN parcels
-    transport_vpn_parcel = next(p for p in ux2_config.profile_parcels if p.parcel.parcel_name == vpn_0_transport.name)
-    service_vpn_parcel = next(p for p in ux2_config.profile_parcels if p.parcel.parcel_name == vpn_1_service.name)
+    transport_vpn_parcel = next(
+        p
+        for p in ux2_config.profile_parcels
+        if p.header.origin in transport_and_management_profile.header.subelements
+        and vpn_0_transport.name in p.parcel.parcel_name
+    )
+    service_vpn_parcel = next(
+        p
+        for p in ux2_config.profile_parcels
+        if p.header.origin in service_profile.header.subelements and vpn_1_service.name in p.parcel.parcel_name
+    )
     management_vpn_parcel = next(
-        p for p in ux2_config.profile_parcels if p.parcel.parcel_name == vpn_512_management.name
+        p
+        for p in ux2_config.profile_parcels
+        if p.header.origin in transport_and_management_profile.header.subelements
+        and vpn_management.name in p.parcel.parcel_name
     )
 
     # Find the required VPN sub-elements
     transport_gre = find_subelement_parcel(
-        ux2_config.profile_parcels, transport_vpn_parcel, interface_gre.name, "_TRANSPORT"
+        ux2_config.profile_parcels,
+        transport_vpn_parcel,
+        interface_gre.name,
+        "_TRANSPORT",
     )
     transport_ethernet = find_subelement_parcel(
-        ux2_config.profile_parcels, transport_vpn_parcel, interface_ethernet.name, "_TRANSPORT"
+        ux2_config.profile_parcels,
+        transport_vpn_parcel,
+        interface_ethernet.name,
+        "_TRANSPORT",
     )
     service_gre = find_subelement_parcel(ux2_config.profile_parcels, service_vpn_parcel, interface_gre.name, "_SERVICE")
     service_ethernet = find_subelement_parcel(
-        ux2_config.profile_parcels, service_vpn_parcel, interface_ethernet.name, "_SERVICE"
+        ux2_config.profile_parcels,
+        service_vpn_parcel,
+        interface_ethernet.name,
+        "_SERVICE",
     )
     service_ipsec = find_subelement_parcel(
         ux2_config.profile_parcels, service_vpn_parcel, interface_ipsec.name, "_SERVICE"
     )
     management_ethernet = find_subelement_parcel(
-        ux2_config.profile_parcels, management_vpn_parcel, interface_ethernet.name, "_MANAGEMENT"
+        ux2_config.profile_parcels,
+        management_vpn_parcel,
+        interface_ethernet.name,
+        "_MANAGEMENT",
     )
     # Assert
 
     # Assert Feature Profiles have correct VPNs
     assert service_profile is not None
-    assert service_profile.header.subelements == {UUID(vpn_1_service.id)}
+    assert service_profile.header.subelements == {service_vpn_parcel.header.origin}
     assert transport_and_management_profile is not None
     assert transport_and_management_profile.header.subelements == {
-        UUID(vpn_0_transport.id),
-        UUID(vpn_512_management.id),
+        transport_vpn_parcel.header.origin,
+        management_vpn_parcel.header.origin,
     }
 
     # Assert VPNs have correct interfaces
@@ -207,15 +233,20 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
     assert management_ethernet is not None
 
 
-def test_when_one_feature_template_with_invalid_payload_expect_one_failed_item_in_conversion_result():
+def test_when_ospfv3_feature_template_expect_two_parcels_assigin_to_correct_profile():
+    """Ospfv3 feature template have data that can create two parcels, one for the ospfv3_ipv4
+    and another for the ospfv3_ipv6. This test checks if the transformed template produce two
+    parcels and if they are correctly assigned to the appropriate feature profiles after
+    the transformation from UX1 to UX2."""
+
     # Arrange
-    vpn_0_transport, malformed_logging = deepcopy_models(vpn_transport, malformed)
-    malformed_logging.template_type = "cisco_logging"
-    malformed_logging.name = "Malformed"
+    vpn_service_, vpn_0_transport, ospfv3_ft_1, ospfv3_ft_2 = deepcopy_models(
+        vpn_service, vpn_transport, ospfv3, ospfv3
+    )
 
     ux1_config = UX1Config(
         templates=UX1Templates(
-            feature_templates=[malformed_logging, vpn_0_transport],
+            feature_templates=[ospfv3_ft_1, ospfv3_ft_2, vpn_0_transport, vpn_service_],
             device_templates=[
                 DeviceTemplateWithInfo(
                     template_id=str(uuid4()),
@@ -229,16 +260,30 @@ def test_when_one_feature_template_with_invalid_payload_expect_one_failed_item_i
                     policy_id="None",
                     generalTemplates=[
                         GeneralTemplate(
-                            name=malformed_logging.name,
-                            templateId=str(malformed_logging.id),
-                            templateType=malformed_logging.template_type,
-                            subTemplates=[],
-                        ),
-                        GeneralTemplate(
                             name=vpn_0_transport.name,
                             templateId=str(vpn_0_transport.id),
                             templateType=vpn_0_transport.template_type,
-                            subTemplates=[],
+                            subTemplates=[
+                                GeneralTemplate(
+                                    name=ospfv3_ft_1.name,
+                                    templateId=ospfv3_ft_1.id,
+                                    templateType=ospfv3_ft_1.template_type,
+                                    subTemplates=[],
+                                ),
+                            ],
+                        ),
+                        GeneralTemplate(
+                            name=vpn_service_.name,
+                            templateId=str(vpn_service_.id),
+                            templateType=vpn_service_.template_type,
+                            subTemplates=[
+                                GeneralTemplate(
+                                    name=ospfv3_ft_2.name,
+                                    templateId=ospfv3_ft_2.id,
+                                    templateType=ospfv3_ft_2.template_type,
+                                    subTemplates=[],
+                                ),
+                            ],
                         ),
                     ],
                 )
@@ -246,8 +291,131 @@ def test_when_one_feature_template_with_invalid_payload_expect_one_failed_item_i
         )
     )
     # Act
-    transform_result = transform(ux1_config, add_suffix=False)
+    ux2_config = transform(ux1_config, add_suffix=False).ux2_config
+    service_profile = None
+    transport_and_management_profile = None
+    for profile in ux2_config.feature_profiles:
+        if profile.feature_profile.name == "DeviceTemplate_service":
+            service_profile = profile
+        elif profile.feature_profile.name == "DeviceTemplate_transport_and_management":
+            transport_and_management_profile = profile
+
+    # Find the transformed VPN parcels
+    transport_vpn_parcel = next(
+        p
+        for p in ux2_config.profile_parcels
+        if p.header.origin in transport_and_management_profile.header.subelements
+        and vpn_0_transport.name in p.parcel.parcel_name
+    )
+    service_vpn_parcel = next(
+        p
+        for p in ux2_config.profile_parcels
+        if p.header.origin in service_profile.header.subelements and vpn_service_.name in p.parcel.parcel_name
+    )
+    # Find the required VPN sub-elements that are created from the OSPFv3 template
+    t_ospfv3_ipv4_parcel = next(
+        p
+        for p in ux2_config.profile_parcels
+        if "_TRANSPORT_IPV4" in p.parcel.parcel_name and p.header.type == "routing/ospfv3/ipv4"
+    )
+    t_ospfv3_ipv6_parcel = next(
+        p
+        for p in ux2_config.profile_parcels
+        if "_TRANSPORT_IPV6" in p.parcel.parcel_name and p.header.type == "routing/ospfv3/ipv6"
+    )
+
+    s_ospfv3_ipv4_parcel = next(
+        p
+        for p in ux2_config.profile_parcels
+        if "_SERVICE_IPV4" in p.parcel.parcel_name and p.header.type == "routing/ospfv3/ipv4"
+    )
+    s_ospfv3_ipv6_parcel = next(
+        p
+        for p in ux2_config.profile_parcels
+        if "_SERVICE_IPV6" in p.parcel.parcel_name and p.header.type == "routing/ospfv3/ipv6"
+    )
     # Assert
-    assert len(transform_result.failed_items) == 1
-    assert transform_result.failed_items[0].feature_template == malformed_logging
-    assert len(transform_result.ux2_config.profile_parcels) == 1
+    assert transport_vpn_parcel is not None
+    assert transport_vpn_parcel.header.subelements == {
+        t_ospfv3_ipv4_parcel.header.origin,
+        t_ospfv3_ipv6_parcel.header.origin,
+    }
+    assert service_vpn_parcel is not None
+    assert service_vpn_parcel.header.subelements == {
+        s_ospfv3_ipv4_parcel.header.origin,
+        s_ospfv3_ipv6_parcel.header.origin,
+    }
+
+
+def test_when_nested_feature_templates_with_interfaces_and_dhcp_servers_expect_correct_subelements_for_interfaces():
+    """This checks if two levels nested templates are correctly assigned to the correct parent template.
+
+    VPN can have interfaces and interfaces can have DHCP servers."""
+
+    # Arrange
+    vpn_service_, ethernet, multilink, dhcp = deepcopy_models(
+        vpn_service, interface_ethernet, interface_multilink, dhcp_server
+    )
+
+    ux1_config = UX1Config(
+        templates=UX1Templates(
+            feature_templates=[vpn_service_, ethernet, multilink, dhcp],
+            device_templates=[
+                DeviceTemplateWithInfo(
+                    template_id=str(uuid4()),
+                    factory_default=False,
+                    devices_attached=2,
+                    template_name="DeviceTemplate",
+                    template_description="DT-example",
+                    device_role="None",
+                    device_type="None",
+                    security_policy_id="None",
+                    policy_id="None",
+                    generalTemplates=[
+                        GeneralTemplate(
+                            name=vpn_service_.name,
+                            templateId=vpn_service_.id,
+                            templateType=vpn_service_.template_type,
+                            subTemplates=[
+                                GeneralTemplate(
+                                    name=ethernet.name,
+                                    templateId=ethernet.id,
+                                    templateType=ethernet.template_type,
+                                    subTemplates=[
+                                        GeneralTemplate(
+                                            name=dhcp.name,
+                                            templateId=dhcp.id,
+                                            templateType=dhcp.template_type,
+                                        ),
+                                    ],
+                                ),
+                                GeneralTemplate(
+                                    name=multilink.name,
+                                    templateId=multilink.id,
+                                    templateType=multilink.template_type,
+                                ),
+                            ],
+                        ),
+                    ],
+                )
+            ],
+        )
+    )
+    # Act
+    ux2_config = transform(ux1_config).ux2_config
+    # Find the transformed Ethernet parcel
+    ethernet_parcel = next(
+        p
+        for p in ux2_config.profile_parcels
+        if "_SERVICE" in p.parcel.parcel_name and p.header.type == "lan/vpn/interface/ethernet"
+    )
+    multilink_parcel = next(
+        p
+        for p in ux2_config.profile_parcels
+        if "_SERVICE" in p.parcel.parcel_name and p.header.type == "lan/vpn/interface/multilink"
+    )
+    # Assert
+    assert ethernet_parcel is not None
+    assert ethernet_parcel.header.subelements == {UUID(dhcp.id)}
+    assert multilink_parcel is not None
+    assert multilink_parcel.header.subelements == set()

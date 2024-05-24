@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from __future__ import annotations
@@ -7,9 +8,8 @@ from typing import List, Literal, Optional, Union
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_variable
-from catalystwan.models.common import SubnetMask
-from catalystwan.models.configuration.feature_profile.common import RefIdItem
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask, RefIdItem
 
 FamilyType = Literal["ipv4-unicast", "vpnv4-unicast", "vpnv6-unicast"]
 FamilyTypeIpv6 = Literal["ipv6-unicast", "vpnv6-unicast"]
@@ -360,25 +360,12 @@ class Ipv6NeighborItem(BaseModel):
     )
 
 
-class Prefix(BaseModel):
-    """
-    Configure the IPv4 prefixes to aggregate
-    """
-
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    address: Union[Variable, Global[IPv4Address]]
-    mask: Union[Variable, Global[SubnetMask]]
-
-
 class AggregateAddres(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
         populate_by_name=True,
     )
-    prefix: Prefix = Field(..., description="Configure the IPv4 prefixes to aggregate")
+    prefix: AddressWithMask = Field(..., description="Configure the IPv4 prefixes to aggregate")
     as_set: Optional[Union[Variable, Global[bool], Default[Literal[False]]]] = Field(
         default=None, serialization_alias="asSet", validation_alias="asSet", description="Set AS set path information"
     )
@@ -390,25 +377,12 @@ class AggregateAddres(BaseModel):
     )
 
 
-class Prefix1(BaseModel):
-    """
-    Configure the prefixes for BGP to announce
-    """
-
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    address: Union[Variable, Global[IPv4Address]]
-    mask: Union[Variable, Global[SubnetMask]]
-
-
 class NetworkItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
         populate_by_name=True,
     )
-    prefix: Prefix1 = Field(..., description="Configure the prefixes for BGP to announce")
+    prefix: AddressWithMask = Field(..., description="Configure the prefixes for BGP to announce")
 
 
 class RedistributeItem(BaseModel):
@@ -547,14 +521,13 @@ class MplsInterfaceItem(BaseModel):
     )
 
 
-class WanRoutingBgpParcel(_ParcelBase):
-    type_: Literal["bgp"] = Field(default="bgp", exclude=True)
+class RoutingBgpParcel(_ParcelBase):
+    type_: Literal["routing/bgp"] = Field(default="routing/bgp", exclude=True)
     model_config = ConfigDict(
         extra="forbid",
         populate_by_name=True,
     )
     as_num: Union[Global[int], Global[str], Variable] = Field(
-        default=as_variable("{{lbgp_1_basicConf_asNumber}}"),
         validation_alias=AliasPath("data", "asNum"),
         description="Set autonomous system number <1..4294967295> or <XX.YY>",
     )

@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 import unittest
 from unittest.mock import Mock
 from uuid import uuid4
@@ -13,6 +14,11 @@ from catalystwan.endpoints.configuration.feature_profile.sdwan.service import Se
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
 from catalystwan.models.configuration.feature_profile.parcel import ParcelAssociationPayload, ParcelCreationResponse
+from catalystwan.models.configuration.feature_profile.sdwan.routing import (
+    RoutingOspfParcel,
+    RoutingOspfv3IPv4Parcel,
+    RoutingOspfv3IPv6Parcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.service import AppqoeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
     InterfaceEthernetParcel as LanInterfaceEthernetParcel,
@@ -25,13 +31,11 @@ from catalystwan.models.configuration.feature_profile.sdwan.service import Inter
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
     LanVpnDhcpServerParcel,
     LanVpnParcel,
-    OspfParcel,
     SwitchportParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.acl import Ipv4AclParcel, Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import EigrpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import MulticastParcel
-from catalystwan.models.configuration.feature_profile.sdwan.service.ospfv3 import Ospfv3IPv4Parcel, Ospfv3IPv6Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.wireless_lan import WirelessLanParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system import (
@@ -140,9 +144,9 @@ service_endpoint_mapping = {
     LanVpnDhcpServerParcel: "dhcp-server",
     AppqoeParcel: "appqoe",
     LanVpnParcel: "lan/vpn",
-    OspfParcel: "routing/ospf",
-    Ospfv3IPv4Parcel: "routing/ospfv3/ipv4",
-    Ospfv3IPv6Parcel: "routing/ospfv3/ipv6",
+    RoutingOspfParcel: "routing/ospf",
+    RoutingOspfv3IPv4Parcel: "routing/ospfv3/ipv4",
+    RoutingOspfv3IPv6Parcel: "routing/ospfv3/ipv6",
     RoutePolicyParcel: "route-policy",
     EigrpParcel: "routing/eigrp",
     Ipv6AclParcel: "ipv6-acl",

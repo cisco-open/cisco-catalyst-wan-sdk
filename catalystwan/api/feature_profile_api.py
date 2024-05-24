@@ -41,6 +41,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object.securi
     SslDecryptionProfileParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.url import URLParcel
+from catalystwan.models.configuration.feature_profile.sdwan.routing import AnyRoutingParcel, RoutingBgpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import MulticastParcel
 from catalystwan.models.configuration.feature_profile.sdwan.sig_security.sig_security import SIGParcel
@@ -49,7 +50,6 @@ from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_cont
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport import AnyTransportParcel
-from catalystwan.models.configuration.feature_profile.sdwan.transport.bgp import WanRoutingBgpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_controller import (
     CellularControllerParcel,
 )
@@ -272,8 +272,8 @@ class TransportFeatureProfileAPI:
 
     @overload
     def get_parcel(
-        self, profile_id: UUID, parcel_type: Type[WanRoutingBgpParcel], parcel_id: UUID
-    ) -> Parcel[WanRoutingBgpParcel]:
+        self, profile_id: UUID, parcel_type: Type[RoutingBgpParcel], parcel_id: UUID
+    ) -> Parcel[RoutingBgpParcel]:
         ...
 
     @overload
@@ -288,7 +288,9 @@ class TransportFeatureProfileAPI:
     ) -> Parcel[ManagementVpnParcel]:
         ...
 
-    def get_parcel(self, profile_id: UUID, parcel_type: Type[AnyTransportParcel], parcel_id: UUID) -> Parcel:
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[Union[AnyTransportParcel, AnyRoutingParcel]], parcel_id: UUID
+    ) -> Parcel:
         """
         Get one Transport Parcel given profile id, parcel type and parcel id
         """

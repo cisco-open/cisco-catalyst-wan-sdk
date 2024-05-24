@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from datetime import datetime
 from uuid import uuid4
 
@@ -151,4 +152,82 @@ interface_ipsec = FeatureTemplateInformation(
     'fragment": {"vipObjectType": "object", "vipType": "ignore", "vipValue": "false",'
     '"vipVariableName": "vpn_ipsec_tunnel_tunnel_clear_dont_fragment"}, "tracker":'
     '{"vipObjectType": "list", "vipType": "ignore", "vipVariableName": "tracker"}}',
+)
+
+interface_multilink = FeatureTemplateInformation(
+    last_updated_by="admin",
+    id=str(uuid4()),
+    factory_default=False,
+    name="InterfaceMultilink",
+    devices_attached=0,
+    description="HnQSYJsm",
+    last_updated_on=datetime.now(),
+    resource_group="global",
+    template_type="vpn-cedge-interface-multilink-controller",
+    device_type=["vedge-C1101-4PLTEPW"],
+    version="15.0.0",
+    template_definiton='{"if-name": {"vipObjectType": "object", "vipType":'
+    '"constant", "vipValue": "Multilink1",'
+    '"vipVariableName": "if_multilink_ctrl_if_name"}, "ppp": {"authentication": {"method":'
+    '{"vipObjectType": "object", "vipType": "constant", "vipValue": "pap"}, "pap":'
+    '{"vipObjectType": "node-only", "vipType": "constant", "vipValue": "false"}, "callin":'
+    '{"vipObjectType": "node-only", "vipType": "notIgnore", "vipValue": "callin",'
+    '"vipVariableName": "pppoa_dsl_auth-callin"}}, "pap": {"sent-username": {"username":'
+    '{"username-string": {"vipObjectType": "object", "vipType": "constant", "vipValue": "test",'
+    '"vipVariableName": "pppoa_dsl_pap_username_string"}, "password": {"vipObjectType": "node-'
+    'only", "vipType": "constant", "vipValue": "true"}, "ppp-auth-password": {"vipObjectType":'
+    '"object", "vipType": "constant", "vipValue": "test", "vipVariableName":'
+    '"pppoa_dsl_pap_auth_password"}}}}, "multilink": {"group": {"vipObjectType": "object",'
+    '"vipType": "constant", "vipValue": 1, "vipVariableName":'
+    '"if_multilink_ctrl_multilink_group"}, "fragment": {"disable": {"vipObjectType": "node-'
+    'only", "vipType": "ignore", "vipValue": "false", "vipVariableName":'
+    '"if_multilink_fragment_disable_multilink_fragment_disable"}, "delay": {"delay-value":'
+    '{"vipObjectType": "object", "vipType": "ignore", "vipVariableName":'
+    '"if_multilink_fragment_delay_value_multilink_fragment_delay_value"}}}, "interleave":'
+    '{"vipObjectType": "node-only", "vipType": "ignore", "vipValue": "false",'
+    '"vipVariableName": "if_multilink_interleave_multilink_interleave"}}}, "description":'
+    '{"vipObjectType": "object", "vipType": "ignore", "vipVariableName":'
+    '"if_multilink_ctrl_description"}, "ip": {"address": {"vipObjectType": "object", "vipType":'
+    '"ignore", "vipVariableName": "if_multilink_ctrl_ip_addr"}}, "ipv6": {"address":'
+    '{"vipObjectType": "object", "vipType": "ignore", "vipVariableName":'
+    '"if_multilink_ctrl_ipv6_address"}, "access-list": {"vipType": "ignore", "vipValue": [],'
+    '"vipObjectType": "tree", "vipPrimaryKey": ["direction"]}}, "pmtu": {"vipObjectType":'
+    '"object", "vipType": "ignore", "vipValue": "false", "vipVariableName": "vpn_if_pmtu"},'
+    '"mtu": {"vipObjectType": "object", "vipType": "ignore", "vipValue": 1500,'
+    '"vipVariableName": "if_multilink_ctrl_mtu"}, "static-ingress-qos": {"vipObjectType":'
+    '"object", "vipType": "ignore", "vipVariableName": "vpn_if_static_ingress_qos"}, "tcp-mss-'
+    'adjust": {"vipObjectType": "object", "vipType": "ignore", "vipVariableName":'
+    '"vpn_if_tcp_mss_adjust"}, "tloc-extension": {"vipObjectType": "object", "vipType":'
+    '"ignore", "vipVariableName": "vpn_if_tloc_extension"}, "shutdown": {"vipObjectType":'
+    '"object", "vipType": "ignore", "vipValue": "true", "vipVariableName":'
+    '"if_multilink_ctrl_shutdown"}, "autonegotiate": {"vipObjectType": "object", "vipType":'
+    '"ignore", "vipValue": "true", "vipVariableName": "vpn_if_autonegotiate"}, "shaping-rate":'
+    '{"vipObjectType": "object", "vipType": "ignore", "vipVariableName": "qos_shaping-rate"},'
+    '"qos-map": {"vipObjectType": "object", "vipType": "ignore", "vipVariableName": "qos-map"},'
+    '"qos-map-vpn": {"vipObjectType": "object", "vipType": "ignore", "vipVariableName": "vpn-'
+    'qos_map"}, "bandwidth-upstream": {"vipObjectType": "object", "vipType": "ignore",'
+    '"vipVariableName": "if_multilink_ctrl_bandwidth_upstream"}, "bandwidth-downstream":'
+    '{"vipObjectType": "object", "vipType": "ignore", "vipVariableName":'
+    '"if_multilink_ctrl_bandwidth_downstream"}, "rewrite-rule": {"rule-name": {"vipObjectType":'
+    '"object", "vipType": "ignore", "vipVariableName": "rewrite_rule-name"}}, "access-list":'
+    '{"vipType": "ignore", "vipValue": [], "vipObjectType": "tree", "vipPrimaryKey":'
+    '["direction"]}, "policer": {"vipType": "ignore", "vipValue": [], "vipObjectType": "tree",'
+    '"vipPrimaryKey": ["policer-name", "direction"]}, "nat64-enable": {"vipObjectType":'
+    '"object", "vipType": "ignore", "vipValue": "false"}, "qos-adaptive": {"vipObjectType":'
+    '"object", "vipType": "ignore", "vipValue": "false", "vipVariableName": "adaptive_qos"},'
+    '"ip-directed-broadcast": {"vipObjectType": "object", "vipType": "ignore", "vipValue":'
+    '"false", "vipVariableName": "vpn_if_ip-directed-broadcast"}, "service-provider":'
+    '{"vipObjectType": "object", "vipType": "ignore", "vipVariableName":'
+    '"vpn_if_service_provider"}, "clear-dont-fragment": {"vipObjectType": "object", "vipType":'
+    '"ignore", "vipValue": "false", "vipVariableName": "vpn_if_clear_dont_fragment"},'
+    '"controller": {"nim-list": {"vipType": "constant", "vipValue": [{"nim": {"vipObjectType":'
+    '"object", "vipType": "constant", "vipValue": "2t", "vipVariableName":'
+    '"nim_twot_list_nim"}, "if-name": {"vipObjectType": "object", "vipType": "constant",'
+    '"vipValue": "serial1", "vipVariableName": "nim_twot_list_if-name"}, "description":'
+    '{"vipObjectType": "object", "vipType": "ignore", "vipValue": "", "vipVariableName":'
+    '"nim_twot_list_description"}, "bandwidth": {"vipObjectType": "object", "vipType":'
+    '"ignore", "vipValue": "", "vipVariableName": "nim_twot_list_bandwidth"}, "DCE-mode-'
+    'config": {"clock-rate": {"vipObjectType": "object", "vipType": "ignore", "vipValue": "",'
+    '"vipVariableName": "nim_twot_list_clock-rate"}}}], "vipObjectType": "tree",'
+    '"vipPrimaryKey": ["nim", "if-name"]}}}',
 )

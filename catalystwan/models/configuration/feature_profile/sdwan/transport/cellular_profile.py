@@ -1,10 +1,11 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from typing import Literal, Optional, Union
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, model_validator
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
 
 AuthenticationType = Literal[
     "chap",
@@ -66,5 +67,5 @@ class CellularProfileParcel(_ParcelBase):
     type_: Literal["cellular-profile"] = Field(default="cellular-profile", exclude=True, frozen=True)
     profile_config: ProfileConfig = Field(validation_alias=AliasPath("data", "profileConfig"))
     config_type: Optional[Default[Literal["non-eSim"]]] = Field(
-        default=None, validation_alias=AliasPath("data", "configType")
+        default=as_default("non-eSim"), validation_alias=AliasPath("data", "configType")
     )

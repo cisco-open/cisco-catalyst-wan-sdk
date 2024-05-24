@@ -1,3 +1,4 @@
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from ipaddress import IPv4Address
@@ -116,7 +117,7 @@ class RedistributedRoute(BaseModel):
     )
 
 
-class OspfParcel(_ParcelBase):
+class RoutingOspfParcel(_ParcelBase):
     type_: Literal["routing/ospf"] = Field(default="routing/ospf", exclude=True)
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 

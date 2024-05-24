@@ -1,11 +1,18 @@
 import logging
 from copy import deepcopy
-from ipaddress import IPv4Address, IPv4Network
-from typing import List
+from ipaddress import IPv4Address
+from typing import Dict, List, Optional, Union
 
-from catalystwan.api.configuration_groups.parcel import Global, Variable, as_global, as_variable
+from catalystwan.api.configuration_groups.parcel import Global, Variable, as_global
 from catalystwan.models.common import SubnetMask
-from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import LanVpnDhcpServerParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import (
+    AddressPool,
+    LanVpnDhcpServerParcel,
+    OptionCode,
+    StaticLeaseItem,
+)
+from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
+from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
 
 logger = logging.getLogger(__name__)
 
@@ -32,77 +39,80 @@ class DhcpTemplateConverter:
 
         """
 
-        values = deepcopy(template_values)
-        values.update(values.pop("options", {}))
+        data = deepcopy(template_values)
+        data.update(data.pop("options", {}))
+        dns_servers = self.parse_str_list_to_ipv4_list(data.get("dns_servers", []))
+        tftp_servers = self.parse_str_list_to_ipv4_list(data.get("tftp_servers", []))
+        address_pool = self.parse_address_pool(data)
+        static_lease = self.parse_static_lease(data)
+        exclude = data.get("exclude")
+        lease_time = data.get("lease_time")
+        domain_name = data.get("domain_name")
+        default_gateway = data.get("default_gateway")
+        domain_name = data.get("domain_name")
+        option_code = self.parse_option_code(data.get("option_code", []))
+        interface_mtu = data.get("interface_mtu")
 
-        if address_pool := values.get("address_pool"):
-            value = address_pool.value
-            network = IPv4Network(value)
-            address = as_global(network.network_address)
-            mask = as_global(str(network.netmask), SubnetMask)
-            values["address_pool"] = {"network_address": address, "subnet_mask": mask}
-        else:
-            logger.warning(
-                "No address pool specified for DHCP server parcel."
-                "Assiging variable: dhcp_1_addressPool_networkAddress and dhcp_1_addressPool_subnetMask."
-            )
-            values["address_pool"] = {
-                "network_address": as_variable(self.variable_address_pool),
-                "subnet_mask": as_variable(self.variable_subnet_mask),
-            }
+        payload = create_dict_without_none(
+            parcel_name=name,
+            parcel_description=description,
+            address_pool=address_pool,
+            static_lease=static_lease,
+            exclude=exclude,
+            lease_time=lease_time,
+            domain_name=domain_name,
+            default_gateway=default_gateway,
+            dns_servers=dns_servers,
+            tftp_servers=tftp_servers,
+            option_code=option_code,
+            interface_mtu=interface_mtu,
+        )
 
-        for entry in values.get("option_code", []):
-            self._convert_str_list_to_ipv4_list(entry, "ip")
+        return LanVpnDhcpServerParcel(**payload)
 
-        for key in ("dns_servers", "tftp_servers"):
-            self._convert_str_list_to_ipv4_list(values, key)
+    def parse_address_pool(self, data: Dict) -> AddressPool:
+        address_pool = data.get("address_pool")
+        if not address_pool:
+            raise CatalystwanConverterCantConvertException("No address pool specified for DHCP server parcel.")
 
-        static_lease = []
-        for i, entry in enumerate(values.get("static_lease", [])):
-            mac_address, ip = self._get_mac_address_and_ip(entry, i)
-            static_lease.append(
-                {
-                    "mac_address": mac_address,
-                    "ip": ip,
-                }
-            )
-        values["static_lease"] = static_lease
-
-        parcel_values = {
-            "parcel_name": name,
-            "parcel_description": description,
-            **values,
-        }
-
-        return LanVpnDhcpServerParcel(**parcel_values)  # type: ignore
-
-    def _convert_str_list_to_ipv4_list(self, d: dict, key: str) -> None:
-        """
-        Convert a list of strings representing IPv4 addresses to a list of IPv4Address objects.
-
-        Args:
-            d (dict): The dictionary containing the key-value pair to be converted.
-            key (str): The key in the dictionary representing the list of strings.
-
-        Returns:
-            None. The function modifies the dictionary in-place by
-            replacing the list of strings with a list of IPv4Address objects.
-        """
-        if str_list := d.get(key, as_global([])).value:
-            d[key] = Global[List[IPv4Address]](value=[IPv4Address(ip) for ip in str_list])
-
-    def _get_mac_address_and_ip(self, entry: dict, i: int) -> tuple:
-        mac_address = entry.get("mac_address", as_variable(self.variable_mac_address.format(i + 1)))
-        ip = entry.get("ip", as_variable(self.variable_ip.format(i + 1)))
-        if isinstance(mac_address, Variable):
-            logger.warning(
-                f"No MAC address specified for static lease {i + 1}."
-                f"Assigning variable: {self.variable_mac_address.format(i + 1)}"
-            )
-        if isinstance(ip, Variable):
-            logger.warning(
-                f"No IP address specified for static lease {i + 1}."
-                f"Assigning variable: {self.variable_ip.format(i + 1)}"
+        if isinstance(address_pool, Variable):
+            return AddressPool(
+                network_address=address_pool,
+                subnet_mask=address_pool,
             )
 
-        return mac_address, ip
+        return AddressPool(
+            network_address=as_global(address_pool.value.network.network_address),
+            subnet_mask=as_global(str(address_pool.value.netmask), SubnetMask),
+        )
+
+    def parse_static_lease(self, data: Dict) -> Optional[List[StaticLeaseItem]]:
+        return [
+            StaticLeaseItem(
+                mac_address=lease.get("mac_address"),
+                ip=lease.get("ip"),
+            )
+            for lease in data.get("static_lease", [])
+        ]
+
+    def parse_str_list_to_ipv4_list(
+        self, data: Global[List[str]]
+    ) -> Optional[Union[Global[List[IPv4Address]], Variable]]:
+        if not data:
+            return None
+        if isinstance(data, Variable):
+            return data
+        return Global[List[IPv4Address]](value=[IPv4Address(ip) for ip in data.value])
+
+    def parse_option_code(self, data: List[Dict[str, str]]) -> List[OptionCode]:
+        return [
+            OptionCode(
+                **create_dict_without_none(
+                    code=entry.get("code"),
+                    ip=self.parse_str_list_to_ipv4_list(entry.get("ip")),  # type: ignore
+                    ascii=entry.get("ascii"),
+                    hex=entry.get("hex"),
+                )
+            )
+            for entry in data
+        ]

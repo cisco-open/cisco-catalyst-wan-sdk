@@ -22,6 +22,7 @@ from catalystwan.models.configuration.config_migration import (
     VersionInfo,
 )
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
+from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
 from catalystwan.models.policy import AnyPolicyDefinitionInfo
 from catalystwan.session import ManagerSession
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
@@ -33,19 +34,31 @@ from catalystwan.utils.config_migration.converters.policy.policy_lists import co
 from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigPushResult
 from catalystwan.utils.config_migration.reverters.config_reverter import UX2ConfigReverter
 from catalystwan.utils.config_migration.steps.constants import (
+    LAN_BGP,
+    LAN_OSPF,
+    LAN_OSPFV3,
     LAN_VPN_ETHERNET,
     LAN_VPN_GRE,
     LAN_VPN_IPSEC,
     LAN_VPN_MULTILINK,
     MANAGEMENT_VPN_ETHERNET,
+    MULTI_PARCEL_FEATURE_TEMPLATES,
     VPN_MANAGEMENT,
     VPN_SERVICE,
     VPN_TRANSPORT,
+    WAN_BGP,
+    WAN_OSPF,
+    WAN_OSPFV3,
     WAN_VPN_ETHERNET,
     WAN_VPN_GRE,
     WAN_VPN_MULTILINK,
 )
-from catalystwan.utils.config_migration.steps.transform import merge_parcels, resolve_template_type
+from catalystwan.utils.config_migration.steps.transform import (
+    handle_multi_parcel_feature_template,
+    merge_parcels,
+    remove_not_casted_duplicates,
+    resolve_template_type,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -106,8 +119,21 @@ SUPPORTED_TEMPLATE_TYPES = [
     LAN_VPN_ETHERNET,
     LAN_VPN_IPSEC,
     MANAGEMENT_VPN_ETHERNET,
+    WAN_BGP,
+    LAN_BGP,
     "cli-template",
     "cisco_secure_internet_gateway",
+    "cisco_ospfv3",
+    "dhcp",
+    "cisco_dhcp_server",
+    "dhcp-server",
+    "cellular-cedge-profile",
+    "cellular-cedge-controller",
+    "cellular-cedge-gps-controller",
+    LAN_OSPF,
+    WAN_OSPF,
+    LAN_OSPFV3,
+    WAN_OSPFV3,
 ]
 
 
@@ -136,8 +162,6 @@ FEATURE_PROFILE_SYSTEM = [
     "omp-vsmart",
     "cisco_ntp",
     "ntp",
-    "bgp",
-    "cisco_bgp",
     "cisco_snmp",
 ]
 
@@ -152,6 +176,11 @@ FEATURE_PROFILE_TRANSPORT = [
     "vpn-interface-ipoe",
     VPN_TRANSPORT,
     VPN_MANAGEMENT,
+    WAN_BGP,
+    "cisco_ospfv3",
+    "cellular-cedge-profile",
+    "cellular-cedge-controller",
+    "cellular-cedge-gps-controller",
 ]
 
 FEATURE_PROFILE_OTHER = [
@@ -174,6 +203,7 @@ FEATURE_PROFILE_SERVICE = [
     "cedge_multicast",
     "cedge_pim",
     VPN_SERVICE,
+    LAN_BGP,
 ]
 
 FEATURE_PROFILE_CLI = [
@@ -181,6 +211,10 @@ FEATURE_PROFILE_CLI = [
 ]
 
 DEVICE_TYPE_BLOCKLIST = ["vsmart", "vbond", "vmanage"]
+
+TOP_LEVEL_TEMPLATE_TYPES = [
+    "cisco_vpn",
+]
 
 
 def log_progress(task: str, completed: int, total: int) -> None:
@@ -272,9 +306,15 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
                 transformed_fp_cli.header.subelements.add(template_uuid)
             # Map subtemplates
             if len(template.subTemplates) > 0:
-                subtemplates_mapping[template_uuid] = set(
-                    [UUID(subtemplate.templateId) for subtemplate in template.subTemplates]
-                )
+                # Interfaces, BGP, OSPF, etc
+                for subtemplate_level_1 in template.subTemplates:
+                    subtemplates_mapping[template_uuid].add(UUID(subtemplate_level_1.templateId))
+                    if len(subtemplate_level_1.subTemplates) > 0:
+                        # DHCPs, Trackers
+                        for subtemplate_level_2 in subtemplate_level_1.subTemplates:
+                            subtemplates_mapping[UUID(subtemplate_level_1.templateId)].add(
+                                UUID(subtemplate_level_2.templateId)
+                            )
 
         transformed_cg = TransformedConfigGroup(
             header=TransformHeader(
@@ -299,32 +339,34 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
         ux2.feature_profiles.append(transformed_fp_cli)
         ux2.config_groups.append(transformed_cg)
 
+    # Sort by top level feature templates to avoid any confilics with subtemplates
+    ux1.templates.feature_templates.sort(key=lambda ft: ft.template_type in TOP_LEVEL_TEMPLATE_TYPES, reverse=True)
+    remove_not_casted_duplicates(ux1)
+
     cloud_credential_templates = []
     for ft in ux1.templates.feature_templates:
         if ft.template_type in SUPPORTED_TEMPLATE_TYPES:
             try:
-                parcel = create_parcel_from_template(ft)
-                ft_template_uuid = UUID(ft.id)
-                transformed_parcel = TransformedParcel(
-                    header=TransformHeader(
-                        type=parcel._get_parcel_type(),
-                        origin=ft_template_uuid,
-                        subelements=subtemplates_mapping[ft_template_uuid],
-                    ),
-                    parcel=parcel,
-                )
-                # Add to UX2. We can indentify the parcels as subelements of the feature profiles by the UUIDs
-                ux2.profile_parcels.append(transformed_parcel)
-            except CatalystwanConverterCantConvertException as e:
-                exception_message = f"Feature Template ({ft.name}) missing data during conversion: {e}."
+                if ft.template_type in MULTI_PARCEL_FEATURE_TEMPLATES:
+                    transformed_parcels = handle_multi_parcel_feature_template(ft, ux2)
+                    ux2.profile_parcels.extend(transformed_parcels)
+                else:
+                    parcel = cast(AnyParcel, create_parcel_from_template(ft))
+                    ft_template_uuid = UUID(ft.id)
+                    transformed_parcel = TransformedParcel(
+                        header=TransformHeader(
+                            type=parcel._get_parcel_type(),
+                            origin=ft_template_uuid,
+                            subelements=subtemplates_mapping[ft_template_uuid],
+                        ),
+                        parcel=parcel,
+                    )
+                    # Add to UX2. We can indentify the parcels as subelements of the feature profiles by the UUIDs
+                    ux2.profile_parcels.append(transformed_parcel)
+            except (CatalystwanConverterCantConvertException, ValidationError, Exception) as e:
+                exception_message = f"Feature Template ({ft.name})[{ft.template_type}] conversion error: {e}."
                 logger.warning(exception_message)
-                transform_result.add_failed_conversion_parcel(
-                    exception_message=exception_message,
-                    feature_template=ft,
-                )
-            except Exception as e:
-                exception_message = f"Feature Template ({ft.name}) unexpected error during converion: {e}."
-                logger.warning(exception_message)
+                ft.device_type = [""]  # This takes to much space in the logs
                 transform_result.add_failed_conversion_parcel(
                     exception_message=exception_message,
                     feature_template=ft,
@@ -332,6 +374,7 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
 
         elif ft.template_type in CLOUD_CREDENTIALS_FEATURE_TEMPLATES:
             cloud_credential_templates.append(ft)
+
     # Add Cloud Credentials to UX2
     if cloud_credential_templates:
         ux2.cloud_credentials = create_cloud_credentials_from_templates(cloud_credential_templates)
