@@ -382,7 +382,7 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
     # Policy Lists
     for policy_list in ux1.policies.policy_lists:
         try:
-            policy_parcel = convert_policy_list(policy_list)
+            policy_parcel = convert_policy_list(policy_list, None)
             header = TransformHeader(type=policy_parcel._get_parcel_type(), origin=policy_list.list_id)
             ux2.profile_parcels.append(TransformedParcel(header=header, parcel=policy_parcel))
         except CatalystwanConverterCantConvertException as e:

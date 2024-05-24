@@ -12,7 +12,6 @@ class ExpandedCommunityParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     expanded_community_list: Global[List[str]] = Field(
         default=Global[List[str]](value=list()),
-        serialization_alias="expandedCommunityList",
         validation_alias=AliasPath("data", "expandedCommunityList"),
     )
 

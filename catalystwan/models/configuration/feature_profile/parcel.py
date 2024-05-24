@@ -1,10 +1,13 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 from typing import Generic, List, Literal, TypeVar, Union
+from functools import lru_cache
+from typing import Any, Generic, List, Literal, Type, TypeVar, Union
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing_extensions import Annotated
 
+from catalystwan.api.configuration_groups.parcel import _ParcelBase
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority import AnyApplicationPriorityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.cli import AnyCliParcel
 from catalystwan.models.configuration.feature_profile.sdwan.dns_security import AnyDnsSecurityParcel
@@ -17,6 +20,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.sig_security import 
 from catalystwan.models.configuration.feature_profile.sdwan.system import AnySystemParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology import AnyTopologyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport import AnyTransportParcel
+from catalystwan.utils.model import resolve_nested_base_model_unions
 
 ParcelType = Literal[
     "aaa",
@@ -32,13 +36,13 @@ ParcelType = Literal[
     "class",
     "color",
     "config",
-    "config",
     "custom-control",
     "data-ipv6-prefix",
     "data-prefix",
     "dhcp-server",
     "dns",
     "expanded-community",
+    "ext-community",
     "global",
     "gps",
     "hubspoke",
@@ -101,6 +105,7 @@ ParcelType = Literal[
     "wan/vpn/interface/ethernet",
     "wan/vpn/interface/gre",
     "wan/vpn/interface/multilink",
+    "traffic-policy",
     "wan/vpn/interface/serial",
     "wirelesslan",
     "cellular-profile",
@@ -130,7 +135,7 @@ T = TypeVar("T", bound=AnyParcel)
 
 
 class Parcel(BaseModel, Generic[T]):
-    parcel_id: str = Field(alias="parcelId")
+    parcel_id: Union[str, UUID] = Field(alias="parcelId")
     parcel_type: ParcelType = Field(alias="parcelType")
     created_by: str = Field(alias="createdBy")
     last_updated_by: str = Field(alias="lastUpdatedBy")
@@ -180,3 +185,16 @@ class ParcelAssociationPayload(BaseModel):
 class ParcelId(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: UUID = Field(serialization_alias="parcelId", validation_alias="parcelId")
+
+
+
+@lru_cache
+def list_types(any_union: Any):
+    return resolve_nested_base_model_unions(any_union)
+
+
+@lru_cache
+def find_type(name: str, any_union: Type[_ParcelBase]):
+    parcel_types = list_types(any_union)
+    parcel_type = next(t for t in parcel_types if t._get_parcel_type() == name)
+    return parcel_type

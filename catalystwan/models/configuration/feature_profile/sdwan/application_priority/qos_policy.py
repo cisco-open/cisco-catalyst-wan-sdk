@@ -7,7 +7,7 @@ from catalystwan.api.configuration_groups.parcel import Global, Variable, _Parce
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
 
 
-class Target(BaseModel):
+class QosPolicyTarget(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     interfaces: Union[Global[List[str]], Variable]
 
@@ -33,4 +33,4 @@ class QosMap(BaseModel):
 class QosPolicyParcel(_ParcelBase):
     type_: Literal["qos-policy"] = Field(default="qos-policy", exclude=True)
     qos_map: QosMap = Field(validation_alias=AliasPath("data", "qosMap"))
-    target: Optional[Target] = Field(default=None, validation_alias=AliasPath("data", "target"))
+    target: Optional[QosPolicyTarget] = Field(default=None, validation_alias=AliasPath("data", "target"))
