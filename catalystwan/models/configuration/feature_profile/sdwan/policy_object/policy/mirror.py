@@ -3,8 +3,9 @@
 from typing import List, Literal
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic.networks import IPvAnyAddress
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
 
 
 class MirrorEntry(BaseModel):
@@ -15,4 +16,11 @@ class MirrorEntry(BaseModel):
 
 class MirrorParcel(_ParcelBase):
     type_: Literal["mirror"] = Field(default="mirror", exclude=True)
-    entries: List[MirrorEntry] = Field(validation_alias=AliasPath("data", "entries"), min_length=1, max_length=1)
+    entries: List[MirrorEntry] = Field(
+        default=[], validation_alias=AliasPath("data", "entries"), min_length=1, max_length=1
+    )
+
+    @classmethod
+    def create(cls, remote_dest_ip: IPvAnyAddress, source_ip: IPvAnyAddress, *args, **kwargs):
+        entry = MirrorEntry(remote_dest_ip=as_global(str(remote_dest_ip)), source_ip=as_global(str(source_ip)))
+        return cls(entries=[entry], *args, **kwargs)

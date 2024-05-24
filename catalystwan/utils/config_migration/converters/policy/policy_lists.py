@@ -16,6 +16,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
     IPv6DataPrefixParcel,
     IPv6PrefixListParcel,
     LocalDomainParcel,
+    MirrorParcel,
     PolicerParcel,
     PreferredColorGroupParcel,
     PrefixListParcel,
@@ -45,6 +46,7 @@ from catalystwan.models.policy import (
     IPSSignatureList,
     IPv6PrefixList,
     LocalDomainList,
+    MirrorList,
     PolicerList,
     PortList,
     PreferredColorGroupList,
@@ -134,6 +136,16 @@ def fqdn(in_: FQDNList, context) -> FQDNDomainParcel:
     out = FQDNDomainParcel(**_get_parcel_name_desc(in_))
     out.from_fqdns([entry.pattern for entry in in_.entries])
     return out
+
+
+def mirror(in_: MirrorList, context) -> MirrorParcel:
+    if len(in_.entries) != 1:
+        raise ValueError("Mirror list shall contain exactly one entry.")
+
+    dst_ip = in_.entries[0].remote_dest
+    src_ip = in_.entries[0].source
+
+    return MirrorParcel.create(remote_dest_ip=dst_ip, source_ip=src_ip, **_get_parcel_name_desc(in_))
 
 
 def geo_location(in_: GeoLocationList, context) -> GeoLocationListParcel:
@@ -310,6 +322,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     URLAllowList: url_allow,
     URLBlockList: url_block,
     ZoneList: zone,
+    MirrorList: mirror,
 }
 
 
