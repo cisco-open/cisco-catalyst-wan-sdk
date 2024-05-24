@@ -140,7 +140,7 @@ def fqdn(in_: FQDNList, context) -> FQDNDomainParcel:
 
 def mirror(in_: MirrorList, context) -> MirrorParcel:
     if len(in_.entries) != 1:
-        raise ValueError("Mirror list shall contain exactly one entry.")
+        raise CatalystwanConverterCantConvertException("Mirror list shall contain exactly one entry.")
 
     dst_ip = in_.entries[0].remote_dest
     src_ip = in_.entries[0].source
