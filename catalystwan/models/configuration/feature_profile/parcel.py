@@ -1,12 +1,11 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 from functools import lru_cache
-from typing import Any, Generic, List, Literal, Type, TypeVar, Union
+from typing import Generic, List, Literal, Sequence, TypeVar, Union, cast
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing_extensions import Annotated
 
-from catalystwan.api.configuration_groups.parcel import _ParcelBase
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority import AnyApplicationPriorityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.cli import AnyCliParcel
 from catalystwan.models.configuration.feature_profile.sdwan.dns_security import AnyDnsSecurityParcel
@@ -187,12 +186,12 @@ class ParcelId(BaseModel):
 
 
 @lru_cache
-def list_types(any_union: Any):
-    return resolve_nested_base_model_unions(any_union)
+def list_types(any_union: T) -> Sequence[T]:
+    return cast(Sequence[T], resolve_nested_base_model_unions(any_union))
 
 
 @lru_cache
-def find_type(name: str, any_union: Type[_ParcelBase]):
+def find_type(name: str, any_union: T) -> T:
     parcel_types = list_types(any_union)
-    parcel_type = next(t for t in parcel_types if t._get_parcel_type() == name)
-    return parcel_type
+    parcel_type = next(t for t in parcel_types if t.type_ == name)
+    return cast(T, parcel_type)
