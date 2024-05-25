@@ -44,6 +44,8 @@ ParcelType = Literal[
     "global",
     "gps",
     "hubspoke",
+    "ipv4-acl",
+    "ipv6-acl",
     "ipv6-prefix",
     "lan/vpn",
     "lan/vpn/interface/ethernet",

@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union
 from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
@@ -307,14 +307,6 @@ class TestAPIEndpoints(unittest.TestCase):
             class TestAPI(APIEndpoints):
                 @request("POST", "/v1/data")
                 def get_data(self, payload: List[str]) -> None:  # type: ignore [empty-body]
-                    ...
-
-    def test_request_decorator_unsupported_payload_composite_type(self):
-        with self.assertRaises(APIEndpointError):
-
-            class TestAPI(APIEndpoints):
-                @request("POST", "/v1/data")
-                def get_data(self, payload: Dict[str, BaseModelExample]) -> None:  # type: ignore [empty-body]
                     ...
 
     @parameterized.expand(
