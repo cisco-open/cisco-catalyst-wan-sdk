@@ -198,10 +198,6 @@ class Ipv4AcceptAction(BaseModel):
 
 
 class Ipv6AcceptAction(BaseModel):
-    """
-    Accept Action
-    """
-
     model_config = ConfigDict(
         extra="forbid",
         populate_by_name=True,
@@ -243,10 +239,6 @@ class Ipv6AcceptActions(BaseModel):
 
 
 class DropAction(BaseModel):
-    """
-    Drop Action
-    """
-
     model_config = ConfigDict(
         extra="forbid",
         populate_by_name=True,
@@ -300,13 +292,13 @@ class Sequences(BaseModel):
             self.base_action = as_default("accept", Action)
 
 
-class Ipv6Sequences(Sequences):
+class Ipv6Sequence(Sequences):
     actions: Optional[List[Union[Ipv6AcceptActions, DropActions]]] = Field(
         default=None, description="Define list of actions", max_length=1, min_length=1
     )
 
 
-class Ipv4Sequences(Sequences):
+class Ipv4Sequence(Sequences):
     actions: Optional[List[Union[Ipv4AcceptActions, DropActions]]] = Field(
         default=None, description="Define list of actions", max_length=1, min_length=1
     )
@@ -323,7 +315,7 @@ class Ipv4AclParcel(_ParcelBase):
         validation_alias=AliasPath("data", "defaultAction"),
         description="Default Action",
     )
-    sequences: List[Union[Ipv4Sequences]] = Field(
+    sequences: List[Union[Ipv4Sequence]] = Field(
         default_factory=list, validation_alias=AliasPath("data", "sequences"), description="Access Control List"
     )
 
@@ -339,6 +331,6 @@ class Ipv6AclParcel(_ParcelBase):
         validation_alias=AliasPath("data", "defaultAction"),
         description="Default Action",
     )
-    sequences: List[Union[Ipv6Sequences]] = Field(
+    sequences: List[Union[Ipv6Sequence]] = Field(
         default_factory=list, validation_alias=AliasPath("data", "sequences"), description="Access Control List"
     )
