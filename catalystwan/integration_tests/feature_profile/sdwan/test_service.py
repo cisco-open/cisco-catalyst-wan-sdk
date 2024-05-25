@@ -26,6 +26,7 @@ from catalystwan.models.configuration.feature_profile.common import (
     MultilinkNimList,
     MultilinkTxExName,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.common.acl import Ipv4AclParcel, Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.routing.ospf import RoutingOspfParcel
 from catalystwan.models.configuration.feature_profile.sdwan.routing.ospfv3 import (
     Ospfv3InterfaceParametres,
@@ -34,7 +35,6 @@ from catalystwan.models.configuration.feature_profile.sdwan.routing.ospfv3 impor
     RoutingOspfv3IPv4Parcel,
     RoutingOspfv3IPv6Parcel,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.service.acl import Ipv4AclParcel, Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server import (
     AddressPool,
     LanVpnDhcpServerParcel,
@@ -424,7 +424,7 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        cls.api.delete_profile(cls.profile_uuid)
+        # cls.api.delete_profile(cls.profile_uuid)
         super().tearDownClass()
 
 

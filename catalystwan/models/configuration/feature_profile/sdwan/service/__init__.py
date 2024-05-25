@@ -4,7 +4,7 @@ from typing import List, Union
 from pydantic import Field
 from typing_extensions import Annotated
 
-from .acl import Ipv4AclParcel, Ipv6AclParcel
+from ..common.acl import Ipv4AclParcel, Ipv6AclParcel
 from .appqoe import AppqoeParcel
 from .dhcp_server import LanVpnDhcpServerParcel
 from .eigrp import EigrpParcel
