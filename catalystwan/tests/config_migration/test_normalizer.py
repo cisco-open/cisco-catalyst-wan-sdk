@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 import unittest
 from ipaddress import IPv4Address, IPv6Address
 from typing import List, Literal
@@ -34,6 +35,7 @@ class TestNormalizer(unittest.TestCase):
             "ip": {
                 "address": DeviceVariable(name="lan_ip_address_2"),
             },
+            "not_correct_variable": DeviceVariable(name="vpn1_gi3_lan_ip(192.168.X.1/24)_!@#$%^&*"),
         }
         self.expected_result = {
             "key_one": Global[str](value="Simple string !@#$%^&*()-=[';/.,`~]"),
@@ -59,6 +61,7 @@ class TestNormalizer(unittest.TestCase):
             "ipv4_address": Global[IPv4Address](value=IPv4Address("10.0.0.2")),
             "ipv6addr": Global[IPv6Address](value=IPv6Address("2000:0:2:3::")),
             "ip": {"address": Variable(value="{{lan_ip_address_2}}")},
+            "not_correct_variable": Variable(value="{{vpn1_gi3_lan_ip_192.168.X.1/24__________}}"),
         }
 
     def test_normalizer_handles_various_types_of_input(self):
