@@ -6,6 +6,8 @@ from typing import List, Union
 from pydantic import Field
 from typing_extensions import Annotated
 
+from catalystwan.models.configuration.feature_profile.sdwan.acl import AnyAclParcel
+
 from .cellular_controller import CellularControllerParcel
 from .cellular_profile import CellularProfileParcel
 from .gps import GpsParcel
@@ -54,8 +56,15 @@ AnyManagementVpnSubParcel = Annotated[
     Union[ManagementInterfaceEthernetParcel],
     Field(discriminator="type_"),
 ]
+
 AnyTransportParcel = Annotated[
-    Union[AnyTransportSuperParcel, AnyTransportVpnParcel, AnyTransportVpnSubParcel, AnyManagementVpnSubParcel],
+    Union[
+        AnyAclParcel,
+        AnyTransportSuperParcel,
+        AnyTransportVpnParcel,
+        AnyTransportVpnSubParcel,
+        AnyManagementVpnSubParcel,
+    ],
     Field(discriminator="type_"),
 ]
 

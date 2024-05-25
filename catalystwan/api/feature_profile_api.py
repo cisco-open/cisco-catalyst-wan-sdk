@@ -15,6 +15,8 @@ from catalystwan.endpoints.configuration.feature_profile.sdwan.system import Sys
 from catalystwan.endpoints.configuration.feature_profile.sdwan.topology import TopologyFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
 from catalystwan.exceptions import ManagerHTTPError
+from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
+from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority import (
     AnyApplicationPriorityParcel,
     PolicySettingsParcel,
@@ -286,6 +288,14 @@ class TransportFeatureProfileAPI:
     def get_parcel(
         self, profile_id: UUID, parcel_type: Type[ManagementVpnParcel], parcel_id: UUID
     ) -> Parcel[ManagementVpnParcel]:
+        ...
+
+    @overload
+    def get_parcel(self, profile_id: UUID, parcel_type: Type[Ipv4AclParcel], parcel_id: UUID) -> Parcel[Ipv4AclParcel]:
+        ...
+
+    @overload
+    def get_parcel(self, profile_id: UUID, parcel_type: Type[Ipv6AclParcel], parcel_id: UUID) -> Parcel[Ipv6AclParcel]:
         ...
 
     def get_parcel(

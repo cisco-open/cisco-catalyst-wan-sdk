@@ -51,6 +51,8 @@ from catalystwan.models.configuration.feature_profile.common import (
     StaticNat,
     TunnelSourceType,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
+from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.management.ethernet import (
     Advanced as ManagementEthernetAdvanced,
 )
@@ -295,6 +297,30 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
     def test_when_fully_specifed_cellular_profile_expect_successful_post(self):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, cellular_profile_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_default_values_acl_ipv6_expect_successful_post(self):
+        # Arrange
+        acl_ipv6_parcel = Ipv6AclParcel(
+            parcel_name="TestAclIpv6Parcel",
+            parcel_description="Test Acl Ipv6 Parcel",
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv6_parcel).id
+        self.api.get_parcel(self.profile_uuid, Ipv6AclParcel, parcel_id)
+        # Assert
+        assert parcel_id
+
+    def test_when_default_values_acl_ipv4_expect_successful_post(self):
+        # Arrange
+        acl_ipv4_parcel = Ipv4AclParcel(
+            parcel_name="TestAclIpv4Parcel",
+            parcel_description="Test Acl Ipv4 Parcel",
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv4_parcel).id
+        self.api.get_parcel(self.profile_uuid, Ipv4AclParcel, parcel_id)
         # Assert
         assert parcel_id
 
