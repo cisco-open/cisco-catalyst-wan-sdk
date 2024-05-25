@@ -30,6 +30,7 @@ from catalystwan.utils.config_migration.converters.feature_template import creat
 from catalystwan.utils.config_migration.converters.feature_template.cloud_credentials import (
     create_cloud_credentials_from_templates,
 )
+from catalystwan.utils.config_migration.converters.policy.policy_definitions import convert as convert_policy_definition
 from catalystwan.utils.config_migration.converters.policy.policy_lists import convert as convert_policy_list
 from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigPushResult
 from catalystwan.utils.config_migration.reverters.config_reverter import UX2ConfigReverter
@@ -382,17 +383,34 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
     # Policy Lists
     for policy_list in ux1.policies.policy_lists:
         try:
-            policy_parcel = convert_policy_list(policy_list, None)
-            header = TransformHeader(type=policy_parcel._get_parcel_type(), origin=policy_list.list_id)
-            ux2.profile_parcels.append(TransformedParcel(header=header, parcel=policy_parcel))
+            pl_parcel = convert_policy_list(policy_list, None)
+            header = TransformHeader(type=pl_parcel._get_parcel_type(), origin=policy_list.list_id)
+            ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pl_parcel))
         except CatalystwanConverterCantConvertException as e:
             exception_message = (
-                f"Policy List {policy_list.type} {policy_list.list_id} {policy_list.name} was not converted: {e}"
+                f"Policy List {policy_list.type} {policy_list.list_id} {policy_list.name}" f"was not converted: {e}"
             )
             logger.warning(exception_message)
             transform_result.add_failed_conversion_parcel(
                 exception_message=exception_message,
                 policy=policy_list,
+            )
+
+    # Policy Definitions
+    for policy_definition in ux1.policies.policy_definitions:
+        try:
+            pd_parcel = convert_policy_definition(policy_definition, None)
+            header = TransformHeader(type=pd_parcel._get_parcel_type(), origin=policy_list.list_id)
+            ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pd_parcel))
+        except CatalystwanConverterCantConvertException as e:
+            exception_message = (
+                f"Policy Definition {policy_definition.type} {policy_definition.definition_id} {policy_definition.name}"
+                f"was not converted: {e}"
+            )
+            logger.warning(exception_message)
+            transform_result.add_failed_conversion_parcel(
+                exception_message=exception_message,
+                policy=policy_definition,
             )
 
     ux2 = merge_parcels(ux2)

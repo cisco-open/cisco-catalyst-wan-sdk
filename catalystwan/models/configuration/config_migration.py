@@ -1,6 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 from uuid import UUID, uuid4
 
 from packaging.version import Version
@@ -230,7 +230,7 @@ class ConfigTransformResult(BaseModel):
         default_factory=list, serialization_alias="failedConversionItems", validation_alias="failedConversionItems"
     )
 
-    def add_suffix_to_names(self):
+    def add_suffix_to_names(self) -> None:
         suffix = f"_{str(self.uuid)[:5]}"
         parcel_name_lookup: Dict[str, List[AnyPolicyObjectParcel]] = {}
         for config_group in self.ux2_config.config_groups:
@@ -241,14 +241,14 @@ class ConfigTransformResult(BaseModel):
             feature_profile.feature_profile.name += suffix
         for profile_parcel in self.ux2_config.profile_parcels:
             profile_parcel.header.origname = profile_parcel.parcel.parcel_name
-            parcel_types = list_types(AnyPolicyObjectParcel)
-            if profile_parcel.header.type in [t._get_parcel_type() for t in parcel_types]:
+            if profile_parcel.header.type in [t._get_parcel_type() for t in list_types(AnyPolicyObjectParcel)]:
                 # build lookup by parcel name to find duplicates
+                parcel = cast(AnyPolicyObjectParcel, profile_parcel.parcel)
                 name = profile_parcel.header.origname
                 if not parcel_name_lookup.get(name):
-                    parcel_name_lookup[name] = [profile_parcel.parcel]
+                    parcel_name_lookup[name] = [parcel]
                 else:
-                    parcel_name_lookup[name].append(profile_parcel.parcel)
+                    parcel_name_lookup[name].append(parcel)
 
         for name, parcels in parcel_name_lookup.items():
             # policy object parcel names are restricted to 32 characters and needs to be unique
