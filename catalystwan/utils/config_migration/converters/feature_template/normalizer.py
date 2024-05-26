@@ -1,5 +1,4 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
-import re
 from ipaddress import AddressValueError, IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
 from typing import List, Optional, Union, get_args
 
@@ -49,6 +48,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.system.logging_parce
     TlsVersion,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.system.mrf import EnableMrfMigration, Role
+from catalystwan.utils.config_migration.converters.utils import convert_varname
 
 """List of all literals that can be casted."""
 CastableLiterals = Union[
@@ -103,8 +103,6 @@ CastedTypes = Union[
     Variable,
 ]
 
-NEGATIVE_VARIABLE_REGEX = re.compile(r"[^.\/\[\]a-zA-Z0-9_-]")
-
 
 def to_snake_case(s: str) -> str:
     """Converts a string from kebab-case to snake_case."""
@@ -113,7 +111,7 @@ def to_snake_case(s: str) -> str:
 
 def cast_value_to_global(value: Union[DeviceVariable, str, int, List[str], List[int]]) -> CastedTypes:
     if isinstance(value, DeviceVariable):
-        return as_variable(value=NEGATIVE_VARIABLE_REGEX.sub("_", value.name))
+        return as_variable(value=convert_varname(value.name))
     if isinstance(value, list):
         value_type = Global[List[int]] if isinstance(value[0], int) else Global[List[str]]
         return value_type(value=value)  # type: ignore
