@@ -428,6 +428,9 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
 def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, int], None] = log_progress) -> UX1Config:
     ux1 = UX1Config(version=get_version_info(session))
 
+    """Get Network Hierarchy"""
+    ux1.network_hierarchy = session.endpoints.network_hierarchy.list_nodes().data
+
     """Collect Policies"""
     policy_api = session.api.policy
 

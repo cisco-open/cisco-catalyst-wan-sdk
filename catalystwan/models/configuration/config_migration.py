@@ -19,6 +19,7 @@ from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
+from catalystwan.models.configuration.network_hierarchy import NodeInfo
 from catalystwan.models.configuration.topology_group import TopologyGroup
 from catalystwan.models.policy import AnyPolicyDefinitionInfo, AnyPolicyListInfo
 from catalystwan.models.policy.centralized import CentralizedPolicyInfo
@@ -121,9 +122,13 @@ class UX1Templates(BaseModel):
 
 class UX1Config(BaseModel):
     # All UX1 Configuration items - Mega Model
+    model_config = ConfigDict(populate_by_name=True)
     version: VersionInfo = VersionInfo()
     policies: UX1Policies = UX1Policies()
     templates: UX1Templates = UX1Templates()
+    network_hierarchy: List[NodeInfo] = Field(
+        default_factory=list, validation_alias="networkHierarchy", serialization_alias="networkHierarchy"
+    )
 
 
 class TransformHeader(BaseModel):
