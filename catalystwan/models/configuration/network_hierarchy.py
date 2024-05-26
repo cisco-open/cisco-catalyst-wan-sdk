@@ -37,7 +37,7 @@ class HierarchyId(BaseModel):
     )
 
     @model_validator(mode="after")
-    def site_xor_region_xor_subregion(self):
+    def one_of_site_region_subregion(self):
         check_fields_exclusive(self.__dict__, {"site_id", "region_id", "sub_region_id"}, True)
         return self
 
@@ -80,7 +80,9 @@ class NodeInfo(BaseModel):
     data: Node
     description: str
     direct_child_count: int = Field(validation_alias="directChildCount", serialization_alias="directChildCount")
-    hierarchy_path: str = Field(validation_alias="hierarchyPath", serialization_alias="directChildCount")
+    hierarchy_path: Optional[str] = Field(
+        default=None, validation_alias="hierarchyPath", serialization_alias="directChildCount"
+    )
     id: str
     name: str
     uuid: Optional[UUID] = None
