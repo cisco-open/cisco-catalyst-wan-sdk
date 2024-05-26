@@ -209,6 +209,7 @@ IntRangeStr = Annotated[
     BeforeValidator(int_range_str_validator),
 ]
 
+BasicPolicyActionType = Literal["accept", "drop"]
 
 CarrierType = Literal[
     "default",
