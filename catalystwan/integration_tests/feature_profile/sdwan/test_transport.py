@@ -1,5 +1,5 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
-from ipaddress import IPv4Address, IPv6Address, IPv6Interface
+from ipaddress import IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
 from typing import List, Literal
 from uuid import UUID
 
@@ -318,6 +318,32 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
             parcel_name="TestAclIpv4Parcel",
             parcel_description="Test Acl Ipv4 Parcel",
         )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv4_parcel).id
+        self.api.get_parcel(self.profile_uuid, Ipv4AclParcel, parcel_id)
+        # Assert
+        assert parcel_id
+
+    def test_when_fully_specified_acl_ipv4_expect_successful_post(self):
+        # Arrange
+        acl_ipv4_parcel = Ipv4AclParcel(
+            parcel_name="TestAclIpv4Parcel",
+            parcel_description="Test Acl Ipv4 Parcel",
+        )
+        # Arrange Sequence 1
+        seq1 = acl_ipv4_parcel.add_sequence("Sequence1", 10, "accept")
+        seq1.match_destination_data_prefix(IPv4Interface("10.0.0.0/16"))
+        seq1.match_dscp([50, 55])
+        seq1.match_icmp_msg(["dod-host-prohibited", "extended-echo", "dod-net-prohibited"])
+        seq1.match_packet_length((1000, 8000))
+        seq1.match_protocol([1])
+        seq1.match_source_data_prefix(IPv4Interface("11.0.0.0/16"))
+        # Arrange Sequence 2
+        seq2 = acl_ipv4_parcel.add_sequence("Sequence2", 20, "drop")
+        seq2.match_destination_data_prefix_variable("varDestPrefix2")
+        seq2.match_source_data_prefix_variable("varSrcPrefix2")
+        seq2.match_destination_ports([233])
+        seq2.match_source_ports([1, 3, (10, 100), (50, 200), 600])
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv4_parcel).id
         self.api.get_parcel(self.profile_uuid, Ipv4AclParcel, parcel_id)

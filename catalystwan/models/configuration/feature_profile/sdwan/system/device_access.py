@@ -168,6 +168,6 @@ class DeviceAccessIPv4Parcel(_ParcelBase):
         if base_action is not None:
             payload["base_action"] = Global[BaseAction](value=base_action)
 
-        sequences = Sequence(**payload)
-        self.sequences.append(sequences)
-        return sequences
+        sequence = Sequence(**payload)
+        self.sequences.append(sequence)
+        return sequence
