@@ -13,7 +13,7 @@ BaseAction = Literal[
 ]
 
 
-IcmpMessages = Literal[
+IcmpIPv4Messages = Literal[
     "administratively-prohibited",
     "dod-host-prohibited",
     "dod-net-prohibited",
@@ -114,7 +114,7 @@ class MatchEntry(BaseModel):
         description="Destination Port List",
     )
     dscp: Optional[Global[List[int]]] = Field(default=None)
-    icmp_msg: Optional[Global[List[IcmpMessages]]] = Field(
+    icmp_msg: Optional[Global[List[IcmpIPv4Messages]]] = Field(
         default=None, validation_alias="icmpMsg", serialization_alias="icmpMsg"
     )
     packet_length: Union[Global[str], Global[int], None] = Field(
@@ -248,8 +248,8 @@ class Sequence(BaseModel):
     def match_dscp(self, dscp: List[int]):
         self._entry.dscp = as_global(dscp)
 
-    def match_icmp_msg(self, icmp: List[IcmpMessages]):
-        self._entry.icmp_msg = Global[List[IcmpMessages]](value=icmp)
+    def match_icmp_msg(self, icmp: List[IcmpIPv4Messages]):
+        self._entry.icmp_msg = Global[List[IcmpIPv4Messages]](value=icmp)
 
     def match_packet_length(self, len: Union[int, Tuple[int, int]]):
         if isinstance(len, int):
@@ -302,10 +302,10 @@ class Sequence(BaseModel):
             self._accept_action.counter_name = as_global(name)
 
     def associate_mirror_action(self, mirror: UUID):
-        self._accept_action.mirror = RefIdItem(ref_id=as_global(str(UUID)))
+        self._accept_action.mirror = RefIdItem(ref_id=as_global(str(mirror)))
 
     def associate_policer_action(self, policer: UUID):
-        self._accept_action.policer = RefIdItem(ref_id=as_global(str(UUID)))
+        self._accept_action.policer = RefIdItem(ref_id=as_global(str(policer)))
 
     def associate_set_dscp_action(self, dscp: int):
         self._accept_action.set_dscp = as_global(dscp)

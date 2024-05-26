@@ -52,7 +52,6 @@ from typing import (
     Sequence,
     Set,
     Tuple,
-    Type,
     TypeVar,
     Union,
     runtime_checkable,
@@ -116,11 +115,17 @@ class TypeSpecifier:
         return TypeSpecifier(present=True, payload_union_model_types=models)
 
     @classmethod
-    def resolve_nested(cls, annotation: Any, models_types: List[Type[BaseModel]]) -> List[Type[BaseModel]]:
+    def resolve_nested(cls, annotation: Any, models_types: List[type]) -> List[type]:
         try:
             return resolve_nested_base_model_unions(annotation)
         except TypeError:
             raise APIEndpointError(f"Expected: {PayloadType}")
+
+    @property
+    def payload_model_set(self) -> Optional[Set[type]]:
+        if self.payload_union_model_types is not None:
+            return set(self.payload_union_model_types)
+        return None
 
 
 @dataclass
