@@ -81,7 +81,7 @@ class NodeInfo(BaseModel):
     description: str
     direct_child_count: int = Field(validation_alias="directChildCount", serialization_alias="directChildCount")
     hierarchy_path: Optional[str] = Field(
-        default=None, validation_alias="hierarchyPath", serialization_alias="directChildCount"
+        default=None, validation_alias="hierarchyPath", serialization_alias="hierarchyPath"
     )
     id: str
     name: str
