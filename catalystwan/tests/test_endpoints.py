@@ -344,7 +344,7 @@ class TestAPIEndpoints(unittest.TestCase):
             (None, True, None),
         ]
     )
-    def test_request_decorator_payload_spec(self, payload_type, raises, expected_payload_spec):
+    def test_request_decorator_payload_spec(self, payload_type, raises, expected_payload_spec: Optional[TypeSpecifier]):
         # Arrange
         class TestAPI(APIEndpoints):
             def get_data(self, payload: payload_type) -> None:  # type: ignore [empty-body]
@@ -357,6 +357,11 @@ class TestAPIEndpoints(unittest.TestCase):
                 decorator(TestAPI.get_data)
         else:
             decorator(TestAPI.get_data)
+            if expected_payload_spec is not None and expected_payload_spec.payload_union_model_types is not None:
+                # check both list contains same set and skip member list comparison below
+                assert decorator.payload_spec.payload_model_set == expected_payload_spec.payload_model_set
+                decorator.payload_spec.payload_union_model_types = None
+                expected_payload_spec.payload_union_model_types = None
             assert decorator.payload_spec == expected_payload_spec
 
     def test_request_decorator_not_annotated_params(self):

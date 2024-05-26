@@ -300,22 +300,10 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
         # Assert
         assert parcel_id
 
-    def test_when_default_values_acl_ipv6_expect_successful_post(self):
-        # Arrange
-        acl_ipv6_parcel = Ipv6AclParcel(
-            parcel_name="TestAclIpv6Parcel",
-            parcel_description="Test Acl Ipv6 Parcel",
-        )
-        # Act
-        parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv6_parcel).id
-        self.api.get_parcel(self.profile_uuid, Ipv6AclParcel, parcel_id)
-        # Assert
-        assert parcel_id
-
     def test_when_default_values_acl_ipv4_expect_successful_post(self):
         # Arrange
         acl_ipv4_parcel = Ipv4AclParcel(
-            parcel_name="TestAclIpv4Parcel",
+            parcel_name="TestAclIpv4Parcel-Defaults",
             parcel_description="Test Acl Ipv4 Parcel",
         )
         # Act
@@ -327,7 +315,7 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
     def test_when_fully_specified_acl_ipv4_expect_successful_post(self):
         # Arrange
         acl_ipv4_parcel = Ipv4AclParcel(
-            parcel_name="TestAclIpv4Parcel",
+            parcel_name="TestAclIpv4Parcel-Full",
             parcel_description="Test Acl Ipv4 Parcel",
         )
         # Arrange Sequence 1
@@ -347,6 +335,41 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv4_parcel).id
         self.api.get_parcel(self.profile_uuid, Ipv4AclParcel, parcel_id)
+        # Assert
+        assert parcel_id
+
+    def test_when_default_values_acl_ipv6_expect_successful_post(self):
+        # Arrange
+        acl_ipv6_parcel = Ipv6AclParcel(
+            parcel_name="TestAclIpv6Parcel-Defaults",
+            parcel_description="Test Acl Ipv6 Parcel",
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv6_parcel).id
+        self.api.get_parcel(self.profile_uuid, Ipv6AclParcel, parcel_id)
+        # Assert
+        assert parcel_id
+
+    def test_when_fully_specified_acl_ipv6_expect_successful_post(self):
+        # Arrange
+        acl_ipv6_parcel = Ipv6AclParcel(
+            parcel_name="TestAclIpv6Parcel-Full",
+            parcel_description="Test Acl Ipv6 Parcel",
+        )
+        # Arrange Sequence 1
+        seq1 = acl_ipv6_parcel.add_sequence("Sequence1", 10, "accept")
+        seq1.match_destination_data_prefix(IPv6Interface("2001:db8:abcd:0012::/64"))
+        seq1.match_icmp_msg(["cp-solicitation", "ind-advertisement"])
+        seq1.match_packet_length((1000, 8000))
+        seq1.match_source_data_prefix(IPv6Interface("2001:db8:1111:0012::/64"))
+        seq1.match_traffic_class([3])
+        # Arrange Sequence 2
+        seq2 = acl_ipv6_parcel.add_sequence("Sequence2", 20, "drop")
+        seq2.match_destination_ports([233])
+        seq2.match_source_ports([1, 3, (10, 100), (50, 200), 600])
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv6_parcel).id
+        self.api.get_parcel(self.profile_uuid, Ipv6AclParcel, parcel_id)
         # Assert
         assert parcel_id
 
