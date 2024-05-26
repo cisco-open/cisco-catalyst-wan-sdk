@@ -384,7 +384,9 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
     for policy_list in ux1.policies.policy_lists:
         try:
             pl_parcel = convert_policy_list(policy_list, None)
-            header = TransformHeader(type=pl_parcel._get_parcel_type(), origin=policy_list.list_id)
+            header = TransformHeader(
+                type=pl_parcel._get_parcel_type(), origin=policy_list.list_id, origname=policy_list.name
+            )
             ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pl_parcel))
         except CatalystwanConverterCantConvertException as e:
             exception_message = (
@@ -400,7 +402,9 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
     for policy_definition in ux1.policies.policy_definitions:
         try:
             pd_parcel = convert_policy_definition(policy_definition, None)
-            header = TransformHeader(type=pd_parcel._get_parcel_type(), origin=policy_list.list_id)
+            header = TransformHeader(
+                type=pd_parcel._get_parcel_type(), origin=policy_list.list_id, origname=policy_definition.name
+            )
             ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pd_parcel))
         except CatalystwanConverterCantConvertException as e:
             exception_message = (
