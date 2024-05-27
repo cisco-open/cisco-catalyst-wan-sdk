@@ -1,3 +1,4 @@
+from logging import getLogger
 from re import match
 from typing import Any, Callable, Dict, List, Mapping, Optional, Type, cast
 
@@ -66,6 +67,8 @@ from catalystwan.models.policy.list.region import RegionList
 from catalystwan.models.policy.list.site import SiteList
 from catalystwan.models.policy.list.vpn import VPNList
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
+
+logger = getLogger(__name__)
 
 
 def _get_parcel_name_desc(policy_list: AnyPolicyList) -> Dict[str, Any]:
@@ -400,11 +403,15 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
 }
 
 
+def _not_supported(in_: Input, *args, **kwargs) -> None:
+    logger.warning(f"Not Supported Conversion of Policy List: '{in_.type}' '{in_.name}'")
+
+
 def _find_converter(in_: Input) -> Callable[..., Output]:
     for key in CONVERTERS.keys():
         if isinstance(in_, key):
             return CONVERTERS[key]
-    raise CatalystwanConverterCantConvertException(f"No converter found for {type(in_).__name__}")
+    return _not_supported
 
 
 def convert(in_: Input, context: PolicyConvertContext) -> Output:

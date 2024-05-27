@@ -1,6 +1,6 @@
 import logging
 from ipaddress import IPv4Interface
-from typing import Any, Callable, Dict, List, Mapping, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Union
 
 from pydantic import Field
 from typing_extensions import Annotated
@@ -24,8 +24,11 @@ from catalystwan.utils.config_migration.converters.utils import convert_varname
 logger = logging.getLogger(__name__)
 
 Input = AnyPolicyDefinition
-Output = Annotated[
-    Union[CustomControlParcel, HubSpokeParcel, MeshParcel, Ipv4AclParcel, Ipv6AclParcel], Field(discriminator="type_")
+Output = Optional[
+    Annotated[
+        Union[CustomControlParcel, HubSpokeParcel, MeshParcel, Ipv4AclParcel, Ipv6AclParcel],
+        Field(discriminator="type_"),
+    ]
 ]
 
 
@@ -139,18 +142,20 @@ def ipv4acl(in_: AclPolicy, context) -> Ipv4AclParcel:
 
 
 def ipv6acl(in_: AclIPv6Policy, context) -> Ipv6AclParcel:
-    if not context:
-        raise CatalystwanConverterCantConvertException(f"Additional context required for {Ipv6AclParcel.__name__}")
     out = Ipv6AclParcel(**_get_parcel_name_desc(in_))
     # TODO: convert definition
     return out
 
 
-def mesh(in_: MeshPolicy, context) -> MeshParcel:
-    if not context:
-        raise CatalystwanConverterCantConvertException(f"Additional context required for {MeshPolicy.__name__}")
+def mesh(in_: MeshPolicy, context: PolicyConvertContext) -> MeshParcel:
+    target_vpns = context.lan_vpns_by_list_id[in_.definition.vpn_list]
+    mesh_sites: List[str] = []
+    for region in in_.definition.regions:
+        for site_list in region.site_lists:
+            mesh_sites.extend(context.sites_by_list_id[site_list])
     out = MeshParcel(**_get_parcel_name_desc(in_))
-    # TODO: convert definition
+    out.target.vpn.value = target_vpns
+    out.sites.value = mesh_sites
     return out
 
 
@@ -163,14 +168,19 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
 }
 
 
+def _not_supported(in_: Input, *args, **kwargs) -> None:
+    logger.warning(f"Not Supported Conversion of Policy Definition: '{in_.type}' '{in_.name}'")
+
+
 def _find_converter(in_: Input) -> Callable[..., Output]:
     for key in CONVERTERS.keys():
         if isinstance(in_, key):
             return CONVERTERS[key]
-    raise CatalystwanConverterCantConvertException(f"No converter found for {type(in_).__name__}")
+    return _not_supported
 
 
 def convert(in_: Input, context: PolicyConvertContext) -> Output:
     result = _find_converter(in_)(in_, context)
-    result.model_validate(result)
+    if result is not None:
+        result.model_validate(result)
     return result

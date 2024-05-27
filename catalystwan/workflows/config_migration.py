@@ -419,12 +419,13 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
     for policy_definition in ux1.policies.policy_definitions:
         try:
             pd_parcel = convert_policy_definition(policy_definition, policy_context)
-            header = TransformHeader(
-                type=pd_parcel._get_parcel_type(),
-                origin=policy_definition.definition_id,
-                origname=policy_definition.name,
-            )
-            ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pd_parcel))
+            if pd_parcel is not None:
+                header = TransformHeader(
+                    type=pd_parcel._get_parcel_type(),
+                    origin=policy_definition.definition_id,
+                    origname=policy_definition.name,
+                )
+                ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pd_parcel))
         except CatalystwanConverterCantConvertException as e:
             exception_message = (
                 f"Policy Definition {policy_definition.type} {policy_definition.definition_id} {policy_definition.name}"
