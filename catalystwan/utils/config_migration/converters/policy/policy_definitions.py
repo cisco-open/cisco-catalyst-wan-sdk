@@ -57,9 +57,18 @@ def control(in_: ControlPolicy, context) -> CustomControlParcel:
 
 
 def hubspoke(in_: HubAndSpokePolicy, context: PolicyConvertContext) -> HubSpokeParcel:
-    target_vpns = context.vpns_by_list_id[in_.definition.vpn_list]
+    target_vpns = context.lan_vpns_by_list_id[in_.definition.vpn_list]
     out = HubSpokeParcel(**_get_parcel_name_desc(in_))
     out.target.vpn.value.extend(target_vpns)
+    for isubdef in in_.definition.sub_definitions:
+        osites: List[str] = []
+        ohubs: List[str] = []
+        for ispoke in isubdef.spokes:
+            osites.extend(context.sites_by_list_id[ispoke.site_list])
+            for ihub in ispoke.hubs:
+                ohubs.extend(context.sites_by_list_id[ihub.site_list])
+        ospoke = out.add_spoke(isubdef.name, list(set(osites)))
+        ospoke.add_hub_site(list(set(ohubs)), 1)
     return out
 
 
