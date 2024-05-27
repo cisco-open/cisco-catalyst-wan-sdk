@@ -21,7 +21,6 @@ from catalystwan.models.configuration.feature_profile.common import FeatureProfi
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
-from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import ManagementVpnParcel, TransportVpnParcel
 from catalystwan.models.configuration.network_hierarchy import NodeInfo
 from catalystwan.models.configuration.topology_group import TopologyGroup
 from catalystwan.models.policy import AnyPolicyDefinitionInfo, AnyPolicyListInfo
@@ -468,11 +467,11 @@ class PolicyConvertContext:
     list_id_lookup: Dict[str, UUID] = field(default_factory=dict)
     region_map: Dict[str, int] = field(default_factory=dict)
     site_map: Dict[str, int] = field(default_factory=dict)
-    vpn_map: Dict[str, Union[int, str]] = field(default_factory=dict)
+    lan_vpn_map: Dict[str, Union[int, str]] = field(default_factory=dict)
     # emited during conversion
     regions_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
     sites_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
-    vpns_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
+    lan_vpns_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
 
     @staticmethod
     def from_configs(
@@ -488,9 +487,9 @@ class PolicyConvertContext:
                 if node.data.label == "REGION" and node.data.hierarchy_id.region_id is not None:
                     context.region_map[node.name] = node.data.hierarchy_id.region_id
         for parcel in [p.parcel for p in transformed_parcels]:
-            if isinstance(parcel, (LanVpnParcel, TransportVpnParcel, ManagementVpnParcel)):
+            if isinstance(parcel, LanVpnParcel):
                 if parcel.vpn_id.value is not None:
-                    context.vpn_map[parcel.parcel_name] = parcel.vpn_id.value
+                    context.lan_vpn_map[parcel.parcel_name] = parcel.vpn_id.value
         for list_info in policy_list_infos:
             context.list_id_lookup[list_info.name] = list_info.list_id
         return context

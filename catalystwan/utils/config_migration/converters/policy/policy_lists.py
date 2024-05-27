@@ -341,16 +341,16 @@ def url_block(in_: URLBlockList, context) -> URLBlockParcel:
 def vpn(in_: VPNList, context: PolicyConvertContext):
     list_id = context.list_id_lookup[in_.name]
     vpn_id_flatlist: List[int] = []
-    context.vpns_by_list_id[list_id] = []
+    context.lan_vpns_by_list_id[list_id] = []
     for entry in in_.entries:
         low, hi = entry.vpn
         if hi is None:
             vpn_id_flatlist.append(low)
         else:
             vpn_id_flatlist.extend(range(low, hi + 1))
-    for name, num in context.vpn_map.items():
+    for name, num in context.lan_vpn_map.items():
         if num in vpn_id_flatlist:
-            context.vpns_by_list_id[list_id].append(name)
+            context.lan_vpns_by_list_id[list_id].append(name)
 
 
 def zone(in_: ZoneList, context) -> SecurityZoneListParcel:
