@@ -1,3 +1,4 @@
+from re import match
 from typing import Any, Callable, Dict, Mapping, Type, cast
 
 from catalystwan.models.common import int_range_serializer
@@ -9,6 +10,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
     ColorParcel,
     DataPrefixParcel,
     ExpandedCommunityParcel,
+    ExtendedCommunityParcel,
     FowardingClassParcel,
     FQDNDomainParcel,
     GeoLocationListParcel,
@@ -41,6 +43,7 @@ from catalystwan.models.policy import (
     DataIPv6PrefixList,
     DataPrefixList,
     ExpandedCommunityList,
+    ExtendedCommunityList,
     FQDNList,
     GeoLocationList,
     IPSSignatureList,
@@ -129,6 +132,27 @@ def expanded_community(in_: ExpandedCommunityList, context) -> ExpandedCommunity
     out = ExpandedCommunityParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_community(entry.community)
+    return out
+
+
+def extended_community(in_: ExtendedCommunityList, context) -> ExtendedCommunityParcel:
+    out = ExtendedCommunityParcel(**_get_parcel_name_desc(in_))
+
+    # v2 models allows folowing entries are:
+    # soo ipv4_addr:port OR rt as_number:community_number
+    # v1 api allows to add str prefix before soo or rt ex. community rt 2:3git
+    # if prefix is available it will be removed during conversion
+    entry_pattern = r"^.*(soo \d+\.\d+\.\d+\.\d+:\d+|rt \d+:\d+)$"
+
+    for entry in in_.entries:
+        if (pattern_match := match(entry_pattern, entry.community)) is None:
+            raise CatalystwanConverterCantConvertException(
+                f"Extended community entr: {entry.community} does not meet expected pattern: "
+                "'soo ipv4:port OR rt int:int'"
+            )
+
+        out._add_community(pattern_match[1])
+
     return out
 
 
@@ -323,6 +347,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     URLBlockList: url_block,
     ZoneList: zone,
     MirrorList: mirror,
+    ExtendedCommunityList: extended_community,
 }
 
 
