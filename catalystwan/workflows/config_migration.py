@@ -1,7 +1,7 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
 from collections import defaultdict
-from typing import Callable, Optional, TypeVar, cast
+from typing import Callable, Optional, Set, TypeVar, cast
 from uuid import UUID, uuid4
 
 from pydantic import ValidationError
@@ -60,7 +60,7 @@ from catalystwan.utils.config_migration.steps.constants import (
 from catalystwan.utils.config_migration.steps.transform import (
     handle_multi_parcel_feature_template,
     merge_parcels,
-    remove_not_casted_duplicates,
+    remove_feature_template_duplicates,
     resolve_template_type,
 )
 
@@ -235,6 +235,7 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
     transform_result = ConfigTransformResult()
     ux2 = UX2Config(version=ux1.version)
     subtemplates_mapping = defaultdict(set)
+    duplicates_to_remove: Set[str] = set()
     # Create Feature Profiles and Config Group
     for dt in ux1.templates.device_templates:
         templates = dt.get_flattened_general_templates()
@@ -298,7 +299,8 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
         for template in templates:
             # Those feature templates IDs are real UUIDs and are used to map to the feature profiles
             if template.templateType == "cisco_vpn":
-                resolve_template_type(template, ux1)
+                copied_feature_tempates = resolve_template_type(template, ux1)
+                duplicates_to_remove.update(copied_feature_tempates)
             template_uuid = UUID(template.templateId)
             if template.templateType in FEATURE_PROFILE_SYSTEM:
                 transformed_fp_system.header.subelements.add(template_uuid)
@@ -347,7 +349,7 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
 
     # Sort by top level feature templates to avoid any confilics with subtemplates
     ux1.templates.feature_templates.sort(key=lambda ft: ft.template_type in TOP_LEVEL_TEMPLATE_TYPES, reverse=True)
-    remove_not_casted_duplicates(ux1)
+    remove_feature_template_duplicates(ux1, duplicates_to_remove)
 
     cloud_credential_templates = []
     for ft in ux1.templates.feature_templates:
