@@ -45,10 +45,9 @@ class TestExtendedCommunityParcel(TestFeatureProfileModels):
         self.created_id = self.policy_api.create(self.profile_uuid, ext).id
         parcel = self.policy_api.get(self.profile_uuid, ExtendedCommunityParcel, parcel_id=self.created_id)
 
-        assert len(parcel) == 1
-        assert parcel[0].payload.parcel_name == "ExampleTestName"
-        assert len(parcel[0].payload.entries) == 4
-        assert parcel[0].payload.entries[0].extended_community.value == "rt 100:2000"
-        assert parcel[0].payload.entries[1].extended_community.value == "rt 300:5000"
-        assert parcel[0].payload.entries[2].extended_community.value == "soo 1.2.3.4:1000"
-        assert parcel[0].payload.entries[3].extended_community.value == "soo 10.20.30.40:3000"
+        assert parcel.payload.parcel_name == "ExampleTestName"
+        assert len(parcel.payload.entries) == 4
+        assert parcel.payload.entries[0].extended_community.value == "rt 100:2000"
+        assert parcel.payload.entries[1].extended_community.value == "rt 300:5000"
+        assert parcel.payload.entries[2].extended_community.value == "soo 1.2.3.4:1000"
+        assert parcel.payload.entries[3].extended_community.value == "soo 10.20.30.40:3000"

@@ -24,8 +24,11 @@ class ExtendedCommunityParcel(_ParcelBase):
 
     def add_site_of_origin_community(self, ip_address: IPv4Address, port: int):
         entry = f"soo {ip_address}:{port}"
-        self.entries.append(ExtendedCommunityEntry.from_string(entry))
+        self._add_community(entry)
 
     def add_route_target_community(self, as_number: int, community_number: int):
         entry = f"rt {as_number}:{community_number}"
-        self.entries.append(ExtendedCommunityEntry.from_string(entry))
+        self._add_community(entry)
+
+    def _add_community(self, exteneded_community: str):
+        self.entries.append(ExtendedCommunityEntry.from_string(exteneded_community))
