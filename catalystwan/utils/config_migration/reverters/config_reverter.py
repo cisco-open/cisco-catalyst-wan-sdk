@@ -23,11 +23,21 @@ class UX2ConfigReverter:
                 all_deleted = False
                 logger.error(f"Error occured during deleting config group {cg_id}: {e}")
 
+        for i, tg_id in enumerate(rollback_info.topology_group_ids):
+            try:
+                self._session.endpoints.configuration.topology_group.delete(tg_id)
+                progress("Removing Topology Groups", i + 1, len(rollback_info.topology_group_ids))
+            except CatalystwanException as e:
+                all_deleted = False
+                logger.error(f"Error occured during deleting topolofy group {cg_id}: {e}")
+
         for i, feature_profile_entry in enumerate(rollback_info.feature_profile_ids):
             feature_profile_id, type_ = feature_profile_entry
             try:
                 api = FeatureProfileAPIFactory.get_api(type_, self._session)
-                if type_ == "policy-object":
+                if (
+                    type_ == "policy-object"
+                ):  # policy-objects are populated only in default policy object profile and handled separately
                     continue
                 api.delete_profile(feature_profile_id)  # type: ignore
                 progress("Removing Feature Profiles", i + 1, len(rollback_info.feature_profile_ids))

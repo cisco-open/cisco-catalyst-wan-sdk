@@ -6,6 +6,7 @@ from pydantic import Field
 from typing_extensions import Annotated
 
 from catalystwan.models.common import int_range_str_validator
+from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
@@ -55,11 +56,10 @@ def control(in_: ControlPolicy, context) -> CustomControlParcel:
     return out
 
 
-def hubspoke(in_: HubAndSpokePolicy, context) -> HubSpokeParcel:
-    if not context:
-        raise CatalystwanConverterCantConvertException(f"Additional context required for {HubAndSpokePolicy.__name__}")
+def hubspoke(in_: HubAndSpokePolicy, context: PolicyConvertContext) -> HubSpokeParcel:
+    target_vpns = context.vpns_by_list_id[in_.definition.vpn_list]
     out = HubSpokeParcel(**_get_parcel_name_desc(in_))
-    # TODO: convert definition
+    out.target.vpn.value.extend(target_vpns)
     return out
 
 
@@ -160,7 +160,7 @@ def _find_converter(in_: Input) -> Callable[..., Output]:
     raise CatalystwanConverterCantConvertException(f"No converter found for {type(in_).__name__}")
 
 
-def convert(in_: Input, context) -> Output:
+def convert(in_: Input, context: PolicyConvertContext) -> Output:
     result = _find_converter(in_)(in_, context)
     result.model_validate(result)
     return result

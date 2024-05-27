@@ -12,9 +12,11 @@ from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
 from catalystwan.models.configuration.config_migration import (
     ConfigTransformResult,
     DeviceTemplateWithInfo,
+    PolicyConvertContext,
     TransformedConfigGroup,
     TransformedFeatureProfile,
     TransformedParcel,
+    TransformedTopologyGroup,
     TransformHeader,
     UX1Config,
     UX2Config,
@@ -23,6 +25,7 @@ from catalystwan.models.configuration.config_migration import (
 )
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
+from catalystwan.models.configuration.topology_group import TopologyGroup
 from catalystwan.models.policy import AnyPolicyDefinitionInfo
 from catalystwan.session import ManagerSession
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
@@ -217,6 +220,8 @@ TOP_LEVEL_TEMPLATE_TYPES = [
     "cisco_vpn",
 ]
 
+TOPOLOGY_POLICIES = ["control", "hubAndSpoke", "mesh"]
+
 
 def log_progress(task: str, completed: int, total: int) -> None:
     logger.info(f"{task} {completed}/{total}")
@@ -380,14 +385,20 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
     if cloud_credential_templates:
         ux2.cloud_credentials = create_cloud_credentials_from_templates(cloud_credential_templates)
 
+    # Prepare Context for Policy Conversion (VPN Parcels must be already transformed)
+    policy_context = PolicyConvertContext.from_configs(
+        ux1.network_hierarchy, ux2.profile_parcels, ux1.policies.policy_lists
+    )
+
     # Policy Lists
     for policy_list in ux1.policies.policy_lists:
         try:
-            pl_parcel = convert_policy_list(policy_list, None)
-            header = TransformHeader(
-                type=pl_parcel._get_parcel_type(), origin=policy_list.list_id, origname=policy_list.name
-            )
-            ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pl_parcel))
+            pl_parcel = convert_policy_list(policy_list, policy_context)
+            if pl_parcel is not None:
+                header = TransformHeader(
+                    type=pl_parcel._get_parcel_type(), origin=policy_list.list_id, origname=policy_list.name
+                )
+                ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pl_parcel))
         except CatalystwanConverterCantConvertException as e:
             exception_message = (
                 f"Policy List {policy_list.type} {policy_list.list_id} {policy_list.name}" f"was not converted: {e}"
@@ -398,12 +409,16 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
                 policy=policy_list,
             )
 
+    print(policy_context.vpns_by_list_id)
+
     # Policy Definitions
     for policy_definition in ux1.policies.policy_definitions:
         try:
-            pd_parcel = convert_policy_definition(policy_definition, None)
+            pd_parcel = convert_policy_definition(policy_definition, policy_context)
             header = TransformHeader(
-                type=pd_parcel._get_parcel_type(), origin=policy_list.list_id, origname=policy_definition.name
+                type=pd_parcel._get_parcel_type(),
+                origin=policy_definition.definition_id,
+                origname=policy_definition.name,
             )
             ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pd_parcel))
         except CatalystwanConverterCantConvertException as e:
@@ -416,6 +431,31 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
                 exception_message=exception_message,
                 policy=policy_definition,
             )
+
+    # Topology Group and Profile
+    topology_sources = [p.definition_id for p in ux1.policies.policy_definitions if p.type in TOPOLOGY_POLICIES]
+    topology_name = "Migrated-from-policy-config"
+    topology_description = "Created by config migration tool"
+    ux2.feature_profiles.append(
+        TransformedFeatureProfile(
+            header=TransformHeader(
+                type="topology",
+                origin=UUID(int=0),
+                subelements=set(topology_sources),
+                origname=topology_name,
+            ),
+            feature_profile=FeatureProfileCreationPayload(
+                name=topology_name,
+                description=topology_description,
+            ),
+        )
+    )
+    ux2.topology_groups.append(
+        TransformedTopologyGroup(
+            header=TransformHeader(type="", origin=UUID(int=0), origname=topology_name, subelements=set()),
+            topology_group=TopologyGroup(name=topology_name, description=topology_description, solution="sdwan"),
+        )
+    )
 
     ux2 = merge_parcels(ux2)
     transform_result.ux2_config = ux2
