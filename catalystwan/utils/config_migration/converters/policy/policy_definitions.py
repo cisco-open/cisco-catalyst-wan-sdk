@@ -9,6 +9,8 @@ from catalystwan.models.common import int_range_str_validator
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
+from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import DeviceAccessIPv4Parcel
+from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import DeviceAccessIPv6Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
@@ -16,17 +18,22 @@ from catalystwan.models.policy import AnyPolicyDefinition
 from catalystwan.models.policy.definition.access_control_list import AclPolicy
 from catalystwan.models.policy.definition.access_control_list_ipv6 import AclIPv6Policy
 from catalystwan.models.policy.definition.control import ControlPolicy
+from catalystwan.models.policy.definition.device_access import DeviceAccessPolicy
+from catalystwan.models.policy.definition.device_access_ipv6 import DeviceAccessIPv6Policy
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
 from catalystwan.models.policy.definition.mesh import MeshPolicy
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.utils import convert_varname
+from catalystwan.utils.config_migration.converters.policy.device_access_ipv4 import device_access_ipv4_converter
+from catalystwan.utils.config_migration.converters.policy.device_access_ipv6 import device_access_ipv6_converter
+
 
 logger = logging.getLogger(__name__)
 
 Input = AnyPolicyDefinition
 Output = Optional[
     Annotated[
-        Union[CustomControlParcel, HubSpokeParcel, MeshParcel, Ipv4AclParcel, Ipv6AclParcel],
+        Union[CustomControlParcel, HubSpokeParcel, MeshParcel, Ipv4AclParcel, Ipv6AclParcel, DeviceAccessIPv4Parcel, DeviceAccessIPv6Parcel],
         Field(discriminator="type_"),
     ]
 ]
@@ -165,6 +172,8 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     ControlPolicy: control,
     HubAndSpokePolicy: hubspoke,
     MeshPolicy: mesh,
+    DeviceAccessPolicy: device_access_ipv4_converter,
+    DeviceAccessIPv6Policy: device_access_ipv6_converter,
 }
 
 

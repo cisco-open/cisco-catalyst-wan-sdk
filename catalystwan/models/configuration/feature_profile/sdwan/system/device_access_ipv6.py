@@ -1,11 +1,11 @@
 from ipaddress import IPv6Interface
-from typing import Any, Dict, List, Literal, Optional, Union, overload
+from typing import Any, Dict, List, Literal, Optional, Union
+from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_variable
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
-from catalystwan.utils.type_check import is_str_uuid
 
 BaseAction = Literal[
     "accept",
@@ -80,59 +80,33 @@ class Sequence(BaseModel):
     def set_base_action(self, base_action: BaseAction):
         self.base_action = Global[BaseAction](value=base_action)
 
-    @overload
-    def match_destination_data_prefix(self, destination_prefix: str):
-        ...
+    def match_destination_data_prefix_id(self, destination_prefix: Union[str, UUID]):
+        self.match_entries.destination_data_prefix = DestinationDataPrefix(
+            destination_data_prefix_list=RefIdItem(ref_id=Global[str](value=str(destination_prefix)))
+        )
 
-    @overload
-    def match_destination_data_prefix(self, destination_prefix: List[str]):
-        ...
+    def match_destination_data_prefix_ip_list(self, destination_prefix: Union[List[str], List[IPv6Interface]]):
+        self.match_entries.destination_data_prefix = DestinationIPPrefix(
+            destination_ip_prefix_list=Global[List[IPv6Interface]](value=destination_prefix)  # type: ignore
+        )
 
-    @overload
-    def match_destination_data_prefix(self, destination_prefix: List[IPv6Interface]):
-        ...
+    def match_destination_data_prefix_ip_variable(self, destination_prefix: str):
+        self.match_entries.destination_data_prefix = DestinationIPPrefix(
+            destination_ip_prefix_list=as_variable(value=destination_prefix)
+        )
 
-    def match_destination_data_prefix(self, destination_prefix):
-        if isinstance(destination_prefix, str):
-            if is_str_uuid(destination_prefix):
-                self.match_entries.destination_data_prefix = DestinationDataPrefix(
-                    destination_data_prefix_list=RefIdItem(ref_id=Global[str](value=destination_prefix))
-                )
-            else:
-                self.match_entries.destination_data_prefix = DestinationIPPrefix(
-                    destination_ip_prefix_list=Variable(value=destination_prefix)
-                )
-        else:
-            self.match_entries.destination_data_prefix = DestinationIPPrefix(
-                destination_ip_prefix_list=Global[List[IPv6Interface]](value=destination_prefix)
-            )
+    def match_source_data_prefix_id(self, source_prefix: Union[str, UUID]):
+        self.match_entries.source_data_prefix = SourceDataPrefix(
+            source_data_prefix_list=RefIdItem(ref_id=Global[str](value=str(source_prefix)))
+        )
 
-    @overload
-    def match_source_data_prefix(self, source_prefix: str):
-        ...
+    def match_source_data_prefix_ip_list(self, source_prefix: Union[List[str], List[IPv6Interface]]):
+        self.match_entries.source_data_prefix = SourceIPPrefix(
+            source_ip_prefix_list=Global[List[IPv6Interface]](value=source_prefix)  # type: ignore
+        )
 
-    @overload
-    def match_source_data_prefix(self, source_prefix: List[str]):
-        ...
-
-    @overload
-    def match_source_data_prefix(self, source_prefix: List[IPv6Interface]):
-        ...
-
-    def match_source_data_prefix(self, source_prefix):
-        if isinstance(source_prefix, str):
-            if is_str_uuid(source_prefix):
-                self.match_entries.source_data_prefix = SourceDataPrefix(
-                    source_data_prefix_list=RefIdItem(ref_id=Global[str](value=source_prefix))
-                )
-            else:
-                self.match_entries.source_data_prefix = SourceIPPrefix(
-                    source_ip_prefix_list=Variable(value=source_prefix)
-                )
-        else:
-            self.match_entries.source_data_prefix = SourceIPPrefix(
-                source_ip_prefix_list=Global[List[IPv6Interface]](value=source_prefix)
-            )
+    def match_source_data_prefix_ip_variable(self, source_prefix: str):
+        self.match_entries.source_data_prefix = SourceIPPrefix(source_ip_prefix_list=as_variable(value=source_prefix))
 
     def match_source_ports(self, ports: List[int]):
         self.match_entries.source_ports = Global[List[int]](value=ports)
