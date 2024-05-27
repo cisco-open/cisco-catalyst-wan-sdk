@@ -431,7 +431,7 @@ def test_when_transform_expect_removed_copies():
     vpn_service_, ethernet = deepcopy_models(vpn_service, interface_ethernet)
     ux1_config = UX1Config(
         templates=UX1Templates(
-            feature_templates=[vpn_service_],
+            feature_templates=[vpn_service_, ethernet],
             device_templates=[
                 DeviceTemplateWithInfo(
                     template_id=str(uuid4()),
