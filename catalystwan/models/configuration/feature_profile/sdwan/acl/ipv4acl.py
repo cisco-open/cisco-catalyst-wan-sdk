@@ -232,7 +232,6 @@ class Sequence(BaseModel):
         """
         destination_ports = []
         for port in ports:
-            print(port)
             if isinstance(port, int):
                 value = as_global(port)
             else:

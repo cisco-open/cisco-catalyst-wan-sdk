@@ -69,6 +69,7 @@ def hubspoke(in_: HubAndSpokePolicy, context: PolicyConvertContext) -> HubSpokeP
                 ohubs.extend(context.sites_by_list_id[ihub.site_list])
         ospoke = out.add_spoke(isubdef.name, list(set(osites)))
         ospoke.add_hub_site(list(set(ohubs)), 1)
+        out.selected_hubs.value = list(set(ohubs))
     return out
 
 

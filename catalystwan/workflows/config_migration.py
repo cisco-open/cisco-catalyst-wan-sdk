@@ -409,8 +409,6 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
                 policy=policy_list,
             )
 
-    print(policy_context.lan_vpns_by_list_id)
-
     # Policy Definitions
     for policy_definition in ux1.policies.policy_definitions:
         try:
