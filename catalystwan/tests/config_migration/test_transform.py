@@ -425,13 +425,28 @@ def test_when_transform_expect_removed_copies():
     """During transform we create copies of the templates,
     but we need to remove the original templates from the list,
     to clean list of templates that will not be pushed to UX2.0.
+
+    Also remove standalone templates that are not used in any device template.
     """
 
     # Arrange
-    vpn_service_, ethernet = deepcopy_models(vpn_service, interface_ethernet)
+
+    #
+    # Original Service VPN should be deleted and not converted becouse
+    # it is used in the two Device Templates and each of them
+    # has its own copy of the Service VPN template.
+    #
+    # Original Management VPN should be deleted and not converted becouse
+    # it is not used in any Device Template.
+    #
+    # Original Ethernet interface should be deleted and not converted
+    # becouse it is used in the two Device Templates and each of them
+    # has its own copy of the Ethernet interface template.
+    #
+    vpn_service_, vpn_standalone, ethernet = deepcopy_models(vpn_service, vpn_management, interface_ethernet)
     ux1_config = UX1Config(
         templates=UX1Templates(
-            feature_templates=[vpn_service_, ethernet],
+            feature_templates=[vpn_service_, vpn_standalone, ethernet],
             device_templates=[
                 DeviceTemplateWithInfo(
                     template_id=str(uuid4()),
@@ -457,14 +472,45 @@ def test_when_transform_expect_removed_copies():
                             ],
                         ),
                     ],
-                )
+                ),
+                DeviceTemplateWithInfo(
+                    template_id=str(uuid4()),
+                    factory_default=False,
+                    devices_attached=2,
+                    template_name="DeviceTemplate",
+                    template_description="DT-example",
+                    device_role="None",
+                    device_type="None",
+                    security_policy_id="None",
+                    policy_id="None",
+                    generalTemplates=[
+                        GeneralTemplate(
+                            name=vpn_service_.name,
+                            templateId=vpn_service_.id,
+                            templateType=vpn_service_.template_type,
+                            subTemplates=[
+                                GeneralTemplate(
+                                    name=ethernet.name,
+                                    templateId=ethernet.id,
+                                    templateType=ethernet.template_type,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
             ],
         )
     )
     # Act
     ux2_config = transform(ux1_config).ux2_config
-    removed_vpn = next((p for p in ux2_config.profile_parcels if p.parcel.parcel_name == vpn_service_.name), None)
+    removed_vpn_service = next(
+        (p for p in ux2_config.profile_parcels if p.parcel.parcel_name == vpn_service_.name), None
+    )
+    removed_vpn_management = next(
+        (p for p in ux2_config.profile_parcels if p.parcel.parcel_name == vpn_management.name), None
+    )
     removed_ethernet = next((p for p in ux2_config.profile_parcels if p.parcel.parcel_name == ethernet.name), None)
     # Assert
-    assert removed_vpn is None
+    assert removed_vpn_service is None
+    assert removed_vpn_management is None
     assert removed_ethernet is None

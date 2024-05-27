@@ -96,7 +96,7 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
     """
     Resolve Cisco VPN template type and its sub-elements.
     """
-    duplicates_to_remove: Set[str] = set()
+    used_feature_templates: Set[str] = set()
     # Find the target feature template based on the provided template ID
     target_feature_template = next(
         (t for t in ux1_config.templates.feature_templates if t.id == cisco_vpn_template.templateId), None
@@ -115,8 +115,6 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
     else:
         cisco_vpn_template.templateType = VPN_SERVICE
 
-    duplicates_to_remove.add(target_feature_template.id)
-
     new_vpn_id = str(uuid4())
     new_vpn_name = f"{target_feature_template.name}_{new_vpn_id[:5]}"
     vpn = target_feature_template.model_copy(deep=True)
@@ -126,6 +124,8 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
     ux1_config.templates.feature_templates.append(vpn)
     cisco_vpn_template.templateId = new_vpn_id
     cisco_vpn_template.name = new_vpn_name
+
+    used_feature_templates.add(vpn.id)
 
     logger.debug(
         f"Resolved Cisco VPN {target_feature_template.name} "
@@ -139,15 +139,13 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
 
     if len(general_templates_from_device_template) == 0:
         # No additional templates on VPN, nothing to cast
-        return duplicates_to_remove
+        return used_feature_templates
 
     feature_and_general_templates = create_feature_template_and_general_template_pairs(
         general_templates_from_device_template, ux1_config.templates.feature_templates
     )
 
     for ft, gt in feature_and_general_templates:
-        duplicates_to_remove.add(ft.id)
-
         new_id = str(uuid4())
         new_name = f"{ft.name}_{new_id[:5]}{VPN_TEMPLATE_MAPPINGS[cisco_vpn_template.templateType]['suffix']}"
         new_type = VPN_TEMPLATE_MAPPINGS[cisco_vpn_template.templateType]["mapping"][ft.template_type]  # type: ignore
@@ -171,7 +169,9 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
         gt.templateType = new_type
         gt.name = new_name
 
-    return duplicates_to_remove
+        used_feature_templates.add(new_id)
+
+    return used_feature_templates
 
 
 def create_feature_template_and_general_template_pairs(
@@ -237,18 +237,16 @@ def handle_multi_parcel_feature_template(
     return transformed_parcels
 
 
-def remove_feature_template_duplicates(ux1: UX1Config, duplicates_to_remove: Set[str]):
+def remove_unused_feature_templates(ux1: UX1Config, used_feature_templates: Set[str]):
     """
-    Remove duplicates from UX1Config.
+    Remove duplicates and all unused feature templates from UX1Config.
 
     This is needed because we are copying and casting routing templates to match the correct
-    feature profile, and we need to remove the old ones.
-
-    Remove copied VPN and interfaces.
+    feature profile, and we need to remove the old ones. Also we want to remove all unused templates.
 
     Args:
         ux1 (UX1Config): The UX1Config object from which to remove duplicates.
-        duplicates_to_remove (Set[str]): A set of template IDs to remove from the feature_templates list.
+        used_feature_templates (Set[str]): A set of template IDs that are used in UX2.0 migration.
     """
     # Remove routing templates
     routing_template_types = {"cisco_bgp", "bgp", "cisco_ospfv3", "cisco_ospf"}
@@ -257,4 +255,4 @@ def remove_feature_template_duplicates(ux1: UX1Config, duplicates_to_remove: Set
     ]
 
     # Remove duplicates based on template IDs
-    ux1.templates.feature_templates = [t for t in ux1.templates.feature_templates if t.id not in duplicates_to_remove]
+    ux1.templates.feature_templates = [t for t in ux1.templates.feature_templates if t.id in used_feature_templates]

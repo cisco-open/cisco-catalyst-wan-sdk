@@ -60,7 +60,7 @@ from catalystwan.utils.config_migration.steps.constants import (
 from catalystwan.utils.config_migration.steps.transform import (
     handle_multi_parcel_feature_template,
     merge_parcels,
-    remove_feature_template_duplicates,
+    remove_unused_feature_templates,
     resolve_template_type,
 )
 
@@ -235,7 +235,7 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
     transform_result = ConfigTransformResult()
     ux2 = UX2Config(version=ux1.version)
     subtemplates_mapping = defaultdict(set)
-    duplicates_to_remove: Set[str] = set()
+    used_feature_templates: Set[str] = set()
     # Create Feature Profiles and Config Group
     for dt in ux1.templates.device_templates:
         templates = dt.get_flattened_general_templates()
@@ -299,8 +299,10 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
         for template in templates:
             # Those feature templates IDs are real UUIDs and are used to map to the feature profiles
             if template.templateType == "cisco_vpn":
-                copied_feature_tempates = resolve_template_type(template, ux1)
-                duplicates_to_remove.update(copied_feature_tempates)
+                copied_feature_templates = resolve_template_type(template, ux1)
+                used_feature_templates.update(copied_feature_templates)
+            else:
+                used_feature_templates.add(template.templateId)
             template_uuid = UUID(template.templateId)
             if template.templateType in FEATURE_PROFILE_SYSTEM:
                 transformed_fp_system.header.subelements.add(template_uuid)
@@ -316,10 +318,12 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
             if len(template.subTemplates) > 0:
                 # Interfaces, BGP, OSPF, etc
                 for subtemplate_level_1 in template.subTemplates:
+                    used_feature_templates.add(subtemplate_level_1.templateId)
                     subtemplates_mapping[template_uuid].add(UUID(subtemplate_level_1.templateId))
                     if len(subtemplate_level_1.subTemplates) > 0:
                         # DHCPs, Trackers
                         for subtemplate_level_2 in subtemplate_level_1.subTemplates:
+                            used_feature_templates.add(subtemplate_level_2.templateId)
                             subtemplates_mapping[UUID(subtemplate_level_1.templateId)].add(
                                 UUID(subtemplate_level_2.templateId)
                             )
@@ -349,7 +353,7 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
 
     # Sort by top level feature templates to avoid any confilics with subtemplates
     ux1.templates.feature_templates.sort(key=lambda ft: ft.template_type in TOP_LEVEL_TEMPLATE_TYPES, reverse=True)
-    remove_feature_template_duplicates(ux1, duplicates_to_remove)
+    remove_unused_feature_templates(ux1, used_feature_templates)
 
     cloud_credential_templates = []
     for ft in ux1.templates.feature_templates:
