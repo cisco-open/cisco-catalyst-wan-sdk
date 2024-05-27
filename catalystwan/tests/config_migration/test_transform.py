@@ -506,11 +506,11 @@ def test_when_transform_expect_removed_copies():
     removed_vpn_service = next(
         (p for p in ux2_config.profile_parcels if p.parcel.parcel_name == vpn_service_.name), None
     )
-    removed_vpn_management = next(
-        (p for p in ux2_config.profile_parcels if p.parcel.parcel_name == vpn_management.name), None
+    removed_vpn_standalone = next(
+        (p for p in ux2_config.profile_parcels if p.parcel.parcel_name == vpn_standalone.name), None
     )
     removed_ethernet = next((p for p in ux2_config.profile_parcels if p.parcel.parcel_name == ethernet.name), None)
     # Assert
     assert removed_vpn_service is None
-    assert removed_vpn_management is None
+    assert removed_vpn_standalone is None
     assert removed_ethernet is None
