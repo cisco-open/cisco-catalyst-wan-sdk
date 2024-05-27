@@ -138,10 +138,11 @@ def expanded_community(in_: ExpandedCommunityList, context) -> ExpandedCommunity
 def extended_community(in_: ExtendedCommunityList, context) -> ExtendedCommunityParcel:
     out = ExtendedCommunityParcel(**_get_parcel_name_desc(in_))
 
-    # v2 models allows folowing entries are:
+    # v2 models allow folowing entries:
     # soo ipv4_addr:port OR rt as_number:community_number
-    # v1 api allows to add str prefix before soo or rt ex. community rt 2:3git
-    # if prefix is available it will be removed during conversion
+    #
+    # v1 api allows to add str prefix before soo or rt ex. 'community rt 2:3'
+    # if prefix is available it will be removed during thr conversion.
     entry_pattern = r"^.*(soo \d+\.\d+\.\d+\.\d+:\d+|rt \d+:\d+)$"
 
     for entry in in_.entries:
