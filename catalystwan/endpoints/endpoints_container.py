@@ -77,6 +77,7 @@ from catalystwan.endpoints.configuration.policy.security_template import Configu
 from catalystwan.endpoints.configuration.policy.vedge_template import ConfigurationVEdgeTemplatePolicy
 from catalystwan.endpoints.configuration.policy.vsmart_template import ConfigurationVSmartTemplatePolicy
 from catalystwan.endpoints.configuration.software_actions import ConfigurationSoftwareActions
+from catalystwan.endpoints.configuration.topology_group import TopologyGroupEndpoints
 from catalystwan.endpoints.configuration_dashboard_status import ConfigurationDashboardStatus
 from catalystwan.endpoints.configuration_device_actions import ConfigurationDeviceActions
 from catalystwan.endpoints.configuration_device_inventory import ConfigurationDeviceInventory
@@ -179,7 +180,8 @@ class ConfigurationFeatureProfileContainer:
 class ConfigurationContainer:
     def __init__(self, session: ManagerSession):
         self.policy = ConfigurationPolicyContainer(session)
-        self.feature_profile = ConfigurationFeatureProfileContainer(session=session)
+        self.feature_profile = ConfigurationFeatureProfileContainer(session)
+        self.topology_group = TopologyGroupEndpoints(session)
 
 
 class TroubleshootingToolsContainer:

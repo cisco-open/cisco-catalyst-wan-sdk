@@ -313,6 +313,7 @@ AnyControlPolicySequence = Annotated[
 
 
 class ControlPolicy(ControlPolicyHeader, DefinitionWithSequencesCommonBase):
+    type: Literal["control"] = "control"
     sequences: List[AnyControlPolicySequence] = []
     default_action: PolicyAcceptRejectAction = Field(
         default=PolicyAcceptRejectAction(type="reject"),

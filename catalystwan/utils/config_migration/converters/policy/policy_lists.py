@@ -1,7 +1,8 @@
 from re import match
-from typing import Any, Callable, Dict, Mapping, Type, cast
+from typing import Any, Callable, Dict, List, Mapping, Optional, Type, cast
 
-from catalystwan.models.common import int_range_serializer
+from catalystwan.models.common import int_range_serializer, int_range_str_validator
+from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import (
     AnyPolicyObjectParcel,
     ApplicationListParcel,
@@ -61,6 +62,9 @@ from catalystwan.models.policy import (
     URLBlockList,
     ZoneList,
 )
+from catalystwan.models.policy.list.region import RegionList
+from catalystwan.models.policy.list.site import SiteList
+from catalystwan.models.policy.list.vpn import VPNList
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 
 
@@ -85,8 +89,7 @@ def app_list(in_: AppList, context) -> ApplicationListParcel:
 
 
 def as_path(in_: ASPathList, context) -> AsPathParcel:
-    if not context:
-        raise CatalystwanConverterCantConvertException(f"Additional context required for {ASPathList.__name__}")
+    raise CatalystwanConverterCantConvertException(f"Additional context required for {ASPathList.__name__}")
     out = AsPathParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_as_path(entry.as_path)
@@ -253,8 +256,36 @@ def protocol(in_: ProtocolNameList, context) -> ProtocolListParcel:
     return out
 
 
-# TODO: def region(in_: RegionList):
-# TODO: def site(in_: SiteList):
+def region(in_: RegionList, context: PolicyConvertContext) -> None:
+    list_id = context.list_id_lookup[in_.name]
+    region_id_flatlist: List[int] = []
+    context.regions_by_list_id[list_id] = []
+    for entry in in_.entries:
+        low, hi = entry.region_id
+        if hi is None:
+            region_id_flatlist.append(low)
+        else:
+            region_id_flatlist.extend(range(low, hi + 1))
+    for name, num in context.region_map.items():
+        if num in region_id_flatlist:
+            context.regions_by_list_id[list_id].append(name)
+
+
+def site(in_: SiteList, context: PolicyConvertContext) -> None:
+    list_id = context.list_id_lookup[in_.name]
+    site_id_flatlist: List[int] = []
+    context.sites_by_list_id[list_id] = []
+    for entry in in_.entries:
+        low, hi = int_range_str_validator(entry.site_id, False)
+        if hi is None:
+            site_id_flatlist.append(low)
+        else:
+            site_id_flatlist.extend(range(low, hi + 1))
+    for name, num in context.site_map.items():
+        if num in site_id_flatlist:
+            context.sites_by_list_id[list_id].append(name)
+
+
 def sla_class(in_: SLAClassList, context) -> SLAClassParcel:
     out = SLAClassParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
@@ -307,7 +338,21 @@ def url_block(in_: URLBlockList, context) -> URLBlockParcel:
     return out
 
 
-# TODO: def vpn(in_: VPNList): needs to be converted to item from service profile
+def vpn(in_: VPNList, context: PolicyConvertContext):
+    list_id = context.list_id_lookup[in_.name]
+    vpn_id_flatlist: List[int] = []
+    context.vpns_by_list_id[list_id] = []
+    for entry in in_.entries:
+        low, hi = entry.vpn
+        if hi is None:
+            vpn_id_flatlist.append(low)
+        else:
+            vpn_id_flatlist.extend(range(low, hi + 1))
+    for name, num in context.vpn_map.items():
+        if num in vpn_id_flatlist:
+            context.vpns_by_list_id[list_id].append(name)
+
+
 def zone(in_: ZoneList, context) -> SecurityZoneListParcel:
     out = SecurityZoneListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
@@ -319,7 +364,7 @@ def zone(in_: ZoneList, context) -> SecurityZoneListParcel:
 
 
 Input = AnyPolicyList
-Output = AnyPolicyObjectParcel
+Output = Optional[AnyPolicyObjectParcel]
 
 
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
@@ -342,10 +387,13 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     PreferredColorGroupList: preferred_color_group,
     PrefixList: prefix,
     ProtocolNameList: protocol,
+    RegionList: region,
+    SiteList: site,
     SLAClassList: sla_class,
     TLOCList: tloc,
     URLAllowList: url_allow,
     URLBlockList: url_block,
+    VPNList: vpn,
     ZoneList: zone,
     MirrorList: mirror,
     ExtendedCommunityList: extended_community,
@@ -359,7 +407,8 @@ def _find_converter(in_: Input) -> Callable[..., Output]:
     raise CatalystwanConverterCantConvertException(f"No converter found for {type(in_).__name__}")
 
 
-def convert(in_: Input, context) -> Output:
+def convert(in_: Input, context: PolicyConvertContext) -> Output:
     result = _find_converter(in_)(in_, context)
-    result.model_validate(result)
+    if result is not None:
+        result.model_validate(result)
     return result

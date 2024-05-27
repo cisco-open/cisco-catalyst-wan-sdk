@@ -195,5 +195,5 @@ def list_types(any_union: T) -> Sequence[T]:
 @lru_cache
 def find_type(name: str, any_union: T) -> T:
     parcel_types = list_types(any_union)
-    parcel_type = next(t for t in parcel_types if t.type_ == name)
+    parcel_type = next(t for t in parcel_types if t._get_parcel_type() == name)
     return cast(T, parcel_type)
