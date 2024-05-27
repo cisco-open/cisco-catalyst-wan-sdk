@@ -17,7 +17,7 @@ Label = Literal[
 class HierarchyId(BaseModel):
     model_config = ConfigDict(populate_by_name=True, validate_assignment=True)
     site_id: Optional[int] = Field(
-        ge=1,
+        ge=0,
         le=4294967295,
         default=None,
         validation_alias="siteId",
@@ -25,10 +25,10 @@ class HierarchyId(BaseModel):
         description="Site ID",
     )
     region_id: Optional[int] = Field(
-        ge=1, le=63, default=None, validation_alias="regionId", serialization_alias="regionId", description="Region ID"
+        ge=0, le=63, default=None, validation_alias="regionId", serialization_alias="regionId", description="Region ID"
     )
     sub_region_id: Optional[int] = Field(
-        ge=1,
+        ge=0,
         le=63,
         default=None,
         validation_alias="subRegionId",
@@ -78,7 +78,7 @@ class Node(BaseModel):
 class NodeInfo(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     data: Node
-    description: str
+    description: Optional[str] = None
     direct_child_count: int = Field(validation_alias="directChildCount", serialization_alias="directChildCount")
     hierarchy_path: Optional[str] = Field(
         default=None, validation_alias="hierarchyPath", serialization_alias="hierarchyPath"

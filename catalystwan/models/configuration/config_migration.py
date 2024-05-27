@@ -464,7 +464,6 @@ class UX2ConfigPushResult(BaseModel):
 @dataclass
 class PolicyConvertContext:
     # conversion input
-    list_id_lookup: Dict[str, UUID] = field(default_factory=dict)
     region_map: Dict[str, int] = field(default_factory=dict)
     site_map: Dict[str, int] = field(default_factory=dict)
     lan_vpn_map: Dict[str, Union[int, str]] = field(default_factory=dict)
@@ -490,6 +489,4 @@ class PolicyConvertContext:
             if isinstance(parcel, LanVpnParcel):
                 if parcel.vpn_id.value is not None:
                     context.lan_vpn_map[parcel.parcel_name] = parcel.vpn_id.value
-        for list_info in policy_list_infos:
-            context.list_id_lookup[list_info.name] = list_info.list_id
         return context

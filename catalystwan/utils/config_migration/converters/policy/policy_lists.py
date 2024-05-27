@@ -63,9 +63,9 @@ from catalystwan.models.policy import (
     URLBlockList,
     ZoneList,
 )
-from catalystwan.models.policy.list.region import RegionList
-from catalystwan.models.policy.list.site import SiteList
-from catalystwan.models.policy.list.vpn import VPNList
+from catalystwan.models.policy.list.region import RegionList, RegionListInfo
+from catalystwan.models.policy.list.site import SiteList, SiteListInfo
+from catalystwan.models.policy.list.vpn import VPNList, VPNListInfo
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 
 logger = getLogger(__name__)
@@ -259,8 +259,8 @@ def protocol(in_: ProtocolNameList, context) -> ProtocolListParcel:
     return out
 
 
-def region(in_: RegionList, context: PolicyConvertContext) -> None:
-    list_id = context.list_id_lookup[in_.name]
+def region(in_: RegionListInfo, context: PolicyConvertContext) -> None:
+    list_id = in_.list_id
     region_id_flatlist: List[int] = []
     context.regions_by_list_id[list_id] = []
     for entry in in_.entries:
@@ -274,8 +274,8 @@ def region(in_: RegionList, context: PolicyConvertContext) -> None:
             context.regions_by_list_id[list_id].append(name)
 
 
-def site(in_: SiteList, context: PolicyConvertContext) -> None:
-    list_id = context.list_id_lookup[in_.name]
+def site(in_: SiteListInfo, context: PolicyConvertContext) -> None:
+    list_id = in_.list_id
     site_id_flatlist: List[int] = []
     context.sites_by_list_id[list_id] = []
     for entry in in_.entries:
@@ -341,8 +341,8 @@ def url_block(in_: URLBlockList, context) -> URLBlockParcel:
     return out
 
 
-def vpn(in_: VPNList, context: PolicyConvertContext):
-    list_id = context.list_id_lookup[in_.name]
+def vpn(in_: VPNListInfo, context: PolicyConvertContext):
+    list_id = in_.list_id
     vpn_id_flatlist: List[int] = []
     context.lan_vpns_by_list_id[list_id] = []
     for entry in in_.entries:

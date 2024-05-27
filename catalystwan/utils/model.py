@@ -21,7 +21,7 @@ def resolve_nested_base_model_unions(
         List[Type[BaseModel]]: flat list of subclasses of BaseModel present in input
     """
 
-    models_types = list(set(models_types))
+    models_types = list(dict.fromkeys(models_types))
 
     if isclass(annotation):
         if issubclass(annotation, BaseModel):
@@ -30,6 +30,6 @@ def resolve_nested_base_model_unions(
     if get_origin(annotation) in [Annotated, Union]:
         for arg in get_args(annotation):
             models_types.extend(resolve_nested_base_model_unions(arg, models_types))
-        return list(set(models_types))
+        return list(dict.fromkeys(models_types))
 
     return list()
