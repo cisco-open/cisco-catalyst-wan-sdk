@@ -6,6 +6,7 @@ from catalystwan.api.feature_profile_api import (
     PolicyObjectFeatureProfileAPI,
     ServiceFeatureProfileAPI,
     SystemFeatureProfileAPI,
+    TopologyFeatureProfileAPI,
     TransportFeatureProfileAPI,
 )
 from catalystwan.models.configuration.feature_profile.common import ProfileType
@@ -18,6 +19,7 @@ FEATURE_PROFILE_API_MAPPING: Mapping[ProfileType, Callable] = {
     "service": ServiceFeatureProfileAPI,
     "transport": TransportFeatureProfileAPI,
     "cli": CliFeatureProfileAPI,
+    "topology": TopologyFeatureProfileAPI,
 }
 
 FeatureProfile = Union[

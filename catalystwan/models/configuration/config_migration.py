@@ -1,6 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, Union, cast
 from uuid import UUID, uuid4
 
 from packaging.version import Version
@@ -19,6 +20,8 @@ from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
+from catalystwan.models.configuration.network_hierarchy import NodeInfo
 from catalystwan.models.configuration.topology_group import TopologyGroup
 from catalystwan.models.policy import AnyPolicyDefinitionInfo, AnyPolicyListInfo
 from catalystwan.models.policy.centralized import CentralizedPolicyInfo
@@ -26,6 +29,8 @@ from catalystwan.models.policy.localized import LocalizedPolicyInfo
 from catalystwan.models.policy.security import AnySecurityPolicyInfo
 from catalystwan.models.templates import FeatureTemplateInformation, TemplateInformation
 from catalystwan.version import parse_api_version
+
+T = TypeVar("T", bound=AnyParcel)
 
 
 class VersionInfo(BaseModel):
@@ -121,9 +126,13 @@ class UX1Templates(BaseModel):
 
 class UX1Config(BaseModel):
     # All UX1 Configuration items - Mega Model
+    model_config = ConfigDict(populate_by_name=True)
     version: VersionInfo = VersionInfo()
     policies: UX1Policies = UX1Policies()
     templates: UX1Templates = UX1Templates()
+    network_hierarchy: List[NodeInfo] = Field(
+        default_factory=list, validation_alias="networkHierarchy", serialization_alias="networkHierarchy"
+    )
 
 
 class TransformHeader(BaseModel):
@@ -219,6 +228,9 @@ class UX2Config(BaseModel):
             profile_parcel["parcel"]["type_"] = profile_parcel["header"]["type"]
         return values
 
+    def parcels_with_origin(self, origin: Set[UUID]) -> List[AnyParcel]:
+        return [p.parcel for p in self.profile_parcels if p.header.origin in origin]
+
 
 class ConfigTransformResult(BaseModel):
     # https://docs.pydantic.dev/2.0/usage/models/#fields-with-dynamic-default-values
@@ -230,25 +242,29 @@ class ConfigTransformResult(BaseModel):
         default_factory=list, serialization_alias="failedConversionItems", validation_alias="failedConversionItems"
     )
 
-    def add_suffix_to_names(self):
+    def add_suffix_to_names(self) -> None:
         suffix = f"_{str(self.uuid)[:5]}"
         parcel_name_lookup: Dict[str, List[AnyPolicyObjectParcel]] = {}
         for config_group in self.ux2_config.config_groups:
             config_group.header.origname = config_group.config_group.name
             config_group.config_group.name += suffix
+        for topology_group in self.ux2_config.topology_groups:
+            topology_group.header.origname = topology_group.topology_group.name
+            topology_group.topology_group.name += suffix
         for feature_profile in self.ux2_config.feature_profiles:
             feature_profile.header.origname = feature_profile.feature_profile.name
             feature_profile.feature_profile.name += suffix
+        # parcel rename only for policy groups-of-interest which share global profile
         for profile_parcel in self.ux2_config.profile_parcels:
             profile_parcel.header.origname = profile_parcel.parcel.parcel_name
-            parcel_types = list_types(AnyPolicyObjectParcel)
-            if profile_parcel.header.type in [t._get_parcel_type() for t in parcel_types]:
+            if profile_parcel.header.type in [t._get_parcel_type() for t in list_types(AnyPolicyObjectParcel)]:
                 # build lookup by parcel name to find duplicates
+                parcel = cast(AnyPolicyObjectParcel, profile_parcel.parcel)
                 name = profile_parcel.header.origname
                 if not parcel_name_lookup.get(name):
-                    parcel_name_lookup[name] = [profile_parcel.parcel]
+                    parcel_name_lookup[name] = [parcel]
                 else:
-                    parcel_name_lookup[name].append(profile_parcel.parcel)
+                    parcel_name_lookup[name].append(parcel)
 
         for name, parcels in parcel_name_lookup.items():
             # policy object parcel names are restricted to 32 characters and needs to be unique
@@ -401,6 +417,16 @@ class UX2RollbackInfo(BaseModel):
         serialization_alias="ConfigGroupIds",
         validation_alias="ConfigGroupIds",
     )
+    policy_group_ids: List[UUID] = Field(
+        default_factory=list,
+        serialization_alias="PolicyGroupIds",
+        validation_alias="PolicyGroupIds",
+    )
+    topology_group_ids: List[UUID] = Field(
+        default_factory=list,
+        serialization_alias="TopologyGroupIds",
+        validation_alias="TopologyGroupIds",
+    )
     feature_profile_ids: List[Tuple[UUID, ProfileType]] = Field(
         default_factory=list,
         serialization_alias="FeatureProfileIds",
@@ -422,8 +448,45 @@ class UX2RollbackInfo(BaseModel):
         self.default_policy_object_profile = DefaultPolicyObjectProfile(profile_id=profile_id)
         return self.default_policy_object_profile
 
+    def add_policy_group(self, group_id: UUID) -> None:
+        self.policy_group_ids.append(group_id)
+
+    def add_topology_group(self, topology_id: UUID) -> None:
+        self.topology_group_ids.append(topology_id)
+
 
 class UX2ConfigPushResult(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     rollback: UX2RollbackInfo = UX2RollbackInfo()
     report: UX2ConfigPushReport = UX2ConfigPushReport()
+
+
+@dataclass
+class PolicyConvertContext:
+    # conversion input
+    region_map: Dict[str, int] = field(default_factory=dict)
+    site_map: Dict[str, int] = field(default_factory=dict)
+    lan_vpn_map: Dict[str, Union[int, str]] = field(default_factory=dict)
+    # emited during conversion
+    regions_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
+    sites_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
+    lan_vpns_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
+
+    @staticmethod
+    def from_configs(
+        network_hierarchy: List[NodeInfo],
+        transformed_parcels: List[TransformedParcel],
+        policy_list_infos: List[AnyPolicyListInfo],
+    ) -> "PolicyConvertContext":
+        context = PolicyConvertContext()
+        for node in network_hierarchy:
+            if node.data.hierarchy_id is not None:
+                if node.data.label == "SITE" and node.data.hierarchy_id.site_id is not None:
+                    context.site_map[node.name] = node.data.hierarchy_id.site_id
+                if node.data.label == "REGION" and node.data.hierarchy_id.region_id is not None:
+                    context.region_map[node.name] = node.data.hierarchy_id.region_id
+        for parcel in [p.parcel for p in transformed_parcels]:
+            if isinstance(parcel, LanVpnParcel):
+                if parcel.vpn_id.value is not None:
+                    context.lan_vpn_map[parcel.parcel_name] = parcel.vpn_id.value
+        return context

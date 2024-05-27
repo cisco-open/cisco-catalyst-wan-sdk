@@ -1,6 +1,6 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
-from typing import List, Tuple, cast
+from typing import List, Set, Tuple, cast
 from uuid import UUID, uuid4
 
 from catalystwan.api.templates.device_template.device_template import GeneralTemplate
@@ -92,10 +92,11 @@ def merge_parcels(ux2: UX2Config) -> UX2Config:
     return ux2
 
 
-def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Config):
+def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Config) -> Set[str]:
     """
     Resolve Cisco VPN template type and its sub-elements.
     """
+    used_feature_templates: Set[str] = set()
     # Find the target feature template based on the provided template ID
     target_feature_template = next(
         (t for t in ux1_config.templates.feature_templates if t.id == cisco_vpn_template.templateId), None
@@ -103,7 +104,7 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
 
     if not target_feature_template:
         logger.error(f"Cisco VPN template {cisco_vpn_template.templateId} not found in Feature Templates list.")
-        return
+        return set()
 
     # Determine the VPN type based on the VPN ID
     vpn_id = create_parcel_from_template(target_feature_template).vpn_id.value  # type: ignore
@@ -124,6 +125,8 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
     cisco_vpn_template.templateId = new_vpn_id
     cisco_vpn_template.name = new_vpn_name
 
+    used_feature_templates.add(vpn.id)
+
     logger.debug(
         f"Resolved Cisco VPN {target_feature_template.name} "
         f"template to type {cisco_vpn_template.templateType} and changed name to new name {new_vpn_name}"
@@ -136,7 +139,7 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
 
     if len(general_templates_from_device_template) == 0:
         # No additional templates on VPN, nothing to cast
-        return
+        return used_feature_templates
 
     feature_and_general_templates = create_feature_template_and_general_template_pairs(
         general_templates_from_device_template, ux1_config.templates.feature_templates
@@ -165,6 +168,10 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
         gt.templateId = new_id
         gt.templateType = new_type
         gt.name = new_name
+
+        used_feature_templates.add(new_id)
+
+    return used_feature_templates
 
 
 def create_feature_template_and_general_template_pairs(
@@ -230,13 +237,22 @@ def handle_multi_parcel_feature_template(
     return transformed_parcels
 
 
-def remove_not_casted_duplicates(ux1: UX1Config):
-    """Remove duplicates from UX1Config. This is needed because we are copying and
-    casting routing templates to match correct feature profile and we need to remove the old ones."""
-    to_remove = [
-        t
-        for t in ux1.templates.feature_templates
-        if t.template_type in ["cisco_bgp", "bgp", "cisco_ospfv3", "cisco_ospf"]
+def remove_unused_feature_templates(ux1: UX1Config, used_feature_templates: Set[str]):
+    """
+    Remove duplicates and all unused feature templates from UX1Config.
+
+    This is needed because we are copying and casting routing templates to match the correct
+    feature profile, and we need to remove the old ones. Also we want to remove all unused templates.
+
+    Args:
+        ux1 (UX1Config): The UX1Config object from which to remove duplicates.
+        used_feature_templates (Set[str]): A set of template IDs that are used in UX2.0 migration.
+    """
+    # Remove routing templates
+    routing_template_types = {"cisco_bgp", "bgp", "cisco_ospfv3", "cisco_ospf"}
+    ux1.templates.feature_templates = [
+        t for t in ux1.templates.feature_templates if t.template_type not in routing_template_types
     ]
-    for t in to_remove:
-        ux1.templates.feature_templates.remove(t)
+
+    # Remove duplicates based on template IDs
+    ux1.templates.feature_templates = [t for t in ux1.templates.feature_templates if t.id in used_feature_templates]

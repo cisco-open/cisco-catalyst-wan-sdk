@@ -178,14 +178,19 @@ SpaceSeparatedPositiveIntList = Annotated[
 ]
 
 
-def int_range_str_validator(value: Union[str, IntRange], ascending: bool = True) -> IntRange:
-    """Validates input given as string containing integer pair separated by hyphen eg: '1-3' or single number '1'"""
+def int_range_str_validator(value: Union[str, int, IntRange], ascending: bool = True) -> IntRange:
+    """
+    Validates input given as string containing integer pair separated by hyphen
+    eg: '1-3' or single number '1'
+    """
     if isinstance(value, str):
         int_list = [int(i) for i in value.strip().split("-")]
-        assert 0 < len(int_list) <= 2, "Number range must contain one or two numbers"
+        assert 0 < len(int_list) <= 2, "Number range string must contain one or two numbers"
         first = int_list[0]
         second = None if len(int_list) == 1 else int_list[1]
         int_range = (first, second)
+    elif isinstance(value, int):
+        int_range = (value, None)
     else:
         int_range = value
     if ascending and int_range[1] is not None:
@@ -204,6 +209,7 @@ IntRangeStr = Annotated[
     BeforeValidator(int_range_str_validator),
 ]
 
+BasicPolicyActionType = Literal["accept", "drop"]
 
 CarrierType = Literal[
     "default",

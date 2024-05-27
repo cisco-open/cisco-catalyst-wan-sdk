@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union
 from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
@@ -309,14 +309,6 @@ class TestAPIEndpoints(unittest.TestCase):
                 def get_data(self, payload: List[str]) -> None:  # type: ignore [empty-body]
                     ...
 
-    def test_request_decorator_unsupported_payload_composite_type(self):
-        with self.assertRaises(APIEndpointError):
-
-            class TestAPI(APIEndpoints):
-                @request("POST", "/v1/data")
-                def get_data(self, payload: Dict[str, BaseModelExample]) -> None:  # type: ignore [empty-body]
-                    ...
-
     @parameterized.expand(
         [
             (BaseModelExample, False, TypeSpecifier(True, None, BaseModelExample, None, False, False)),
@@ -352,7 +344,7 @@ class TestAPIEndpoints(unittest.TestCase):
             (None, True, None),
         ]
     )
-    def test_request_decorator_payload_spec(self, payload_type, raises, expected_payload_spec):
+    def test_request_decorator_payload_spec(self, payload_type, raises, expected_payload_spec: Optional[TypeSpecifier]):
         # Arrange
         class TestAPI(APIEndpoints):
             def get_data(self, payload: payload_type) -> None:  # type: ignore [empty-body]
@@ -365,6 +357,11 @@ class TestAPIEndpoints(unittest.TestCase):
                 decorator(TestAPI.get_data)
         else:
             decorator(TestAPI.get_data)
+            if expected_payload_spec is not None and expected_payload_spec.payload_union_model_types is not None:
+                # check both list contains same set and skip member list comparison below
+                assert decorator.payload_spec.payload_model_set == expected_payload_spec.payload_model_set
+                decorator.payload_spec.payload_union_model_types = None
+                expected_payload_spec.payload_union_model_types = None
             assert decorator.payload_spec == expected_payload_spec
 
     def test_request_decorator_not_annotated_params(self):

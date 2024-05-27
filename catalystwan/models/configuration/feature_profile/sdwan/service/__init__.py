@@ -4,7 +4,7 @@ from typing import List, Union
 from pydantic import Field
 from typing_extensions import Annotated
 
-from .acl import Ipv4AclParcel, Ipv6AclParcel
+from ..acl import AnyAclParcel
 from .appqoe import AppqoeParcel
 from .dhcp_server import LanVpnDhcpServerParcel
 from .eigrp import EigrpParcel
@@ -27,8 +27,6 @@ AnyTopLevelServiceParcel = Annotated[
         RoutePolicyParcel,
         EigrpParcel,
         SwitchportParcel,
-        Ipv6AclParcel,
-        Ipv4AclParcel,
         WirelessLanParcel,
         MulticastParcel,
         # TrackerGroupData,
@@ -58,28 +56,26 @@ AnyAssociatoryParcel = Annotated[
 ]
 
 AnyServiceParcel = Annotated[
-    Union[AnyTopLevelServiceParcel, AnyLanVpnInterfaceParcel],
+    Union[AnyAclParcel, AnyTopLevelServiceParcel, AnyLanVpnInterfaceParcel],
     Field(discriminator="type_"),
 ]
 
 __all__ = [
-    "LanVpnDhcpServerParcel",
-    "AppqoeParcel",
-    "LanVpnParcel",
-    "OspfParcel",
-    "RoutePolicyParcel",
-    "Ospfv3IPv4Parcel",
-    "Ospfv3IPv6Parcel",
-    "Ipv6AclParcel",
-    "Ipv4AclParcel",
-    "SwitchportParcel",
-    "InterfaceSviParcel",
-    "InterfaceGreParcel",
-    "WirelessLanParcel",
-    "MulticastParcel",
+    "AnyLanVpnInterfaceParcel",
     "AnyServiceParcel",
     "AnyTopLevelServiceParcel",
-    "AnyLanVpnInterfaceParcel",
+    "AppqoeParcel",
+    "InterfaceGreParcel",
+    "InterfaceSviParcel",
+    "LanVpnDhcpServerParcel",
+    "LanVpnParcel",
+    "MulticastParcel",
+    "OspfParcel",
+    "Ospfv3IPv4Parcel",
+    "Ospfv3IPv6Parcel",
+    "RoutePolicyParcel",
+    "SwitchportParcel",
+    "WirelessLanParcel",
 ]
 
 

@@ -16,6 +16,7 @@ from catalystwan.endpoints.configuration.feature_profile.sdwan.sig_security impo
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.topology import TopologyFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
+from catalystwan.endpoints.configuration.network_hierarchy import NetworkHierarchy
 from catalystwan.endpoints.configuration.policy.definition.access_control_list import ConfigurationPolicyAclDefinition
 from catalystwan.endpoints.configuration.policy.definition.access_control_list_ipv6 import (
     ConfigurationPolicyAclIPv6Definition,
@@ -76,6 +77,7 @@ from catalystwan.endpoints.configuration.policy.security_template import Configu
 from catalystwan.endpoints.configuration.policy.vedge_template import ConfigurationVEdgeTemplatePolicy
 from catalystwan.endpoints.configuration.policy.vsmart_template import ConfigurationVSmartTemplatePolicy
 from catalystwan.endpoints.configuration.software_actions import ConfigurationSoftwareActions
+from catalystwan.endpoints.configuration.topology_group import TopologyGroupEndpoints
 from catalystwan.endpoints.configuration_dashboard_status import ConfigurationDashboardStatus
 from catalystwan.endpoints.configuration_device_actions import ConfigurationDeviceActions
 from catalystwan.endpoints.configuration_device_inventory import ConfigurationDeviceInventory
@@ -178,7 +180,8 @@ class ConfigurationFeatureProfileContainer:
 class ConfigurationContainer:
     def __init__(self, session: ManagerSession):
         self.policy = ConfigurationPolicyContainer(session)
-        self.feature_profile = ConfigurationFeatureProfileContainer(session=session)
+        self.feature_profile = ConfigurationFeatureProfileContainer(session)
+        self.topology_group = TopologyGroupEndpoints(session)
 
 
 class TroubleshootingToolsContainer:
@@ -208,6 +211,7 @@ class APIEndpointContainter:
         self.monitoring_device_details = MonitoringDeviceDetails(session)
         self.monitoring_server_info = ServerInfo(session)
         self.monitoring_status = MonitoringStatus(session)
+        self.network_hierarchy = NetworkHierarchy(session)
         self.sdavc_cloud_connector = SDAVCCloudConnector(session)
         self.tenant_backup_restore = TenantBackupRestore(session)
         self.tenant_management = TenantManagement(session)

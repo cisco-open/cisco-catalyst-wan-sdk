@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, m
 from typing_extensions import Annotated, Literal
 
 from catalystwan.models.common import (
+    BasicPolicyActionType,
     CarrierType,
     ControlPathType,
     EncapType,
@@ -71,8 +72,6 @@ PathType = Literal[
     "transport-gateway-path",
 ]
 
-
-BasicPolicyActionType = Literal["accept", "drop"]
 
 SequenceType = Literal[
     "applicationFirewall",
@@ -1081,7 +1080,7 @@ class PolicyDefinitionSequenceBase(BaseModel):
 
     def _remove_match(self, match_type: Any) -> None:
         if isinstance(self.match.entries, MutableSequence):
-            self.match.entries[:] = [entry for entry in self.match.entries if type(entry) != match_type]
+            self.match.entries[:] = [entry for entry in self.match.entries if type(entry) is match_type]
 
     def _insert_match(self, match: MatchEntry, insert_field_check: bool = True) -> int:
         # inserts new item or replaces item with same field name if found
