@@ -9,7 +9,7 @@ from catalystwan.models.configuration.feature_profile.common import (
     FeatureProfileCreationPayload,
     FeatureProfileCreationResponse,
     FeatureProfileInfo,
-    GetFeatureProfilesPayload,
+    GetFeatureProfilesParams,
 )
 from catalystwan.models.configuration.feature_profile.parcel import ParcelAssociationPayload, ParcelCreationResponse
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
@@ -23,7 +23,7 @@ class ServiceFeatureProfile(APIEndpoints):
     @versions(supported_versions=(">=20.9"), raises=False)
     @get("/v1/feature-profile/sdwan/service")
     def get_sdwan_service_feature_profiles(
-        self, payload: Optional[GetFeatureProfilesPayload]
+        self, payload: Optional[GetFeatureProfilesParams]
     ) -> DataSequence[FeatureProfileInfo]:
         ...
 

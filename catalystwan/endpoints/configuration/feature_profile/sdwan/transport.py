@@ -12,7 +12,7 @@ from catalystwan.models.configuration.feature_profile.common import (
     FeatureProfileDetail,
     FeatureProfileEditPayload,
     FeatureProfileInfo,
-    GetFeatureProfilesPayload,
+    GetFeatureProfilesParams,
     SchemaTypeQuery,
 )
 from catalystwan.models.configuration.feature_profile.parcel import (
@@ -39,14 +39,12 @@ class TransportFeatureProfile(APIEndpoints):
 
     @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sdwan/transport")
-    def get_transport_feature_profiles(self, params: GetFeatureProfilesPayload) -> DataSequence[FeatureProfileInfo]:
+    def get_transport_feature_profiles(self, params: GetFeatureProfilesParams) -> DataSequence[FeatureProfileInfo]:
         ...
 
     @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sdwan/transport/{profile_id}")
-    def get_transport_feature_profile(
-        self, profile_id: UUID, params: GetFeatureProfilesPayload
-    ) -> FeatureProfileDetail:
+    def get_transport_feature_profile(self, profile_id: UUID, params: GetFeatureProfilesParams) -> FeatureProfileDetail:
         ...
 
     @versions(supported_versions=(">=20.12"), raises=False)
@@ -125,7 +123,7 @@ class TransportFeatureProfile(APIEndpoints):
     @versions(supported_versions=(">=20.9"), raises=False)
     @get("/v1/feature-profile/sdwan/transport")
     def get_sdwan_transport_feature_profiles(
-        self, payload: Optional[GetFeatureProfilesPayload]
+        self, payload: Optional[GetFeatureProfilesParams]
     ) -> DataSequence[FeatureProfileInfo]:
         ...
 

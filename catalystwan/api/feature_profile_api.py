@@ -74,7 +74,7 @@ from catalystwan.models.configuration.feature_profile.common import (
     FeatureProfileCreationPayload,
     FeatureProfileCreationResponse,
     FeatureProfileInfo,
-    GetFeatureProfilesPayload,
+    GetFeatureProfilesParams,
     GetReferenceCountFeatureProfilesPayload,
 )
 from catalystwan.models.configuration.feature_profile.parcel import (
@@ -216,7 +216,7 @@ class TransportFeatureProfileAPI:
         """
         Get all Transport Feature Profiles
         """
-        payload = GetFeatureProfilesPayload(limit=limit if limit else None, offset=offset if offset else None)
+        payload = GetFeatureProfilesParams(limit=limit if limit else None, offset=offset if offset else None)
 
         return self.endpoint.get_transport_feature_profiles(payload)
 
@@ -322,7 +322,7 @@ class OtherFeatureProfileAPI:
         """
         Get all Other Feature Profiles
         """
-        payload = GetFeatureProfilesPayload(limit=limit if limit else None, offset=offset if offset else None)
+        payload = GetFeatureProfilesParams(limit=limit if limit else None, offset=offset if offset else None)
 
         return self.endpoint.get_sdwan_other_feature_profiles(payload)
 
@@ -389,7 +389,7 @@ class ServiceFeatureProfileAPI:
         """
         Get all Service Feature Profiles
         """
-        payload = GetFeatureProfilesPayload(limit=limit if limit else None, offset=offset if offset else None)
+        payload = GetFeatureProfilesParams(limit=limit if limit else None, offset=offset if offset else None)
 
         return self.endpoint.get_sdwan_service_feature_profiles(payload)
 
@@ -445,7 +445,7 @@ class SystemFeatureProfileAPI:
         """
         Get all System Feature Profiles
         """
-        payload = GetFeatureProfilesPayload(limit=limit if limit else None, offset=offset if offset else None)
+        payload = GetFeatureProfilesParams(limit=limit if limit else None, offset=offset if offset else None)
 
         return self.endpoint.get_sdwan_system_feature_profiles(payload)
 
@@ -812,6 +812,12 @@ class PolicyObjectFeatureProfileAPI:
 
     def get_profiles(self) -> DataSequence[FeatureProfileInfo]:
         return self.endpoint.get_profiles()
+
+    def create_profile(self, profile: FeatureProfileCreationPayload) -> FeatureProfileCreationResponse:
+        return self.endpoint.create_profile()
+
+    def delete_profile(self, profile_id: UUID) -> None:
+        return self.endpoint.delete_profile(profile_id=profile_id)
 
     @overload
     def get(
@@ -1202,7 +1208,7 @@ class EmbeddedSecurityFeatureProfileAPI:
         """
         Get all Embedded Security Feature Profiles
         """
-        payload = GetFeatureProfilesPayload(limit=limit if limit else None, offset=offset if offset else None)
+        payload = GetFeatureProfilesParams(limit=limit if limit else None, offset=offset if offset else None)
 
         return self.endpoint.get_embedded_security_feature_profiles(payload)
 
@@ -1312,7 +1318,7 @@ class CliFeatureProfileAPI:
         """
         Get all CLI Feature Profiles
         """
-        payload = GetFeatureProfilesPayload(limit=limit if limit else None, offset=offset if offset else None)
+        payload = GetFeatureProfilesParams(limit=limit if limit else None, offset=offset if offset else None)
 
         return self.endpoint.get_profiles(payload)
 
@@ -1373,7 +1379,7 @@ class DnsSecurityFeatureProfileAPI:
         """
         Get all DNS Security Feature Profiles
         """
-        payload = GetFeatureProfilesPayload(limit=limit if limit else None, offset=offset if offset else None)
+        payload = GetFeatureProfilesParams(limit=limit if limit else None, offset=offset if offset else None)
 
         return self.endpoint.get_dns_security_feature_profiles(payload)
 
@@ -1486,7 +1492,7 @@ class ApplicationPriorityFeatureProfileAPI:
         """
         Get all Application Priority Feature Profiles
         """
-        payload = GetFeatureProfilesPayload(limit=limit if limit else None, offset=offset if offset else None)
+        payload = GetFeatureProfilesParams(limit=limit if limit else None, offset=offset if offset else None)
 
         return self.endpoint.get_application_priority_feature_profiles(payload)
 
@@ -1613,7 +1619,7 @@ class TopologyFeatureProfileAPI:
         """
         Get all Topology Feature Profiles
         """
-        payload = GetFeatureProfilesPayload(limit=limit, offset=offset)
+        payload = GetFeatureProfilesParams(limit=limit, offset=offset)
         return self.endpoint.get_topology_feature_profiles(payload)
 
     def create_profile(self, name: str, description: str) -> FeatureProfileCreationResponse:

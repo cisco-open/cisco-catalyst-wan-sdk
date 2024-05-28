@@ -10,7 +10,7 @@ from catalystwan.models.configuration.feature_profile.common import (
     FeatureProfileCreationPayload,
     FeatureProfileCreationResponse,
     FeatureProfileInfo,
-    GetFeatureProfilesPayload,
+    GetFeatureProfilesParams,
 )
 from catalystwan.models.configuration.feature_profile.parcel import Parcel, ParcelId
 from catalystwan.typed_list import DataSequence
@@ -20,7 +20,7 @@ class OtherFeatureProfile(APIEndpoints):
     @versions(supported_versions=(">=20.9"), raises=False)
     @get("/v1/feature-profile/sdwan/other")
     def get_sdwan_other_feature_profiles(
-        self, payload: Optional[GetFeatureProfilesPayload]
+        self, payload: Optional[GetFeatureProfilesParams]
     ) -> DataSequence[FeatureProfileInfo]:
         ...
 

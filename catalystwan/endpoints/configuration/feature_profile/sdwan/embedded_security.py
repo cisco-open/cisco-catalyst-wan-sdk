@@ -10,7 +10,7 @@ from catalystwan.models.configuration.feature_profile.common import (
     FeatureProfileDetail,
     FeatureProfileEditPayload,
     FeatureProfileInfo,
-    GetFeatureProfilesPayload,
+    GetFeatureProfilesParams,
 )
 from catalystwan.models.configuration.feature_profile.parcel import Parcel, ParcelCreationResponse
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import (
@@ -31,14 +31,14 @@ class EmbeddedSecurityFeatureProfile(APIEndpoints):
     @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sdwan/embedded-security")
     def get_embedded_security_feature_profiles(
-        self, params: GetFeatureProfilesPayload
+        self, params: GetFeatureProfilesParams
     ) -> DataSequence[FeatureProfileInfo]:
         ...
 
     @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sdwan/embedded-security/{profile_id}")
     def get_embedded_security_feature_profile(
-        self, profile_id: str, params: GetFeatureProfilesPayload
+        self, profile_id: str, params: GetFeatureProfilesParams
     ) -> FeatureProfileDetail:
         ...
 

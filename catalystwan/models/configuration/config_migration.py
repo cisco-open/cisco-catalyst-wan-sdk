@@ -476,7 +476,6 @@ class PolicyConvertContext:
     def from_configs(
         network_hierarchy: List[NodeInfo],
         transformed_parcels: List[TransformedParcel],
-        policy_list_infos: List[AnyPolicyListInfo],
     ) -> "PolicyConvertContext":
         context = PolicyConvertContext()
         for node in network_hierarchy:
