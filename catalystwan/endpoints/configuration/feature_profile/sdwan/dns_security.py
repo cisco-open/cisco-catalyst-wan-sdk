@@ -10,7 +10,7 @@ from catalystwan.models.configuration.feature_profile.common import (
     FeatureProfileDetail,
     FeatureProfileEditPayload,
     FeatureProfileInfo,
-    GetFeatureProfilesPayload,
+    GetFeatureProfilesParams,
 )
 from catalystwan.models.configuration.feature_profile.parcel import Parcel, ParcelCreationResponse
 from catalystwan.models.configuration.feature_profile.sdwan.dns_security import AnyDnsSecurityParcel
@@ -27,13 +27,13 @@ class DnsSecurityFeatureProfile(APIEndpoints):
 
     @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sdwan/dns-security")
-    def get_dns_security_feature_profiles(self, params: GetFeatureProfilesPayload) -> DataSequence[FeatureProfileInfo]:
+    def get_dns_security_feature_profiles(self, params: GetFeatureProfilesParams) -> DataSequence[FeatureProfileInfo]:
         ...
 
     @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sdwan/dns-security/{profile_id}")
     def get_dns_security_feature_profile(
-        self, profile_id: str, params: GetFeatureProfilesPayload
+        self, profile_id: str, params: GetFeatureProfilesParams
     ) -> FeatureProfileDetail:
         ...
 

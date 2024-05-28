@@ -112,12 +112,12 @@ class SchemaTypeQuery(BaseModel):
     schema_type: SchemaType = Field(alias="schemaType")
 
 
-class GetFeatureProfilesPayload(BaseModel):
+class GetFeatureProfilesParams(BaseModel):
     limit: Optional[int] = None
     offset: Optional[int] = None
 
 
-class GetReferenceCountFeatureProfilesPayload(GetFeatureProfilesPayload):
+class GetReferenceCountFeatureProfilesPayload(GetFeatureProfilesParams):
     model_config = ConfigDict(populate_by_name=True)
 
     reference_count: Optional[bool] = Field(serialization_alias="referenceCount", validation_alias="referenceCount")

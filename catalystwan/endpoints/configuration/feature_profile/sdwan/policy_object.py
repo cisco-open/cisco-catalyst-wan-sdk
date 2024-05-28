@@ -4,7 +4,12 @@
 from uuid import UUID
 
 from catalystwan.endpoints import APIEndpoints, delete, get, post, put, versions
-from catalystwan.models.configuration.feature_profile.common import FeatureProfileInfo, GetFeatureProfilesPayload
+from catalystwan.models.configuration.feature_profile.common import (
+    FeatureProfileCreationPayload,
+    FeatureProfileCreationResponse,
+    FeatureProfileInfo,
+    GetFeatureProfilesParams,
+)
 from catalystwan.models.configuration.feature_profile.parcel import Parcel, ParcelCreationResponse
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
 from catalystwan.typed_list import DataSequence
@@ -14,8 +19,18 @@ class PolicyObjectFeatureProfile(APIEndpoints):
     @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sdwan/policy-object")
     def get_profiles(
-        self, params: GetFeatureProfilesPayload = GetFeatureProfilesPayload()
+        self, params: GetFeatureProfilesParams = GetFeatureProfilesParams()
     ) -> DataSequence[FeatureProfileInfo]:
+        ...
+
+    @versions(supported_versions=(">=20.12"), raises=False)
+    @post("/v1/feature-profile/sdwan/policy-object")
+    def create_profile(self, payload: FeatureProfileCreationPayload) -> FeatureProfileCreationResponse:
+        ...
+
+    @versions(supported_versions=(">=20.12"), raises=False)
+    @delete("/v1/feature-profile/sdwan/policy-object/{profile_id}")
+    def delete_profile(self, profile_id: UUID) -> None:
         ...
 
     @versions(supported_versions=(">=20.12"), raises=False)

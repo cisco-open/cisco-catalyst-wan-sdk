@@ -392,9 +392,7 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
         ux2.cloud_credentials = create_cloud_credentials_from_templates(cloud_credential_templates)
 
     # Prepare Context for Policy Conversion (VPN Parcels must be already transformed)
-    policy_context = PolicyConvertContext.from_configs(
-        ux1.network_hierarchy, ux2.profile_parcels, ux1.policies.policy_lists
-    )
+    policy_context = PolicyConvertContext.from_configs(ux1.network_hierarchy, ux2.profile_parcels)
 
     # Policy Lists
     for policy_list in ux1.policies.policy_lists:

@@ -14,7 +14,7 @@ from catalystwan.models.configuration.config_migration import (
     UX2Config,
     UX2ConfigPushResult,
 )
-from catalystwan.models.configuration.feature_profile.common import ProfileType
+from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, Parcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
@@ -54,7 +54,7 @@ class UX2ConfigPusher:
     def push(self) -> UX2ConfigPushResult:
         self._create_cloud_credentials()
         self._create_config_groups()
-        dpop = self._get_default_policy_object_profile()
+        dpop = self._get_or_create_default_policy_object_profile()
         self._insert_groups_of_interest_in_default_policy_object_profile(dpop)
         self._create_topology_groups(dpop)  # needs to be executed after vpn parcels and groups of interests are created
         self._push_result.report.set_failed_push_parcels_flat_list()
@@ -102,9 +102,14 @@ class UX2ConfigPusher:
                     feature_profiles=created_profiles,
                 )
 
-    def _get_default_policy_object_profile(self) -> UUID:
+    def _get_or_create_default_policy_object_profile(self) -> UUID:
         api = self._session.api.sdwan_feature_profiles.policy_object
-        profile_id = api.get_profiles().find(solution="sdwan", created_by="system").profile_id
+        profiles = api.get_profiles()
+        if len(profiles) >= 1:
+            return profiles[0].profile_id
+        profile_id = api.create_profile(
+            FeatureProfileCreationPayload(name="Policy_Profile_Global", description="Policy_Profile_Global_description")
+        ).id
         return profile_id
 
     def _insert_groups_of_interest_in_default_policy_object_profile(self, profile_id: UUID):

@@ -11,7 +11,7 @@ from catalystwan.models.configuration.feature_profile.common import (
     FeatureProfileDetail,
     FeatureProfileEditPayload,
     FeatureProfileInfo,
-    GetFeatureProfilesPayload,
+    GetFeatureProfilesParams,
     SchemaTypeQuery,
 )
 from catalystwan.models.configuration.feature_profile.parcel import Parcel, ParcelCreationResponse
@@ -27,12 +27,12 @@ class TopologyFeatureProfile(APIEndpoints):
 
     @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sdwan/topology")
-    def get_topology_feature_profiles(self, params: GetFeatureProfilesPayload) -> DataSequence[FeatureProfileInfo]:
+    def get_topology_feature_profiles(self, params: GetFeatureProfilesParams) -> DataSequence[FeatureProfileInfo]:
         ...
 
     @versions(supported_versions=(">=20.12"), raises=False)
     @get("/v1/feature-profile/sdwan/topology/{profile_id}")
-    def get_topology_feature_profile(self, profile_id: str, params: GetFeatureProfilesPayload) -> FeatureProfileDetail:
+    def get_topology_feature_profile(self, profile_id: str, params: GetFeatureProfilesParams) -> FeatureProfileDetail:
         ...
 
     @versions(supported_versions=(">=20.12"), raises=False)
