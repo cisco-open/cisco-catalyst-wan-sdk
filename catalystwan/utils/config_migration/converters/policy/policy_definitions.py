@@ -23,17 +23,24 @@ from catalystwan.models.policy.definition.device_access_ipv6 import DeviceAccess
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
 from catalystwan.models.policy.definition.mesh import MeshPolicy
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
-from catalystwan.utils.config_migration.converters.utils import convert_varname
 from catalystwan.utils.config_migration.converters.policy.device_access_ipv4 import device_access_ipv4_converter
 from catalystwan.utils.config_migration.converters.policy.device_access_ipv6 import device_access_ipv6_converter
-
+from catalystwan.utils.config_migration.converters.utils import convert_varname
 
 logger = logging.getLogger(__name__)
 
 Input = AnyPolicyDefinition
 Output = Optional[
     Annotated[
-        Union[CustomControlParcel, HubSpokeParcel, MeshParcel, Ipv4AclParcel, Ipv6AclParcel, DeviceAccessIPv4Parcel, DeviceAccessIPv6Parcel],
+        Union[
+            CustomControlParcel,
+            HubSpokeParcel,
+            MeshParcel,
+            Ipv4AclParcel,
+            Ipv6AclParcel,
+            DeviceAccessIPv4Parcel,
+            DeviceAccessIPv6Parcel,
+        ],
         Field(discriminator="type_"),
     ]
 ]
