@@ -61,7 +61,7 @@ from catalystwan.utils.config_migration.steps.transform import (
     handle_multi_parcel_feature_template,
     merge_parcels,
     remove_unused_feature_templates,
-    resolve_template_type,
+    resolve_vpn_and_subtemplates_type,
 )
 
 logger = logging.getLogger(__name__)
@@ -97,6 +97,7 @@ SUPPORTED_TEMPLATE_TYPES = [
     "dhcp",
     "cisco_dhcp_server",
     "cisco_vpn",
+    "vpn-vedge",
     "cisco_ospf",
     "switchport",
     "cisco_wireless_lan",
@@ -216,8 +217,8 @@ FEATURE_PROFILE_CLI = [
 
 DEVICE_TYPE_BLOCKLIST = ["vsmart", "vbond", "vmanage"]
 
-TOP_LEVEL_TEMPLATE_TYPES = [
-    "cisco_vpn",
+VPN_TEMPLATE_TYPES = [
+    "cisco_vpn", "vpn-vedge",
 ]
 
 TOPOLOGY_POLICIES = ["control", "hubAndSpoke", "mesh"]
@@ -298,8 +299,8 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
 
         for template in templates:
             # Those feature templates IDs are real UUIDs and are used to map to the feature profiles
-            if template.templateType == "cisco_vpn":
-                copied_feature_templates = resolve_template_type(template, ux1)
+            if template.templateType in VPN_TEMPLATE_TYPES:
+                copied_feature_templates = resolve_vpn_and_subtemplates_type(template, ux1)
                 used_feature_templates.update(copied_feature_templates)
             else:
                 used_feature_templates.add(template.templateId)
@@ -351,8 +352,8 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
         ux2.feature_profiles.append(transformed_fp_cli)
         ux2.config_groups.append(transformed_cg)
 
-    # Sort by top level feature templates to avoid any confilics with subtemplates
-    ux1.templates.feature_templates.sort(key=lambda ft: ft.template_type in TOP_LEVEL_TEMPLATE_TYPES, reverse=True)
+    # Sort by vpn feature templates to avoid any confilics with subtemplates
+    ux1.templates.feature_templates.sort(key=lambda ft: ft.template_type in VPN_TEMPLATE_TYPES, reverse=True)
     remove_unused_feature_templates(ux1, used_feature_templates)
 
     cloud_credential_templates = []

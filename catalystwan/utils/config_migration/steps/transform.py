@@ -92,7 +92,7 @@ def merge_parcels(ux2: UX2Config) -> UX2Config:
     return ux2
 
 
-def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Config) -> Set[str]:
+def resolve_vpn_and_subtemplates_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Config) -> Set[str]:
     """
     Resolve Cisco VPN template type and its sub-elements.
     """
@@ -151,6 +151,7 @@ def resolve_template_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Co
         new_type = VPN_TEMPLATE_MAPPINGS[cisco_vpn_template.templateType]["mapping"][ft.template_type]  # type: ignore
 
         if NO_SUBSTITUTE_ERROR in new_type:
+            cisco_vpn_template.subTemplates.remove(gt)
             logger.error(new_type)
             continue
 
