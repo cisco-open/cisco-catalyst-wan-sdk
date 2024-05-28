@@ -1,6 +1,7 @@
 import re
 from typing import List, Optional, cast
 
+from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import (
     DestinationPort,
     DeviceAccessIPv6Parcel,
@@ -13,7 +14,9 @@ from catalystwan.models.policy.definition.device_access_ipv6 import (
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 
 
-def device_access_ipv6_converter(in_: DeviceAccessIPv6Policy, **context) -> DeviceAccessIPv6Parcel:
+def device_access_ipv6_converter(
+    in_: DeviceAccessIPv6Policy, context: Optional[PolicyConvertContext] = None
+) -> DeviceAccessIPv6Parcel:
     device_access_ipv6_parcel = DeviceAccessIPv6Parcel(
         parcel_name=in_.name,
         parcel_description=in_.description,

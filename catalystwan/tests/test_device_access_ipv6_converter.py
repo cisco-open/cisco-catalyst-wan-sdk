@@ -1,4 +1,5 @@
 import unittest
+import uuid
 from ipaddress import IPv6Network
 
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import DeviceAccessIPv6Parcel
@@ -19,6 +20,11 @@ class TestDeviceAccessIPv4Converter(unittest.TestCase):
         sequence.match_destination_ip([IPv6Network("::3e46/128"), IPv6Network("::3e47/128")])
         sequence.match_source_ip([IPv6Network("::3e48/128"), IPv6Network("::3e49/128")])
         sequence.match_source_port({1, 2, 3})
+
+        sequence_2 = device_access_policy.add_acl_sequence(name="sequence2", device_access_protocol=161)
+        sequence_2.match_destination_data_prefix_list(uuid.uuid4())
+        sequence_2.match_source_data_prefix_list(uuid.uuid4())
+        sequence_2.match_source_port({1, 2, 3})
 
         device_access_parcel = device_access_ipv6_converter(device_access_policy)
 

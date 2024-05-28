@@ -1,5 +1,6 @@
 from typing import List, Optional, cast
 
+from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import (
     DestinationPort,
     DeviceAccessIPv4Parcel,
@@ -9,7 +10,9 @@ from catalystwan.models.policy.definition.device_access import DeviceAccessPolic
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 
 
-def device_access_ipv4_converter(in_: DeviceAccessPolicy, **context) -> DeviceAccessIPv4Parcel:
+def device_access_ipv4_converter(
+    in_: DeviceAccessPolicy, context: Optional[PolicyConvertContext] = None
+) -> DeviceAccessIPv4Parcel:
     device_access_ipv4_parcel = DeviceAccessIPv4Parcel(
         parcel_name=in_.name,
         parcel_description=in_.description,
