@@ -86,6 +86,7 @@ def as_num_ranges_list(p: str) -> List[Union[int, Tuple[int, int]]]:
     """
     applicable to acl source/destination port list
     "1 2-5 6 7 20-22" -> [1 (2,5) 6 7 (20,22)]
+
     """
     num_list: List[Union[int, Tuple[int, int]]] = []
     for val in p.split():

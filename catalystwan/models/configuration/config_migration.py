@@ -1,7 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, Union, cast
+from typing import Any, ClassVar, Dict, List, Optional, Set, Tuple, TypeVar, Union, cast
 from uuid import UUID, uuid4
 
 from packaging.version import Version
@@ -306,28 +306,54 @@ class ConfigTransformResult(BaseModel):
         )
 
 
-class ConfigGroupReport(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+class _GroupReportBase(BaseModel):
+    type_: ClassVar[str] = ""
+    from_: ClassVar[str] = ""
     name: str = Field(
-        serialization_alias="ConfigGroupName",
-        validation_alias="ConfigGroupName",
-        description="Name of the Config Group created from Device Template",
+        serialization_alias=f"{type_}Name",
+        validation_alias=f"{type_}Name",
+        description=f"Name of the {type_} created from {from_}",
     )
     uuid: UUID = Field(
-        serialization_alias="ConfigGroupUuid",
-        validation_alias="ConfigGroupUuid",
-        description="UUID of the Config Group created from Device Template",
+        serialization_alias=f"{type_}Uuid",
+        validation_alias=f"{type_}Uuid",
+        description=f"UUID of the {type_} created from {from_}",
     )
     feature_profiles: List[FeatureProfileBuildReport] = Field(
         default=[],
         serialization_alias="FeatureProfiles",
         validation_alias="FeatureProfiles",
-        description="List of Feature Profiles created from Device Template and attached to the Config Group",
+        description=f"List of FeatureProfiles created from {from_} and attached to the {type_}",
     )
+
+
+class ConfigGroupReport(_GroupReportBase):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+    type_ = "ConfigGroup"
+    from_ = "DeviceTemplate"
+
+
+class TopologyGroupReport(_GroupReportBase):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+    type_ = "TopologyGroup"
+    from_ = "Policy"
+
+
+class PolicyGroupReport(_GroupReportBase):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+    type_ = "PolicyGroup"
+    from_ = "Policy"
+
+
+class DefaultPolicyObjectProfileReport(BaseModel):
+    present_before_migration: Optional[bool] = None
+    created_by: Optional[str] = None
+    creation_failed: Optional[bool] = None
 
 
 class GroupsOfInterestBuildReport(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
+    default_policy_object_profile: DefaultPolicyObjectProfileReport = DefaultPolicyObjectProfileReport()
     created_parcels: List[Tuple[str, UUID]] = Field(
         default_factory=list, serialization_alias="createdParcels", validation_alias="createdParcels"
     )
@@ -384,6 +410,9 @@ class UX2ConfigPushReport(BaseModel):
             for failed_parcel in s_feature_profile.failed_parcels:
                 self.failed_push_parcels.append(failed_parcel)
 
+        for failed_parcel in self.groups_of_interest.failed_parcels:
+            self.failed_push_parcels.append(failed_parcel)
+
     @property
     def get_summary(self) -> str:
         created_parcels = 0
@@ -438,6 +467,7 @@ class UX2RollbackInfo(BaseModel):
         default=None,
         serialization_alias="defaultPolicyObjectProfile",
         validation_alias="defaultPolicyObjectProfile",
+        description="Do not delete this profile! only selected parcel contents for which profile id is provided",
     )
 
     def add_config_group(self, config_group_id: UUID) -> None:
@@ -446,7 +476,8 @@ class UX2RollbackInfo(BaseModel):
     def add_feature_profile(self, feature_profile_id: UUID, profile_type: ProfileType) -> None:
         self.feature_profile_ids.append((feature_profile_id, profile_type))
 
-    def add_default_policy_object_profile(self, profile_id: UUID) -> DefaultPolicyObjectProfile:
+    def add_default_policy_object_profile_id(self, profile_id: UUID) -> DefaultPolicyObjectProfile:
+        # do not delete this profile! only selected parcel contents
         self.default_policy_object_profile = DefaultPolicyObjectProfile(profile_id=profile_id)
         return self.default_policy_object_profile
 

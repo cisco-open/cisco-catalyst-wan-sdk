@@ -136,7 +136,7 @@ class PolicyObjectPusher:
         def cast_(parcel: AnyParcel) -> AnyPolicyObjectParcel:
             return parcel  # type: ignore
 
-        profile_rollback = self._push_result.rollback.add_default_policy_object_profile(default_profile_id)
+        profile_rollback = self._push_result.rollback.add_default_policy_object_profile_id(default_profile_id)
 
         # will hold system created parcels id by type and name when detected
         system_created_parcels: Dict[Type[AnyPolicyObjectParcel], Dict[str, UUID]] = {}

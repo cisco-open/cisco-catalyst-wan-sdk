@@ -55,7 +55,6 @@ class UX2ConfigPusher:
     def push(self) -> UX2ConfigPushResult:
         self._create_cloud_credentials()
         self._create_config_groups()
-
         self._policy_object_pusher.push()
         dpop = self._policy_object_pusher.get_or_create_default_policy_object_profile()
         self._create_topology_groups(dpop)  # needs to be executed after vpn parcels and groups of interests are created
