@@ -1,6 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
-from typing import Callable, Dict, List, Set, Tuple, Type, cast
+from typing import Callable, Dict, List, Optional, Set, Tuple, Type, cast
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -55,8 +55,12 @@ class UX2ConfigPusher:
         self._create_cloud_credentials()
         self._create_config_groups()
         dpop = self._get_or_create_default_policy_object_profile()
-        self._insert_groups_of_interest_in_default_policy_object_profile(dpop)
-        self._create_topology_groups(dpop)  # needs to be executed after vpn parcels and groups of interests are created
+        if dpop is not None:
+            self._insert_groups_of_interest_in_default_policy_object_profile(dpop)
+            # needs to be executed after vpn parcels and groups of interests are created
+            self._create_topology_groups(dpop)
+        else:
+            logger.error("Unable to provide Default Policy Object Profile to push policy items")
         self._push_result.report.set_failed_push_parcels_flat_list()
         logger.debug(f"Configuration push completed. Rollback configuration {self._push_result}")
         return self._push_result
@@ -102,14 +106,19 @@ class UX2ConfigPusher:
                     feature_profiles=created_profiles,
                 )
 
-    def _get_or_create_default_policy_object_profile(self) -> UUID:
+    def _get_or_create_default_policy_object_profile(self) -> Optional[UUID]:
         api = self._session.api.sdwan_feature_profiles.policy_object
         profiles = api.get_profiles()
         if len(profiles) >= 1:
             return profiles[0].profile_id
-        profile_id = api.create_profile(
-            FeatureProfileCreationPayload(name="Policy_Profile_Global", description="Policy_Profile_Global_description")
-        ).id
+        try:
+            profile_id = api.create_profile(
+                FeatureProfileCreationPayload(
+                    name="Policy_Profile_Global", description="Policy_Profile_Global_description"
+                )
+            ).id
+        except ManagerHTTPError:
+            pass
         return profile_id
 
     def _insert_groups_of_interest_in_default_policy_object_profile(self, profile_id: UUID):
@@ -118,7 +127,7 @@ class UX2ConfigPusher:
             return parcel  # type: ignore
 
         api = self._session.api.sdwan_feature_profiles.policy_object
-        profile_rollback = self._push_result.rollback.add_default_policy_object_profile(profile_id)
+        profile_rollback = self._push_result.rollback.add_default_policy_object_profile_id(profile_id)
 
         # will hold system created parcels id by type and name when detected
         system_created_parcels: Dict[Type[AnyPolicyObjectParcel], Dict[str, UUID]] = {}
