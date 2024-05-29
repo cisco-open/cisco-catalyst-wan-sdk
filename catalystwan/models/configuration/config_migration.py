@@ -17,6 +17,7 @@ from catalystwan.api.templates.device_template.device_template import DeviceTemp
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
 from catalystwan.endpoints.configuration_settings import CloudCredentials
 from catalystwan.exceptions import ManagerHTTPError
+from catalystwan.models.common import VpnId
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
@@ -471,6 +472,7 @@ class PolicyConvertContext:
     regions_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
     sites_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
     lan_vpns_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
+    amp_target_vpns_id: Dict[str, List[VpnId]] = field(default_factory=dict)
 
     @staticmethod
     def from_configs(

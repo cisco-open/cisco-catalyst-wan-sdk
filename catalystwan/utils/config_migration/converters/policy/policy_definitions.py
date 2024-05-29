@@ -9,12 +9,16 @@ from catalystwan.models.common import int_range_str_validator
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.amp import (
+    AdvancedMalwareProtectionParcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
 from catalystwan.models.policy import AnyPolicyDefinition
 from catalystwan.models.policy.definition.access_control_list import AclPolicy
 from catalystwan.models.policy.definition.access_control_list_ipv6 import AclIPv6Policy
+from catalystwan.models.policy.definition.amp import AdvancedMalwareProtectionPolicy
 from catalystwan.models.policy.definition.control import ControlPolicy
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
 from catalystwan.models.policy.definition.mesh import MeshPolicy
@@ -26,7 +30,14 @@ logger = logging.getLogger(__name__)
 Input = AnyPolicyDefinition
 Output = Optional[
     Annotated[
-        Union[CustomControlParcel, HubSpokeParcel, MeshParcel, Ipv4AclParcel, Ipv6AclParcel],
+        Union[
+            CustomControlParcel,
+            HubSpokeParcel,
+            MeshParcel,
+            Ipv4AclParcel,
+            Ipv6AclParcel,
+            AdvancedMalwareProtectionParcel,
+        ],
         Field(discriminator="type_"),
     ]
 ]
@@ -49,6 +60,19 @@ def as_num_ranges_list(p: str) -> List[Union[int, Tuple[int, int]]]:
         else:
             num_list.append((hi, low))
     return num_list
+
+
+def advanced_malware_protection(
+    in_: AdvancedMalwareProtectionPolicy, context: PolicyConvertContext
+) -> AdvancedMalwareProtectionParcel:
+    if not in_.definition.file_reputation_alert:
+        raise CatalystwanConverterCantConvertException("AMP file reputation alert shall not be an empty str.")
+
+    if vpn_list := in_.definition.target_vpns:
+        context.amp_target_vpns_id[in_.name] = vpn_list
+
+    definition_dump = in_.definition.model_dump(exclude={"target_vpns"})
+    return AdvancedMalwareProtectionParcel.create(**_get_parcel_name_desc(in_), **definition_dump)
 
 
 def control(in_: ControlPolicy, context) -> CustomControlParcel:
@@ -165,6 +189,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     ControlPolicy: control,
     HubAndSpokePolicy: hubspoke,
     MeshPolicy: mesh,
+    AdvancedMalwareProtectionPolicy: advanced_malware_protection,
 }
 
 
