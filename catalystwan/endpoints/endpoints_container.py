@@ -76,6 +76,7 @@ from catalystwan.endpoints.configuration.policy.list.zone import ConfigurationPo
 from catalystwan.endpoints.configuration.policy.security_template import ConfigurationSecurityTemplatePolicy
 from catalystwan.endpoints.configuration.policy.vedge_template import ConfigurationVEdgeTemplatePolicy
 from catalystwan.endpoints.configuration.policy.vsmart_template import ConfigurationVSmartTemplatePolicy
+from catalystwan.endpoints.configuration.policy_group import PolicyGroupEndpoints
 from catalystwan.endpoints.configuration.software_actions import ConfigurationSoftwareActions
 from catalystwan.endpoints.configuration.topology_group import TopologyGroupEndpoints
 from catalystwan.endpoints.configuration_dashboard_status import ConfigurationDashboardStatus
@@ -182,6 +183,7 @@ class ConfigurationContainer:
         self.policy = ConfigurationPolicyContainer(session)
         self.feature_profile = ConfigurationFeatureProfileContainer(session)
         self.topology_group = TopologyGroupEndpoints(session)
+        self.policy_group = PolicyGroupEndpoints(session)
 
 
 class TroubleshootingToolsContainer:
