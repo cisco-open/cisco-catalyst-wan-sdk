@@ -137,3 +137,11 @@ class ConfigGroupAPI:
         payload = ConfigGroupVariablesEditPayload(solution=solution, devices=device_variables)
 
         self._endpoints.update_variables(config_group_id=cg_id, payload=payload)
+
+    def delete_all(self) -> None:
+        """
+        Deletes all config-group
+        """
+        config_groups = self.get()
+        for config_group in config_groups:
+            self.delete(config_group.id)

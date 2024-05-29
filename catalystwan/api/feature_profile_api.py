@@ -233,6 +233,14 @@ class TransportFeatureProfileAPI:
         """
         self.endpoint.delete_transport_feature_profile(profile_id)
 
+    def delete_all_profiles(self) -> None:
+        """
+        Delete all Transport Feature Profiles
+        """
+        profiles = self.get_profiles()
+        for profile in profiles:
+            self.delete_profile(profile.profile_id)
+
     def create_parcel(
         self, profile_id: UUID, payload: AnyTransportParcel, vpn_uuid: Optional[UUID] = None
     ) -> ParcelCreationResponse:
@@ -339,6 +347,14 @@ class OtherFeatureProfileAPI:
         """
         self.endpoint.delete_sdwan_other_feature_profile(profile_id)
 
+    def delete_all_profiles(self) -> None:
+        """
+        Delete all Other Feature Profiles
+        """
+        profiles = self.get_profiles()
+        for profile in profiles:
+            self.delete_profile(profile.profile_id)
+
     def get(
         self,
         profile_id: UUID,
@@ -406,6 +422,14 @@ class ServiceFeatureProfileAPI:
         """
         self.endpoint.delete_sdwan_service_feature_profile(profile_id)
 
+    def delete_all_profiles(self) -> None:
+        """
+        Delete all Service Feature Profiles
+        """
+        profiles = self.get_profiles()
+        for profile in profiles:
+            self.delete_profile(profile.profile_id)
+
     def create_parcel(
         self, profile_uuid: UUID, payload: AnyServiceParcel, vpn_uuid: Optional[UUID] = None
     ) -> ParcelCreationResponse:
@@ -461,6 +485,14 @@ class SystemFeatureProfileAPI:
         Delete System Feature Profile
         """
         self.endpoint.delete_sdwan_system_feature_profile(profile_id)
+
+    def delete_all_profiles(self) -> None:
+        """
+        Delete all System Feature Profiles
+        """
+        profiles = self.get_profiles()
+        for profile in profiles:
+            self.delete_profile(profile.profile_id)
 
     def get_schema(
         self,
@@ -1225,6 +1257,14 @@ class EmbeddedSecurityFeatureProfileAPI:
         """
         self.endpoint.delete_embedded_security_feature_profile(profile_id)
 
+    def delete_all_profiles(self) -> None:
+        """
+        Delete Embedded Security Feature Profiles
+        """
+        profiles = self.get_profiles()
+        for profile in profiles:
+            self.delete_profile(profile.profile_id)
+
     @overload
     def get_parcels(
         self,
@@ -1335,6 +1375,14 @@ class CliFeatureProfileAPI:
         """
         self.endpoint.delete_profile(profile_id)
 
+    def delete_all_profiles(self) -> None:
+        """
+        Delete all CLI Feature Profiles
+        """
+        profiles = self.get_profiles()
+        for profile in profiles:
+            self.delete_profile(profile.profile_id)
+
     def get_parcel_by_id(
         self,
         profile_id: UUID,
@@ -1395,6 +1443,14 @@ class DnsSecurityFeatureProfileAPI:
         Delete DNS Security Feature Profile
         """
         self.endpoint.delete_dns_security_feature_profile(profile_id)
+
+    def delete_all_profiles(self) -> None:
+        """
+        Delete DNS Security Feature Profiles
+        """
+        profiles = self.get_profiles()
+        for profile in profiles:
+            self.delete_profile(profile.profile_id)
 
     def get_parcels(
         self,
@@ -1464,6 +1520,14 @@ class SIGSecurityAPI:
         """
         self.endpoint.delete_sig_security_feature_profile(profile_id)
 
+    def delete_all_profiles(self) -> None:
+        """
+        Delete all SIG Security Feature Profiles
+        """
+        profiles = self.get_profiles()
+        for profile in profiles:
+            self.delete_profile(profile.profile_id)
+
     def create_parcel(self, profile_uuid: UUID, payload: SIGParcel) -> ParcelCreationResponse:
         """
         Create SIG Security Parcel for selected profile_id
@@ -1508,6 +1572,14 @@ class ApplicationPriorityFeatureProfileAPI:
         Delete Application Priority Feature Profile
         """
         self.endpoint.delete_application_priority_feature_profile(profile_id)
+
+    def delete_all_profiles(self) -> None:
+        """
+        Delete all Application Priority Feature Profiles
+        """
+        profiles = self.get_profiles()
+        for profile in profiles:
+            self.delete_profile(profile.profile_id)
 
     @overload
     def get_parcels(
@@ -1634,6 +1706,14 @@ class TopologyFeatureProfileAPI:
         Delete Topology Feature Profile
         """
         self.endpoint.delete_topology_feature_profile(profile_id)
+
+    def delete_all_profiles(self) -> None:
+        """
+        Delete all Topology Feature Profiles
+        """
+        profiles = self.get_profiles()
+        for profile in profiles:
+            self.delete_profile(profile.profile_id)
 
     def create_parcel(self, profile_id: UUID, parcel: AnyTopologyParcel) -> ParcelCreationResponse:
         """
