@@ -1,9 +1,8 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from __future__ import annotations
 
-from ipaddress import IPv4Address, IPv6Address
+from ipaddress import IPv4Address, IPv6Address, IPv6Interface
 from typing import List, Literal, Optional, Union
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
@@ -11,13 +10,13 @@ from pydantic import AliasPath, BaseModel, ConfigDict, Field
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask, RefIdItem
 
-FamilyType = Literal["ipv4-unicast", "vpnv4-unicast", "vpnv6-unicast"]
-FamilyTypeIpv6 = Literal["ipv6-unicast", "vpnv6-unicast"]
+FamilyType = Literal["ipv4-unicast", "vpnv4-unicast", "vpnv6-unicast", "ipv6-unicast"]
 PolicyTypeOff = Literal["off"]
 PolicyTypeRestart = Literal["restart"]
 PolicyTypeWarningDisablePeer = Literal["warning-only", "disable-peer"]
-Protocol = Literal["static", "connected", "ospf", "ospfv3", "nat"]
-Protocol2 = Literal["static", "connected", "ospf"]
+# Transport and Management Protocols don't have a "omp" option
+RedistributeProtocol = Literal["static", "connected", "ospf", "ospfv3", "nat", "omp"]
+RedistributeProtocolIpv6 = Literal["static", "connected", "ospf", "omp"]
 
 
 class MaxPrefixConfigDisabled(BaseModel):
@@ -108,7 +107,7 @@ class AddressFamilyItem(BaseModel):
         ...,
         serialization_alias="familyType",
         validation_alias="familyType",
-        description="Set IPv4 unicast address family",
+        description="Set IPv4 unicast address family or IPv6 unicast address family",
     )
     max_prefix_config: Optional[
         Union[MaxPrefixConfigDisabled, MaxPrefixConfigRestart, MaxPrefixConfigWarningDisablePeer]
@@ -234,40 +233,6 @@ class NeighborItem(BaseModel):
     )
 
 
-class VariableFamilyItem1(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    family_type: Global[FamilyTypeIpv6] = Field(
-        ...,
-        serialization_alias="familyType",
-        validation_alias="familyType",
-        description="Set IPv6 unicast address family",
-    )
-    max_prefix_config: Optional[
-        Union[MaxPrefixConfigDisabled, MaxPrefixConfigRestart, MaxPrefixConfigWarningDisablePeer]
-    ] = Field(
-        default=None,
-        serialization_alias="maxPrefixConfig",
-        validation_alias="maxPrefixConfig",
-        description="Set maximum number of prefixes accepted from BGP peer and"
-        "threshold exceeded policy actions(restart or warning)",
-    )
-    in_route_policy: Optional[Union[Default[None], RefIdItem]] = Field(
-        default=None,
-        serialization_alias="inRoutePolicy",
-        validation_alias="inRoutePolicy",
-        description="In direction route policy name",
-    )
-    out_route_policy: Optional[Union[Default[None], RefIdItem]] = Field(
-        default=None,
-        serialization_alias="outRoutePolicy",
-        validation_alias="outRoutePolicy",
-        description="out direction route policy name",
-    )
-
-
 class Ipv6NeighborItem(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -351,7 +316,7 @@ class Ipv6NeighborItem(BaseModel):
         validation_alias="asNumber",
         description="The number of accept as-path with my AS present in it",
     )
-    address_family: Optional[List[VariableFamilyItem1]] = Field(
+    address_family: Optional[List[AddressFamilyItem]] = Field(
         default=None,
         serialization_alias="addressFamily",
         validation_alias="addressFamily",
@@ -390,7 +355,11 @@ class RedistributeItem(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    protocol: Union[Global[Protocol], Variable] = Field(..., description="Set the protocol to redistribute routes from")
+    protocol: Union[Global[RedistributeProtocol], Variable] = Field(
+        ...,
+        description="Set the protocol to redistribute routes from. "
+        "Transport and Management Protocols don't have a 'omp' option",
+    )
     route_policy: Optional[Union[Default[None], RefIdItem]] = Field(
         default=None,
         serialization_alias="routePolicy",
@@ -410,8 +379,8 @@ class AddressFamily(BaseModel):
     )
     aggregate_address: Optional[List[AggregateAddres]] = Field(
         default=None,
-        serialization_alias="aggregateVariable",
-        validation_alias="aggregateVariable",
+        serialization_alias="aggregateAddress",
+        validation_alias="aggregateAddress",
         description="Aggregate prefixes in specific range",
     )
     network: Optional[List[NetworkItem]] = Field(
@@ -419,7 +388,7 @@ class AddressFamily(BaseModel):
     )
     paths: Optional[Union[Global[int], Variable, Default[None]]] = Field(
         default=None,
-        description="Set maximum number of parallel IBGP paths for multipath load sharing",
+        description="Set maximum number of parallel IBGP paths for multipath load sharing. Maximum value is 32 paths.",
     )
     originate: Optional[Union[Variable, Global[bool], Default[Literal[False]]]] = Field(
         default=None, description="BGP Default Information Variable"
@@ -438,7 +407,9 @@ class Ipv6AggregateAddres(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    prefix: Union[Global[str], Variable] = Field(..., description="Configure the IPv6 prefixes to aggregate")
+    prefix: Union[Global[str], Global[IPv6Interface], Variable] = Field(
+        ..., description="Configure the IPv6 prefixes to aggregate"
+    )
     as_set: Optional[Union[Variable, Global[bool], Default[Literal[False]]]] = Field(
         default=None, serialization_alias="asSet", validation_alias="asSet", description="Set AS set path information"
     )
@@ -455,7 +426,9 @@ class Ipv6NetworkItem(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    prefix: Union[Global[str], Variable] = Field(..., description="Configure the prefixes for BGP to announce")
+    prefix: Union[Global[str], Global[IPv6Interface], Variable] = Field(
+        ..., description="Configure the prefixes for BGP to announce"
+    )
 
 
 class Ipv6RedistributeItem(BaseModel):
@@ -463,8 +436,10 @@ class Ipv6RedistributeItem(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    protocol: Union[Global[Protocol2], Variable] = Field(
-        ..., description="Set the protocol to redistribute routes from"
+    protocol: Union[Global[RedistributeProtocolIpv6], Variable] = Field(
+        ...,
+        description="Set the protocol to redistribute routes from. "
+        "Transport and Management Protocols don't have a 'omp' option",
     )
     route_policy: Optional[Union[Default[None], RefIdItem]] = Field(
         default=None,
@@ -485,8 +460,8 @@ class Ipv6AddressFamily(BaseModel):
     )
     ipv6_aggregate_address: Optional[List[Ipv6AggregateAddres]] = Field(
         default=None,
-        serialization_alias="ipv6AggregateVariable",
-        validation_alias="ipv6AggregateVariable",
+        serialization_alias="ipv6AggregateAddress",
+        validation_alias="ipv6AggregateAddress",
         description="IPv6 Aggregate prefixes in specific range",
     )
     ipv6_network: Optional[List[Ipv6NetworkItem]] = Field(
@@ -497,7 +472,7 @@ class Ipv6AddressFamily(BaseModel):
     )
     paths: Optional[Union[Global[int], Variable, Default[None]]] = Field(
         default=None,
-        description="Set maximum number of parallel IBGP paths for multipath load sharing",
+        description="Set maximum number of parallel IBGP paths for multipath load sharing. Maximum value is 32 paths.",
     )
     originate: Optional[Union[Variable, Global[bool], Default[Literal[False]]]] = Field(
         default=None, description="BGP Default Information Variable"
@@ -548,12 +523,12 @@ class RoutingBgpParcel(_ParcelBase):
     )
     external: Optional[Union[Global[int], Variable, Default[int]]] = Field(
         default=None,
-        description="Set administrative distance for external BGP routes",
+        description="Set administrative distance for external BGP routes. Maximum value is 255",
         validation_alias=AliasPath("data", "external"),
     )
     internal: Optional[Union[Global[int], Variable, Default[int]]] = Field(
         default=None,
-        description="Set administrative distance for internal BGP routes",
+        description="Set administrative distance for internal BGP routes. Maximum value is 255",
         validation_alias=AliasPath("data", "internal"),
     )
     local: Optional[Union[Global[int], Variable, Default[int]]] = Field(
@@ -588,7 +563,7 @@ class RoutingBgpParcel(_ParcelBase):
     )
     compare_router_id: Optional[Union[Variable, Global[bool], Default[Literal[False]]]] = Field(
         default=None,
-        validation_alias=AliasPath("data", "compareGlobal[)ipaddress.IPv4Variable]"),
+        validation_alias=AliasPath("data", "compareRouterId"),
         description="Compare router IDs when selecting active BGP paths",
     )
     multipath_relax: Optional[Union[Variable, Global[bool], Default[Literal[False]]]] = Field(
@@ -596,7 +571,9 @@ class RoutingBgpParcel(_ParcelBase):
         validation_alias=AliasPath("data", "multipathRelax"),
         description="Ignore AS for multipath selection",
     )
-    neighbor: Optional[List[NeighborItem]] = Field(default=None, description="Set BGP IPv4 neighbors")
+    neighbor: Optional[List[NeighborItem]] = Field(
+        default=None, validation_alias=AliasPath("data", "neighbor"), description="Set BGP IPv4 neighbors"
+    )
     ipv6_neighbor: Optional[List[Ipv6NeighborItem]] = Field(
         default=None,
         validation_alias=AliasPath("data", "ipv6Neighbor"),
@@ -609,7 +586,7 @@ class RoutingBgpParcel(_ParcelBase):
     )
     ipv6_address_family: Optional[Ipv6AddressFamily] = Field(
         default=None,
-        validation_alias=AliasPath("data", "ipv6VariableFamily"),
+        validation_alias=AliasPath("data", "ipv6AddressFamily"),
         description="Set BGP address family",
     )
     mpls_interface: Optional[List[MplsInterfaceItem]] = Field(

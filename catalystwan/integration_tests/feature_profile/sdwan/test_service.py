@@ -1,9 +1,9 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
-from ipaddress import IPv4Address, IPv4Interface, IPv6Interface
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+from ipaddress import IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
 from typing import Literal
 from uuid import UUID
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, as_global, as_variable
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global, as_variable
 from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
 from catalystwan.models.common import (
     CableLengthLongValue,
@@ -28,6 +28,21 @@ from catalystwan.models.configuration.feature_profile.common import (
 )
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
+from catalystwan.models.configuration.feature_profile.sdwan.routing.bgp import AddressFamily as BgpAddressFamily
+from catalystwan.models.configuration.feature_profile.sdwan.routing.bgp import (
+    AddressFamilyItem,
+    FamilyType,
+    Ipv6AddressFamily,
+    Ipv6AggregateAddres,
+    Ipv6NeighborItem,
+    Ipv6NetworkItem,
+    Ipv6RedistributeItem,
+    MaxPrefixConfigRestart,
+    NeighborItem,
+    NetworkItem,
+    RedistributeItem,
+    RoutingBgpParcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.routing.ospf import RoutingOspfParcel
 from catalystwan.models.configuration.feature_profile.sdwan.routing.ospfv3 import (
     Ospfv3InterfaceParametres,
@@ -274,6 +289,130 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
         seq2.match_source_ports([1, 3, (10, 100), (50, 200), 600])
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv6_parcel).id
+        # Assert
+        assert parcel_id
+
+    def test_when_fully_specified_routing_bgp_expect_successful_post(self):
+        # Arrange
+        bgp_parcel = RoutingBgpParcel(
+            parcel_name="TestRoutingBgpParcel",
+            parcel_description="Description",
+            as_num=Global[int](value=50),
+            router_id=Global[IPv4Address](value=IPv4Address("192.0.0.4")),
+            propagate_aspath=Global[bool](value=True),
+            propagate_community=Global[bool](value=True),
+            external=Global[int](value=255),
+            internal=Global[int](value=255),
+            local=Global[int](value=195),
+            keepalive=Global[int](value=200),
+            holdtime=Global[int](value=246),
+            always_compare=Global[bool](value=True),
+            deterministic=Global[bool](value=True),
+            missing_as_worst=Global[bool](value=True),
+            compare_router_id=Global[bool](value=False),
+            multipath_relax=Global[bool](value=True),
+            neighbor=[
+                NeighborItem(
+                    address=Global[IPv4Address](value=IPv4Address("192.175.48.31")),
+                    description=Global[str](value="sJQwaemlk"),
+                    shutdown=Global[bool](value=True),
+                    remote_as=Global[int](value=330),
+                    local_as=Global[int](value=409),
+                    keepalive=Global[int](value=500),
+                    holdtime=Global[int](value=204),
+                    if_name=Variable(value="{{lbgp_1_ipv4_conf_1_updateSrcIntf}}"),
+                    next_hop_self=Global[bool](value=True),
+                    send_community=Global[bool](value=True),
+                    send_ext_community=Global[bool](value=False),
+                    ebgp_multihop=Global[int](value=147),
+                    password=Global[str](value="Qzxpq"),
+                    send_label=Global[bool](value=True),
+                    as_override=Global[bool](value=False),
+                    as_number=Variable(value="{{lbgp_1_ipv4_conf_1_asNumber}}"),
+                    address_family=[
+                        AddressFamilyItem(
+                            family_type=Global[FamilyType](value="ipv4-unicast"),
+                            max_prefix_config=MaxPrefixConfigRestart(
+                                policy_type=Global[Literal["restart"]](value="restart"),
+                                prefix_num=Global[int](value=11),
+                                threshold=Global[int](value=10),
+                                restart_interval=Global[int](value=10),
+                            ),
+                        ),
+                    ],
+                ),
+            ],
+            ipv6_neighbor=[
+                Ipv6NeighborItem(
+                    address=Global[IPv6Address](value=IPv6Address("f555:b620:61fc:798a:ece3:4364:58c3:8656")),
+                    description=Global[str](value="VOBWPfHlS"),
+                    shutdown=Global[bool](value=True),
+                    remote_as=Global[int](value=20),
+                    local_as=Global[int](value=479),
+                    keepalive=Global[int](value=165),
+                    holdtime=Global[int](value=147),
+                    if_name=Variable(value="{{lbgp_1_ipv6_conf_1_updateSrcIntf}}"),
+                    next_hop_self=Global[bool](value=True),
+                    send_community=Global[bool](value=True),
+                    send_ext_community=Global[bool](value=False),
+                    ebgp_multihop=Global[int](value=21),
+                    password=Global[str](value="vaPsP"),
+                    as_override=Global[bool](value=True),
+                    as_number=Global[int](value=10),
+                    address_family=[
+                        AddressFamilyItem(
+                            family_type=Global[FamilyType](value="ipv6-unicast"),
+                            max_prefix_config=MaxPrefixConfigRestart(
+                                policy_type=Global[Literal["restart"]](value="restart"),
+                                prefix_num=Global[int](value=11),
+                                threshold=Global[int](value=10),
+                                restart_interval=Global[int](value=10),
+                            ),
+                        ),
+                    ],
+                )
+            ],
+            address_family=BgpAddressFamily(
+                name=Default[None](value=None),
+                network=[
+                    NetworkItem(
+                        prefix=AddressWithMask(address=Variable(value="{{cYQ4ud15}}"), mask=Variable(value="{{LdKTD}}"))
+                    )
+                ],
+                paths=Global[int](value=32),
+                originate=Global[bool](value=True),
+                filter=Global[bool](value=True),
+                redistribute=[
+                    RedistributeItem(
+                        protocol=Global[Literal["static", "connected", "ospf", "ospfv3", "nat", "omp"]](value="ospf"),
+                    )
+                ],
+            ),
+            ipv6_address_family=Ipv6AddressFamily(
+                ipv6_aggregate_address=[
+                    Ipv6AggregateAddres(
+                        prefix=Global[IPv6Interface](value=IPv6Interface("0::/16")),
+                        as_set=Global[bool](value=True),
+                        summary_only=Global[bool](value=False),
+                    )
+                ],
+                ipv6_network=[
+                    Ipv6NetworkItem(prefix=Global[IPv6Interface](value=IPv6Interface("2002::/16"))),
+                ],
+                paths=Global[int](value=2),
+                originate=Global[bool](value=True),
+                name=Default[None](value=None),
+                filter=Global[bool](value=True),
+                redistribute=[
+                    Ipv6RedistributeItem(
+                        protocol=Global[Literal["static", "connected", "ospf", "omp"]](value="connected"),
+                        route_policy=Default[None](value=None),
+                    )
+                ],
+            ),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, bgp_parcel).id
         # Assert
         assert parcel_id
 
