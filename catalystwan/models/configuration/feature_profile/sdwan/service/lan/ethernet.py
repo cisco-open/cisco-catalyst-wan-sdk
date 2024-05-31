@@ -149,7 +149,7 @@ class AdvancedEthernetAttributes(BaseModel):
         serialization_alias="ipMtu", validation_alias="ipMtu", default=Default[int](value=1500)
     )
     interface_mtu: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        serialization_alias="intrfMtu", validation_alias="intrfMtu", default=Default[int](value=1500)
+        default=None, serialization_alias="intrfMtu", validation_alias="intrfMtu"
     )
     tcp_mss: Optional[Union[Global[int], Variable, Default[int]]] = Field(
         serialization_alias="tcpMss", validation_alias="tcpMss", default=None
