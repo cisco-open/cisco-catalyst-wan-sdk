@@ -884,6 +884,25 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestFeatureProfileModels):
 
         assert parcel_id
 
+    def test_when_default_values_ethernet_interface_expect_successful_post(self):
+        # For 20.13 when we send "advanced.intfruMtu" as Default 1500
+        # endpoint returns 400
+        # catalystwan.exceptions.ManagerHTTPError:
+        # message='Invalid Payload'
+        # details="Invalid Payload: doesn't support user settable interface mtu for sub interface"
+        # code='PPARC0012'
+
+        # Arrange
+        ethernet_parcel = InterfaceEthernetParcel(
+            name="vedge-C8000V_interface_*GigabitEthernet3.2*_FT_84.xml",
+            description="interface_Description",
+            interface_name=as_global("GigabitEthernet3.2"),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
+        # Assert
+        assert parcel_id
+
     @classmethod
     def tearDownClass(cls) -> None:
         cls.api.delete_profile(cls.profile_uuid)
