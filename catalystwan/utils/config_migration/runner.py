@@ -154,6 +154,8 @@ class ConfigMigrationRunner:
                 with open(self.ux2_push_dump, "w") as f:
                     f.write(ux2_push_result.model_dump_json(exclude_none=True, by_alias=True, indent=4, warnings=False))
 
+            breakpoint()
+
             # rollback
             if self.rollback:
                 ux2_push_result = UX2ConfigPushResult.model_validate_json(open(self.ux2_push_dump).read())

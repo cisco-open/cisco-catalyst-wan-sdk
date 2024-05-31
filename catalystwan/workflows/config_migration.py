@@ -419,6 +419,7 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
     for policy_definition in ux1.policies.policy_definitions:
         try:
             pd_parcel = convert_policy_definition(policy_definition, policy_definition.definition_id, policy_context)
+
             if pd_parcel is not None:
                 header = TransformHeader(
                     type=pd_parcel._get_parcel_type(),

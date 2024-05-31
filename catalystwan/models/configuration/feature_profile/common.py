@@ -280,6 +280,10 @@ class RefIdItem(BaseModel):
     )
     ref_id: Global[str] = Field(..., serialization_alias="refId", validation_alias="refId")
 
+    @classmethod
+    def from_uuid(cls, ref_id: UUID):
+        return cls(ref_id=as_global(str(ref_id)))
+
 
 class RefIdList(BaseModel):
     ref_id: Global[List[str]] = Field(..., serialization_alias="refId", validation_alias="refId")
