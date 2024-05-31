@@ -10,12 +10,13 @@ from catalystwan.models.configuration.feature_profile.common import AddressWithM
 from catalystwan.models.configuration.feature_profile.sdwan.routing import RoutingBgpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.routing.bgp import (
     AddressFamily,
+    AddressFamilyItem,
     AggregateAddres,
     Ipv6NeighborItem,
     NeighborItem,
     NetworkItem,
-    Protocol,
     RedistributeItem,
+    RedistributeProtocol,
 )
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
 from catalystwan.utils.config_migration.steps.constants import LAN_BGP, WAN_BGP
@@ -69,7 +70,7 @@ class BgpRoutingTemplateConverter:
             external=data.get("external"),
             internal=data.get("internal"),
             local=data.get("local"),
-            holdtime=data.get("holdtime"),
+            holdtime=self.parse_holdtime(data.get("holdtime")),
             keepalive=data.get("keepalive"),
             always_compare=data.get("always_compare"),
             deterministic=data.get("deterministic"),
@@ -83,9 +84,21 @@ class BgpRoutingTemplateConverter:
 
         return RoutingBgpParcel(**payload)
 
+    def parse_holdtime(
+        self, holdtime: Optional[Union[Global[str], Variable]]
+    ) -> Optional[Union[Global[int], Variable]]:
+        if not holdtime:
+            return None
+
+        if isinstance(holdtime, Global):
+            return Global[int](value=int(holdtime.value))
+        return holdtime
+
     def parse_neighbor(self, neighbors: List[Dict]) -> Optional[List[NeighborItem]]:
         if not neighbors:
             return None
+
+        print(neighbors)
 
         items = []
         for neighbor in neighbors:
@@ -113,9 +126,29 @@ class BgpRoutingTemplateConverter:
                 send_label_explicit=neighbor.get("send_label_explicit"),
                 as_override=neighbor.get("as_override"),
                 as_number=neighbor.get("as_number"),
-                address_family=neighbor.get("address_family"),
+                address_family=self.parse_address_family_item(neighbor.get("address_family", [])),
             )
             items.append(ni)
+        return items
+
+    def parse_address_family_item(self, address_family: List[Dict]) -> Optional[List[AddressFamilyItem]]:
+        if not address_family:
+            return None
+
+        items = []
+        for family in address_family:
+            family_type = family.pop("type", None)
+            if not family_type:
+                continue
+
+            family_type = as_global(family_type, RedistributeProtocol)
+            items.append(
+                AddressFamilyItem(
+                    family_type=family_type,
+                    **family,
+                )
+            )
+        print(len(items))
         return items
 
     def parse_neighbor_ipv6(self, neighbors: List[Dict]) -> Optional[List[Ipv6NeighborItem]]:
@@ -146,7 +179,7 @@ class BgpRoutingTemplateConverter:
                 password=neighbor.get("password"),
                 as_override=neighbor.get("as_override"),
                 as_number=neighbor.get("as_number"),
-                address_family=neighbor.get("address_family"),
+                address_family=self.parse_address_family_item(neighbor.get("address_family", [])),
             )
             items.append(ni)
         return items
@@ -177,7 +210,7 @@ class BgpRoutingTemplateConverter:
             if not protocol:
                 continue
             if isinstance(protocol, Global):
-                protocol = as_global(protocol.value, Protocol)
+                protocol = as_global(protocol.value, RedistributeProtocol)
 
             ri = RedistributeItem(
                 protocol=protocol,
