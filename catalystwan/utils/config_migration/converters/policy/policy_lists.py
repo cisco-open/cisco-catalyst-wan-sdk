@@ -92,7 +92,6 @@ def app_list(in_: AppList, context) -> ApplicationListParcel:
 
 
 def as_path(in_: ASPathList, context) -> AsPathParcel:
-    raise CatalystwanConverterCantConvertException(f"Additional context required for {ASPathList.__name__}")
     out = AsPathParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_as_path(entry.as_path)
@@ -373,7 +372,7 @@ Output = Optional[AnyPolicyObjectParcel]
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     AppProbeClassList: app_probe,
     AppList: app_list,
-    ASPathList: as_path,
+    #  ASPathList: as_path,
     ClassMapList: class_map,
     ColorList: color,
     CommunityList: community,
