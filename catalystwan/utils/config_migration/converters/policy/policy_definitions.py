@@ -1,6 +1,7 @@
 import logging
 from ipaddress import IPv4Interface
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Union
+from uuid import UUID
 
 from pydantic import Field
 from typing_extensions import Annotated
@@ -63,19 +64,19 @@ def as_num_ranges_list(p: str) -> List[Union[int, Tuple[int, int]]]:
 
 
 def advanced_malware_protection(
-    in_: AdvancedMalwareProtectionPolicy, context: PolicyConvertContext
+    in_: AdvancedMalwareProtectionPolicy, uuid: UUID, context: PolicyConvertContext
 ) -> AdvancedMalwareProtectionParcel:
     if not in_.definition.file_reputation_alert:
         raise CatalystwanConverterCantConvertException("AMP file reputation alert shall not be an empty str.")
 
     if vpn_list := in_.definition.target_vpns:
-        context.amp_target_vpns_id[in_.name] = vpn_list
+        context.amp_target_vpns_id[uuid] = vpn_list
 
     definition_dump = in_.definition.model_dump(exclude={"target_vpns"})
     return AdvancedMalwareProtectionParcel.create(**_get_parcel_name_desc(in_), **definition_dump)
 
 
-def control(in_: ControlPolicy, context) -> CustomControlParcel:
+def control(in_: ControlPolicy, uuid: UUID, context) -> CustomControlParcel:
     if not context:
         raise CatalystwanConverterCantConvertException(f"Additional context required for {ControlPolicy.__name__}")
     out = CustomControlParcel(**_get_parcel_name_desc(in_))
@@ -83,7 +84,7 @@ def control(in_: ControlPolicy, context) -> CustomControlParcel:
     return out
 
 
-def hubspoke(in_: HubAndSpokePolicy, context: PolicyConvertContext) -> HubSpokeParcel:
+def hubspoke(in_: HubAndSpokePolicy, uuid: UUID, context: PolicyConvertContext) -> HubSpokeParcel:
     target_vpns = context.lan_vpns_by_list_id[in_.definition.vpn_list]
     out = HubSpokeParcel(**_get_parcel_name_desc(in_))
     out.target.vpn.value.extend(target_vpns)
@@ -100,7 +101,7 @@ def hubspoke(in_: HubAndSpokePolicy, context: PolicyConvertContext) -> HubSpokeP
     return out
 
 
-def ipv4acl(in_: AclPolicy, context) -> Ipv4AclParcel:
+def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
     out = Ipv4AclParcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
     for in_seq in in_.sequences:
@@ -165,13 +166,13 @@ def ipv4acl(in_: AclPolicy, context) -> Ipv4AclParcel:
     return out
 
 
-def ipv6acl(in_: AclIPv6Policy, context) -> Ipv6AclParcel:
+def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context) -> Ipv6AclParcel:
     out = Ipv6AclParcel(**_get_parcel_name_desc(in_))
     # TODO: convert definition
     return out
 
 
-def mesh(in_: MeshPolicy, context: PolicyConvertContext) -> MeshParcel:
+def mesh(in_: MeshPolicy, uuid: UUID, context: PolicyConvertContext) -> MeshParcel:
     target_vpns = context.lan_vpns_by_list_id[in_.definition.vpn_list]
     mesh_sites: List[str] = []
     for region in in_.definition.regions:
@@ -204,8 +205,8 @@ def _find_converter(in_: Input) -> Callable[..., Output]:
     return _not_supported
 
 
-def convert(in_: Input, context: PolicyConvertContext) -> Output:
-    result = _find_converter(in_)(in_, context)
+def convert(in_: Input, uuid: UUID, context: PolicyConvertContext) -> Output:
+    result = _find_converter(in_)(in_, uuid, context)
     if result is not None:
         result.model_validate(result)
     return result

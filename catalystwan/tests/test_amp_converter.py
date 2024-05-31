@@ -1,11 +1,12 @@
 import unittest
+from uuid import uuid4
 
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.policy.definition.amp import (
     AdvancedMalwareProtectionDefinition,
     AdvancedMalwareProtectionPolicy,
 )
-from catalystwan.utils.config_migration.converters.policy.policy_definitions import advanced_malware_protection
+from catalystwan.utils.config_migration.converters.policy.policy_definitions import convert
 
 
 class TestAdvancedMalwareProtectionConverter(unittest.TestCase):
@@ -29,7 +30,8 @@ class TestAdvancedMalwareProtectionConverter(unittest.TestCase):
             ),
         )
 
-        parcel = advanced_malware_protection(amp_v1_entry, context=self.context)
+        uuid = uuid4()
+        parcel = convert(amp_v1_entry, uuid, context=self.context)
 
         assert parcel.parcel_name == "amp_security"
         assert parcel.match_all_vpn.value is False
@@ -42,7 +44,7 @@ class TestAdvancedMalwareProtectionConverter(unittest.TestCase):
         assert parcel.file_analysis_cloud_server.value == "eur"
 
         assert len(self.context.amp_target_vpns_id) == 1
-        assert self.context.amp_target_vpns_id[amp_v1_entry.name] == amp_v1_entry.definition.target_vpns
+        assert self.context.amp_target_vpns_id[uuid] == amp_v1_entry.definition.target_vpns
 
     def test_amp_unified_conversion(self):
         amp_v1_entry = AdvancedMalwareProtectionPolicy(
@@ -60,7 +62,8 @@ class TestAdvancedMalwareProtectionConverter(unittest.TestCase):
             ),
         )
 
-        parcel = advanced_malware_protection(amp_v1_entry, context=self.context)
+        uuid = uuid4()
+        parcel = convert(amp_v1_entry, uuid, context=self.context)
 
         assert parcel.parcel_name == "amp_unified"
         assert parcel.match_all_vpn.value is True
@@ -89,7 +92,8 @@ class TestAdvancedMalwareProtectionConverter(unittest.TestCase):
             ),
         )
 
-        parcel = advanced_malware_protection(amp_v1_entry, context=self.context)
+        uuid = uuid4()
+        parcel = convert(amp_v1_entry, uuid, context=self.context)
 
         assert parcel.parcel_name == "amp_empty_literals"
         assert parcel.match_all_vpn.value is True
