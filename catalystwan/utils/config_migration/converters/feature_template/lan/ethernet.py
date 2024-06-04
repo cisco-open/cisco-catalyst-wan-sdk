@@ -1,4 +1,4 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from copy import deepcopy
 from typing import Dict, List, Optional
 
@@ -26,6 +26,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet
     Trustsec,
     VrrpIPv4,
 )
+from catalystwan.utils.config_migration.converters.utils import convert_interface_name
 from catalystwan.utils.config_migration.steps.constants import LAN_VPN_ETHERNET
 
 
@@ -114,6 +115,7 @@ class LanInterfaceEthernetTemplateConverter:
     def configure_interface_name(self, values: dict) -> None:
         if if_name := values.get("if_name"):
             values["interface_name"] = if_name
+            values["interface_name"] = as_global(convert_interface_name(if_name.value))
 
     def configure_ethernet_description(self, values: dict) -> None:
         values["ethernet_description"] = values.get("description")

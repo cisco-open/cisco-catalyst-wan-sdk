@@ -1,4 +1,4 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv6Interface
 from typing import Dict, List, Optional, Union
 
@@ -22,6 +22,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.management
     StaticIPv6AddressConfig,
 )
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
+from catalystwan.utils.config_migration.converters.utils import convert_interface_name
 from catalystwan.utils.config_migration.steps.constants import MANAGEMENT_VPN_ETHERNET
 
 
@@ -33,7 +34,7 @@ class ManagementInterfaceEthernetTemplateConverter:
             parcel_name=name,
             parcel_description=description,
             advanced=self.parse_advanced(template_values),
-            interface_name=template_values.get("if_name"),
+            interface_name=as_global(convert_interface_name(template_values["if_name"].value)),
             interface_description=template_values.get("description", Default[None](value=None)),
             intf_ip_address=self.parse_ipv4_address(template_values),
             shutdown=template_values.get("shutdown"),
