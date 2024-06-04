@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
 from copy import deepcopy
@@ -98,8 +99,6 @@ class BgpRoutingTemplateConverter:
         if not neighbors:
             return None
 
-        print(neighbors)
-
         items = []
         for neighbor in neighbors:
             address = neighbor.get("address")
@@ -148,7 +147,6 @@ class BgpRoutingTemplateConverter:
                     **family,
                 )
             )
-        print(len(items))
         return items
 
     def parse_neighbor_ipv6(self, neighbors: List[Dict]) -> Optional[List[Ipv6NeighborItem]]:

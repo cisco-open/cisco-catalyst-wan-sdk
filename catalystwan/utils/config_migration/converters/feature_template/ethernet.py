@@ -1,4 +1,5 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
+from copy import deepcopy
 from ipaddress import IPv6Interface
 from typing import Dict, List, Optional, Union
 
@@ -22,7 +23,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.management
     StaticIPv6AddressConfig,
 )
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
-from catalystwan.utils.config_migration.converters.utils import convert_interface_name
+from catalystwan.utils.config_migration.converters.utils import parse_interface_name
 from catalystwan.utils.config_migration.steps.constants import MANAGEMENT_VPN_ETHERNET
 
 
@@ -30,19 +31,21 @@ class ManagementInterfaceEthernetTemplateConverter:
     supported_template_types = (MANAGEMENT_VPN_ETHERNET,)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceEthernetParcel:
+        data = deepcopy(template_values)
+
         payload = create_dict_without_none(
             parcel_name=name,
             parcel_description=description,
-            advanced=self.parse_advanced(template_values),
-            interface_name=as_global(convert_interface_name(template_values["if_name"].value)),
-            interface_description=template_values.get("description", Default[None](value=None)),
-            intf_ip_address=self.parse_ipv4_address(template_values),
-            shutdown=template_values.get("shutdown"),
-            arp=self.parse_arp(template_values),
-            auto_detect_bandwidth=template_values.get("auto_bandwidth_detect"),
-            dhcp_helper=template_values.get("dhcp_helper"),
-            intf_ip_v6_address=self.parse_ipv6_address(template_values),
-            iperf_server=template_values.get("iperf_server"),
+            advanced=self.parse_advanced(data),
+            interface_name=parse_interface_name(data),
+            interface_description=data.get("description", Default[None](value=None)),
+            intf_ip_address=self.parse_ipv4_address(data),
+            shutdown=data.get("shutdown"),
+            arp=self.parse_arp(data),
+            auto_detect_bandwidth=data.get("auto_bandwidth_detect"),
+            dhcp_helper=data.get("dhcp_helper"),
+            intf_ip_v6_address=self.parse_ipv6_address(data),
+            iperf_server=data.get("iperf_server"),
         )
 
         return InterfaceEthernetParcel(**payload)
