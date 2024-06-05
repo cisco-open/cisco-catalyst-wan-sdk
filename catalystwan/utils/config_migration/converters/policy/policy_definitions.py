@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
 from ipaddress import IPv4Interface
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Union
@@ -13,6 +14,9 @@ from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import I
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.amp import (
     AdvancedMalwareProtectionParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.intrusion_prevention import (
+    IntrusionPreventionParcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
@@ -22,6 +26,7 @@ from catalystwan.models.policy.definition.access_control_list_ipv6 import AclIPv
 from catalystwan.models.policy.definition.amp import AdvancedMalwareProtectionPolicy
 from catalystwan.models.policy.definition.control import ControlPolicy
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
+from catalystwan.models.policy.definition.intrusion_prevention import IntrusionPreventionPolicy
 from catalystwan.models.policy.definition.mesh import MeshPolicy
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.utils import convert_varname
@@ -38,6 +43,7 @@ Output = Optional[
             Ipv4AclParcel,
             Ipv6AclParcel,
             AdvancedMalwareProtectionParcel,
+            IntrusionPreventionParcel,
         ],
         Field(discriminator="type_"),
     ]
@@ -184,6 +190,28 @@ def mesh(in_: MeshPolicy, uuid: UUID, context: PolicyConvertContext) -> MeshParc
     return out
 
 
+def intrusion_prevention(
+    in_: IntrusionPreventionPolicy, uuid: UUID, context: PolicyConvertContext
+) -> IntrusionPreventionParcel:
+    if in_.mode == "security":
+        raise CatalystwanConverterCantConvertException(
+            f"Policy Mode '{in_.mode}' is not supported for Intrusion Prevention Policy"
+        )
+
+    if vpn_list := in_.definition.target_vpns:
+        context.intrusion_prevention_target_vpns_id[uuid] = vpn_list
+
+    definition_dump = in_.definition.model_dump(exclude={"target_vpns", "logging"})
+    signature_white_list = definition_dump.pop("signature_white_list", None)
+    signature_allowed_list = signature_white_list.get("ref") if signature_white_list else None
+
+    return IntrusionPreventionParcel.create(
+        **_get_parcel_name_desc(in_),
+        **definition_dump,
+        signature_allowed_list=signature_allowed_list,
+    )
+
+
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     AclPolicy: ipv4acl,
     AclIPv6Policy: ipv6acl,
@@ -191,6 +219,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     HubAndSpokePolicy: hubspoke,
     MeshPolicy: mesh,
     AdvancedMalwareProtectionPolicy: advanced_malware_protection,
+    IntrusionPreventionPolicy: intrusion_prevention,
 }
 
 
