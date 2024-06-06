@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from __future__ import annotations
@@ -13,7 +14,6 @@ from requests.exceptions import HTTPError
 
 from catalystwan.dataclasses import Device
 from catalystwan.exceptions import TemplateTypeError
-from catalystwan.utils.device_model import DeviceModel
 from catalystwan.utils.template_type import TemplateType
 
 logger = logging.getLogger(__name__)
@@ -99,7 +99,7 @@ class CLITemplate:
             "templateId": id,
             "templateName": self.template_name,
             "templateDescription": self.template_description,
-            "deviceType": self.device_model.value,
+            "deviceType": self.device_model,
             "templateConfiguration": config_str,
             "factoryDefault": False,
             "configType": "file",
@@ -149,7 +149,6 @@ class CLITemplate:
         >>> a_conf = CiscoConfParse(a)
         >>> b_conf = CiscoConfParse(b)
         >>> compare = TemplateAPI.compare_template(a_conf, b_conf full=True)
-        >>> print(compare)
           !
             tacacs
             server 192.168.1.1
@@ -193,7 +192,6 @@ class CLITemplate:
         >>> a_conf = CiscoConfParse(a)
         >>> device = DevicesAPI(API_SESSION).get(DeviceField.HOSTNAME, device_name)
         >>> compare = TemplateAPI.compare_template(a_conf, device, full=True)
-        >>> print(compare)
         .
         .
         .
