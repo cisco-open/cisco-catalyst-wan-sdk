@@ -18,6 +18,9 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object.securi
     CaCertBundle,
     SslDecryptionParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.ssl_decryption_profile import (
+    SslDecryptionProfileParcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
@@ -29,6 +32,7 @@ from catalystwan.models.policy.definition.control import ControlPolicy
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
 from catalystwan.models.policy.definition.mesh import MeshPolicy
 from catalystwan.models.policy.definition.ssl_decryption import SslDecryptionPolicy
+from catalystwan.models.policy.definition.ssl_decryption_utd_profile import SslDecryptionUtdProfilePolicy
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.utils import convert_varname
 
@@ -45,6 +49,7 @@ Output = Optional[
             Ipv6AclParcel,
             AdvancedMalwareProtectionParcel,
             SslDecryptionParcel,
+            SslDecryptionProfileParcel,
         ],
         Field(discriminator="type_"),
     ]
@@ -200,6 +205,19 @@ def ssl_decryption(in_: SslDecryptionPolicy, uuid: UUID, context: PolicyConvertC
     return SslDecryptionParcel.create(**_get_parcel_name_desc(in_), **definition_dump)
 
 
+def ssl_profile(
+    in_: SslDecryptionUtdProfilePolicy, uuid: UUID, context: PolicyConvertContext
+) -> SslDecryptionProfileParcel:
+    definition_dump = in_.definition.model_dump(
+        exclude={"filtered_url_white_list", "filtered_url_black_list", "url_white_list", "url_black_list"}
+    )
+    if in_.definition.url_white_list:
+        definition_dump["url_allowed_list"] = in_.definition.url_white_list.ref
+    if in_.definition.url_black_list:
+        definition_dump["url_blocked_list"] = in_.definition.url_black_list.ref
+    return SslDecryptionProfileParcel.create(**_get_parcel_name_desc(in_), **definition_dump)
+
+
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     AclPolicy: ipv4acl,
     AclIPv6Policy: ipv6acl,
@@ -208,6 +226,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     MeshPolicy: mesh,
     AdvancedMalwareProtectionPolicy: advanced_malware_protection,
     SslDecryptionPolicy: ssl_decryption,
+    SslDecryptionUtdProfilePolicy: ssl_profile,
 }
 
 
