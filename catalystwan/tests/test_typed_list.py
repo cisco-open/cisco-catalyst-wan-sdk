@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 # type: ignore
@@ -396,6 +397,30 @@ class TestDataSequence(TestCase):
         # Arrange, Act, Assert
         with self.assertRaises(InvalidOperationError):
             self.data_sequence.find(username="NonExistingUser")
+
+    def test_deepcopy_basemodel(self):
+        # Arrange
+        user = User(username="admin")
+        ds = DataSequence(User, [user])
+        # Act
+        ds_deepcopy = copy.deepcopy(ds)
+        user_deepcopied = ds_deepcopy[0]
+        # Assert
+        self.assertIsNot(ds, ds_deepcopy)
+        self.assertIsNot(user, user_deepcopied)
+        self.assertEqual(user.username, user_deepcopied.username)
+
+    def test_deepcopy_dataclass(self):
+        # Arrange
+        fu = FakeUser(name="admin", weight=87.5)
+        ds = DataSequence(FakeUser, [fu])
+        # Act
+        ds_deepcopy = copy.deepcopy(ds)
+        fd_deepcopied = ds_deepcopy[0]
+        # Assert
+        self.assertIsNot(ds, ds_deepcopy)
+        self.assertIsNot(fu, fd_deepcopied)
+        self.assertEqual(fu.name, fd_deepcopied.name)
 
 
 if __name__ == "__main__":
