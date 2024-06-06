@@ -144,8 +144,8 @@ class SslDecryptionProfileParcel(_ParcelBase):
         url_allowed_list: Optional[UUID] = None,
         url_blocked_list: Optional[UUID] = None,
     ) -> "SslDecryptionProfileParcel":
-        ual = RefIdItem(ref_id=Global[str](value=str(url_allowed_list))) if url_allowed_list else None
-        ubl = RefIdItem(ref_id=Global[str](value=str(url_blocked_list))) if url_blocked_list else None
+        ual = RefIdItem.from_uuid(url_allowed_list) if url_allowed_list else None
+        ubl = RefIdItem.from_uuid(url_blocked_list) if url_blocked_list else None
         dt = Global[DecryptThreshold](value=decrypt_threshold) if decrypt_threshold else None
         sdt = Global[DecryptThreshold](value=skip_decrypt_threshold) if skip_decrypt_threshold else None
 

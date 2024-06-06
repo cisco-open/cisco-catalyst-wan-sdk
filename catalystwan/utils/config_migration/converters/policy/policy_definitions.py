@@ -11,6 +11,9 @@ from catalystwan.models.common import int_range_str_validator
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.aip import (
+    AdvancedInspectionProfileParcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.amp import (
     AdvancedMalwareProtectionParcel,
 )
@@ -27,6 +30,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import
 from catalystwan.models.policy import AnyPolicyDefinition
 from catalystwan.models.policy.definition.access_control_list import AclPolicy
 from catalystwan.models.policy.definition.access_control_list_ipv6 import AclIPv6Policy
+from catalystwan.models.policy.definition.aip import AdvancedInspectionProfilePolicy
 from catalystwan.models.policy.definition.amp import AdvancedMalwareProtectionPolicy
 from catalystwan.models.policy.definition.control import ControlPolicy
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
@@ -50,6 +54,7 @@ Output = Optional[
             AdvancedMalwareProtectionParcel,
             SslDecryptionParcel,
             SslDecryptionProfileParcel,
+            AdvancedInspectionProfileParcel,
         ],
         Field(discriminator="type_"),
     ]
@@ -218,6 +223,27 @@ def ssl_profile(
     return SslDecryptionProfileParcel.create(**_get_parcel_name_desc(in_), **definition_dump)
 
 
+def advanced_inspection_profile(
+    in_: AdvancedInspectionProfilePolicy, uuid: UUID, context: PolicyConvertContext
+) -> AdvancedInspectionProfileParcel:
+    if intrusion_prevention := in_.definition.intrusion_prevention:
+        ip = intrusion_prevention.ref
+    if url_filtering := in_.definition.url_filtering:
+        uf = url_filtering.ref
+    if advanced_malware_protection := in_.definition.advanced_malware_protection:
+        amp = advanced_malware_protection.ref
+    if ssl_utd_decrypt_profile := in_.definition.ssl_utd_decrypt_profile:
+        sdp = ssl_utd_decrypt_profile.ref
+    return AdvancedInspectionProfileParcel.create(
+        **_get_parcel_name_desc(in_),
+        tls_decryption_action=in_.definition.tls_decryption_action,
+        intrusion_prevention=ip,
+        url_filtering=uf,
+        advanced_malware_protection=amp,
+        ssl_decryption_profile=sdp,
+    )
+
+
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     AclPolicy: ipv4acl,
     AclIPv6Policy: ipv6acl,
@@ -227,6 +253,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     AdvancedMalwareProtectionPolicy: advanced_malware_protection,
     SslDecryptionPolicy: ssl_decryption,
     SslDecryptionUtdProfilePolicy: ssl_profile,
+    AdvancedInspectionProfilePolicy: advanced_inspection_profile,
 }
 
 
