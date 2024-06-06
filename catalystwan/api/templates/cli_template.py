@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 class CLITemplate:
     template_name: str
     template_description: str
-    device_model: DeviceModel
+    device_model: str
     config: CiscoConfParse = CiscoConfParse([], factory=True)
 
     def load(self, session: ManagerSession, id: str) -> CiscoConfParse:
@@ -67,16 +67,15 @@ class CLITemplate:
         payload = {
             "templateName": self.template_name,
             "templateDescription": self.template_description,
-            "deviceType": self.device_model.value,
+            "deviceType": self.device_model,
             "templateConfiguration": config_str,
             "factoryDefault": False,
             "configType": "file",
         }
         if self.device_model not in [
-            DeviceModel.VEDGE,
-            DeviceModel.VSMART,
-            DeviceModel.VMANAGE,
-            DeviceModel.VBOND,
+            "vedge-cloud",
+            "vsmart",
+            "vmanage",
         ]:
             payload["cliType"] = "device"
             payload["draftMode"] = False
