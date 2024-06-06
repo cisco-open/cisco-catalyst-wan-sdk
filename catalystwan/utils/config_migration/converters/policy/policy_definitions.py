@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
 from ipaddress import IPv4Interface
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Union
@@ -13,6 +14,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import I
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.amp import (
     AdvancedMalwareProtectionParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.ssl_decryption import (
+    CaCertBundle,
+    SslDecryptionParcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
@@ -23,6 +28,7 @@ from catalystwan.models.policy.definition.amp import AdvancedMalwareProtectionPo
 from catalystwan.models.policy.definition.control import ControlPolicy
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
 from catalystwan.models.policy.definition.mesh import MeshPolicy
+from catalystwan.models.policy.definition.ssl_decryption import SslDecryptionPolicy
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.utils import convert_varname
 
@@ -38,6 +44,7 @@ Output = Optional[
             Ipv4AclParcel,
             Ipv6AclParcel,
             AdvancedMalwareProtectionParcel,
+            SslDecryptionParcel,
         ],
         Field(discriminator="type_"),
     ]
@@ -184,6 +191,15 @@ def mesh(in_: MeshPolicy, uuid: UUID, context: PolicyConvertContext) -> MeshParc
     return out
 
 
+def ssl_decryption(in_: SslDecryptionPolicy, uuid: UUID, context: PolicyConvertContext) -> SslDecryptionParcel:
+    context.ssl_decryption_profiles[uuid] = in_.definition.profiles
+    context.ssl_decryption_sequences[uuid] = in_.definition.sequences
+    definition_dump = in_.definition.settings.model_dump()
+    definition_dump["certificate_lifetime"] = str(definition_dump["certificate_lifetime"])
+    definition_dump["ca_cert_bundle"] = CaCertBundle.create(**definition_dump["ca_cert_bundle"])
+    return SslDecryptionParcel.create(**_get_parcel_name_desc(in_), **definition_dump)
+
+
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     AclPolicy: ipv4acl,
     AclIPv6Policy: ipv6acl,
@@ -191,6 +207,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     HubAndSpokePolicy: hubspoke,
     MeshPolicy: mesh,
     AdvancedMalwareProtectionPolicy: advanced_malware_protection,
+    SslDecryptionPolicy: ssl_decryption,
 }
 
 

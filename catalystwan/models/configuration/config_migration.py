@@ -26,6 +26,7 @@ from catalystwan.models.configuration.network_hierarchy import NodeInfo
 from catalystwan.models.configuration.topology_group import TopologyGroup
 from catalystwan.models.policy import AnyPolicyDefinitionInfo, AnyPolicyListInfo
 from catalystwan.models.policy.centralized import CentralizedPolicyInfo
+from catalystwan.models.policy.definition.ssl_decryption import NetworkDecryptionRuleSequence, UrlProfile
 from catalystwan.models.policy.localized import LocalizedPolicyInfo
 from catalystwan.models.policy.security import AnySecurityPolicyInfo
 from catalystwan.models.templates import FeatureTemplateInformation, TemplateInformation
@@ -473,6 +474,8 @@ class PolicyConvertContext:
     sites_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
     lan_vpns_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
     amp_target_vpns_id: Dict[UUID, List[VpnId]] = field(default_factory=dict)
+    ssl_decryption_sequences: Dict[UUID, List[NetworkDecryptionRuleSequence]] = field(default_factory=dict)
+    ssl_decryption_profiles: Dict[UUID, List[UrlProfile]] = field(default_factory=dict)
 
     @staticmethod
     def from_configs(
