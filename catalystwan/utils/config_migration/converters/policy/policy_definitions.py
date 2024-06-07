@@ -26,7 +26,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object.securi
 )
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.ssl_decryption_profile import (
     SslDecryptionProfileParcel,
-
+)
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.url_filtering import (
     BlockPageAction,
     UrlFilteringParcel,
