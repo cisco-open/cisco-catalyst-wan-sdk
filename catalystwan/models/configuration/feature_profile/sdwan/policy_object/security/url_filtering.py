@@ -1,10 +1,10 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from pydantic import AliasPath, Field
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
 
 WebCategories = Literal[
@@ -106,10 +106,41 @@ class UrlFilteringParcel(_ParcelBase):
     )
     web_categories: Global[List[WebCategories]] = Field(validation_alias=AliasPath("data", "webCategories"))
     web_reputation: Global[WebReputation] = Field(validation_alias=AliasPath("data", "webReputation"))
-    url_allowed_list: RefIdItem = Field(default=None, validation_alias=AliasPath("data", "urlAllowedList"))
-    url_blocked_list: RefIdItem = Field(default=None, validation_alias=AliasPath("data", "urlBlockedList"))
+    url_allowed_list: Optional[RefIdItem] = Field(default=None, validation_alias=AliasPath("data", "urlAllowedList"))
+    url_blocked_list: Optional[RefIdItem] = Field(default=None, validation_alias=AliasPath("data", "urlBlockedList"))
     block_page_action: Global[BlockPageAction] = Field(validation_alias=AliasPath("data", "blockPageAction"))
     block_page_contents: Global[str] = Field(default=None, validation_alias=AliasPath("data", "blockPageContents"))
     redirect_url: Global[str] = Field(default=None, validation_alias=AliasPath("data", "redirectUrl"))
     enable_alerts: Global[bool] = Field(validation_alias=AliasPath("data", "enableAlerts"))
-    alerts: Global[List[Alerts]] = Field(default=None, validation_alias=AliasPath("data", "alerts"))
+    alerts: Optional[Global[List[Alerts]]] = Field(default=None, validation_alias=AliasPath("data", "alerts"))
+
+    @classmethod
+    def create(
+        cls,
+        parcel_name: str,
+        parcel_description: str,
+        web_categories_action: WebCategoriesAction,
+        web_categories: List[WebCategories],
+        web_reputation: WebReputation,
+        enable_alerts: bool,
+        block_page_action: BlockPageAction,
+        block_page_contents: str,
+        alerts: List[Alerts] = [],
+        url_allowed_list: Optional[RefIdItem] = None,
+        url_blocked_list: Optional[RefIdItem] = None,
+    ):
+        _alerts = Global[List[Alerts]](value=alerts) if alerts else None
+
+        return cls(
+            parcel_name=parcel_name,
+            parcel_description=parcel_description,
+            web_categories_action=as_global(web_categories_action, WebCategoriesAction),
+            web_categories=Global[List[WebCategories]](value=web_categories),
+            web_reputation=as_global(web_reputation, WebReputation),
+            block_page_action=as_global(block_page_action, BlockPageAction),
+            block_page_contents=as_global(block_page_contents),
+            enable_alerts=as_global(enable_alerts),
+            alerts=_alerts,
+            url_allowed_list=url_allowed_list,
+            url_blocked_list=url_blocked_list,
+        )

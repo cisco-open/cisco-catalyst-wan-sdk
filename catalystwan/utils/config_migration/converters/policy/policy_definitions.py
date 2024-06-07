@@ -7,8 +7,10 @@ from uuid import UUID
 from pydantic import Field
 from typing_extensions import Annotated
 
+from catalystwan.api.configuration_groups.parcel import as_global
 from catalystwan.models.common import int_range_str_validator
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
+from catalystwan.models.configuration.feature_profile.common import RefIdItem
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.aip import (
@@ -17,12 +19,17 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object.securi
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.amp import (
     AdvancedMalwareProtectionParcel,
 )
+
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.ssl_decryption import (
     CaCertBundle,
     SslDecryptionParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.ssl_decryption_profile import (
     SslDecryptionProfileParcel,
+
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.url_filtering import (
+    BlockPageAction,
+    UrlFilteringParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
@@ -37,6 +44,7 @@ from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
 from catalystwan.models.policy.definition.mesh import MeshPolicy
 from catalystwan.models.policy.definition.ssl_decryption import SslDecryptionPolicy
 from catalystwan.models.policy.definition.ssl_decryption_utd_profile import SslDecryptionUtdProfilePolicy
+from catalystwan.models.policy.definition.url_filtering import UrlFilteringPolicy
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.utils import convert_varname
 
@@ -55,6 +63,7 @@ Output = Optional[
             SslDecryptionParcel,
             SslDecryptionProfileParcel,
             AdvancedInspectionProfileParcel,
+            UrlFilteringParcel,
         ],
         Field(discriminator="type_"),
     ]
@@ -243,6 +252,35 @@ def advanced_inspection_profile(
         ssl_decryption_profile=sdp,
     )
 
+def url_filtering(in_: UrlFilteringPolicy, uuid: UUID, context: PolicyConvertContext) -> UrlFilteringParcel:
+    block_page_action_map: Dict[str, BlockPageAction] = {"text": "text", "redirectUrl": "redirect-url"}
+    definition_dump = in_.definition.model_dump(
+        exclude={"target_vpns", "url_white_list", "url_black_list", "logging", "block_page_action"}
+    )
+
+    if vpns := in_.definition.target_vpns:
+        context.url_filtering_target_vpns[uuid] = vpns
+
+    block_page_action = block_page_action_map[in_.definition.block_page_action]
+    # below references are a references to v1 objects,
+    # during push the references shall be transformed to point v2 objects
+    url_allowed_list = (
+        RefIdItem(ref_id=as_global(str(in_.definition.url_white_list.ref))) if in_.definition.url_white_list else None
+    )
+    url_blocked_list = (
+        RefIdItem(ref_id=as_global(str(in_.definition.url_black_list.ref))) if in_.definition.url_black_list else None
+    )
+
+    out = UrlFilteringParcel.create(
+        **_get_parcel_name_desc(in_),
+        **definition_dump,
+        block_page_action=block_page_action,
+        url_allowed_list=url_allowed_list,
+        url_blocked_list=url_blocked_list,
+    )
+    return out
+
+
 
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     AclPolicy: ipv4acl,
@@ -254,6 +292,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     SslDecryptionPolicy: ssl_decryption,
     SslDecryptionUtdProfilePolicy: ssl_profile,
     AdvancedInspectionProfilePolicy: advanced_inspection_profile,
+    UrlFilteringPolicy: url_filtering,
 }
 
 

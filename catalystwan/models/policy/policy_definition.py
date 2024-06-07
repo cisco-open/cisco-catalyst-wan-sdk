@@ -1161,6 +1161,7 @@ class InfoTag(BaseModel):
 
 
 class PolicyDefinitionId(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     definition_id: UUID = Field(serialization_alias="definitionId", validation_alias="definitionId")
 
 

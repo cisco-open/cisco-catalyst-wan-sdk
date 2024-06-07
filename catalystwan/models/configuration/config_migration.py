@@ -474,6 +474,7 @@ class PolicyConvertContext:
     sites_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
     lan_vpns_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
     amp_target_vpns_id: Dict[UUID, List[VpnId]] = field(default_factory=dict)
+    url_filtering_target_vpns: Dict[UUID, List[VpnId]] = field(default_factory=dict)
     ssl_decryption_sequences: Dict[UUID, List[NetworkDecryptionRuleSequence]] = field(default_factory=dict)
     ssl_decryption_profiles: Dict[UUID, List[UrlProfile]] = field(default_factory=dict)
 
