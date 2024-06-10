@@ -1,6 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from typing import List, Literal
+from typing import List, Literal, Optional
+from uuid import UUID
 
 from pydantic import AliasPath, Field
 
@@ -116,14 +117,48 @@ class SslDecryptionProfileParcel(_ParcelBase):
     reputation: Global[bool] = Field(
         default=Global[bool](value=False), validation_alias=AliasPath("data", "reputation")
     )
-    decrypt_threshold: Global[DecryptThreshold] = Field(
+    decrypt_threshold: Optional[Global[DecryptThreshold]] = Field(
         default=None, validation_alias=AliasPath("data", "decryptThreshold")
     )
-    skip_decrypt_threshold: Global[DecryptThreshold] = Field(
+    skip_decrypt_threshold: Optional[Global[DecryptThreshold]] = Field(
         default=None, validation_alias=AliasPath("data", "skipDecryptThreshold")
     )
     fail_decrypt: Global[bool] = Field(
         default=Global[bool](value=False), validation_alias=AliasPath("data", "failDecrypt")
     )
-    url_allowed_list: RefIdItem = Field(default=None, validation_alias=AliasPath("data", "urlAllowedList"))
-    url_blocked_list: RefIdItem = Field(default=None, validation_alias=AliasPath("data", "urlBlockedList"))
+    url_allowed_list: Optional[RefIdItem] = Field(default=None, validation_alias=AliasPath("data", "urlAllowedList"))
+    url_blocked_list: Optional[RefIdItem] = Field(default=None, validation_alias=AliasPath("data", "urlBlockedList"))
+
+    @classmethod
+    def create(
+        cls,
+        parcel_name: str,
+        parcel_description: str,
+        decrypt_categories: List[Categories],
+        never_decrypt_categories: List[Categories],
+        skip_decrypt_categories: List[Categories],
+        reputation: bool,
+        fail_decrypt: bool,
+        skip_decrypt_threshold: Optional[DecryptThreshold] = None,
+        decrypt_threshold: Optional[DecryptThreshold] = None,
+        url_allowed_list: Optional[UUID] = None,
+        url_blocked_list: Optional[UUID] = None,
+    ) -> "SslDecryptionProfileParcel":
+        ual = RefIdItem.from_uuid(url_allowed_list) if url_allowed_list else None
+        ubl = RefIdItem.from_uuid(url_blocked_list) if url_blocked_list else None
+        dt = Global[DecryptThreshold](value=decrypt_threshold) if decrypt_threshold else None
+        sdt = Global[DecryptThreshold](value=skip_decrypt_threshold) if skip_decrypt_threshold else None
+
+        return cls(
+            parcel_name=parcel_name,
+            parcel_description=parcel_description,
+            decrypt_categories=Global[List[Categories]](value=decrypt_categories),
+            never_decrypt_categories=Global[List[Categories]](value=never_decrypt_categories),
+            skip_decrypt_categories=Global[List[Categories]](value=skip_decrypt_categories),
+            reputation=Global[bool](value=reputation),
+            fail_decrypt=Global[bool](value=fail_decrypt),
+            decrypt_threshold=dt,
+            skip_decrypt_threshold=sdt,
+            url_allowed_list=ual,
+            url_blocked_list=ubl,
+        )

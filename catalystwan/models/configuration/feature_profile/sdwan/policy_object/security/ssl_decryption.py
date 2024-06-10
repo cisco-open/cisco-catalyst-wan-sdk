@@ -1,13 +1,14 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase
 
 Action = Literal["decrypt", "drop"]
-CertificateRevocationStatus = Literal["oscp", "none"]
+UnspportedModeAction = Literal["drop", "no-decrypt"]
+CertificateRevocationStatus = Literal["ocsp", "none"]
 FailureMode = Literal["close", "open"]
 KeyModulus = Literal["1024", "2048", "4096"]
 EckeyType = Literal["P256", "P384", "P521"]
@@ -17,9 +18,24 @@ CaTpLabel = Literal["PROXY-SIGNING-CA"]
 
 class CaCertBundle(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    default: Global[bool] = Field(default=Global[bool](value=True), validation_alias="default")
-    file_name: Global[str] = Field(default=None, validation_alias="fileName")
-    bundle_string: Global[str] = Field(default=None, validation_alias="bundle_string")
+    default: Global[bool] = Field(default=Global[bool](value=True))
+    file_name: Optional[Global[str]] = Field(default=None, validation_alias="fileName", serialization_alias="fileName")
+    bundle_string: Optional[Global[str]] = Field(
+        default=None, validation_alias="bundleString", serialization_alias="bundleString"
+    )
+
+    @classmethod
+    def create(
+        cls,
+        default: bool = True,
+        file_name: Optional[str] = None,
+        bundle_string: Optional[str] = None,
+    ) -> "CaCertBundle":
+        return cls(
+            default=Global[bool](value=default),
+            file_name=Global[str](value=file_name) if file_name else None,
+            bundle_string=Global[str](value=bundle_string) if bundle_string else None,
+        )
 
 
 class SslDecryptionParcel(_ParcelBase):
@@ -41,11 +57,11 @@ class SslDecryptionParcel(_ParcelBase):
         default=Global[CertificateRevocationStatus](value="none"),
         validation_alias=AliasPath("data", "certificateRevocationStatus"),
     )
-    unknown_status: Global[Action] = Field(default=None, validation_alias=AliasPath("data", "unknownStatus"))
-    unsupported_protocol_versions: Global[Action] = Field(
+    unknown_status: Optional[Global[Action]] = Field(default=None, validation_alias=AliasPath("data", "unknownStatus"))
+    unsupported_protocol_versions: Global[UnspportedModeAction] = Field(
         default=Global[Action](value="drop"), validation_alias=AliasPath("data", "unsupportedProtocolVersions")
     )
-    unsupported_cipher_suites: Global[Action] = Field(
+    unsupported_cipher_suites: Global[UnspportedModeAction] = Field(
         default=Global[Action](value="drop"), validation_alias=AliasPath("data", "unsupportedCipherSuites")
     )
     failure_mode: Global[FailureMode] = Field(
@@ -67,3 +83,42 @@ class SslDecryptionParcel(_ParcelBase):
     ca_tp_label: Global[CaTpLabel] = Field(
         default=Global[CaTpLabel](value="PROXY-SIGNING-CA"), validation_alias=AliasPath("data", "caTpLabel")
     )
+
+    @classmethod
+    def create(
+        cls,
+        parcel_name: str,
+        parcel_description: str,
+        ssl_enable: bool = True,
+        expired_certificate: Action = "drop",
+        untrusted_certificate: Action = "drop",
+        certificate_revocation_status: CertificateRevocationStatus = "none",
+        unknown_status: Optional[Action] = None,
+        unsupported_protocol_versions: UnspportedModeAction = "drop",
+        unsupported_cipher_suites: UnspportedModeAction = "drop",
+        failure_mode: FailureMode = "close",
+        ca_cert_bundle: CaCertBundle = CaCertBundle(),
+        key_modulus: KeyModulus = "1024",
+        eckey_type: EckeyType = "P256",
+        certificate_lifetime: str = "1",
+        min_tls_ver: TlsVersion = "TLSv1",
+        ca_tp_label: CaTpLabel = "PROXY-SIGNING-CA",
+    ) -> "SslDecryptionParcel":
+        return cls(
+            parcel_name=parcel_name,
+            parcel_description=parcel_description,
+            ssl_enable=Global[bool](value=ssl_enable),
+            expired_certificate=Global[Action](value=expired_certificate),
+            untrusted_certificate=Global[Action](value=untrusted_certificate),
+            certificate_revocation_status=Global[CertificateRevocationStatus](value=certificate_revocation_status),
+            unknown_status=Global[Action](value=unknown_status) if unknown_status else None,
+            unsupported_protocol_versions=Global[UnspportedModeAction](value=unsupported_protocol_versions),
+            unsupported_cipher_suites=Global[UnspportedModeAction](value=unsupported_cipher_suites),
+            failure_mode=Global[FailureMode](value=failure_mode),
+            ca_cert_bundle=ca_cert_bundle,
+            key_modulus=Global[KeyModulus](value=key_modulus),
+            eckey_type=Global[EckeyType](value=eckey_type),
+            certificate_lifetime=Global[str](value=certificate_lifetime),
+            min_tls_ver=Global[TlsVersion](value=min_tls_ver),
+            ca_tp_label=Global[CaTpLabel](value=ca_tp_label),
+        )
