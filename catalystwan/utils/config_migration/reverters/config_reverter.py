@@ -48,6 +48,10 @@ class UX2ConfigReverter:
         if rollback_info.default_policy_object_profile is not None:
             profile_id = rollback_info.default_policy_object_profile.profile_id
             api = self._session.api.sdwan_feature_profiles.policy_object
+
+            # removing order shall be reversed, otherwise some parcels may not be removed due to reference count != 0
+            rollback_info.default_policy_object_profile.parcels.reverse()
+
             for i, parcel in enumerate(rollback_info.default_policy_object_profile.parcels):
                 parcel_id, parcel_type_str = parcel
                 parcel_type = find_type(parcel_type_str, AnyPolicyObjectParcel)
