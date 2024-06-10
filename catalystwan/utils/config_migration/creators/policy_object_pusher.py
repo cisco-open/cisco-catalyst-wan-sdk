@@ -32,60 +32,60 @@ class ReferencesUpdater(ABC):
     def update_references(self):
         pass
 
-    def get_v2_uuid_of_transferred_v1_policy(self, v1_uuid: UUID) -> UUID:
-        if v2_uuid := self.pushed_objects_map.get(v1_uuid):
+    def get_target_uuid(self, origin_uuid: UUID) -> UUID:
+        if v2_uuid := self.pushed_objects_map.get(origin_uuid):
             return v2_uuid
 
         raise CatalystwanConverterCantConvertException(
-            f"Cannot find transferred policy object based on v1 API id: {v1_uuid}"
+            f"Cannot find transferred policy object based on v1 API id: {origin_uuid}"
         )
 
 
 class UrlFilteringReferencesUpdater(ReferencesUpdater):
     def update_references(self):
         if allowed_list := self.parcel.url_allowed_list:
-            v2_uuid = self.get_v2_uuid_of_transferred_v1_policy(UUID(allowed_list.ref_id.value))
+            v2_uuid = self.get_target_uuid(UUID(allowed_list.ref_id.value))
             self.parcel.url_allowed_list = RefIdItem.from_uuid(v2_uuid)
 
         if blocked_list := self.parcel.url_blocked_list:
-            v2_uuid = self.get_v2_uuid_of_transferred_v1_policy(UUID(blocked_list.ref_id.value))
+            v2_uuid = self.get_target_uuid(UUID(blocked_list.ref_id.value))
             self.parcel.url_blocked_list = RefIdItem.from_uuid(v2_uuid)
 
 
 class SslProfileReferencesUpdater(ReferencesUpdater):
     def update_references(self):
         if allowed_list := self.parcel.url_allowed_list:
-            v2_uuid = self.get_v2_uuid_of_transferred_v1_policy(UUID(allowed_list.ref_id.value))
+            v2_uuid = self.get_target_uuid(UUID(allowed_list.ref_id.value))
             self.parcel.url_allowed_list = RefIdItem.from_uuid(v2_uuid)
 
         if blocked_list := self.parcel.url_blocked_list:
-            v2_uuid = self.get_v2_uuid_of_transferred_v1_policy(UUID(blocked_list.ref_id.value))
+            v2_uuid = self.get_target_uuid(UUID(blocked_list.ref_id.value))
             self.parcel.url_blocked_list = RefIdItem.from_uuid(v2_uuid)
 
 
 class IntrusionPreventionReferencesUpdater(ReferencesUpdater):
     def update_references(self):
         if allowed_list := self.parcel.signature_allowed_list:
-            v2_uuid = self.get_v2_uuid_of_transferred_v1_policy(UUID(allowed_list.ref_id.value))
+            v2_uuid = self.get_target_uuid(UUID(allowed_list.ref_id.value))
             self.parcel.signature_allowed_list = RefIdItem.from_uuid(v2_uuid)
 
 
 class AdvancedInspectionProfileReferencesUpdater(ReferencesUpdater):
     def update_references(self):
         if advanced_malware_protection := self.parcel.advanced_malware_protection:
-            v2_uuid = self.get_v2_uuid_of_transferred_v1_policy(UUID(advanced_malware_protection.ref_id.value))
+            v2_uuid = self.get_target_uuid(UUID(advanced_malware_protection.ref_id.value))
             self.parcel.advanced_malware_protection = RefIdItem.from_uuid(v2_uuid)
 
         if intrusion_prevention := self.parcel.intrusion_prevention:
-            v2_uuid = self.get_v2_uuid_of_transferred_v1_policy(UUID(intrusion_prevention.ref_id.value))
+            v2_uuid = self.get_target_uuid(UUID(intrusion_prevention.ref_id.value))
             self.parcel.intrusion_prevention = RefIdItem.from_uuid(v2_uuid)
 
         if ssl_decryption_profile := self.parcel.ssl_decryption_profile:
-            v2_uuid = self.get_v2_uuid_of_transferred_v1_policy(UUID(ssl_decryption_profile.ref_id.value))
+            v2_uuid = self.get_target_uuid(UUID(ssl_decryption_profile.ref_id.value))
             self.parcel.ssl_decryption_profile = RefIdItem.from_uuid(v2_uuid)
 
         if url_filtering := self.parcel.url_filtering:
-            v2_uuid = self.get_v2_uuid_of_transferred_v1_policy(UUID(url_filtering.ref_id.value))
+            v2_uuid = self.get_target_uuid(UUID(url_filtering.ref_id.value))
             self.parcel.url_filtering = RefIdItem.from_uuid(v2_uuid)
 
 
