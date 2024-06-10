@@ -1,15 +1,17 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
-from ipaddress import IPv4Interface
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Union
+from ipaddress import IPv4Interface, IPv6Network
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Union, cast
 from uuid import UUID
 
 from pydantic import Field
 from typing_extensions import Annotated
 
-from catalystwan.api.configuration_groups.parcel import as_global
+from catalystwan.api.configuration_groups.parcel import Global, as_global
 from catalystwan.models.common import int_range_str_validator
 from catalystwan.models.configuration.config_migration import (
+    DeviceAccessIpv6Residues,
+    DeviceAccessIpv6SequenceDataPrefixRef,
     PolicyConvertContext,
     SslDecryptioneResidues,
     SslProfileResidues,
@@ -38,6 +40,12 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object.securi
     BlockPageAction,
     UrlFilteringParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import (
+    DestinationPort,
+    DeviceAccessIPv6Parcel,
+    MatchEntries,
+    Sequence,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
@@ -47,6 +55,7 @@ from catalystwan.models.policy.definition.access_control_list_ipv6 import AclIPv
 from catalystwan.models.policy.definition.aip import AdvancedInspectionProfilePolicy
 from catalystwan.models.policy.definition.amp import AdvancedMalwareProtectionPolicy
 from catalystwan.models.policy.definition.control import ControlPolicy
+from catalystwan.models.policy.definition.device_access_ipv6 import DeviceAccessIPv6Policy
 from catalystwan.models.policy.definition.dns_security import DnsSecurityPolicy, TargetVpn
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
 from catalystwan.models.policy.definition.intrusion_prevention import IntrusionPreventionPolicy
@@ -75,6 +84,7 @@ Output = Optional[
             SslDecryptionProfileParcel,
             UrlFilteringParcel,
             DnsParcel,
+            DeviceAccessIPv6Parcel,
         ],
         Field(discriminator="type_"),
     ]
@@ -98,6 +108,21 @@ def as_num_ranges_list(p: str) -> List[Union[int, Tuple[int, int]]]:
             num_list.append(low)
         else:
             num_list.append((hi, low))
+    return num_list
+
+
+def as_num_list(ports_list: List[Union[int, Tuple[int, int]]]) -> List[int]:
+    """
+    applicable to device access port list
+    [(30, 35), 80] -> [30 31 32 33 34 35 80]
+    """
+    num_list: List[int] = []
+    for val in ports_list:
+        if isinstance(val, int):
+            num_list.append(val)
+        elif isinstance(val, tuple):
+            num_list.extend(range(val[1], val[0] + 1))
+    num_list = sorted(list(set(num_list)))
     return num_list
 
 
@@ -245,6 +270,55 @@ def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context) -> Ipv6AclParcel:
     return out
 
 
+def device_access_ipv6(
+    in_: DeviceAccessIPv6Policy, uuid: UUID, context: PolicyConvertContext
+) -> DeviceAccessIPv6Parcel:
+    residues = DeviceAccessIpv6Residues()
+    out = DeviceAccessIPv6Parcel(**_get_parcel_name_desc(in_))
+    out.set_default_action(in_.default_action.type)
+    for in_seq in in_.sequences:
+        seq = Sequence.create(
+            sequence_id=in_seq.sequence_id,
+            sequence_name=in_seq.sequence_name,
+            base_action=in_seq.base_action,
+            match_entries=MatchEntries(destination_port=Global[DestinationPort](value=161)),  # will be overwritten
+        )
+        destination_origin = None
+        source_origin = None
+        for in_entry in in_seq.match.entries:
+            if "destinationDataIpv6PrefixList" == in_entry.field:
+                if in_entry.ref:
+                    d_ref = in_entry.ref[0]
+                    seq.match_destination_data_prefix(str(d_ref))
+                    destination_origin = d_ref
+            elif "destinationIpv6" == in_entry.field:
+                d_network_ipv6 = [IPv6Network(v) for v in in_entry.value.split(" ")]
+                seq.match_destination_data_prefix(d_network_ipv6)
+            elif "destinationPort" == in_entry.field:
+                destination_port = cast(DestinationPort, int(in_entry.value))
+                seq.match_destination_port(destination_port)
+            elif "sourceDataIpv6PrefixList" == in_entry.field:
+                if in_entry.ref:
+                    s_ref = in_entry.ref[0]
+                    seq.match_source_data_prefix(str(s_ref))
+                    source_origin = s_ref
+            elif "sourceIpv6" == in_entry.field:
+                s_network_ipv6 = [IPv6Network(v) for v in in_entry.value.split(" ")]
+                seq.match_source_data_prefix(s_network_ipv6)
+            elif "sourcePort" == in_entry.field:
+                seq.match_source_ports(as_num_list(as_num_ranges_list(in_entry.value)))
+        if destination_origin is not None or source_origin is not None:
+            prefixes = DeviceAccessIpv6SequenceDataPrefixRef(
+                sequence_id=in_seq.sequence_id,
+                destination_origin=destination_origin,
+                source_origin=source_origin,
+            )
+            residues.sequences.append(prefixes)
+        out.sequences.append(seq)
+    context.device_access_ipv6[uuid] = residues
+    return out
+
+
 def mesh(in_: MeshPolicy, uuid: UUID, context: PolicyConvertContext) -> MeshParcel:
     target_vpns = context.lan_vpns_by_list_id[in_.definition.vpn_list]
     mesh_sites: List[str] = []
@@ -388,6 +462,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     SslDecryptionUtdProfilePolicy: ssl_profile,
     UrlFilteringPolicy: url_filtering,
     DnsSecurityPolicy: dns_security,
+    DeviceAccessIPv6Policy: device_access_ipv6,
 }
 
 

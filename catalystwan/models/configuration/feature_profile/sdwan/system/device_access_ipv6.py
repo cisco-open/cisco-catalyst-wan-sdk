@@ -1,4 +1,5 @@
-from ipaddress import IPv6Interface
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+from ipaddress import IPv6Network
 from typing import Any, Dict, List, Literal, Optional, Union, overload
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
@@ -25,7 +26,7 @@ class SourceDataPrefix(BaseModel):
 class SourceIPPrefix(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
-    source_ip_prefix_list: Union[Global[List[IPv6Interface]], Variable] = Field(
+    source_ip_prefix_list: Union[Global[List[IPv6Network]], Variable] = Field(
         validation_alias="sourceIpPrefixList", serialization_alias="sourceIpPrefixList"
     )
 
@@ -41,7 +42,7 @@ class DestinationDataPrefix(BaseModel):
 class DestinationIPPrefix(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
-    destination_ip_prefix_list: Union[Global[List[IPv6Interface]], Variable] = Field(
+    destination_ip_prefix_list: Union[Global[List[IPv6Network]], Variable] = Field(
         validation_alias="destinationIpPrefixList", serialization_alias="destinationIpPrefixList"
     )
 
@@ -89,7 +90,7 @@ class Sequence(BaseModel):
         ...
 
     @overload
-    def match_destination_data_prefix(self, destination_prefix: List[IPv6Interface]):
+    def match_destination_data_prefix(self, destination_prefix: List[IPv6Network]):
         ...
 
     def match_destination_data_prefix(self, destination_prefix):
@@ -104,8 +105,11 @@ class Sequence(BaseModel):
                 )
         else:
             self.match_entries.destination_data_prefix = DestinationIPPrefix(
-                destination_ip_prefix_list=Global[List[IPv6Interface]](value=destination_prefix)
+                destination_ip_prefix_list=Global[List[IPv6Network]](value=destination_prefix)
             )
+
+    def match_destination_port(self, port: DestinationPort):
+        self.match_entries.destination_port = Global[DestinationPort](value=port)
 
     @overload
     def match_source_data_prefix(self, source_prefix: str):
@@ -116,7 +120,7 @@ class Sequence(BaseModel):
         ...
 
     @overload
-    def match_source_data_prefix(self, source_prefix: List[IPv6Interface]):
+    def match_source_data_prefix(self, source_prefix: List[IPv6Network]):
         ...
 
     def match_source_data_prefix(self, source_prefix):
@@ -131,11 +135,26 @@ class Sequence(BaseModel):
                 )
         else:
             self.match_entries.source_data_prefix = SourceIPPrefix(
-                source_ip_prefix_list=Global[List[IPv6Interface]](value=source_prefix)
+                source_ip_prefix_list=Global[List[IPv6Network]](value=source_prefix)
             )
 
     def match_source_ports(self, ports: List[int]):
         self.match_entries.source_ports = Global[List[int]](value=ports)
+
+    @classmethod
+    def create(
+        cls,
+        sequence_id: int,
+        sequence_name: str,
+        base_action: BaseAction,
+        match_entries: MatchEntries,
+    ) -> "Sequence":
+        return cls(
+            base_action=Global[BaseAction](value=base_action),
+            match_entries=match_entries,
+            sequence_id=Global[int](value=sequence_id),
+            sequence_name=Global[str](value=sequence_name),
+        )
 
 
 class DeviceAccessIPv6Parcel(_ParcelBase):
