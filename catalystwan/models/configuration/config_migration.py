@@ -24,8 +24,9 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
 from catalystwan.models.configuration.network_hierarchy import NodeInfo
 from catalystwan.models.configuration.topology_group import TopologyGroup
-from catalystwan.models.policy import AnyPolicyDefinitionInfo, AnyPolicyListInfo
+from catalystwan.models.policy import AnyPolicyDefinitionInfo, AnyPolicyListInfo, URLAllowListInfo, URLBlockListInfo
 from catalystwan.models.policy.centralized import CentralizedPolicyInfo
+from catalystwan.models.policy.definition.ssl_decryption import NetworkDecryptionRuleSequence, UrlProfile
 from catalystwan.models.policy.localized import LocalizedPolicyInfo
 from catalystwan.models.policy.security import AnySecurityPolicyInfo
 from catalystwan.models.templates import FeatureTemplateInformation, TemplateInformation
@@ -463,6 +464,18 @@ class UX2ConfigPushResult(BaseModel):
 
 
 @dataclass
+class SslProfileResidues:
+    filtered_url_black_list: List[URLBlockListInfo]
+    filtered_url_white_list: List[URLAllowListInfo]
+
+
+@dataclass
+class SslDecryptioneResidues:
+    sequences: List[NetworkDecryptionRuleSequence]
+    profiles: List[UrlProfile]
+
+
+@dataclass
 class PolicyConvertContext:
     # conversion input
     region_map: Dict[str, int] = field(default_factory=dict)
@@ -473,6 +486,10 @@ class PolicyConvertContext:
     sites_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
     lan_vpns_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
     amp_target_vpns_id: Dict[UUID, List[VpnId]] = field(default_factory=dict)
+    intrusion_prevention_target_vpns_id: Dict[UUID, List[VpnId]] = field(default_factory=dict)
+    ssl_decryption_residues: Dict[UUID, SslDecryptioneResidues] = field(default_factory=dict)
+    ssl_profile_residues: Dict[UUID, SslProfileResidues] = field(default_factory=dict)
+    url_filtering_target_vpns: Dict[UUID, List[VpnId]] = field(default_factory=dict)
 
     @staticmethod
     def from_configs(
