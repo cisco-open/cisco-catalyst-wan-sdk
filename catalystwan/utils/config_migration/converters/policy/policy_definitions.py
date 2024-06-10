@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
 from ipaddress import IPv4Interface
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Union
@@ -6,12 +7,35 @@ from uuid import UUID
 from pydantic import Field
 from typing_extensions import Annotated
 
+from catalystwan.api.configuration_groups.parcel import as_global
 from catalystwan.models.common import int_range_str_validator
-from catalystwan.models.configuration.config_migration import PolicyConvertContext
+from catalystwan.models.configuration.config_migration import (
+    PolicyConvertContext,
+    SslDecryptioneResidues,
+    SslProfileResidues,
+)
+from catalystwan.models.configuration.feature_profile.common import RefIdItem
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.aip import (
+    AdvancedInspectionProfileParcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.amp import (
     AdvancedMalwareProtectionParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.intrusion_prevention import (
+    IntrusionPreventionParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.ssl_decryption import (
+    CaCertBundle,
+    SslDecryptionParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.ssl_decryption_profile import (
+    SslDecryptionProfileParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.url_filtering import (
+    BlockPageAction,
+    UrlFilteringParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
@@ -19,10 +43,15 @@ from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import
 from catalystwan.models.policy import AnyPolicyDefinition
 from catalystwan.models.policy.definition.access_control_list import AclPolicy
 from catalystwan.models.policy.definition.access_control_list_ipv6 import AclIPv6Policy
+from catalystwan.models.policy.definition.aip import AdvancedInspectionProfilePolicy
 from catalystwan.models.policy.definition.amp import AdvancedMalwareProtectionPolicy
 from catalystwan.models.policy.definition.control import ControlPolicy
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
+from catalystwan.models.policy.definition.intrusion_prevention import IntrusionPreventionPolicy
 from catalystwan.models.policy.definition.mesh import MeshPolicy
+from catalystwan.models.policy.definition.ssl_decryption import SslDecryptionPolicy
+from catalystwan.models.policy.definition.ssl_decryption_utd_profile import SslDecryptionUtdProfilePolicy
+from catalystwan.models.policy.definition.url_filtering import UrlFilteringPolicy
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.utils import convert_varname
 
@@ -37,7 +66,12 @@ Output = Optional[
             MeshParcel,
             Ipv4AclParcel,
             Ipv6AclParcel,
+            AdvancedInspectionProfileParcel,
             AdvancedMalwareProtectionParcel,
+            IntrusionPreventionParcel,
+            SslDecryptionParcel,
+            SslDecryptionProfileParcel,
+            UrlFilteringParcel,
         ],
         Field(discriminator="type_"),
     ]
@@ -184,13 +218,136 @@ def mesh(in_: MeshPolicy, uuid: UUID, context: PolicyConvertContext) -> MeshParc
     return out
 
 
+def ssl_decryption(in_: SslDecryptionPolicy, uuid: UUID, context: PolicyConvertContext) -> SslDecryptionParcel:
+    definition_dump = in_.definition.settings.model_dump(
+        exclude={"certificate_lifetime", "ca_cert_bundle", "unknown_status"}
+    )
+    certificate_lifetime = str(in_.definition.settings.certificate_lifetime)
+    ca_cert_bundle = CaCertBundle.create(**in_.definition.settings.ca_cert_bundle.model_dump())
+    unknown_status = (
+        in_.definition.settings.unknown_status
+        if in_.definition.settings.certificate_revocation_status != "none"
+        else None
+    )
+
+    if in_.definition.sequences or in_.definition.profiles:
+        context.ssl_decryption_residues[uuid] = SslDecryptioneResidues(
+            sequences=in_.definition.sequences, profiles=in_.definition.profiles
+        )
+
+    return SslDecryptionParcel.create(
+        **_get_parcel_name_desc(in_),
+        **definition_dump,
+        ca_cert_bundle=ca_cert_bundle,
+        certificate_lifetime=certificate_lifetime,
+        unknown_status=unknown_status,
+    )
+
+
+def ssl_profile(
+    in_: SslDecryptionUtdProfilePolicy, uuid: UUID, context: PolicyConvertContext
+) -> SslDecryptionProfileParcel:
+    definition_dump = in_.definition.model_dump(
+        exclude={"filtered_url_white_list", "filtered_url_black_list", "url_white_list", "url_black_list"}
+    )
+
+    url_allowed_list = in_.definition.url_white_list.ref if in_.definition.url_white_list else None
+    url_blocked_list = in_.definition.url_black_list.ref if in_.definition.url_black_list else None
+
+    if in_.definition.filtered_url_black_list or in_.definition.filtered_url_white_list:
+        context.ssl_profile_residues[uuid] = SslProfileResidues(
+            filtered_url_black_list=in_.definition.filtered_url_black_list,
+            filtered_url_white_list=in_.definition.filtered_url_white_list,
+        )
+
+    return SslDecryptionProfileParcel.create(
+        **_get_parcel_name_desc(in_),
+        **definition_dump,
+        url_allowed_list=url_allowed_list,
+        url_blocked_list=url_blocked_list,
+    )
+
+
+def advanced_inspection_profile(
+    in_: AdvancedInspectionProfilePolicy, uuid: UUID, context: PolicyConvertContext
+) -> AdvancedInspectionProfileParcel:
+    intrusion_prevention_ref = in_.definition.intrusion_prevention.ref if in_.definition.intrusion_prevention else None
+    url_filtering_ref = in_.definition.url_filtering.ref if in_.definition.url_filtering else None
+    advanced_malware_protection_ref = (
+        in_.definition.advanced_malware_protection.ref if in_.definition.advanced_malware_protection else None
+    )
+    ssl_decryption_profile_ref = (
+        in_.definition.ssl_utd_decrypt_profile.ref if in_.definition.ssl_utd_decrypt_profile else None
+    )
+
+    return AdvancedInspectionProfileParcel.create(
+        **_get_parcel_name_desc(in_),
+        tls_decryption_action=in_.definition.tls_decryption_action,
+        intrusion_prevention=intrusion_prevention_ref,
+        url_filtering=url_filtering_ref,
+        advanced_malware_protection=advanced_malware_protection_ref,
+        ssl_decryption_profile=ssl_decryption_profile_ref,
+    )
+
+
+def url_filtering(in_: UrlFilteringPolicy, uuid: UUID, context: PolicyConvertContext) -> UrlFilteringParcel:
+    block_page_action_map: Dict[str, BlockPageAction] = {"text": "text", "redirectUrl": "redirect-url"}
+    definition_dump = in_.definition.model_dump(
+        exclude={"target_vpns", "url_white_list", "url_black_list", "logging", "block_page_action"}
+    )
+
+    if vpns := in_.definition.target_vpns:
+        context.url_filtering_target_vpns[uuid] = vpns
+
+    block_page_action = block_page_action_map[in_.definition.block_page_action]
+    # below references are a references to v1 objects,
+    # during push the references shall be transformed to point v2 objects
+    url_allowed_list = (
+        RefIdItem(ref_id=as_global(str(in_.definition.url_white_list.ref))) if in_.definition.url_white_list else None
+    )
+    url_blocked_list = (
+        RefIdItem(ref_id=as_global(str(in_.definition.url_black_list.ref))) if in_.definition.url_black_list else None
+    )
+
+    out = UrlFilteringParcel.create(
+        **_get_parcel_name_desc(in_),
+        **definition_dump,
+        block_page_action=block_page_action,
+        url_allowed_list=url_allowed_list,
+        url_blocked_list=url_blocked_list,
+    )
+    return out
+
+
+def intrusion_prevention(
+    in_: IntrusionPreventionPolicy, uuid: UUID, context: PolicyConvertContext
+) -> IntrusionPreventionParcel:
+    if vpn_list := in_.definition.target_vpns:
+        context.intrusion_prevention_target_vpns_id[uuid] = vpn_list
+
+    definition_dump = in_.definition.model_dump(exclude={"target_vpns", "logging"})
+    signature_white_list = definition_dump.pop("signature_white_list", None)
+    signature_allowed_list = signature_white_list.get("ref") if signature_white_list else None
+
+    return IntrusionPreventionParcel.create(
+        **_get_parcel_name_desc(in_),
+        **definition_dump,
+        signature_allowed_list=signature_allowed_list,
+    )
+
+
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     AclPolicy: ipv4acl,
     AclIPv6Policy: ipv6acl,
     ControlPolicy: control,
     HubAndSpokePolicy: hubspoke,
     MeshPolicy: mesh,
+    AdvancedInspectionProfilePolicy: advanced_inspection_profile,
     AdvancedMalwareProtectionPolicy: advanced_malware_protection,
+    IntrusionPreventionPolicy: intrusion_prevention,
+    SslDecryptionPolicy: ssl_decryption,
+    SslDecryptionUtdProfilePolicy: ssl_profile,
+    UrlFilteringPolicy: url_filtering,
 }
 
 

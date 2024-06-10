@@ -40,6 +40,7 @@ from .security.security_port import SecurityPortListEntry, SecurityPortParcel
 from .security.ssl_decryption import SslDecryptionParcel
 from .security.ssl_decryption_profile import SslDecryptionProfileParcel
 from .security.url import BaseURLListEntry, URLAllowParcel, URLBlockParcel, URLParcel
+from .security.url_filtering import UrlFilteringParcel
 from .security.zone import SecurityZoneListEntry, SecurityZoneListParcel
 
 AnyPolicyObjectParcel = Annotated[
@@ -76,6 +77,7 @@ AnyPolicyObjectParcel = Annotated[
         StandardCommunityParcel,
         TlocParcel,
         URLParcel,
+        UrlFilteringParcel,
     ],
     Field(discriminator="type_"),
 ]

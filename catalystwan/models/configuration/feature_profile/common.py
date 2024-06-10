@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from datetime import datetime
@@ -279,6 +280,10 @@ class RefIdItem(BaseModel):
         populate_by_name=True,
     )
     ref_id: Global[str] = Field(..., serialization_alias="refId", validation_alias="refId")
+
+    @classmethod
+    def from_uuid(cls, ref_id: UUID):
+        return cls(ref_id=as_global(str(ref_id)))
 
 
 class RefIdList(BaseModel):

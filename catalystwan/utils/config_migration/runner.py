@@ -9,6 +9,7 @@ from catalystwan.models.configuration.feature_profile.parcel import Parcel, list
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
 from catalystwan.session import ManagerSession
 from catalystwan.typed_list import DataSequence
+from catalystwan.utils.config_migration.creators.policy_object_pusher import get_parcel_ordering_value
 from catalystwan.workflows.config_migration import (
     collect_ux1_config,
     log_progress,
@@ -108,8 +109,13 @@ class ConfigMigrationRunner:
             po_profiles = fp_api.policy_object.get_profiles()
             if len(po_profiles) > 1:
                 print("WARNING MORE THAN ONE DEFAULT POLICY OBJECT PROFILE DETECTED")
+
             for po_profile in po_profiles:
-                for dpo_parcel_type in list_types(AnyPolicyObjectParcel):
+                sorted_parcel_types = sorted(
+                    list_types(AnyPolicyObjectParcel), key=lambda x: get_parcel_ordering_value(x), reverse=True
+                )
+
+                for dpo_parcel_type in sorted_parcel_types:
                     for parcel in cast(
                         DataSequence[Parcel[AnyPolicyObjectParcel]],
                         fp_api.policy_object.get(po_profile.profile_id, dpo_parcel_type),
