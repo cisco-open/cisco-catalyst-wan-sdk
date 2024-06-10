@@ -7,11 +7,10 @@ from catalystwan.models.policy.definition.intrusion_prevention import (
     IntrusionPreventionDefinition,
     IntrusionPreventionPolicy,
 )
-from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.policy.policy_definitions import convert
 
 
-class TestAdvancedMalwareProtectionConverter(unittest.TestCase):
+class TestIntrusionPreventionConverter(unittest.TestCase):
     def setUp(self) -> None:
         self.context = PolicyConvertContext()
 
@@ -26,7 +25,7 @@ class TestAdvancedMalwareProtectionConverter(unittest.TestCase):
                 signature_white_list=None,
                 log_level="error",
                 logging=[],
-                target_vpns=[1, 2, 3],
+                target_vpns=[],
                 custom_signature=False,
             ),
         )
@@ -41,8 +40,7 @@ class TestAdvancedMalwareProtectionConverter(unittest.TestCase):
         assert parcel.log_level.value == "error"
         assert parcel.custom_signature.value is False
 
-        assert len(self.context.intrusion_prevention_target_vpns_id) == 1
-        assert self.context.intrusion_prevention_target_vpns_id[uuid] == ipp.definition.target_vpns
+        assert len(self.context.intrusion_prevention_target_vpns_id) == 0
 
     def test_intrusion_prevention_security_conversion(self):
         # Arrange
@@ -50,10 +48,10 @@ class TestAdvancedMalwareProtectionConverter(unittest.TestCase):
             name="ip_security",
             mode="security",
             definition=IntrusionPreventionDefinition(
-                signature_set="balanced",
-                inspection_mode="detection",
+                signature_set="connectivity",
+                inspection_mode="protection",
                 signature_white_list=None,
-                log_level="error",
+                log_level="critical",
                 logging=[],
                 target_vpns=[1, 2, 3],
                 custom_signature=False,
@@ -61,8 +59,14 @@ class TestAdvancedMalwareProtectionConverter(unittest.TestCase):
         )
         uuid = uuid4()
         # Act
-        with self.assertRaises(CatalystwanConverterCantConvertException) as ccce:
-            convert(ipp, uuid, context=self.context)
+        parcel = convert(ipp, uuid, context=self.context)
+
         # Assert
-        assert len(self.context.intrusion_prevention_target_vpns_id) == 0
-        assert "Policy Mode 'security' is not supported for Intrusion Prevention Policy" in str(ccce.exception)
+        assert parcel.parcel_name == "ip_security"
+        assert parcel.signature_set.value == "connectivity"
+        assert parcel.inspection_mode.value == "protection"
+        assert parcel.signature_allowed_list is None
+        assert parcel.log_level.value == "critical"
+        assert parcel.custom_signature.value is False
+        assert len(self.context.intrusion_prevention_target_vpns_id) == 1
+        assert self.context.intrusion_prevention_target_vpns_id[uuid] == [1, 2, 3]
