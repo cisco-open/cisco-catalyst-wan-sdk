@@ -2,7 +2,7 @@
 
 from typing import List, Literal, Optional
 
-from pydantic import AliasPath, Field
+from pydantic import AliasPath, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
 
@@ -17,6 +17,7 @@ FileAnalysisFileTypes = Literal[
 
 
 class AdvancedMalwareProtectionParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["unified/advanced-malware-protection"] = Field(
         default="unified/advanced-malware-protection", exclude=True
     )

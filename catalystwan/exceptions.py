@@ -32,7 +32,7 @@ class ManagerHTTPError(HTTPError, ManagerRequestException):
             _args = (str(_args[0]) + "\n" + info_str,) + _args[1:]
         super().__init__(*_args, **kwargs)
 
-    def __str__(self):
+    def details(self):
         error_info_str = str(self.info) if self.info else "No error information"
         request_str = (
             f"Request: Method: {self.request.method}, URL: {self.request.url},"

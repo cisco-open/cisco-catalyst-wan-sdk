@@ -16,6 +16,7 @@ class StandardCommunityEntry(BaseModel):
 
 
 class StandardCommunityParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["standard-community"] = Field(default="standard-community", exclude=True)
     entries: List[StandardCommunityEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
 

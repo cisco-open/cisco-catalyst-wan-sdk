@@ -156,7 +156,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         port: Optional[int] = None,
         subdomain: Optional[str] = None,
         auth: Optional[AuthBase] = None,
-        validate_response: bool = True,
+        validate_responses: bool = True,
     ):
         self.url = url
         self.port = port
@@ -179,7 +179,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self._state: ManagerSessionState = ManagerSessionState.OPERATIVE
         self.restart_timeout: int = 1200
         self.polling_requests_timeout: int = 10
-        self._validate_response = validate_response
+        self._validate_responses = validate_responses
 
     @cached_property
     def api(self) -> APIContainer:
@@ -444,11 +444,23 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         return response.json()["VSessionId"]
 
     def logout(self) -> Optional[ManagerResponse]:
+        response = None
         if isinstance((version := self.api_version), NullVersion):
             self.logger.warning("Cannot perform logout operation without known api_version.")
-            return None
+            return response
         else:
-            return self.post("/logout") if version >= Version("20.12") else self.get("/logout")
+            # disable automatic relogin before performing logout request
+            _relogin = self.enable_relogin
+            try:
+                self.enable_relogin = False
+                if version >= Version("20.12"):
+                    response = self.post("/logout")
+                else:
+                    response = self.get("/logout")
+            finally:
+                # restore original setting after performing logout request
+                self.enable_relogin = _relogin
+        return response
 
     def close(self) -> None:
         """Closes the ManagerSession.
@@ -461,7 +473,6 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         using the `with` statement, which ensures that the session is properly
         closed and resources are cleaned up even in case of exceptions.
         """
-        self.enable_relogin = False
         self.logout()
         super().close()
 
@@ -487,12 +498,12 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         return self._api_version
 
     @property
-    def validate_response(self) -> bool:
-        return self._validate_response
+    def validate_responses(self) -> bool:
+        return self._validate_responses
 
-    @validate_response.setter
-    def validate_response(self, value: bool):
-        self._validate_response = value
+    @validate_responses.setter
+    def validate_responses(self, value: bool):
+        self._validate_responses = value
 
     def __str__(self) -> str:
         return f"{self.username}@{self.base_url}"

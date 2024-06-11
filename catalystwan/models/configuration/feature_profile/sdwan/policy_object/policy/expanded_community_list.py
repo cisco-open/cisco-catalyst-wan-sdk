@@ -8,8 +8,8 @@ from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase
 
 
 class ExpandedCommunityParcel(_ParcelBase):
-    type_: Literal["expanded-community"] = Field(default="expanded-community", exclude=True)
     model_config = ConfigDict(populate_by_name=True)
+    type_: Literal["expanded-community"] = Field(default="expanded-community", exclude=True)
     expanded_community_list: Global[List[str]] = Field(
         default=Global[List[str]](value=list()),
         validation_alias=AliasPath("data", "expandedCommunityList"),

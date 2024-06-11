@@ -80,7 +80,6 @@ ParcelType = Literal[
     "security-port",
     "security-protocolname",
     "security-urllist",
-    "security-urllist",
     "security-zone",
     "security",
     "sig",

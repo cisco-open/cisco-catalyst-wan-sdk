@@ -28,6 +28,7 @@ class AppProbeEntry(BaseModel):
 
 
 class AppProbeParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["app-probe"] = Field(default="app-probe", exclude=True)
     entries: List[AppProbeEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
 

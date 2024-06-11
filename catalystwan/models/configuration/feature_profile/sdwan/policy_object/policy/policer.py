@@ -5,11 +5,7 @@ from typing import List, Literal
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
-
-PolicerExceedAction = Literal[
-    "drop",
-    "remark",
-]
+from catalystwan.models.policy.list.policer import PolicerExceedAction
 
 
 class PolicerEntry(BaseModel):
@@ -32,6 +28,7 @@ class PolicerEntry(BaseModel):
 
 
 class PolicerParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["policer"] = Field(default="policer", exclude=True)
     entries: List[PolicerEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
 

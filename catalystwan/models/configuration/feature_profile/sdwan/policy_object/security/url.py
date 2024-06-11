@@ -13,6 +13,7 @@ class BaseURLListEntry(BaseModel):
 
 
 class URLParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["security-urllist"] = Field(default="security-urllist", exclude=True)
     type: Literal["urlallowed", "urlblocked"]
     entries: List[BaseURLListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
@@ -22,10 +23,10 @@ class URLParcel(_ParcelBase):
 
 
 class URLAllowParcel(URLParcel):
-    type_: Literal["security-urllist"] = Field(default="security-urllist", exclude=True)
+    model_config = ConfigDict(populate_by_name=True)
     type: Literal["urlallowed"] = "urlallowed"
 
 
 class URLBlockParcel(URLParcel):
-    type_: Literal["security-urllist"] = Field(default="security-urllist", exclude=True)
+    model_config = ConfigDict(populate_by_name=True)
     type: Literal["urlblocked"] = "urlblocked"

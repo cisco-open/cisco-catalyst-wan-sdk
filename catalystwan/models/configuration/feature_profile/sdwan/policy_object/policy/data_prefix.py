@@ -22,8 +22,14 @@ class DataPrefixEntry(BaseModel):
 
 
 class DataPrefixParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["data-prefix"] = Field(default="data-prefix", exclude=True)
     entries: List[DataPrefixEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def add_data_prefix(self, ipv4_network: IPv4Network):
-        self.entries.append(DataPrefixEntry.from_ipv4_network(ipv4_network))
+        self.entries.append(
+            DataPrefixEntry(
+                ipv4_address=as_global(ipv4_network.network_address),
+                ipv4_prefix_length=as_global(ipv4_network.prefixlen),
+            )
+        )

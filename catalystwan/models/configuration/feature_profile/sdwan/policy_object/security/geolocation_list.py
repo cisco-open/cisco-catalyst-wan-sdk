@@ -2,7 +2,7 @@
 
 from typing import List, Literal, Optional
 
-from pydantic import AliasPath, BaseModel, Field, model_validator
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, model_validator
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
 from catalystwan.models.common import check_fields_exclusive
@@ -21,6 +21,7 @@ class GeoLocationListEntry(BaseModel):
 
 
 class GeoLocationListParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["security-geolocation"] = Field(default="security-geolocation", exclude=True)
     entries: List[GeoLocationListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
 

@@ -11,7 +11,9 @@ DEFAULT_USER_PRIVILEGE = "15"
 
 
 class PubkeyChainItem(BaseModel):
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     key_string: Global[str] = Field(
         validation_alias="keyString",
         serialization_alias="keyString",
@@ -280,9 +282,7 @@ class AAAParcel(_ParcelBase):
         max_length=4,
         description="ServerGroups priority order",
     )
-    user: Optional[List[UserItem]] = Field(
-        default=None, validation_alias=AliasPath("data", "user"), description="Create local login account", min_length=1
-    )
+    user: Optional[List[UserItem]] = Field(default=None, description="Create local login account", min_length=1)
     radius: Optional[List[Radius]] = Field(
         default=None, validation_alias=AliasPath("data", "radius"), description="Configure the Radius serverGroup"
     )

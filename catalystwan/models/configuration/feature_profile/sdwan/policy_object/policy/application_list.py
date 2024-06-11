@@ -18,6 +18,7 @@ class ApplicationFamilyListEntry(BaseModel):
 
 
 class ApplicationListParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["app-list"] = Field(default="app-list", exclude=True)
     entries: List[Union[ApplicationListEntry, ApplicationFamilyListEntry]] = Field(
         default=[], validation_alias=AliasPath("data", "entries")

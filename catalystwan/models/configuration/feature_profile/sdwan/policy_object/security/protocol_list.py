@@ -13,6 +13,7 @@ class ProtocolListEntry(BaseModel):
 
 
 class ProtocolListParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["security-protocolname"] = Field(default="security-protocolname", exclude=True)
     entries: List[ProtocolListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
 

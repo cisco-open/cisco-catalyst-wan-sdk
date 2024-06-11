@@ -70,7 +70,7 @@ class UX2ConfigPusher:
         try:
             self._session.endpoints.configuration_settings.create_cloud_credentials(cloud_credentials)
         except ManagerHTTPError as e:
-            logger.error(f"Error occured during credentials migration: {e.info}")
+            logger.error(f"Error occured during credentials migration: {e}")
 
     def _create_config_groups(self):
         config_groups = self._ux2_config.config_groups
@@ -92,7 +92,7 @@ class UX2ConfigPusher:
             try:
                 cg_id = self._session.endpoints.configuration_group.create_config_group(config_group_payload).id
             except ManagerHTTPError as e:
-                logger.error(f"Error occured during config group creation: {e.info}")
+                logger.error(f"Error occured during config group creation: {e}")
                 self._push_result.report.add_feature_profiles_not_assosiated_with_config_group(
                     feature_profiles=created_profiles
                 )
@@ -126,7 +126,7 @@ class UX2ConfigPusher:
                 feature_profiles.append(profile)
                 self._push_result.rollback.add_feature_profile(profile.profile_uuid, profile_type)
             except ManagerHTTPError as e:
-                logger.error(f"Error occured during [{fp_name}] feature profile creation: {e.info}")
+                logger.error(f"Error occured during [{fp_name}] feature profile creation: {e}")
             except Exception:
                 logger.critical(f"Unexpected error occured during [{fp_name}] feature profile creation", exc_info=True)
         return feature_profiles
@@ -161,7 +161,7 @@ class UX2ConfigPusher:
                     len(ttps),
                 )
             except ManagerHTTPError as e:
-                logger.error(f"Error occured during topology profile creation: {e.info}")
+                logger.error(f"Error occured during topology profile creation: {e}")
 
         ttgs = self._ux2_config.topology_groups
         for ttg in ttgs:
@@ -177,13 +177,13 @@ class UX2ConfigPusher:
                     len(ttps),
                 )
             except ManagerHTTPError as e:
-                logger.error(f"Error occured during topology group creation: {e.info}")
+                logger.error(f"Error occured during topology group creation: {e}")
 
             for parcel in self._ux2_config.parcels_with_origin(origins):
                 if isinstance(parcel, (CustomControlParcel, HubSpokeParcel, MeshParcel)):
                     try:
                         profile_api.create_parcel(profile_id, parcel)
                     except ManagerHTTPError as e:
-                        logger.error(f"Error occured during topology profile creation: {e.info}")
+                        logger.error(f"Error occured during topology profile creation: {e}")
                 else:
                     logger.warning(f"Unexpected parcel type {type(parcel)}")

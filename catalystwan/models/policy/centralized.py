@@ -193,6 +193,7 @@ AnyAssemblyItem = Annotated[
 
 
 class CentralizedPolicyDefinition(PolicyDefinition):
+    model_config = ConfigDict(populate_by_name=True)
     region_role_assembly: List = Field(
         default=[], serialization_alias="regionRoleAssembly", validation_alias="regionRoleAssembly"
     )
@@ -201,13 +202,13 @@ class CentralizedPolicyDefinition(PolicyDefinition):
 
 
 class CentralizedPolicy(PolicyCreationPayload):
-    policy_definition: Union[CentralizedPolicyDefinition, str] = Field(
-        default=CentralizedPolicyDefinition(),
-        serialization_alias="policyDefinition",
-        validation_alias="policyDefinition",
-    )
+    model_config = ConfigDict(populate_by_name=True)
     policy_type: Literal["feature", "cli"] = Field(
         default="feature", serialization_alias="policyType", validation_alias="policyType"
+    )
+    policy_definition: Union[str, CentralizedPolicyDefinition] = Field(
+        serialization_alias="policyDefinition",
+        validation_alias="policyDefinition",
     )
 
     def add_traffic_data_policy(self, traffic_data_policy_id: UUID) -> TrafficDataPolicyItem:
@@ -238,11 +239,10 @@ class CentralizedPolicy(PolicyCreationPayload):
         # it makes sense to reuse that model for both requests and present parsed data to the user
         if not isinstance(values, dict):
             return values
-        if (policy_definition := values.get("policyDefinition")) and values.get("policyType") != "cli":
-            if isinstance(policy_definition, str):
-                values["policyDefinition"] = CentralizedPolicyDefinition.model_validate_json(policy_definition)
-        else:
-            values["policyDefinition"] = CentralizedPolicyDefinition()
+        json_policy_type = values.get("policyType")
+        json_policy_definition = values.get("policyDefinition")
+        if json_policy_type == "feature" and isinstance(json_policy_definition, str):
+            values["policyDefinition"] = CentralizedPolicyDefinition.model_validate_json(json_policy_definition)
         return values
 
 

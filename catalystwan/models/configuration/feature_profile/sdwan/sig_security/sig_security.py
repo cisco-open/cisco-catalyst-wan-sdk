@@ -372,7 +372,7 @@ class SIGParcel(_ParcelBase):
         validation_alias=AliasPath("data", "interface"), description="Interface name: IPsec when present"
     )
     service: Service = Field(validation_alias=AliasPath("data", "service"))
-    tracker_src_ip: Union[Global[IPv4Address], Variable] = Field(
-        validation_alias=AliasPath("data", "trackerSrcIp"), description="Source IP address for Tracker"
+    tracker_src_ip: Union[Global[IPv4Address], Variable, None] = Field(
+        default=None, validation_alias=AliasPath("data", "trackerSrcIp"), description="Source IP address for Tracker"
     )
     tracker: List[Tracker] = Field(validation_alias=AliasPath("data", "tracker"))

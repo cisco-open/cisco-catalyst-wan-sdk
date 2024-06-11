@@ -1,7 +1,8 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from __future__ import annotations
 
+import copy
 from typing import Any, Generic, Iterable, MutableSequence, Type, TypeVar, overload
 
 from pydantic import BaseModel
@@ -185,6 +186,15 @@ class DataSequence(TypedList[T], Generic[T]):
     def __iadd__(self, __value: Iterable[T]) -> DataSequence[T]:
         self.data = DataSequence(self._type, self.data + [*__value.__iter__()]).data
         return self
+
+    def __copy__(self) -> DataSequence[T]:
+        return DataSequence(self._type, self.data)
+
+    def __deepcopy__(self, memo) -> DataSequence[T]:
+        if issubclass(self._type, BaseModel):
+            return DataSequence(self._type, [o.model_copy(deep=True) for o in self])  # type: ignore
+        else:
+            return DataSequence(self._type, [copy.deepcopy(o, memo) for o in self])
 
     @overload
     def single_or_default(self) -> T:

@@ -30,6 +30,7 @@ class IPSSignatureListEntry(BaseModel):
 
 
 class IPSSignatureParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["security-ipssignature"] = Field(default="security-ipssignature", exclude=True)
     entries: List[IPSSignatureListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
 

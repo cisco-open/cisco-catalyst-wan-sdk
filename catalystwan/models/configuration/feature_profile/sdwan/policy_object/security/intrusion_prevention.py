@@ -3,7 +3,7 @@
 from typing import Literal, Optional
 from uuid import UUID
 
-from pydantic import AliasPath, Field
+from pydantic import AliasPath, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
@@ -14,6 +14,7 @@ LogLevel = Literal["emergency", "alert", "critical", "error", "warning", "notice
 
 
 class IntrusionPreventionParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["unified/intrusion-prevention"] = Field(default="unified/intrusion-prevention", exclude=True)
     signature_set: Global[SignatureSet] = Field(
         default=Global[SignatureSet](value="balanced"), validation_alias=AliasPath("data", "signatureSet")

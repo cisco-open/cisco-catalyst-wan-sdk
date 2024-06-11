@@ -37,6 +37,7 @@ class _ParcelBase(BaseModel):
         validation_alias="description",
         description="Set the parcel description",
     )
+    data: Optional[Any] = None
     _parcel_data_key: str = PrivateAttr(default="data")
 
     @model_serializer(mode="wrap")
@@ -86,7 +87,7 @@ class OptionType(str, Enum):
 
 
 class ParcelAttribute(BaseModel):
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    model_config = ConfigDict(extra="forbid")
     option_type: OptionType = Field(serialization_alias="optionType", validation_alias="optionType")
 
 

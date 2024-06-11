@@ -15,6 +15,7 @@ class MirrorEntry(BaseModel):
 
 
 class MirrorParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["mirror"] = Field(default="mirror", exclude=True)
     entries: List[MirrorEntry] = Field(
         default=[], validation_alias=AliasPath("data", "entries"), min_length=1, max_length=1

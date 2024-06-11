@@ -15,6 +15,7 @@ class IPv6DataPrefixEntry(BaseModel):
 
 
 class IPv6DataPrefixParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["data-ipv6-prefix"] = Field(default="data-ipv6-prefix", exclude=True)
     entries: List[IPv6DataPrefixEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
 

@@ -54,5 +54,5 @@ class APIEndpointClient(Protocol):
         ...
 
     @property
-    def validate_response(self) -> bool:
+    def validate_responses(self) -> bool:
         ...

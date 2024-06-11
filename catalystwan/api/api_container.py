@@ -33,6 +33,7 @@ from catalystwan.api.tenant_backup_restore_api import TenantBackupRestoreAPI
 from catalystwan.api.tenant_management_api import TenantManagementAPI
 from catalystwan.api.tenant_migration_api import TenantMigrationAPI
 from catalystwan.api.versions_utils import RepositoryAPI
+from catalystwan.api.virtual_image_action_api import LxcActionAPI
 
 if TYPE_CHECKING:
     from catalystwan.session import ManagerSession
@@ -59,6 +60,7 @@ class APIContainer:
         self.repository = RepositoryAPI(session)
         self.resource_pool = ResourcePoolAPI(session)
         self.software = SoftwareActionAPI(session)
+        self.lxcsoftware = LxcActionAPI(session)
         self.partition = PartitionManagerAPI(session)
         self.users = UsersAPI(session)
         self.cluster_management = ClusterManagementAPI(session)

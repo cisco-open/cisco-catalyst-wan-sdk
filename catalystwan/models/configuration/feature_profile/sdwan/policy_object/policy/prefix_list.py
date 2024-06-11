@@ -15,6 +15,7 @@ class PrefixListEntry(BaseModel):
 
 
 class PrefixListParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["prefix"] = Field(default="prefix", exclude=True)
     entries: List[PrefixListEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 

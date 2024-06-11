@@ -44,6 +44,7 @@ class PreferredColorGroupEntry(BaseModel):
 
 
 class PreferredColorGroupParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["preferred-color-group"] = Field(default="preferred-color-group", exclude=True)
     entries: List[PreferredColorGroupEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
 

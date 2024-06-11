@@ -4,7 +4,7 @@
 from typing import Literal, Optional
 from uuid import UUID
 
-from pydantic import AliasPath, Field
+from pydantic import AliasPath, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
@@ -13,6 +13,7 @@ TlsDecryptionAction = Literal["decrypt", "neverDecrypt", "skipDecrypt"]
 
 
 class AdvancedInspectionProfileParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["unified/advanced-inspection-profile"] = Field(
         default="unified/advanced-inspection-profile", exclude=True
     )

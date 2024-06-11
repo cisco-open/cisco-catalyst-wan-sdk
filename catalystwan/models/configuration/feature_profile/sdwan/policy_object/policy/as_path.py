@@ -13,6 +13,7 @@ class AsPathEntry(BaseModel):
 
 
 class AsPathParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
     type_: Literal["as-path"] = Field(default="as-path", exclude=True)
     as_path_list_num: Global[int] = Field(validation_alias=AliasPath("data", "asPathListNum"))
     entries: List[AsPathEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))

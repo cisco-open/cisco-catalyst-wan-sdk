@@ -4,7 +4,7 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from catalystwan.models.common import InterfaceType, VpnId
+from catalystwan.models.common import VpnId
 from catalystwan.models.policy.policy_definition import (
     Optimized,
     PolicyDefinitionBase,
@@ -23,7 +23,9 @@ class Collector(BaseModel):
     address: str
     port: int = Field(ge=1024, le=65536)
     transport: TransportProtocol
-    sourceInterface: InterfaceType
+    source_interface: str = Field(
+        default=None, validation_alias="sourceInterface", serialization_alias="sourceInterface"
+    )
     export_spread: Optional[ExportState] = Field(
         default=None, validation_alias="exportSpread", serialization_alias="exportSpread"
     )

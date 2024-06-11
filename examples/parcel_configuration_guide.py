@@ -9,7 +9,7 @@ from uuid import UUID
 
 from catalystwan.api.feature_profile_api import PolicyObjectFeatureProfileAPI
 from catalystwan.endpoints.configuration_feature_profile import ConfigurationFeatureProfile
-from catalystwan.models.configuration.feature_profile.common import ParcelCreationResponse
+from catalystwan.models.configuration.feature_profile.parcel import ParcelCreationResponse
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import (
     ApplicationListParcel,
     AppProbeParcel,

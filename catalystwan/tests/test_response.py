@@ -156,7 +156,6 @@ class TestResponse(unittest.TestCase):
         data = vmng_response.dataobj(DataForValidateTest, sourcekey=None, validate=False)
         # Assert
         assert isinstance(data, DataForValidateTest)
-        print(data)
         assert data.important == VALIDATE_DATASEQ_TEST_DATA[0]["important"]
         with self.assertRaises(ValidationError):
             vmng_response.dataobj(DataForValidateTest, sourcekey=None, validate=True)
@@ -168,7 +167,6 @@ class TestResponse(unittest.TestCase):
         dataseq = vmng_response.dataseq(DataForValidateTest, sourcekey=None, validate=False)
         # Assert
         assert isinstance(dataseq, DataSequence)
-        print(dataseq)
         for i, data in enumerate(dataseq):
             assert isinstance(data, DataForValidateTest)
             assert data.important == VALIDATE_DATASEQ_TEST_DATA[i]["important"]
