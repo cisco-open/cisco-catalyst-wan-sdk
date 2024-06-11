@@ -1,5 +1,4 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from dataclasses import InitVar, dataclass, field
 from typing import Any, Dict, Iterator, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union
