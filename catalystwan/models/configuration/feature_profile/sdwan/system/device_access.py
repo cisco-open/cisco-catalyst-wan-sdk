@@ -1,17 +1,13 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Interface
 from typing import Any, Dict, List, Literal, Optional, Union, overload
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_variable
+from catalystwan.models.common import BasicPolicyActionType, PolicyMatchEntryDestinationPort
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
 from catalystwan.utils.type_check import is_str_uuid
-
-BaseAction = Literal[
-    "accept",
-    "drop",
-]
-DestinationPort = Literal[161, 22]
 
 
 class SourceDataPrefix(BaseModel):
@@ -52,7 +48,7 @@ class MatchEntries(BaseModel):
     destination_data_prefix: Optional[Union[DestinationIPPrefix, DestinationDataPrefix]] = Field(
         default=None, validation_alias="destinationDataPrefix", serialization_alias="destinationDataPrefix"
     )
-    destination_port: Global[DestinationPort] = Field(
+    destination_port: Global[PolicyMatchEntryDestinationPort] = Field(
         validation_alias="destinationPort", serialization_alias="destinationPort"
     )
     source_data_prefix: Optional[Union[SourceIPPrefix, SourceDataPrefix]] = Field(
@@ -66,10 +62,10 @@ class MatchEntries(BaseModel):
 class Sequence(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True, validate_assignment=True)
 
-    base_action: Union[Global[BaseAction], Default[Literal[BaseAction]]] = Field(
-        default=Default[Literal[BaseAction]](value="accept"),
-        validation_alias="baseAction",
-        serialization_alias="baseAction",
+    base_action: Union[Global[BasicPolicyActionType], Default[Literal[BasicPolicyActionType]]] = Field(
+        default=Default[Literal[BasicPolicyActionType]](value="accept"),
+        validation_alias="BasicPolicyActionType",
+        serialization_alias="BasicPolicyActionType",
     )
     match_entries: MatchEntries = Field(
         validation_alias="matchEntries", serialization_alias="matchEntries", description="Define match conditions"
@@ -77,8 +73,8 @@ class Sequence(BaseModel):
     sequence_id: Global[int] = Field(validation_alias="sequenceId", serialization_alias="sequenceId")
     sequence_name: Global[str] = Field(validation_alias="sequenceName", serialization_alias="sequenceName")
 
-    def set_base_action(self, base_action: BaseAction):
-        self.base_action = Global[BaseAction](value=base_action)
+    def set_base_action(self, base_action: BasicPolicyActionType):
+        self.base_action = Global[BasicPolicyActionType](value=base_action)
 
     @overload
     def match_destination_data_prefix(self, destination_prefix: str):
@@ -100,12 +96,15 @@ class Sequence(BaseModel):
                 )
             else:
                 self.match_entries.destination_data_prefix = DestinationIPPrefix(
-                    destination_ip_prefix_list=Variable(value=destination_prefix)
+                    destination_ip_prefix_list=as_variable(value=destination_prefix)
                 )
         else:
             self.match_entries.destination_data_prefix = DestinationIPPrefix(
                 destination_ip_prefix_list=Global[List[IPv4Interface]](value=destination_prefix)
             )
+
+    def match_destination_port(self, port: PolicyMatchEntryDestinationPort):
+        self.match_entries.destination_port = Global[PolicyMatchEntryDestinationPort](value=port)
 
     @overload
     def match_source_data_prefix(self, source_prefix: str):
@@ -127,7 +126,7 @@ class Sequence(BaseModel):
                 )
             else:
                 self.match_entries.source_data_prefix = SourceIPPrefix(
-                    source_ip_prefix_list=Variable(value=source_prefix)
+                    source_ip_prefix_list=as_variable(value=source_prefix)
                 )
         else:
             self.match_entries.source_data_prefix = SourceIPPrefix(
@@ -137,36 +136,53 @@ class Sequence(BaseModel):
     def match_source_ports(self, ports: List[int]):
         self.match_entries.source_ports = Global[List[int]](value=ports)
 
+    @classmethod
+    def create(
+        cls,
+        sequence_id: int,
+        sequence_name: str,
+        base_action: BasicPolicyActionType,
+        match_entries: MatchEntries,
+    ) -> "Sequence":
+        return cls(
+            base_action=Global[BasicPolicyActionType](value=base_action),
+            match_entries=match_entries,
+            sequence_id=Global[int](value=sequence_id),
+            sequence_name=Global[str](value=sequence_name),
+        )
+
 
 class DeviceAccessIPv4Parcel(_ParcelBase):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     type_: Literal["ipv4-device-access-policy"] = Field(default="ipv4-device-access-policy", exclude=True)
 
-    default_action: Union[Global[BaseAction], Default[BaseAction]] = Field(
-        default=Default[BaseAction](value="drop"), validation_alias=AliasPath("data", "defaultAction")
+    default_action: Union[Global[BasicPolicyActionType], Default[BasicPolicyActionType]] = Field(
+        default=Default[BasicPolicyActionType](value="drop"), validation_alias=AliasPath("data", "defaultAction")
     )
     sequences: List[Sequence] = Field(
         default=[], validation_alias=AliasPath("data", "sequences"), description="Device Access Control List"
     )
 
-    def set_default_action(self, default_action: BaseAction) -> None:
-        self.default_action = Global[BaseAction](value=default_action)
+    def set_default_action(self, default_action: BasicPolicyActionType) -> None:
+        self.default_action = Global[BasicPolicyActionType](value=default_action)
 
     def add_sequence(
         self,
         sequence_id: int,
         sequence_name: str,
-        destination_port: DestinationPort,
-        base_action: Optional[BaseAction] = None,
+        destination_port: PolicyMatchEntryDestinationPort,
+        base_action: Optional[BasicPolicyActionType] = None,
     ) -> Sequence:
         payload: Dict[str, Any] = {
             "sequence_id": Global[int](value=sequence_id),
             "sequence_name": Global[str](value=sequence_name),
-            "match_entries": MatchEntries(destination_port=Global[DestinationPort](value=destination_port)),
+            "match_entries": MatchEntries(
+                destination_port=Global[PolicyMatchEntryDestinationPort](value=destination_port)
+            ),
         }
         if base_action is not None:
-            payload["base_action"] = Global[BaseAction](value=base_action)
+            payload["base_action"] = Global[BasicPolicyActionType](value=base_action)
 
         sequence = Sequence(**payload)
         self.sequences.append(sequence)

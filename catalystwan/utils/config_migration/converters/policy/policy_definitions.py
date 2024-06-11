@@ -1,6 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
-from ipaddress import IPv4Interface, IPv6Network
+from ipaddress import IPv4Interface, IPv6Interface
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Union, cast
 from uuid import UUID
 
@@ -8,10 +8,10 @@ from pydantic import Field
 from typing_extensions import Annotated
 
 from catalystwan.api.configuration_groups.parcel import Global, as_global
-from catalystwan.models.common import int_range_str_validator
+from catalystwan.models.common import PolicyMatchEntryDestinationPort, int_range_str_validator
 from catalystwan.models.configuration.config_migration import (
-    DeviceAccessIpv6Residues,
-    DeviceAccessIpv6SequenceDataPrefixRef,
+    DeviceAccessResidues,
+    DeviceAccessSequenceDataPrefixRef,
     PolicyConvertContext,
     SslDecryptioneResidues,
     SslProfileResidues,
@@ -40,11 +40,19 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object.securi
     BlockPageAction,
     UrlFilteringParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import DeviceAccessIPv4Parcel
+from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import (
+    MatchEntries as DeviceAccessIPv4MatchEntries,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import (
+    Sequence as DeviceAccessIPv4Sequence,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import DeviceAccessIPv6Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import (
-    DestinationPort,
-    DeviceAccessIPv6Parcel,
-    MatchEntries,
-    Sequence,
+    MatchEntries as DeviceAccessIpv6MatchEntries,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import (
+    Sequence as DeviceAccessIPv6Sequence,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
@@ -55,6 +63,7 @@ from catalystwan.models.policy.definition.access_control_list_ipv6 import AclIPv
 from catalystwan.models.policy.definition.aip import AdvancedInspectionProfilePolicy
 from catalystwan.models.policy.definition.amp import AdvancedMalwareProtectionPolicy
 from catalystwan.models.policy.definition.control import ControlPolicy
+from catalystwan.models.policy.definition.device_access import DeviceAccessPolicy
 from catalystwan.models.policy.definition.device_access_ipv6 import DeviceAccessIPv6Policy
 from catalystwan.models.policy.definition.dns_security import DnsSecurityPolicy, TargetVpn
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
@@ -85,6 +94,7 @@ Output = Optional[
             UrlFilteringParcel,
             DnsParcel,
             DeviceAccessIPv6Parcel,
+            DeviceAccessIPv4Parcel,
         ],
         Field(discriminator="type_"),
     ]
@@ -124,6 +134,16 @@ def as_num_list(ports_list: List[Union[int, Tuple[int, int]]]) -> List[int]:
             num_list.extend(range(val[1], val[0] + 1))
     num_list = sorted(list(set(num_list)))
     return num_list
+
+
+def conditional_split(s: str, seps: List[str]) -> List[str]:
+    """
+    split s by first sep found in seps
+    """
+    for sep in seps:
+        if sep in s:
+            return s.split(sep)
+    raise CatalystwanConverterCantConvertException(f"None of the separators {seps} found in {s}")
 
 
 def advanced_malware_protection(
@@ -273,15 +293,17 @@ def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context) -> Ipv6AclParcel:
 def device_access_ipv6(
     in_: DeviceAccessIPv6Policy, uuid: UUID, context: PolicyConvertContext
 ) -> DeviceAccessIPv6Parcel:
-    residues = DeviceAccessIpv6Residues()
+    residues = DeviceAccessResidues()
     out = DeviceAccessIPv6Parcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
     for in_seq in in_.sequences:
-        seq = Sequence.create(
+        seq = DeviceAccessIPv6Sequence.create(
             sequence_id=in_seq.sequence_id,
             sequence_name=in_seq.sequence_name,
             base_action=in_seq.base_action,
-            match_entries=MatchEntries(destination_port=Global[DestinationPort](value=161)),  # will be overwritten
+            match_entries=DeviceAccessIpv6MatchEntries(
+                destination_port=Global[PolicyMatchEntryDestinationPort](value=161)
+            ),  # will be overwritten
         )
         destination_origin = None
         source_origin = None
@@ -292,10 +314,10 @@ def device_access_ipv6(
                     seq.match_destination_data_prefix(str(d_ref))
                     destination_origin = d_ref
             elif "destinationIpv6" == in_entry.field:
-                d_network_ipv6 = [IPv6Network(v) for v in in_entry.value.split(" ")]
-                seq.match_destination_data_prefix(d_network_ipv6)
+                d_network_ipv6 = conditional_split(in_entry.value, [",", " "])
+                seq.match_destination_data_prefix([IPv6Interface(v) for v in d_network_ipv6])
             elif "destinationPort" == in_entry.field:
-                destination_port = cast(DestinationPort, int(in_entry.value))
+                destination_port = cast(PolicyMatchEntryDestinationPort, int(in_entry.value))
                 seq.match_destination_port(destination_port)
             elif "sourceDataIpv6PrefixList" == in_entry.field:
                 if in_entry.ref:
@@ -303,19 +325,74 @@ def device_access_ipv6(
                     seq.match_source_data_prefix(str(s_ref))
                     source_origin = s_ref
             elif "sourceIpv6" == in_entry.field:
-                s_network_ipv6 = [IPv6Network(v) for v in in_entry.value.split(" ")]
-                seq.match_source_data_prefix(s_network_ipv6)
+                s_network_ipv6 = conditional_split(in_entry.value, [",", " "])
+                seq.match_source_data_prefix([IPv6Interface(v) for v in s_network_ipv6])
             elif "sourcePort" == in_entry.field:
                 seq.match_source_ports(as_num_list(as_num_ranges_list(in_entry.value)))
         if destination_origin is not None or source_origin is not None:
-            prefixes = DeviceAccessIpv6SequenceDataPrefixRef(
+            prefixes = DeviceAccessSequenceDataPrefixRef(
                 sequence_id=in_seq.sequence_id,
                 destination_origin=destination_origin,
                 source_origin=source_origin,
             )
             residues.sequences.append(prefixes)
         out.sequences.append(seq)
-    context.device_access_ipv6[uuid] = residues
+    context.device_access[uuid] = residues
+    return out
+
+
+def device_access_ipv4(in_: DeviceAccessPolicy, uuid: UUID, context: PolicyConvertContext) -> DeviceAccessIPv4Parcel:
+    residues = DeviceAccessResidues()
+    out = DeviceAccessIPv4Parcel(**_get_parcel_name_desc(in_))
+    out.set_default_action(in_.default_action.type)
+    for in_seq in in_.sequences:
+        seq = DeviceAccessIPv4Sequence.create(
+            sequence_id=in_seq.sequence_id,
+            sequence_name=in_seq.sequence_name,
+            base_action=in_seq.base_action,
+            match_entries=DeviceAccessIPv4MatchEntries(
+                destination_port=Global[PolicyMatchEntryDestinationPort](value=161)
+            ),  # will be overwritten
+        )
+        destination_origin = None
+        source_origin = None
+        for in_entry in in_seq.match.entries:
+            if "destinationDataPrefixList" == in_entry.field:
+                if in_entry.ref:
+                    d_ref = in_entry.ref[0]
+                    seq.match_destination_data_prefix(str(d_ref))
+                    destination_origin = d_ref
+            elif "destinationIp" == in_entry.field:
+                if in_entry.value is not None:
+                    d_network_ipv6 = conditional_split(in_entry.value, [",", " "])
+                    seq.match_destination_data_prefix([IPv4Interface(v) for v in d_network_ipv6])
+                elif in_entry.vipVariableName is not None:
+                    seq.match_destination_data_prefix(in_entry.vipVariableName)
+            elif "destinationPort" == in_entry.field:
+                destination_port = cast(PolicyMatchEntryDestinationPort, int(in_entry.value))
+                seq.match_destination_port(destination_port)
+            elif "sourceDataPrefixList" == in_entry.field:
+                if in_entry.ref:
+                    s_ref = in_entry.ref[0]
+                    seq.match_source_data_prefix(str(s_ref))
+                    source_origin = s_ref
+            elif "sourceIp" == in_entry.field:
+                if in_entry.value is not None:
+                    s_network_ipv6 = conditional_split(in_entry.value, [",", " "])
+                    seq.match_source_data_prefix([IPv4Interface(v) for v in s_network_ipv6])
+                elif in_entry.vipVariableName is not None:
+                    seq.match_source_data_prefix(in_entry.vipVariableName)
+            elif "sourcePort" == in_entry.field:
+                seq.match_source_ports(as_num_list(as_num_ranges_list(in_entry.value)))
+        if destination_origin is not None or source_origin is not None:
+            prefixes = DeviceAccessSequenceDataPrefixRef(
+                sequence_id=in_seq.sequence_id,
+                destination_origin=destination_origin,
+                source_origin=source_origin,
+            )
+            residues.sequences.append(prefixes)
+        out.sequences.append(seq)
+    context.device_access[uuid] = residues
     return out
 
 
@@ -463,6 +540,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     UrlFilteringPolicy: url_filtering,
     DnsSecurityPolicy: dns_security,
     DeviceAccessIPv6Policy: device_access_ipv6,
+    DeviceAccessPolicy: device_access_ipv4,
 }
 
 

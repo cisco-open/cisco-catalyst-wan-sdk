@@ -525,15 +525,15 @@ class SslDecryptioneResidues:
 
 
 @dataclass(frozen=True)
-class DeviceAccessIpv6SequenceDataPrefixRef:
+class DeviceAccessSequenceDataPrefixRef:
     sequence_id: int
     source_origin: Optional[UUID] = None
     destination_origin: Optional[UUID] = None
 
 
 @dataclass
-class DeviceAccessIpv6Residues:
-    sequences: List[DeviceAccessIpv6SequenceDataPrefixRef] = field(default_factory=list)
+class DeviceAccessResidues:
+    sequences: List[DeviceAccessSequenceDataPrefixRef] = field(default_factory=list)
 
 
 @dataclass
@@ -552,7 +552,7 @@ class PolicyConvertContext:
     ssl_decryption_residues: Dict[UUID, SslDecryptioneResidues] = field(default_factory=dict)
     ssl_profile_residues: Dict[UUID, SslProfileResidues] = field(default_factory=dict)
     url_filtering_target_vpns: Dict[UUID, List[VpnId]] = field(default_factory=dict)
-    device_access_ipv6: Dict[UUID, DeviceAccessIpv6Residues] = field(default_factory=dict)
+    device_access: Dict[UUID, DeviceAccessResidues] = field(default_factory=dict)
 
     def get_vpn_id_to_vpn_name_map(self) -> Dict[Union[str, int], List[str]]:
         vpn_map: Dict[Union[str, int], List[str]] = {}

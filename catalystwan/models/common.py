@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from dataclasses import InitVar, dataclass, field
@@ -210,6 +211,8 @@ IntRangeStr = Annotated[
 ]
 
 BasicPolicyActionType = Literal["accept", "drop"]
+
+PolicyMatchEntryDestinationPort = Literal[161, 22]
 
 CarrierType = Literal[
     "default",

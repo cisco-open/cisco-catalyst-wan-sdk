@@ -1,50 +1,47 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import unittest
-from ipaddress import IPv6Interface
+from ipaddress import IPv4Interface
 from typing import cast
 from uuid import uuid4
 
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
-from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import DeviceAccessIPv6Parcel
-from catalystwan.models.policy.definition.device_access_ipv6 import (
-    DeviceAccessIPv6Policy,
-    DeviceAccessIPv6PolicySequence,
-)
+from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import DeviceAccessIPv4Parcel
+from catalystwan.models.policy.definition.device_access import DeviceAccessPolicy, DeviceAccessPolicySequence
 from catalystwan.models.policy.policy_definition import BasicPolicyAction
 from catalystwan.utils.config_migration.converters.policy.policy_definitions import convert
 
 
-class TestDeviceAccessIpv6Converter(unittest.TestCase):
+class TestDeviceAccessIPv4Converter(unittest.TestCase):
     def setUp(self) -> None:
         self.context = PolicyConvertContext()
 
-    def test_device_access_ipv6_convert_when_prefix_list_is_uuid(self):
+    def test_device_access_ipv4_convert_when_prefix_list_is_uuid(self):
         # Arrange
         destination_data_prefix_uuid = uuid4()
         destination_port = 161
         source_data_prefix_uuid = uuid4()
-        policy = DeviceAccessIPv6Policy(
-            name="device_access_ipv6",
+        policy = DeviceAccessPolicy(
+            name="device_access_ipv4",
             description="test_description",
             sequences=[],
             default_action=BasicPolicyAction(type="drop"),
         )
-        seq = DeviceAccessIPv6PolicySequence(
+        seq = DeviceAccessPolicySequence(
             sequence_id=1,
             sequence_name="test_sequence",
             base_action="accept",
-            sequence_ip_type="ipv6",
+            sequence_ip_type="ipv4",
         )
         seq.match_destination_data_prefix_list(data_prefix_list_id=destination_data_prefix_uuid)
         seq.match_device_access_protocol(port=destination_port)
-        seq.match_source_data_prefix_list(data_prefix_list_id=source_data_prefix_uuid)
+        seq.match_source_data_prefix_list(data_prefix_lists=[source_data_prefix_uuid])
         seq.match_source_port(ports={80}, port_ranges=[(30, 32)])
         policy.sequences.append(seq)
         uuid = uuid4()
         # Act
-        parcel = cast(DeviceAccessIPv6Parcel, convert(policy, uuid, context=self.context))
+        parcel = cast(DeviceAccessIPv4Parcel, convert(policy, uuid, context=self.context))
         # Assert
-        assert parcel.parcel_name == "device_access_ipv6"
+        assert parcel.parcel_name == "device_access_ipv4"
         assert parcel.parcel_description == "test_description"
         assert parcel.default_action.value == "drop"
         assert len(parcel.sequences) == 1
@@ -64,22 +61,22 @@ class TestDeviceAccessIpv6Converter(unittest.TestCase):
         assert self.context.device_access[uuid].sequences[0].destination_origin == destination_data_prefix_uuid
         assert self.context.device_access[uuid].sequences[0].source_origin == source_data_prefix_uuid
 
-    def test_device_access_ipv6_convert_when_prefix_list_is_ip(self):
+    def test_device_access_ipv4_convert_when_prefix_list_is_ip(self):
         # Arrange
-        destination_ip = [IPv6Interface("::3e46/128"), IPv6Interface("::3e47/128")]
+        destination_ip = [IPv4Interface("10.0.0.1/32"), IPv4Interface("10.0.0.2/32")]
         destination_port = 161
-        source_ip = [IPv6Interface("::3e48/128"), IPv6Interface("::3e49/128")]
-        policy = DeviceAccessIPv6Policy(
-            name="device_access_ipv6",
+        source_ip = [IPv4Interface("10.0.0.4/32"), IPv4Interface("10.0.0.3/32")]
+        policy = DeviceAccessPolicy(
+            name="device_access_ipv4",
             description="test_description",
             sequences=[],
             default_action=BasicPolicyAction(type="drop"),
         )
-        seq = DeviceAccessIPv6PolicySequence(
+        seq = DeviceAccessPolicySequence(
             sequence_id=1,
             sequence_name="test_sequence",
             base_action="accept",
-            sequence_ip_type="ipv6",
+            sequence_ip_type="ipv4",
         )
         seq.match_destination_ip(networks=destination_ip)
         seq.match_device_access_protocol(port=destination_port)
@@ -88,9 +85,9 @@ class TestDeviceAccessIpv6Converter(unittest.TestCase):
         policy.sequences.append(seq)
         uuid = uuid4()
         # Act
-        parcel = cast(DeviceAccessIPv6Parcel, convert(policy, uuid, context=self.context))
+        parcel = cast(DeviceAccessIPv4Parcel, convert(policy, uuid, context=self.context))
         # Assert
-        assert parcel.parcel_name == "device_access_ipv6"
+        assert parcel.parcel_name == "device_access_ipv4"
         assert parcel.parcel_description == "test_description"
         assert parcel.default_action.value == "drop"
         assert len(parcel.sequences) == 1
