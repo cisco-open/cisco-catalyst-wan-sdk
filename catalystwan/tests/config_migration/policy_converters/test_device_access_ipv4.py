@@ -34,7 +34,7 @@ class TestDeviceAccessIPv4Converter(unittest.TestCase):
         )
         seq.match_destination_data_prefix_list(data_prefix_list_id=destination_data_prefix_uuid)
         seq.match_device_access_protocol(port=destination_port)
-        seq.match_source_data_prefix_list(data_prefix_lists=[source_data_prefix_uuid])
+        seq.match_source_data_prefix_list(data_prefix_list_id=source_data_prefix_uuid)
         seq.match_source_port(ports={80}, port_ranges=[(30, 32)])
         policy.sequences.append(seq)
         uuid = uuid4()
