@@ -1,12 +1,13 @@
-# Copyright 2024 Cisco Systems, Inc. and its affiliates
+# Copyright 2023 Cisco Systems, Inc. and its affiliates
 
+from ipaddress import IPv4Address, IPv6Address, IPv6Interface
 from typing import List, Literal, Optional, Union
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable
-from catalystwan.models.configuration.feature_profile.common import Prefix
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask, DNSIPv4, DNSIPv6, HostMapping
 
 ProtocolIPv4 = Literal[
     "bgp",
@@ -93,58 +94,33 @@ RedistributeToGlobalProtocol = Literal[
 ]
 
 
-class DnsIPv4(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
-    primary_dns_address_ipv4: Union[Variable, Global[str], Default[None]] = Field(
-        serialization_alias="primaryDnsAddressIpv4", validation_alias="primaryDnsAddressIpv4"
-    )
-    secondary_dns_address_ipv4: Union[Variable, Global[str], Default[None]] = Field(
-        serialization_alias="secondaryDnsAddressIpv4", validation_alias="secondaryDnsAddressIpv4"
-    )
-
-
-class DnsIPv6(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
-    primary_dns_address_ipv6: Union[Variable, Global[str], Default[None]] = Field(
-        serialization_alias="primaryDnsAddressIpv6", validation_alias="primaryDnsAddressIpv6"
-    )
-    secondary_dns_address_ipv6: Union[Variable, Global[str], Default[None]] = Field(
-        serialization_alias="secondaryDnsAddressIpv6", validation_alias="secondaryDnsAddressIpv6"
-    )
-
-
-class HostMapping(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
-    host_name: Union[Variable, Global[str]] = Field(serialization_alias="hostName", validation_alias="hostName")
-    list_of_ip: Union[Variable, Global[str]] = Field(serialization_alias="listOfIp", validation_alias="listOfIp")
-
-
 class RoutePrefix(BaseModel):
-    ip_address: Union[Variable, Global[str]] = Field(serialization_alias="ipAddress", validation_alias="ipAddress")
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+
+    ip_address: Union[Variable, Global[str], Global[IPv4Address], Global[IPv6Address]] = Field(
+        serialization_alias="ipAddress", validation_alias="ipAddress"
+    )
     subnet_mask: Union[Variable, Global[str]] = Field(serialization_alias="subnetMask", validation_alias="subnetMask")
 
 
 class IPv4Prefix(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    prefix: Prefix
+    prefix: AddressWithMask
     aggregate_only: Optional[Union[Global[bool], Default[bool]]] = Field(
         serialization_alias="aggregateOnly", validation_alias="aggregateOnly", default=None
     )
-    region: Optional[Union[Variable, Global[Region], Default[str]]] = None
+    region: Optional[Union[Variable, Global[Region], Default[Region]]] = None
 
 
 class IPv6Prefix(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    prefix: Union[Global[str], Variable]
+    prefix: Union[Global[str], Global[IPv6Interface], Variable]
     aggregate_only: Optional[Union[Global[bool], Default[bool]]] = Field(
         serialization_alias="aggregateOnly", validation_alias="aggregateOnly", default=None
     )
-    region: Optional[Union[Variable, Global[Region], Default[str]]] = None
+    region: Optional[Union[Variable, Global[Region], Default[Region]]] = None
 
 
 class OmpAdvertiseIPv4(BaseModel):
@@ -174,7 +150,7 @@ class OmpAdvertiseIPv6(BaseModel):
 class IPv4RouteGatewayNextHop(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    address: Union[Variable, Global[str]]
+    address: Union[Variable, Global[str], Global[IPv4Address]]
     distance: Union[Variable, Global[int], Default[int]] = Default[int](value=1)
 
 
@@ -183,7 +159,7 @@ class IPv4RouteGatewayNextHopWithTracker(BaseModel):
 
     address: Union[Variable, Global[str]]
     distance: Union[Variable, Global[int], Default[int]] = Default[int](value=1)
-    tracker: Union[Global[UUID], Default[None]]
+    tracker: Union[Global[UUID], Default[None]] = as_default(None)
 
 
 class NextHopContainer(BaseModel):
@@ -229,8 +205,6 @@ class NextHopRouteIPv6Container(BaseModel):
 
 
 class Null0(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
     null0: Union[Global[bool], Default[bool]] = Default[bool](value=True)
     distance: Union[Variable, Global[int], Default[int]] = Default[int](value=1)
 
@@ -248,15 +222,11 @@ class NAT(BaseModel):
 
 
 class DHCP(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
     dhcp: Union[Global[bool], Default[bool]] = Default[bool](value=True)
 
 
 class StaticRouteVPN(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
-    vpn: Union[Global[bool], Default[bool]] = Default[bool](value=True)
+    vpn: Union[Global[bool], Default[bool]] = Field(default=Default[bool](value=True))
 
 
 class NextHopInterfaceRoute(BaseModel):
@@ -269,7 +239,7 @@ class NextHopInterfaceRoute(BaseModel):
 class NextHopInterfaceRouteIPv6(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    address: Union[Variable, Global[str], Default[None]] = Default[None](value=None)
+    address: Union[Variable, Global[str], Global[IPv6Address], Default[None]] = Default[None](value=None)
     distance: Union[Variable, Global[int], Default[int]] = Default[int](value=1)
 
 
@@ -288,7 +258,9 @@ class IPv6StaticRouteInterface(BaseModel):
     interface_name: Union[Variable, Global[str]] = Field(
         serialization_alias="interfaceName", validation_alias="interfaceName"
     )
-    next_hop: List[NextHopInterfaceRouteIPv6] = Field(serialization_alias="nextHop", validation_alias="nextHop")
+    interface_next_hop: List[NextHopInterfaceRouteIPv6] = Field(
+        serialization_alias="nextHop", validation_alias="nextHop"
+    )
 
 
 class InterfaceContainer(BaseModel):
@@ -324,12 +296,26 @@ class InterfaceRouteIPv6Container(BaseModel):
 
 
 class StaticRouteIPv4(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True)
 
     prefix: RoutePrefix
     one_of_ip_route: Union[NextHopRouteContainer, Null0, DHCP, StaticRouteVPN, InterfaceRouteContainer] = Field(
         serialization_alias="oneOfIpRoute", validation_alias="oneOfIpRoute"
     )
+
+    @field_validator("one_of_ip_route", mode="before")
+    @classmethod
+    def validate_one_of_ip_route(
+        cls, value: Union[dict, NextHopRouteContainer, Null0, DHCP, StaticRouteVPN, InterfaceRouteContainer]
+    ):
+        # https://github.com/pydantic/pydantic/issues/6830
+        # For some reason the Null0 is always created from dict
+        if isinstance(value, dict):
+            if value.get("vpn"):
+                return StaticRouteVPN(**value)
+            if value.get("nextHopContainer"):
+                return NextHopRouteContainer(**value)
+        return value
 
 
 class StaticRouteIPv6(BaseModel):
@@ -356,7 +342,7 @@ class Service(BaseModel):
 class ServiceRoute(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    prefix: Prefix
+    prefix: AddressWithMask
     service: Union[Variable, Global[ServiceRouteType], Default[ServiceRouteType]] = Default[ServiceRouteType](
         value="SIG"
     )
@@ -369,16 +355,16 @@ class ServiceRoute(BaseModel):
 class StaticGreRouteIPv4(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    prefix: Prefix
-    interface: Union[Variable, Global[List[str]], Default[None]]
+    prefix: AddressWithMask
+    interface: Union[Variable, Global[List[str]], Default[None]] = Default[None](value=None)
     vpn: Global[int] = Global[int](value=0)
 
 
 class StaticIpsecRouteIPv4(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    prefix: Prefix
-    interface: Union[Variable, Global[List[str]], Default[None]]
+    prefix: AddressWithMask
+    interface: Union[Variable, Global[List[str]], Default[None]] = Default[None](value=None)
 
 
 class NatPool(BaseModel):
@@ -390,8 +376,12 @@ class NatPool(BaseModel):
     prefix_length: Union[Variable, Global[int]] = Field(
         serialization_alias="prefixLength", validation_alias="prefixLength"
     )
-    range_start: Union[Variable, Global[str]] = Field(serialization_alias="rangeStart", validation_alias="rangeStart")
-    range_end: Union[Variable, Global[str]] = Field(serialization_alias="rangeEnd", validation_alias="rangeEnd")
+    range_start: Union[Variable, Global[str], Global[IPv4Address]] = Field(
+        serialization_alias="rangeStart", validation_alias="rangeStart"
+    )
+    range_end: Union[Variable, Global[str], Global[IPv4Address]] = Field(
+        serialization_alias="rangeEnd", validation_alias="rangeEnd"
+    )
     overload: Union[Variable, Global[bool], Default[bool]] = Default[bool](value=True)
     direction: Union[Variable, Global[Direction]]
     tracking_object: Optional[dict] = Field(
@@ -409,9 +399,11 @@ class NatPortForward(BaseModel):
     translate_port: Union[Variable, Global[int]] = Field(
         serialization_alias="translatePort", validation_alias="translatePort"
     )
-    source_ip: Union[Variable, Global[str]] = Field(serialization_alias="sourceIp", validation_alias="sourceIp")
-    translated_source_ip: Union[Variable, Global[str]] = Field(
-        serialization_alias="TranslatedSourceIp", validation_alias="TranslatedSourceIp"
+    source_ip: Union[Variable, Global[str], Global[IPv4Address]] = Field(
+        serialization_alias="sourceIp", validation_alias="sourceIp"
+    )
+    translated_source_ip: Union[Variable, Global[str], Global[IPv4Address]] = Field(
+        serialization_alias="translatedSourceIp", validation_alias="translatedSourceIp"
     )
     protocol: Union[Variable, Global[NATPortForwardProtocol]]
 
@@ -422,9 +414,11 @@ class StaticNat(BaseModel):
     nat_pool_name: Union[Variable, Global[int], Default[None]] = Field(
         serialization_alias="natPoolName", validation_alias="natPoolName"
     )
-    source_ip: Union[Variable, Global[str]] = Field(serialization_alias="sourceIp", validation_alias="sourceIp")
-    translated_source_ip: Union[Variable, Global[str]] = Field(
-        serialization_alias="TranslatedSourceIP", validation_alias="TranslatedSourceIP"
+    source_ip: Union[Variable, Global[str], Global[IPv4Address]] = Field(
+        serialization_alias="sourceIp", validation_alias="sourceIp"
+    )
+    translated_source_ip: Union[Variable, Global[str], Global[IPv4Address]] = Field(
+        serialization_alias="TranslatedSourceIp", validation_alias="TranslatedSourceIp"
     )
     static_nat_direction: Union[Variable, Global[Direction]] = Field(
         serialization_alias="staticNatDirection", validation_alias="staticNatDirection"
@@ -441,7 +435,7 @@ class StaticNatSubnet(BaseModel):
         serialization_alias="sourceIpSubnet", validation_alias="sourceIpSubnet"
     )
     translated_source_ip_subnet: Union[Variable, Global[str]] = Field(
-        serialization_alias="TranslatedSourceIpSubnet", validation_alias="TranslatedSourceIpSubnet"
+        serialization_alias="translatedSourceIpSubnet", validation_alias="translatedSourceIpSubnet"
     )
     prefix_length: Union[Variable, Global[int]] = Field(
         serialization_alias="prefixLength", validation_alias="prefixLength"
@@ -460,10 +454,10 @@ class Nat64v4Pool(BaseModel):
     nat64_v4_pool_name: Union[Variable, Global[str]] = Field(
         serialization_alias="nat64V4PoolName", validation_alias="nat64V4PoolName"
     )
-    nat64_v4_pool_range_start: Union[Variable, Global[str]] = Field(
+    nat64_v4_pool_range_start: Union[Variable, Global[str], Global[IPv4Address]] = Field(
         serialization_alias="nat64V4PoolRangeStart", validation_alias="nat64V4PoolRangeStart"
     )
-    nat64_v4_pool_range_end: Union[Variable, Global[str]] = Field(
+    nat64_v4_pool_range_end: Union[Variable, Global[str], Global[IPv4Address]] = Field(
         serialization_alias="nat64V4PoolRangeEnd", validation_alias="nat64V4PoolRangeEnd"
     )
     nat64_v4_pool_overload: Union[Variable, Global[bool], Default[bool]] = Field(
@@ -477,14 +471,14 @@ class RedistributeToService(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
     protocol: Union[Variable, Global[RedistributeToServiceProtocol]]
-    policy: Union[Default[None], Global[UUID]]
+    policy: Union[Default[None], Global[UUID]] = Default[None](value=None)
 
 
 class RedistributeToGlobal(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
     protocol: Union[Variable, Global[RedistributeToGlobalProtocol]]
-    policy: Union[Default[None], Global[UUID]]
+    policy: Union[Default[None], Global[UUID]] = Default[None](value=None)
 
 
 class RouteLeakFromGlobal(BaseModel):
@@ -558,79 +552,65 @@ class MplsVpnIPv6RouteTarget(BaseModel):
     )
 
 
-class LanVpnData(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+class LanVpnParcel(_ParcelBase):
+    type_: Literal["lan/vpn"] = Field(default="lan/vpn", exclude=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    vpn_id: Union[Variable, Global[int], Default[int]] = Field(serialization_alias="vpnId", validation_alias="vpnId")
-    name: Union[Variable, Global[str], Default[None]]
-    omp_admin_distance: Optional[Union[Variable, Global[int], Default[None]]] = Field(
-        serialization_alias="ompAdminDistance", validation_alias="ompAdminDistance", default=None
+    vpn_id: Union[Variable, Global[int]] = Field(validation_alias=AliasPath("data", "vpnId"))
+    vpn_name: Union[Variable, Global[str], Default[None]] = Field(
+        default=Default[None](value=None), validation_alias=AliasPath("data", "name")
+    )
+    omp_admin_distance_ipv4: Optional[Union[Variable, Global[int], Default[None]]] = Field(
+        validation_alias=AliasPath("data", "ompAdminDistance"), default=None
     )
     omp_admin_distance_ipv6: Optional[Union[Variable, Global[int], Default[None]]] = Field(
-        serialization_alias="ompAdminDistanceIpv6", validation_alias="ompAdminDistanceIpv6", default=None
+        validation_alias=AliasPath("data", "ompAdminDistanceIpv6"), default=None
     )
-    dns_ipv4: Optional[DnsIPv4] = Field(serialization_alias="dnsIpv4", validation_alias="dnsIpv4", default=None)
-    dns_ipv6: Optional[DnsIPv6] = Field(serialization_alias="dnsIpv6", validation_alias="dnsIpv6", default=None)
+    dns_ipv4: Optional[DNSIPv4] = Field(validation_alias=AliasPath("data", "dnsIpv4"), default=None)
+    dns_ipv6: Optional[DNSIPv6] = Field(validation_alias=AliasPath("data", "dnsIpv6"), default=None)
     new_host_mapping: Optional[List[HostMapping]] = Field(
-        serialization_alias="newHostMapping", validation_alias="newHostMapping", default=None
+        validation_alias=AliasPath("data", "newHostMapping"), default=None
     )
     omp_advertise_ipv4: Optional[List[OmpAdvertiseIPv4]] = Field(
-        serialization_alias="ompAdvertiseIpv4", validation_alias="ompAdvertiseIpv4", default=None
+        validation_alias=AliasPath("data", "ompAdvertiseIp4"), default=None  # API typo
     )
     omp_advertise_ipv6: Optional[List[OmpAdvertiseIPv6]] = Field(
-        serialization_alias="ompAdvertiseIpv6", validation_alias="ompAdvertiseIpv6", default=None
+        validation_alias=AliasPath("data", "ompAdvertiseIpv6"), default=None
     )
-    ipv4_route: Optional[List[StaticRouteIPv4]] = Field(
-        serialization_alias="ipv4Route", validation_alias="ipv4Route", default=None
-    )
-    ipv6_route: Optional[List[StaticRouteIPv6]] = Field(
-        serialization_alias="ipv6Route", validation_alias="ipv6Route", default=None
-    )
-    service: Optional[List[Service]] = None
+    ipv4_route: Optional[List[StaticRouteIPv4]] = Field(validation_alias=AliasPath("data", "ipv4Route"), default=None)
+    ipv6_route: Optional[List[StaticRouteIPv6]] = Field(validation_alias=AliasPath("data", "ipv6Route"), default=None)
+    service: Optional[List[Service]] = Field(default=None, validation_alias=AliasPath("data", "service"))
     service_route: Optional[List[ServiceRoute]] = Field(
-        serialization_alias="serviceRoute", validation_alias="serviceRoute", default=None
+        validation_alias=AliasPath("data", "serviceRoute"), default=None
     )
-    gre_route: Optional[List[StaticGreRouteIPv4]] = Field(
-        serialization_alias="greRoute", validation_alias="greRoute", default=None
-    )
+    gre_route: Optional[List[StaticGreRouteIPv4]] = Field(validation_alias=AliasPath("data", "greRoute"), default=None)
     ipsec_route: Optional[List[StaticIpsecRouteIPv4]] = Field(
-        serialization_alias="ipsecRoute", validation_alias="ipsecRoute", default=None
+        validation_alias=AliasPath("data", "ipsecRoute"), default=None
     )
-    nat_pool: Optional[List[NatPool]] = Field(serialization_alias="natPool", validation_alias="natPool", default=None)
+    nat_pool: Optional[List[NatPool]] = Field(validation_alias=AliasPath("data", "natPool"), default=None)
     nat_port_forwarding: Optional[List[NatPortForward]] = Field(
-        serialization_alias="natPortForwarding", validation_alias="natPortForwarding", default=None
+        validation_alias=AliasPath("data", "natPortForwarding"), default=None
     )
-    static_nat: Optional[List[StaticNat]] = Field(
-        serialization_alias="staticNat", validation_alias="staticNat", default=None
-    )
+    static_nat: Optional[List[StaticNat]] = Field(validation_alias=AliasPath("data", "staticNat"), default=None)
     static_nat_subnet: Optional[List[StaticNatSubnet]] = Field(
-        serialization_alias="staticNatSubnet", validation_alias="staticNatSubnet", default=None
+        validation_alias=AliasPath("data", "staticNatSubnet"), default=None
     )
-    nat64_v4_pool: Optional[List[Nat64v4Pool]] = Field(
-        serialization_alias="nat64V4Pool", validation_alias="nat64V4Pool", default=None
-    )
+    nat64_v4_pool: Optional[List[Nat64v4Pool]] = Field(validation_alias=AliasPath("data", "nat64V4Pool"), default=None)
     route_leak_from_global: Optional[List[RouteLeakFromGlobal]] = Field(
-        serialization_alias="routeLeakFromGlobal", validation_alias="routeLeakFromGlobal", default=None
+        validation_alias=AliasPath("data", "routeLeakFromGlobal"), default=None
     )
     route_leak_from_service: Optional[List[RouteLeakFromService]] = Field(
-        serialization_alias="routeLeakFromService", validation_alias="routeLeakFromService", default=None
+        validation_alias=AliasPath("data", "routeLeakFromService"), default=None
     )
     route_leak_between_services: Optional[List[RouteLeakBetweenServices]] = Field(
-        serialization_alias="routeLeakBetweenServices", validation_alias="routeLeakBetweenServices", default=None
+        validation_alias=AliasPath("data", "routeLeakBetweenServices"), default=None
     )
     mpls_vpn_ipv4_route_target: Optional[MplsVpnIPv4RouteTarget] = Field(
-        serialization_alias="mplsVpnIpv4RouteTarget", validation_alias="mplsVpnIpv4RouteTarget", default=None
+        validation_alias=AliasPath("data", "mplsVpnIpv4RouteTarget"), default=None
     )
     mpls_vpn_ipv6_route_target: Optional[MplsVpnIPv6RouteTarget] = Field(
-        serialization_alias="mplsVpnIpv6RouteTarget", validation_alias="mplsVpnIpv6RouteTarget", default=None
+        validation_alias=AliasPath("data", "mplsVpnIpv6RouteTarget"), default=None
     )
     enable_sdra: Optional[Union[Global[bool], Default[bool]]] = Field(
-        serialization_alias="enableSdra", validation_alias="enableSdra", default=None
+        validation_alias=AliasPath("data", "enableSdra"), default=None
     )
-
-
-class LanVpnCreationPayload(BaseModel):
-    name: str
-    description: Optional[str] = None
-    data: LanVpnData
-    metadata: Optional[dict] = None

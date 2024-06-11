@@ -4,12 +4,10 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, List
+from typing import TYPE_CHECKING, ClassVar, List
 
 from jinja2 import DebugUndefined, Environment, FileSystemLoader, meta  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-from catalystwan.utils.device_model import DeviceModel
 
 if TYPE_CHECKING:
     from catalystwan.session import ManagerSession
@@ -44,13 +42,17 @@ class DeviceTemplate(BaseModel):
     >>> session.api.templates.create(device_template)
     """
 
-    template_name: str = Field(alias="templateName")
-    template_description: str = Field(alias="templateDescription")
-    general_templates: List[GeneralTemplate] = Field(alias="generalTemplates")
-    device_role: str = Field(default="sdwan-edge", alias="deviceRole")
-    device_type: DeviceModel = Field(alias="deviceType")
-    security_policy_id: str = Field(default="", alias="securityPolicyId")
-    policy_id: str = Field(default="", alias="policyId")
+    template_name: str = Field(serialization_alias="templateName", validation_alias="templateName")
+    template_description: str = Field(serialization_alias="templateDescription", validation_alias="templateDescription")
+    general_templates: List[GeneralTemplate] = Field(
+        default=[], serialization_alias="generalTemplates", validation_alias="generalTemplates"
+    )
+    device_role: str = Field(default="sdwan-edge", serialization_alias="deviceRole", validation_alias="deviceRole")
+    device_type: str = Field(serialization_alias="deviceType", validation_alias="deviceType")
+    security_policy_id: str = Field(
+        default="", serialization_alias="securityPolicyId", validation_alias="securityPolicyId"
+    )
+    policy_id: str = Field(default="", serialization_alias="policyId", validation_alias="policyId")
 
     def generate_payload(self) -> str:
         env = Environment(
@@ -79,7 +81,7 @@ class DeviceTemplate(BaseModel):
                 output.append(template)
         return output
 
-    payload_path: Final[Path] = Path(__file__).parent / "device_template_payload.json.j2"
+    payload_path: ClassVar[Path] = Path(__file__).parent / "device_template_payload.json.j2"
 
     @classmethod
     def get(self, name: str, session: ManagerSession) -> DeviceTemplate:

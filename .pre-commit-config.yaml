@@ -33,7 +33,7 @@ repos:
   # Code analysis (only checks staged files)
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.2.0
+    rev: v1.9.0
     hooks:
       - id: mypy
         name: mypy
@@ -42,17 +42,17 @@ repos:
         # types: [python]
         # require_serial: true
         args: ["--show-error-codes", "--show-error-context", "--pretty", "--show-absolute-path"]
-        additional_dependencies: ['types-requests', 'types-attrs', 'pydantic', 'types-python-dateutil']
+        additional_dependencies: ['types-requests', 'types-attrs', 'pydantic', 'types-python-dateutil', 'pytest']
         verbose: true
         fail_fast: true
   
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 5.0.4
+    rev: 7.0.0
     hooks:
       - id: flake8
         additional_dependencies: [
-          "flake8-quotes==3.3.2"
+          "flake8-quotes==3.4.0"
         ]
         fail_fast: true
 

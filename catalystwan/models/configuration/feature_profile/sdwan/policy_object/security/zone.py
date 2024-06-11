@@ -1,8 +1,8 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from typing import List, Optional
+from typing import List, Literal, Optional
 
-from pydantic import AliasPath, BaseModel, Field, field_validator, model_validator
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
 from catalystwan.models.common import InterfaceType, check_fields_exclusive
@@ -25,6 +25,8 @@ class SecurityZoneListEntry(BaseModel):
 
 
 class SecurityZoneListParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
+    type_: Literal["security-zone"] = Field(default="security-zone", exclude=True)
     entries: List[SecurityZoneListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
 
     def add_interface(self, interface: InterfaceType):
@@ -37,6 +39,6 @@ class SecurityZoneListParcel(_ParcelBase):
     def add_vpn(self, vpn: str):
         self.entries.append(
             SecurityZoneListEntry(
-                vpn=as_global(vpn, InterfaceType),
+                vpn=as_global(vpn),
             )
         )

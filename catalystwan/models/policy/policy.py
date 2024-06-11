@@ -6,14 +6,16 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+ZoneListId = Union[UUID, Literal["self", "default"]]
+
 
 class PolicyId(BaseModel):
     policy_id: UUID = Field(serialization_alias="policyId", validation_alias="policyId")
 
 
 class NGFirewallZoneListEntry(BaseModel):
-    src_zone_list_id: UUID = Field(serialization_alias="srcZoneListId", validation_alias="srcZoneListId")
-    dst_zone_list_id: UUID = Field(serialization_alias="dstZoneListId", validation_alias="dstZoneListId")
+    src_zone_list_id: ZoneListId = Field(serialization_alias="srcZoneListId", validation_alias="srcZoneListId")
+    dst_zone_list_id: ZoneListId = Field(serialization_alias="dstZoneListId", validation_alias="dstZoneListId")
     model_config = ConfigDict(populate_by_name=True)
 
 
@@ -47,6 +49,10 @@ class URLFilteringAssemblyItem(AssemblyItemBase):
     type: Literal["urlFiltering"] = "urlFiltering"
 
 
+class AdvancedInspectionProfileAssemblyItem(AssemblyItemBase):
+    type: Literal["advancedInspectionProfile"] = "advancedInspectionProfile"
+
+
 class AdvancedMalwareProtectionAssemblyItem(AssemblyItemBase):
     type: Literal["advancedMalwareProtection"] = "advancedMalwareProtection"
 
@@ -63,7 +69,7 @@ class PolicyCreationPayload(BaseModel):
     policy_name: str = Field(
         serialization_alias="policyName",
         validation_alias="policyName",
-        pattern="^[a-zA-Z0-9_-]{1,127}$",
+        pattern="^[a-zA-Z0-9_-]{0,127}$",
         description="Can include only alpha-numeric characters, hyphen '-' or underscore '_'; maximum 127 characters",
     )
     policy_description: str = Field(

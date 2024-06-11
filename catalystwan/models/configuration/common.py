@@ -7,4 +7,5 @@ Solution = Literal[
     "sdwan",
     "nfvirtual",
     "sd-routing",
+    "cellulargateway",
 ]

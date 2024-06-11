@@ -1,8 +1,8 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from typing import List
+from typing import List, Literal
 
-from pydantic import AliasPath, BaseModel, Field, field_validator
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
 
@@ -18,6 +18,8 @@ class FowardingClassQueueEntry(BaseModel):
 
 
 class FowardingClassParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
+    type_: Literal["class"] = Field(default="class", exclude=True)
     entries: List[FowardingClassQueueEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
 
     def add_queue(self, queue: int):

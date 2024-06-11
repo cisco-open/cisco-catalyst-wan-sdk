@@ -13,7 +13,8 @@ from typing import Callable, Final, List, Optional
 
 import urllib3
 
-USER_AGENT = f"{__package__}/{metadata.version(__package__)}"
+PACKAGE_VERSION = metadata.version(__package__)
+USER_AGENT = f"{__package__}/{PACKAGE_VERSION}"
 
 
 def with_proc_info_header(method: Callable[..., str]) -> Callable[..., str]:

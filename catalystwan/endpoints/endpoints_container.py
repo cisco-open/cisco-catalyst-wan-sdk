@@ -11,8 +11,12 @@ from catalystwan.endpoints.client import Client
 from catalystwan.endpoints.cluster_management import ClusterManagement
 from catalystwan.endpoints.configuration.device.software_update import ConfigurationDeviceSoftwareUpdate
 from catalystwan.endpoints.configuration.disaster_recovery import ConfigurationDisasterRecovery
+from catalystwan.endpoints.configuration.feature_profile.sdwan.cli import CliFeatureProfile
+from catalystwan.endpoints.configuration.feature_profile.sdwan.sig_security import SIGSecurity
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
+from catalystwan.endpoints.configuration.feature_profile.sdwan.topology import TopologyFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
+from catalystwan.endpoints.configuration.network_hierarchy import NetworkHierarchy
 from catalystwan.endpoints.configuration.policy.definition.access_control_list import ConfigurationPolicyAclDefinition
 from catalystwan.endpoints.configuration.policy.definition.access_control_list_ipv6 import (
     ConfigurationPolicyAclIPv6Definition,
@@ -64,6 +68,7 @@ from catalystwan.endpoints.configuration.policy.list.region import Configuration
 from catalystwan.endpoints.configuration.policy.list.site import ConfigurationPolicySiteList
 from catalystwan.endpoints.configuration.policy.list.sla import ConfigurationPolicySLAClassList
 from catalystwan.endpoints.configuration.policy.list.tloc import ConfigurationPolicyTLOCList
+from catalystwan.endpoints.configuration.policy.list.trunkgroup import ConfigurationPolicyTrunkGroupList
 from catalystwan.endpoints.configuration.policy.list.url_allow_list import ConfigurationPolicyURLAllowList
 from catalystwan.endpoints.configuration.policy.list.url_block_list import ConfigurationPolicyURLBlockList
 from catalystwan.endpoints.configuration.policy.list.vpn import ConfigurationPolicyVPNList
@@ -71,7 +76,9 @@ from catalystwan.endpoints.configuration.policy.list.zone import ConfigurationPo
 from catalystwan.endpoints.configuration.policy.security_template import ConfigurationSecurityTemplatePolicy
 from catalystwan.endpoints.configuration.policy.vedge_template import ConfigurationVEdgeTemplatePolicy
 from catalystwan.endpoints.configuration.policy.vsmart_template import ConfigurationVSmartTemplatePolicy
+from catalystwan.endpoints.configuration.policy_group import PolicyGroupEndpoints
 from catalystwan.endpoints.configuration.software_actions import ConfigurationSoftwareActions
+from catalystwan.endpoints.configuration.topology_group import TopologyGroupEndpoints
 from catalystwan.endpoints.configuration_dashboard_status import ConfigurationDashboardStatus
 from catalystwan.endpoints.configuration_device_actions import ConfigurationDeviceActions
 from catalystwan.endpoints.configuration_device_inventory import ConfigurationDeviceInventory
@@ -84,7 +91,6 @@ from catalystwan.endpoints.configuration_group import ConfigurationGroup
 from catalystwan.endpoints.configuration_settings import ConfigurationSettings
 from catalystwan.endpoints.misc import MiscellaneousEndpoints
 from catalystwan.endpoints.monitoring.device_details import MonitoringDeviceDetails
-from catalystwan.endpoints.monitoring.security_policy import MonitoringSecurityPolicy
 from catalystwan.endpoints.monitoring.server_info import ServerInfo
 from catalystwan.endpoints.monitoring.status import MonitoringStatus
 from catalystwan.endpoints.real_time_monitoring.reboot_history import RealTimeMonitoringRebootHistory
@@ -93,7 +99,6 @@ from catalystwan.endpoints.tenant_backup_restore import TenantBackupRestore
 from catalystwan.endpoints.tenant_management import TenantManagement
 from catalystwan.endpoints.tenant_migration import TenantMigration
 from catalystwan.endpoints.troubleshooting_tools.device_connectivity import TroubleshootingToolsDeviceConnectivity
-from catalystwan.endpoints.url_monitoring import UrlMonitoring
 
 if TYPE_CHECKING:
     from catalystwan.session import ManagerSession
@@ -126,6 +131,7 @@ class ConfigurationPolicyListContainer:
         self.site = ConfigurationPolicySiteList(session)
         self.sla = ConfigurationPolicySLAClassList(session)
         self.tloc = ConfigurationPolicyTLOCList(session)
+        self.trunkgroup = ConfigurationPolicyTrunkGroupList(session)
         self.url_block_list = ConfigurationPolicyURLBlockList(session)
         self.url_allow_list = ConfigurationPolicyURLAllowList(session)
         self.vpn = ConfigurationPolicyVPNList(session)
@@ -163,6 +169,8 @@ class ConfigurationSDWANFeatureProfileContainer:
     def __init__(self, session: ManagerSession):
         self.transport = TransportFeatureProfile(client=session)
         self.system = SystemFeatureProfile(client=session)
+        self.cli = CliFeatureProfile(client=session)
+        self.topology = TopologyFeatureProfile(client=session)
 
 
 class ConfigurationFeatureProfileContainer:
@@ -173,7 +181,9 @@ class ConfigurationFeatureProfileContainer:
 class ConfigurationContainer:
     def __init__(self, session: ManagerSession):
         self.policy = ConfigurationPolicyContainer(session)
-        self.feature_profile = ConfigurationFeatureProfileContainer(session=session)
+        self.feature_profile = ConfigurationFeatureProfileContainer(session)
+        self.topology_group = TopologyGroupEndpoints(session)
+        self.policy_group = PolicyGroupEndpoints(session)
 
 
 class TroubleshootingToolsContainer:
@@ -201,9 +211,9 @@ class APIEndpointContainter:
         self.configuration_software_actions = ConfigurationSoftwareActions(session)
         self.configuration_disaster_recovery = ConfigurationDisasterRecovery(session)
         self.monitoring_device_details = MonitoringDeviceDetails(session)
-        self.monitoring_security_policy = MonitoringSecurityPolicy(session)
         self.monitoring_server_info = ServerInfo(session)
         self.monitoring_status = MonitoringStatus(session)
+        self.network_hierarchy = NetworkHierarchy(session)
         self.sdavc_cloud_connector = SDAVCCloudConnector(session)
         self.tenant_backup_restore = TenantBackupRestore(session)
         self.tenant_management = TenantManagement(session)
@@ -216,4 +226,4 @@ class APIEndpointContainter:
         self.misc = MiscellaneousEndpoints(session)
         self.real_time_monitoring = RealTimeMonitoringContainer(session)
         self.certificate_management_device = CertificateManagementDevice(session)
-        self.url_monitoring = UrlMonitoring(session)
+        self.sig_security = SIGSecurity(session)

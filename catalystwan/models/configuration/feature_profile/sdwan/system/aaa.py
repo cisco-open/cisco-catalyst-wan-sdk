@@ -1,11 +1,13 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from ipaddress import IPv4Address, IPv6Address
-from typing import List, Optional, Union
+from typing import List, Literal, Optional, Union
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default, as_global
+
+DEFAULT_USER_PRIVILEGE = "15"
 
 
 class PubkeyChainItem(BaseModel):
@@ -15,7 +17,6 @@ class PubkeyChainItem(BaseModel):
     key_string: Global[str] = Field(
         validation_alias="keyString",
         serialization_alias="keyString",
-        pattern="^AAAA[0-9A-Za-z+/]+[=]{0,3}$",
         description="Set the RSA key string",
     )
 
@@ -29,7 +30,7 @@ class PubkeyChainItem(BaseModel):
 
 
 class UserItem(BaseModel):
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
     name: Union[Global[str], Variable] = Field(description="Set the username")
     password: Union[Global[str], Variable] = Field(
@@ -39,7 +40,7 @@ class UserItem(BaseModel):
         )
     )
     privilege: Union[Global[str], Variable, Default[str], None] = Field(
-        None, description="Set Privilege Level for this user"
+        default=as_default(DEFAULT_USER_PRIVILEGE), description="Set Privilege Level for this user"
     )
     pubkey_chain: Optional[List[PubkeyChainItem]] = Field(
         default=None,
@@ -260,7 +261,10 @@ class AuthorizationRuleItem(BaseModel):
     )
 
 
-class AAA(_ParcelBase):
+class AAAParcel(_ParcelBase):
+    type_: Literal["aaa"] = Field(default="aaa", exclude=True)
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
     authentication_group: Union[Variable, Global[bool], Default[bool]] = Field(
         default=as_default(False),
         validation_alias=AliasPath("data", "authenticationGroup"),
@@ -271,8 +275,8 @@ class AAA(_ParcelBase):
         validation_alias=AliasPath("data", "accountingGroup"),
         description="Accounting configurations parameters",
     )
-    # local, radius, tacacs
     server_auth_order: Global[List[str]] = Field(
+        # local, radius, tacacs
         validation_alias=AliasPath("data", "serverAuthOrder"),
         min_length=1,
         max_length=4,
@@ -303,6 +307,48 @@ class AAA(_ParcelBase):
         validation_alias=AliasPath("data", "authorizationRule"),
         description="Configure the Authorization Rules",
     )
+
+    @classmethod
+    def new(
+        cls,
+        parcel_name: str,
+        server_auth_order: List[str],
+        *,
+        parcel_description: Optional[str] = None,
+        accounting_group: bool = False,
+        authorization_console: bool = False,
+        authorization_config_commands: bool = False
+    ) -> "AAAParcel":
+        return cls(
+            parcel_name=parcel_name,
+            parcel_description=parcel_description,
+            server_auth_order=as_global(server_auth_order),
+            accounting_group=as_global(accounting_group),
+            authorization_console=as_global(authorization_console),
+            authorization_config_commands=as_global(authorization_config_commands),
+        )
+
+    def add_user(
+        self,
+        name: str,
+        password: str,
+        *,
+        privilege: str = DEFAULT_USER_PRIVILEGE,
+        pubkey_chain: Optional[List[PubkeyChainItem]] = None
+    ) -> UserItem:
+        user = UserItem(
+            name=as_global(name),
+            password=as_global(password),
+            privilege=as_global(privilege),
+            pubkey_chain=pubkey_chain,
+        )
+        if self.user is None:
+            self.user = []
+        self.user.append(user)
+        return user
+
+    def set_server_auth_order(self, server_auth_order: List[str]) -> None:
+        self.server_auth_order = as_global(server_auth_order)
 
     def add_authorization_rule(
         self, rule_id: str, method: str, level: str, group: List[str], if_authenticated: bool

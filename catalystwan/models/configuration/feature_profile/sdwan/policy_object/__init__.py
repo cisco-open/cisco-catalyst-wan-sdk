@@ -1,24 +1,29 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from typing import List, Mapping, Union
+from typing import List, Union
 
 from pydantic import Field
 from typing_extensions import Annotated
 
 from .policy.app_probe import AppProbeMapItem, AppProbeParcel
 from .policy.application_list import ApplicationFamilyListEntry, ApplicationListEntry, ApplicationListParcel
+from .policy.as_path import AsPathParcel
 from .policy.color_list import ColorEntry, ColorParcel
 from .policy.data_prefix import DataPrefixEntry, DataPrefixParcel
 from .policy.expanded_community_list import ExpandedCommunityParcel
+from .policy.extended_community import ExtendedCommunityParcel
 from .policy.fowarding_class import FowardingClassParcel, FowardingClassQueueEntry
 from .policy.ipv6_data_prefix import IPv6DataPrefixEntry, IPv6DataPrefixParcel
 from .policy.ipv6_prefix_list import IPv6PrefixListEntry, IPv6PrefixListParcel
-from .policy.policier import PolicierEntry, PolicierParcel
+from .policy.mirror import MirrorParcel
+from .policy.policer import PolicerEntry, PolicerParcel
 from .policy.prefered_group_color import Preference, PreferredColorGroupEntry, PreferredColorGroupParcel
 from .policy.prefix_list import PrefixListEntry, PrefixListParcel
-from .policy.sla_class import FallbackBestTunnel, SLAAppProbeClass, SLAClassCriteria, SLAClassListEntry, SLAClassParcel
+from .policy.sla_class import SLAClassListEntry, SLAClassParcel
 from .policy.standard_community import StandardCommunityEntry, StandardCommunityParcel
 from .policy.tloc_list import TlocEntry, TlocParcel
+from .security.aip import AdvancedInspectionProfileParcel
+from .security.amp import AdvancedMalwareProtectionParcel
 from .security.application_list import (
     SecurityApplicationFamilyListEntry,
     SecurityApplicationListEntry,
@@ -27,73 +32,68 @@ from .security.application_list import (
 from .security.data_prefix import SecurityDataPrefixEntry, SecurityDataPrefixParcel
 from .security.fqdn import FQDNDomainParcel, FQDNListEntry
 from .security.geolocation_list import GeoLocationListEntry, GeoLocationListParcel
+from .security.intrusion_prevention import IntrusionPreventionParcel
 from .security.ips_signature import IPSSignatureListEntry, IPSSignatureParcel
 from .security.local_domain import LocalDomainListEntry, LocalDomainParcel
 from .security.protocol_list import ProtocolListEntry, ProtocolListParcel
 from .security.security_port import SecurityPortListEntry, SecurityPortParcel
-from .security.url import BaseURLListEntry, URLAllowParcel, URLBlockParcel
+from .security.ssl_decryption import SslDecryptionParcel
+from .security.ssl_decryption_profile import SslDecryptionProfileParcel
+from .security.url import BaseURLListEntry, URLAllowParcel, URLBlockParcel, URLParcel
+from .security.url_filtering import UrlFilteringParcel
 from .security.zone import SecurityZoneListEntry, SecurityZoneListParcel
 
 AnyPolicyObjectParcel = Annotated[
     Union[
-        AppProbeParcel,
+        AdvancedInspectionProfileParcel,
+        AdvancedMalwareProtectionParcel,
         ApplicationListParcel,
+        AppProbeParcel,
+        AsPathParcel,
         ColorParcel,
         DataPrefixParcel,
         ExpandedCommunityParcel,
+        ExtendedCommunityParcel,
         FowardingClassParcel,
+        FQDNDomainParcel,
+        GeoLocationListParcel,
+        IntrusionPreventionParcel,
+        IPSSignatureParcel,
         IPv6DataPrefixParcel,
         IPv6PrefixListParcel,
-        PrefixListParcel,
-        PolicierParcel,
+        LocalDomainParcel,
+        MirrorParcel,
+        PolicerParcel,
         PreferredColorGroupParcel,
+        PrefixListParcel,
         SLAClassParcel,
         TlocParcel,
         StandardCommunityParcel,
         LocalDomainParcel,
         FQDNDomainParcel,
         IPSSignatureParcel,
-        URLAllowParcel,
-        URLBlockParcel,
         SecurityPortParcel,
         ProtocolListParcel,
         GeoLocationListParcel,
         SecurityZoneListParcel,
         SecurityApplicationListParcel,
         SecurityDataPrefixParcel,
+        SecurityPortParcel,
+        SecurityZoneListParcel,
+        SLAClassParcel,
+        SslDecryptionParcel,
+        SslDecryptionProfileParcel,
+        StandardCommunityParcel,
+        TlocParcel,
+        URLParcel,
+        UrlFilteringParcel,
     ],
-    Field(discriminator="type"),
+    Field(discriminator="type_"),
 ]
 
-POLICY_OBJECT_PAYLOAD_ENDPOINT_MAPPING: Mapping[type, str] = {
-    AppProbeParcel: "app-probe",
-    ApplicationListParcel: "app-list",
-    ColorParcel: "color",
-    DataPrefixParcel: "data-prefix",
-    ExpandedCommunityParcel: "expanded-community",
-    FowardingClassParcel: "class",
-    IPv6DataPrefixParcel: "data-ipv6-prefix",
-    IPv6PrefixListParcel: "ipv6-prefix",
-    PrefixListParcel: "prefix",
-    PolicierParcel: "policer",
-    PreferredColorGroupParcel: "preferred-color-group",
-    SLAClassParcel: "sla-class",
-    TlocParcel: "tloc",
-    StandardCommunityParcel: "standard-community",
-    LocalDomainParcel: "security-localdomain",
-    FQDNDomainParcel: "security-fqdn",
-    IPSSignatureParcel: "security-ipssignature",
-    URLAllowParcel: "security-urllist",
-    URLBlockParcel: "security-urllist",
-    SecurityPortParcel: "security-port",
-    ProtocolListParcel: "security-protocolname",
-    GeoLocationListParcel: "security-geolocation",
-    SecurityZoneListParcel: "security-zone",
-    SecurityApplicationListParcel: "security-localapp",
-    SecurityDataPrefixParcel: "security-data-ip-prefix",
-}
-
 __all__ = (
+    "AdvancedInspectionProfileParcel",
+    "AdvancedMalwareProtectionParcel",
     "AnyPolicyObjectParcel",
     "ApplicationFamilyListEntry",
     "ApplicationListEntry",
@@ -101,12 +101,14 @@ __all__ = (
     "AppProbeEntry",
     "AppProbeMapItem",
     "AppProbeParcel",
+    "AsPathParcel",
     "BaseURLListEntry",
     "ColorEntry",
     "ColorParcel",
     "DataPrefixEntry",
     "DataPrefixParcel",
     "ExpandedCommunityParcel",
+    "ExtendedCommunityParcel",
     "FallbackBestTunnel",
     "FowardingClassParcel",
     "FowardingClassQueueEntry",
@@ -114,6 +116,7 @@ __all__ = (
     "FQDNListEntry",
     "GeoLocationListEntry",
     "GeoLocationListParcel",
+    "IntrusionPreventionParcel",
     "IPSSignatureListEntry",
     "IPSSignatureParcel",
     "IPv6DataPrefixEntry",
@@ -122,8 +125,9 @@ __all__ = (
     "IPv6PrefixListParcel",
     "LocalDomainListEntry",
     "LocalDomainParcel",
-    "PolicierEntry",
-    "PolicierParcel",
+    "MirrorParcel",
+    "PolicerEntry",
+    "PolicerParcel",
     "Preference",
     "PreferredColorGroupEntry",
     "PreferredColorGroupParcel",
@@ -144,10 +148,13 @@ __all__ = (
     "SLAClassCriteria",
     "SLAClassListEntry",
     "SLAClassParcel",
+    "SslDecryptionParcel",
+    "SslDecryptionProfileParcel",
     "StandardCommunityEntry",
     "StandardCommunityParcel",
     "TlocEntry",
     "TlocParcel",
+    "URLParcel",
     "URLAllowParcel",
     "URLBlockParcel",
 )

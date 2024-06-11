@@ -6,14 +6,14 @@ import tempfile
 import unittest
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union
 from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
 import pytest  # type: ignore
 from packaging.version import Version  # type: ignore
 from parameterized import parameterized  # type: ignore
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_serializer
 from typing_extensions import Annotated
 
 from catalystwan.endpoints import (
@@ -29,6 +29,7 @@ from catalystwan.endpoints import (
 from catalystwan.endpoints import logger as endpoints_logger
 from catalystwan.endpoints import post, put, request, versions, view
 from catalystwan.exceptions import APIEndpointError, APIRequestPayloadTypeError, APIVersionError, APIViewError
+from catalystwan.models.common import VersionedField
 from catalystwan.typed_list import DataSequence
 from catalystwan.utils.session_type import ProviderAsTenantView, ProviderView, TenantView
 
@@ -308,14 +309,6 @@ class TestAPIEndpoints(unittest.TestCase):
                 def get_data(self, payload: List[str]) -> None:  # type: ignore [empty-body]
                     ...
 
-    def test_request_decorator_unsupported_payload_composite_type(self):
-        with self.assertRaises(APIEndpointError):
-
-            class TestAPI(APIEndpoints):
-                @request("POST", "/v1/data")
-                def get_data(self, payload: Dict[str, BaseModelExample]) -> None:  # type: ignore [empty-body]
-                    ...
-
     @parameterized.expand(
         [
             (BaseModelExample, False, TypeSpecifier(True, None, BaseModelExample, None, False, False)),
@@ -351,7 +344,7 @@ class TestAPIEndpoints(unittest.TestCase):
             (None, True, None),
         ]
     )
-    def test_request_decorator_payload_spec(self, payload_type, raises, expected_payload_spec):
+    def test_request_decorator_payload_spec(self, payload_type, raises, expected_payload_spec: Optional[TypeSpecifier]):
         # Arrange
         class TestAPI(APIEndpoints):
             def get_data(self, payload: payload_type) -> None:  # type: ignore [empty-body]
@@ -364,6 +357,11 @@ class TestAPIEndpoints(unittest.TestCase):
                 decorator(TestAPI.get_data)
         else:
             decorator(TestAPI.get_data)
+            if expected_payload_spec is not None and expected_payload_spec.payload_union_model_types is not None:
+                # check both list contains same set and skip member list comparison below
+                assert decorator.payload_spec.payload_model_set == expected_payload_spec.payload_model_set
+                decorator.payload_spec.payload_union_model_types = None
+                expected_payload_spec.payload_union_model_types = None
             assert decorator.payload_spec == expected_payload_spec
 
     def test_request_decorator_not_annotated_params(self):
@@ -874,3 +872,36 @@ class TestAPIEndpoints(unittest.TestCase):
             @request("POST", "/v1/data")
             def create(self, payload: AnyBaseModel) -> None:  # type: ignore [empty-body]
                 ...
+
+    @parameterized.expand(
+        [
+            ("1.3", '{"name":"John"}'),
+            ("1.9", '{"newName":"John"}'),
+        ]
+    )
+    def test_api_version_passed_in_dump_context(self, version, expected_payload_json):
+        # Arrange
+        class Payload(BaseModel):
+            model_config = ConfigDict(populate_by_name=True)
+            name: Annotated[str, VersionedField(versions=">1.6", serialization_alias="newName")]
+
+            @model_serializer(mode="wrap")
+            def serialize(self, handler, info):
+                return VersionedField.dump(self.model_fields, handler(self), info)
+
+        class ExampleAPI(APIEndpoints):
+            @request("POST", "/v1/data")
+            def create(self, payload: Payload) -> None:  # type: ignore [empty-body]
+                ...
+
+        self.session_mock.api_version = Version(version)
+        api = ExampleAPI(self.session_mock)
+        # Act
+        api.create(Payload(name="John"))
+        # Assert
+        self.session_mock.request.assert_called_once_with(
+            "POST",
+            self.base_path + "/v1/data",
+            data=expected_payload_json,
+            headers={"content-type": "application/json"},
+        )

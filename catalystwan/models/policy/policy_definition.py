@@ -2,17 +2,33 @@
 
 import datetime
 from functools import wraps
-from ipaddress import IPv4Address, IPv4Network, IPv6Network
-from typing import Any, Dict, List, MutableSequence, Optional, Protocol, Sequence, Set, Tuple, Union
+from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
+from typing import Any, Dict, List, MutableSequence, Optional, Sequence, Set, Tuple, Union
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, RootModel, model_validator
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
 from typing_extensions import Annotated, Literal
 
-from catalystwan.models.common import ServiceChainNumber, TLOCColor, check_fields_exclusive
+from catalystwan.models.common import (
+    BasicPolicyActionType,
+    CarrierType,
+    ControlPathType,
+    EncapType,
+    ICMPMessageType,
+    IntStr,
+    MultiRegionRole,
+    OriginProtocol,
+    SequenceIpType,
+    ServiceChainNumber,
+    ServiceType,
+    SpaceSeparatedPositiveIntList,
+    SpaceSeparatedUUIDList,
+    TLOCActionType,
+    TLOCColor,
+    check_fields_exclusive,
+    str_as_str_list,
+)
 from catalystwan.models.misc.application_protocols import ApplicationProtocol
-from catalystwan.models.policy.lists_entries import EncapType
-from catalystwan.typed_list import DataSequence
 
 
 def port_set_and_ranges_to_str(ports: Set[int] = set(), port_ranges: List[Tuple[int, int]] = []) -> str:
@@ -49,30 +65,6 @@ DestinationRegion = Literal[
     "other-region",
 ]
 
-OriginProtocol = Literal[
-    "aggregate",
-    "bgp",
-    "bgp-external",
-    "bgp-internal",
-    "connected",
-    "eigrp",
-    "ospf",
-    "ospf-inter-area",
-    "ospf-intra-area",
-    "ospf-external1",
-    "ospf-external2",
-    "rip",
-    "static",
-    "eigrp-summary",
-    "eigrp-internal",
-    "eigrp-external",
-    "lisp",
-    "nat-dia",
-    "natpool",
-    "isis",
-    "isis-level1",
-    "isis-level2",
-]
 
 PathType = Literal[
     "hierarchical-path",
@@ -80,19 +72,6 @@ PathType = Literal[
     "transport-gateway-path",
 ]
 
-SequenceIpType = Literal[
-    "ipv4",
-    "ipv6",
-    "all",
-]
-
-PolicyActionType = Literal[
-    "drop",
-    "accept",
-    "pass",
-    "inspect",
-    "reject",
-]
 
 SequenceType = Literal[
     "applicationFirewall",
@@ -107,6 +86,8 @@ SequenceType = Literal[
     "aclv6",
     "deviceaccesspolicy",
     "deviceaccesspolicyv6",
+    "sslDecryption",
+    "vedgeRoute",
 ]
 
 
@@ -126,41 +107,11 @@ LossProtectionType = Literal[
     "packetDuplication",
 ]
 
-MultiRegionRole = Literal[
-    "border-router",
-    "edge-router",
-]
-
-ServiceType = Literal[
-    "FW",
-    "IDP",
-    "IDS",
-    "netsvc1",
-    "netsvc2",
-    "netsvc3",
-    "netsvc4",
-]
-
-TLOCActionType = Literal[
-    "strict",
-    "primary",
-    "backup",
-    "ecmp",
-]
-
-Carrier = Literal[
-    "default",
-    "carrier1",
-    "carrier2",
-    "carrier3",
-    "carrier4",
-    "carrier5",
-    "carrier6",
-    "carrier7",
-    "carrier8",
-]
-
 DeviceAccessProtocol = Literal[22, 161]
+
+AdvancedCommunityMatchFlag = Literal["or", "and", "exact"]
+
+MetricType = Literal["type1", "type2"]
 
 
 class Reference(BaseModel):
@@ -231,7 +182,10 @@ class DSCPEntry(BaseModel):
 
 class SourceIPEntry(BaseModel):
     field: Literal["sourceIp"] = "sourceIp"
-    value: str = Field(description="IP network specifiers separate by space")
+    value: Optional[str] = Field(default=None, description="IP network specifiers separate by space")
+    vipVariableName: Optional[str] = Field(
+        default=None, serialization_alias="vipVariableName", validation_alias="vipVariableName"
+    )
 
     @staticmethod
     def from_ipv4_networks(networks: List[IPv4Network]) -> "SourceIPEntry":
@@ -263,7 +217,10 @@ class SourcePortEntry(BaseModel):
 
 class DestinationIPEntry(BaseModel):
     field: Literal["destinationIp"] = "destinationIp"
-    value: str
+    value: Optional[str] = Field(default=None)
+    vipVariableName: Optional[str] = Field(
+        default=None, serialization_alias="vipVariableName", validation_alias="vipVariableName"
+    )
 
     @staticmethod
     def from_ipv4_networks(networks: List[IPv4Network]) -> "DestinationIPEntry":
@@ -318,6 +275,26 @@ class DestinationRegionEntry(BaseModel):
     value: DestinationRegion
 
 
+class AddressEntry(BaseModel):
+    field: Literal["address"] = "address"
+    ref: UUID
+
+
+class AsPathListMatchEntry(BaseModel):
+    field: Literal["asPath"] = "asPath"
+    ref: UUID
+
+
+class AsPathActionEntryValue(BaseModel):
+    prepend: SpaceSeparatedPositiveIntList
+    exclude: SpaceSeparatedPositiveIntList
+
+
+class AsPathActionEntry(BaseModel):
+    field: Literal["asPath"] = "asPath"
+    value: AsPathActionEntryValue
+
+
 class SourceFQDNEntry(BaseModel):
     field: Literal["sourceFqdn"] = "sourceFqdn"
     value: str = Field(max_length=120)
@@ -367,9 +344,14 @@ class FallBackEntry(BaseModel):
     value: str = ""
 
 
-class NextHopEntry(BaseModel):
+class NextHopActionEntry(BaseModel):
     field: Literal["nextHop"] = "nextHop"
-    value: IPv4Address
+    value: Union[IPv4Address, IPv6Address]
+
+
+class NextHopMatchEntry(BaseModel):
+    field: Literal["nextHop"] = "nextHop"
+    ref: UUID
 
 
 class NextHopLooseEntry(BaseModel):
@@ -379,7 +361,7 @@ class NextHopLooseEntry(BaseModel):
 
 class OMPTagEntry(BaseModel):
     field: Literal["ompTag"] = "ompTag"
-    value: str = Field(description="Number in range 0-4294967295")
+    value: IntStr = Field(description="Number in range 0-4294967295", ge=0, le=4294967295)
 
 
 class OriginEntry(BaseModel):
@@ -399,7 +381,7 @@ class PreferenceEntry(BaseModel):
 
 class PathTypeEntry(BaseModel):
     field: Literal["pathType"] = "pathType"
-    value: PathType
+    value: ControlPathType
 
 
 class RegionEntry(BaseModel):
@@ -443,8 +425,17 @@ class TLOCEntry(BaseModel):
 
 
 class CommunityEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     field: Literal["community"] = "community"
-    value: str = Field(description="Example: 1000:10000 or internet or local-AS or no advertise or no-export")
+    value: Optional[str] = Field(
+        default=None, description="Example: 1000:10000 or internet or local-AS or no advertise or no-export"
+    )
+    vip_variable_name: Optional[str] = Field(
+        default=None,
+        serialization_alias="vipVariableName",
+        validation_alias="vipVariableName",
+        description="Example: 1000:10000 or internet or local-AS or no advertise or no-export",
+    )
 
 
 class CommunityAdditiveEntry(BaseModel):
@@ -454,7 +445,7 @@ class CommunityAdditiveEntry(BaseModel):
 
 class CarrierEntry(BaseModel):
     field: Literal["carrier"] = "carrier"
-    value: Carrier
+    value: CarrierType
 
 
 class DomainIDEntry(BaseModel):
@@ -472,9 +463,82 @@ class NextHeaderEntry(BaseModel):
     value: str = Field(description="0-63 single numbers separate by space")
 
 
+class AggregatorActionEntryValue(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    aggregator: IntStr = Field(description="Number in range 1-4294967295", ge=0, le=4294967295)
+    ip_address: Union[IPv4Address, IPv6Address] = Field(serialization_alias="ipAddress", validation_alias="ipAddress")
+
+
+class AggregatorActionEntry(BaseModel):
+    field: Literal["aggregator"] = "aggregator"
+    value: AggregatorActionEntryValue
+
+
 class TrafficClassEntry(BaseModel):
     field: Literal["trafficClass"] = "trafficClass"
     value: str = Field(description="Number in range 0-63")
+
+
+class LocalPreferenceEntry(BaseModel):
+    field: Literal["localPreference"] = "localPreference"
+    value: IntStr = Field(ge=0, le=4294967295, description="Number in range 0-4294967295")
+
+
+class MetricEntry(BaseModel):
+    field: Literal["metric"] = "metric"
+    value: IntStr = Field(ge=0, le=4294967295, description="Number in range 0-4294967295")
+
+
+class MetricTypeEntry(BaseModel):
+    field: Literal["metricType"] = "metricType"
+    value: MetricType
+
+
+class OspfTagEntry(BaseModel):
+    field: Literal["ospfTag"] = "ospfTag"
+    value: IntStr = Field(ge=0, le=4294967295, description="Number in range 0-4294967295")
+
+
+class PeerEntry(BaseModel):
+    field: Literal["peer"] = "peer"
+    value: Union[IPv4Address, IPv6Address]
+
+
+class AtomicAggregateActionEntry(BaseModel):
+    field: Literal["atomicAggregate"] = "atomicAggregate"
+    value: Literal["true"] = "true"
+
+
+class WeightEntry(BaseModel):
+    field: Literal["weight"] = "weight"
+    value: IntStr = Field(ge=0, le=4294967295, description="Number in range 0-4294967295")
+
+
+class AdvancedCommunityEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    field: Literal["advancedCommunity"] = "advancedCommunity"
+
+    match_flag: AdvancedCommunityMatchFlag = Field(
+        default="or",
+        serialization_alias="matchFlag",
+        validation_alias="matchFlag",
+        description="The 'and' and 'exact' conditions are applicable to only one community list",
+    )
+
+    refs: List[UUID] = []
+
+
+class ExpandedCommunityInLineEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    field: Literal["expandedCommunityInline"] = "expandedCommunityInline"
+    vip_variable_name: str = Field(serialization_alias="vipVariableName", validation_alias="vipVariableName")
+
+
+class ExtendedCommunityEntry(BaseModel):
+    field: Literal["extCommunity"] = "extCommunity"
+    ref: UUID
 
 
 class NATVPNEntry(RootModel):
@@ -487,24 +551,31 @@ class NATVPNEntry(RootModel):
         return NATVPNEntry(root=[UseVPNEntry(value=str(vpn))])
 
 
+class ICMPMessageEntry(BaseModel):
+    field: Literal["icmpMessage"] = "icmpMessage"
+    value: List[ICMPMessageType]
+
+    _value = field_validator("value", mode="before")(str_as_str_list)
+
+
 class SourceDataPrefixListEntry(BaseModel):
     field: Literal["sourceDataPrefixList"] = "sourceDataPrefixList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
 
 
 class SourceDataIPv6PrefixListEntry(BaseModel):
     field: Literal["sourceDataIpv6PrefixList"] = "sourceDataIpv6PrefixList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
 
 
 class DestinationDataPrefixListEntry(BaseModel):
     field: Literal["destinationDataPrefixList"] = "destinationDataPrefixList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
 
 
 class DestinationDataIPv6PrefixListEntry(BaseModel):
     field: Literal["destinationDataIpv6PrefixList"] = "destinationDataIpv6PrefixList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
 
 
 class DNSAppListEntry(BaseModel):
@@ -514,6 +585,11 @@ class DNSAppListEntry(BaseModel):
 
 class AppListEntry(BaseModel):
     field: Literal["appList"] = "appList"
+    ref: UUID
+
+
+class AppListFlatEntry(BaseModel):
+    field: Literal["appListFlat"] = "appListFlat"
     ref: UUID
 
 
@@ -547,8 +623,18 @@ class SourcePortListEntry(BaseModel):
     ref: UUID
 
 
+class SourceScalableGroupTagListEntry(BaseModel):
+    field: Literal["sourceScalableGroupTagList"] = "sourceScalableGroupTagList"
+    ref: UUID
+
+
 class DestinationPortListEntry(BaseModel):
     field: Literal["destinationPortList"] = "destinationPortList"
+    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
+
+
+class DestinationScalableGroupTagListEntry(BaseModel):
+    field: Literal["destinationScalableGroupTagList"] = "destinationScalableGroupTagList"
     ref: UUID
 
 
@@ -569,6 +655,16 @@ class PolicerListEntry(BaseModel):
 class TLOCListEntry(BaseModel):
     field: Literal["tlocList"] = "tlocList"
     ref: UUID
+
+
+class SourceVpnEntry(BaseModel):
+    field: Literal["sourceVpn"] = "sourceVpn"
+    value: str = Field(description="VPN ids numbers separated by space")
+
+
+class DestinationVpnEntry(BaseModel):
+    field: Literal["destinationVpn"] = "destinationVpn"
+    value: str = Field(description="VPN ids numbers separated by space")
 
 
 class PrefferedColorGroupListEntry(BaseModel):
@@ -752,6 +848,16 @@ class PolicerAction(BaseModel):
     parameter: Reference
 
 
+class ConnectionEventsAction(BaseModel):
+    type: Literal["connectionEvents"] = "connectionEvents"
+    parameter: str = ""
+
+
+class AdvancedInspectionProfileAction(BaseModel):
+    type: Literal["advancedInspectionProfile"] = "advancedInspectionProfile"
+    parameter: Reference
+
+
 ActionSetEntry = Annotated[
     Union[
         AffinityEntry,
@@ -760,7 +866,7 @@ ActionSetEntry = Annotated[
         DSCPEntry,
         ForwardingClassEntry,
         LocalTLOCListEntry,
-        NextHopEntry,
+        NextHopActionEntry,
         NextHopLooseEntry,
         OMPTagEntry,
         PolicerListEntry,
@@ -773,6 +879,16 @@ ActionSetEntry = Annotated[
         TLOCListEntry,
         TrafficClassEntry,
         VPNEntry,
+        AggregatorActionEntry,
+        AsPathActionEntry,
+        AtomicAggregateActionEntry,
+        LocalPreferenceEntry,
+        MetricEntry,
+        MetricTypeEntry,
+        OriginEntry,
+        OriginatorEntry,
+        OspfTagEntry,
+        WeightEntry,
     ],
     Field(discriminator="field"),
 ]
@@ -786,8 +902,10 @@ class ActionSet(BaseModel):
 ActionEntry = Annotated[
     Union[
         ActionSet,
+        AdvancedInspectionProfileAction,
         CFlowDAction,
         ClassMapAction,
+        ConnectionEventsAction,
         CountAction,
         DREOptimizationAction,
         FallBackToRoutingAction,
@@ -809,7 +927,14 @@ ActionEntry = Annotated[
 
 MatchEntry = Annotated[
     Union[
+        AdvancedCommunityEntry,
+        ExpandedCommunityListEntry,
+        ExpandedCommunityInLineEntry,
+        AddressEntry,
         AppListEntry,
+        AppListFlatEntry,
+        AsPathListMatchEntry,
+        LocalPreferenceEntry,
         CarrierEntry,
         ClassMapListEntry,
         ColorListEntry,
@@ -825,13 +950,17 @@ MatchEntry = Annotated[
         DestinationPortEntry,
         DestinationPortListEntry,
         DestinationRegionEntry,
+        DestinationScalableGroupTagListEntry,
+        DestinationVpnEntry,
         DNSAppListEntry,
         DNSEntry,
         DomainIDEntry,
         DSCPEntry,
         ExpandedCommunityListEntry,
         GroupIDEntry,
+        ICMPMessageEntry,
         NextHeaderEntry,
+        MetricEntry,
         OMPTagEntry,
         OriginatorEntry,
         OriginEntry,
@@ -860,12 +989,18 @@ MatchEntry = Annotated[
         SourceIPv6Entry,
         SourcePortEntry,
         SourcePortListEntry,
+        SourceScalableGroupTagListEntry,
+        SourceVpnEntry,
         TCPEntry,
         TLOCEntry,
         TLOCListEntry,
         TrafficClassEntry,
         TrafficToEntry,
         VPNListEntry,
+        NextHopMatchEntry,
+        OspfTagEntry,
+        PeerEntry,
+        ExtendedCommunityEntry,
     ],
     Field(discriminator="field"),
 ]
@@ -904,17 +1039,20 @@ class Action(BaseModel):
     pass
 
 
+PolicyAcceptRejectActionType = Literal["accept", "reject"]
+
+
 class PolicyDefinitionSequenceBase(BaseModel):
     sequence_id: int = Field(default=0, serialization_alias="sequenceId", validation_alias="sequenceId")
     sequence_name: str = Field(serialization_alias="sequenceName", validation_alias="sequenceName")
-    base_action: PolicyActionType = Field(
-        default="drop", serialization_alias="baseAction", validation_alias="baseAction"
-    )
+    base_action: str = Field(serialization_alias="baseAction", validation_alias="baseAction")
     sequence_type: SequenceType = Field(serialization_alias="sequenceType", validation_alias="sequenceType")
-    sequence_ip_type: SequenceIpType = Field(serialization_alias="sequenceIpType", validation_alias="sequenceIpType")
+    sequence_ip_type: Optional[SequenceIpType] = Field(
+        default="ipv4", serialization_alias="sequenceIpType", validation_alias="sequenceIpType"
+    )
     ruleset: Optional[bool] = None
     match: Match
-    actions: Sequence[ActionEntry]
+    actions: Optional[Sequence[ActionEntry]] = None
 
     @staticmethod
     def _check_field_collision(field: str, fields: Sequence[str]) -> None:
@@ -942,7 +1080,7 @@ class PolicyDefinitionSequenceBase(BaseModel):
 
     def _remove_match(self, match_type: Any) -> None:
         if isinstance(self.match.entries, MutableSequence):
-            self.match.entries[:] = [entry for entry in self.match.entries if type(entry) != match_type]
+            self.match.entries[:] = [entry for entry in self.match.entries if type(entry) is match_type]
 
     def _insert_match(self, match: MatchEntry, insert_field_check: bool = True) -> int:
         # inserts new item or replaces item with same field name if found
@@ -1006,8 +1144,16 @@ def accept_action(method):
     return wrapper
 
 
-class DefaultAction(BaseModel):
-    type: PolicyActionType
+class PolicyActionBase(BaseModel):
+    type: str
+
+
+class PolicyAcceptRejectAction(PolicyActionBase):
+    type: PolicyAcceptRejectActionType
+
+
+class BasicPolicyAction(PolicyActionBase):
+    type: BasicPolicyActionType
 
 
 class InfoTag(BaseModel):
@@ -1015,6 +1161,7 @@ class InfoTag(BaseModel):
 
 
 class PolicyDefinitionId(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     definition_id: UUID = Field(serialization_alias="definitionId", validation_alias="definitionId")
 
 
@@ -1024,8 +1171,8 @@ class PolicyReference(BaseModel):
 
 
 class DefinitionWithSequencesCommonBase(BaseModel):
-    default_action: Optional[DefaultAction] = Field(
-        default=DefaultAction(type="drop"),
+    default_action: Optional[PolicyActionBase] = Field(
+        default=None,
         serialization_alias="defaultAction",
         validation_alias="defaultAction",
     )
@@ -1109,20 +1256,3 @@ class PolicyDefinitionEditResponse(BaseModel):
 
 class PolicyDefinitionPreview(BaseModel):
     preview: str
-
-
-class PolicyDefinitionEndpoints(Protocol):
-    def create_policy_definition(self, payload: BaseModel) -> PolicyDefinitionId:
-        ...
-
-    def delete_policy_definition(self, id: UUID) -> None:
-        ...
-
-    def edit_policy_definition(self, id: UUID, payload: BaseModel) -> PolicyDefinitionEditResponse:
-        ...
-
-    def get_definitions(self) -> DataSequence[PolicyDefinitionInfo]:
-        ...
-
-    def get_policy_definition(self, id: UUID) -> PolicyDefinitionGetResponse:
-        ...

@@ -175,7 +175,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self.headers.update({"User-Agent": USER_AGENT})
         self.__prepare_session(verify, auth)
         self._platform_version: str = ""
-        self._api_version: Version
+        self._api_version: Version = NullVersion  # type: ignore
         self._state: ManagerSessionState = ManagerSessionState.OPERATIVE
         self.restart_timeout: int = 1200
         self.polling_requests_timeout: int = 10

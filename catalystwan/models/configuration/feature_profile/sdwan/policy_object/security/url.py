@@ -1,6 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from typing import List
+from typing import List, Literal
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
@@ -12,16 +12,21 @@ class BaseURLListEntry(BaseModel):
     pattern: Global[str]
 
 
-class BaseURLParcel(_ParcelBase):
+class URLParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
+    type_: Literal["security-urllist"] = Field(default="security-urllist", exclude=True)
+    type: Literal["urlallowed", "urlblocked"]
     entries: List[BaseURLListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
 
     def add_url(self, pattern: str):
         self.entries.append(BaseURLListEntry(pattern=as_global(pattern)))
 
 
-class URLAllowParcel(BaseURLParcel):
-    parcel_type: str = Field(default="urlallowed", validation_alias="type", serialization_alias="type")
+class URLAllowParcel(URLParcel):
+    model_config = ConfigDict(populate_by_name=True)
+    type: Literal["urlallowed"] = "urlallowed"
 
 
-class URLBlockParcel(BaseURLParcel):
-    parcel_type: str = Field(default="urlblocked", validation_alias="type", serialization_alias="type")
+class URLBlockParcel(URLParcel):
+    model_config = ConfigDict(populate_by_name=True)
+    type: Literal["urlblocked"] = "urlblocked"

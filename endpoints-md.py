@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from importlib import metadata
 from inspect import getsourcefile, getsourcelines
 from os import environ
 from pathlib import Path, PurePath
@@ -12,8 +11,9 @@ from typing import Any, Dict, List, Optional, Protocol, Sequence, Set
 from urllib.request import pathname2url
 
 from packaging.specifiers import SpecifierSet  # type: ignore
+from typing_extensions import get_original_bases
 
-from catalystwan import __package__
+from catalystwan import PACKAGE_VERSION, __package__
 from catalystwan.endpoints import BASE_PATH, APIEndpointRequestMeta, TypeSpecifier, request, versions, view
 from catalystwan.utils.session_type import SessionType  # type: ignore
 
@@ -110,12 +110,20 @@ class CompositeTypeLink(CodeLink, MarkdownRenderer):
                 if payloadtype.__module__ == "builtins":
                     return CompositeTypeLink.text_only(payloadtype.__name__)
                 elif sourcefile := getsourcefile(payloadtype):
-                    return CompositeTypeLink(
-                        link_text=payloadtype.__name__,
-                        sourcefile=create_sourcefile_link(sourcefile),
-                        lineno=getsourcelines(payloadtype)[1],
-                        origin=generate_origin_string(typespec),
-                    )
+                    try:
+                        lineno = getsourcelines(payloadtype)[1]
+                        link_text = payloadtype.__name__
+                    except OSError:
+                        base, *_ = get_original_bases(payloadtype)
+                        lineno = getsourcelines(base)[1]
+                        link_text = base.__name__
+                    finally:
+                        return CompositeTypeLink(
+                            link_text=link_text,
+                            sourcefile=create_sourcefile_link(sourcefile),
+                            lineno=lineno,
+                            origin=generate_origin_string(typespec),
+                        )
         return CompositeTypeLink.text_only("")
 
     def md(self) -> str:
@@ -211,5 +219,5 @@ if __name__ == "__main__":
     if environ.get("catalystwan_export_endpoints") is not None:
         with open("ENDPOINTS.md", "w") as f:
             f.write("**THIS FILE WAS AUTO-GENERATED DO NOT EDIT**\n\n")
-            f.write(f"Generated for: {__package__}-{metadata.version(__package__)}\n\n")
+            f.write(f"Generated for: {__package__}-{PACKAGE_VERSION}\n\n")
             f.write(endpoint_registry.md())

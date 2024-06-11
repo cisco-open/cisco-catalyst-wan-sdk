@@ -6,62 +6,80 @@ from typing import List, Union
 from pydantic import Field
 from typing_extensions import Annotated
 
-from .centralized import CentralizedPolicy, TrafficDataDirection
-from .definitions.access_control_list import AclPolicy
-from .definitions.access_control_list_ipv6 import AclIPv6Policy
-from .definitions.control import ControlPolicy
-from .definitions.device_access import DeviceAccessPolicy
-from .definitions.device_access_ipv6 import DeviceAccessIPv6Policy
-from .definitions.hub_and_spoke import HubAndSpokePolicy
-from .definitions.mesh import MeshPolicy
-from .definitions.qos_map import QoSDropType, QoSMapPolicy
-from .definitions.rewrite import RewritePolicy
-from .definitions.rule_set import RuleSet
-from .definitions.security_group import SecurityGroup
-from .definitions.traffic_data import TrafficDataPolicy
-from .definitions.vpn_membership import VPNMembershipPolicy
-from .definitions.zone_based_firewall import ZoneBasedFWPolicy
-from .lists import (
-    AppList,
-    AppProbeClassList,
-    ASPathList,
-    ClassMapList,
-    ColorList,
+from catalystwan.models.policy.list.app import AppList, AppListInfo
+from catalystwan.models.policy.list.app_probe import AppProbeClassList, AppProbeClassListInfo
+from catalystwan.models.policy.list.as_path import ASPathList, ASPathListInfo
+from catalystwan.models.policy.list.class_map import ClassMapList, ClassMapListInfo
+from catalystwan.models.policy.list.color import ColorList, ColorListInfo
+from catalystwan.models.policy.list.communities import (
     CommunityList,
-    DataIPv6PrefixList,
-    DataPrefixList,
+    CommunityListInfo,
     ExpandedCommunityList,
-    FQDNList,
-    GeoLocationList,
-    IPSSignatureList,
-    IPv6PrefixList,
-    LocalAppList,
-    LocalDomainList,
-    MirrorList,
-    PolicerList,
-    PortList,
-    PreferredColorGroupList,
-    PrefixList,
-    ProtocolNameList,
-    RegionList,
-    SiteList,
-    SLAClassList,
-    TLOCList,
-    URLAllowList,
-    URLBlockList,
-    VPNList,
-    ZoneList,
+    ExpandedCommunityListInfo,
+    ExtendedCommunityList,
+    ExtendedCommunityListInfo,
 )
-from .lists_entries import EncapType, PathPreference, PolicerExceedAction
+from catalystwan.models.policy.list.data_ipv6_prefix import DataIPv6PrefixList, DataIPv6PrefixListInfo
+from catalystwan.models.policy.list.data_prefix import DataPrefixList, DataPrefixListInfo
+from catalystwan.models.policy.list.fqdn import FQDNList, FQDNListInfo
+from catalystwan.models.policy.list.geo_location import GeoLocationList, GeoLocationListInfo
+from catalystwan.models.policy.list.ips_signature import IPSSignatureList, IPSSignatureListInfo
+from catalystwan.models.policy.list.ipv6_prefix import IPv6PrefixList, IPv6PrefixListInfo
+from catalystwan.models.policy.list.local_app import LocalAppList, LocalAppListInfo
+from catalystwan.models.policy.list.local_domain import LocalDomainList, LocalDomainListInfo
+from catalystwan.models.policy.list.mirror import MirrorList, MirrorListInfo
+from catalystwan.models.policy.list.policer import PolicerList, PolicerListInfo
+from catalystwan.models.policy.list.port import PortList, PortListInfo
+from catalystwan.models.policy.list.preferred_color_group import PreferredColorGroupList, PreferredColorGroupListInfo
+from catalystwan.models.policy.list.prefix import PrefixList, PrefixListInfo
+from catalystwan.models.policy.list.protocol_name import ProtocolNameList, ProtocolNameListInfo
+from catalystwan.models.policy.list.region import RegionList, RegionListInfo
+from catalystwan.models.policy.list.site import SiteList, SiteListInfo
+from catalystwan.models.policy.list.sla import SLAClassList, SLAClassListInfo
+from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList, ThreatGridApiKeyListInfo
+from catalystwan.models.policy.list.tloc import TLOCList, TLOCListInfo
+from catalystwan.models.policy.list.trunkgroup import TrunkGroupList, TrunkGroupListInfo
+from catalystwan.models.policy.list.umbrella_data import UmbrellaDataList, UmbrellaDataListInfo
+from catalystwan.models.policy.list.url import URLAllowList, URLAllowListInfo, URLBlockList, URLBlockListInfo
+from catalystwan.models.policy.list.vpn import VPNList, VPNListInfo
+from catalystwan.models.policy.list.zone import ZoneList, ZoneListInfo
+
+from .centralized import CentralizedPolicy, TrafficDataDirection
+from .definition.access_control_list import AclPolicy, AclPolicyGetResponse
+from .definition.access_control_list_ipv6 import AclIPv6Policy, AclIPv6PolicyGetResponse
+from .definition.aip import AdvancedInspectionProfilePolicy, AdvancedInspectionProfilePolicyGetResponse
+from .definition.amp import AdvancedMalwareProtectionPolicy, AdvancedMalwareProtectionPolicyGetResponse
+from .definition.cflowd import CflowdPolicy, CflowdPolicyGetResponse
+from .definition.control import ControlPolicy, ControlPolicyGetResponse
+from .definition.device_access import DeviceAccessPolicy, DeviceAccessPolicyGetResponse
+from .definition.device_access_ipv6 import DeviceAccessIPv6Policy, DeviceAccessIPv6PolicyGetResponse
+from .definition.dns_security import DnsSecurityPolicy, DnsSecurityPolicyGetResponse
+from .definition.hub_and_spoke import HubAndSpokePolicy, HubAndSpokePolicyGetResponse
+from .definition.intrusion_prevention import IntrusionPreventionPolicy, IntrusionPreventionPolicyGetResponse
+from .definition.mesh import MeshPolicy, MeshPolicyGetResponse
+from .definition.qos_map import QoSDropType, QoSMapPolicy, QoSMapPolicyGetResponse
+from .definition.rewrite import RewritePolicy, RewritePolicyGetResponse
+from .definition.route_policy import RoutePolicy, RoutePolicyGetResponse
+from .definition.rule_set import RuleSet, RuleSetGetResponse
+from .definition.security_group import SecurityGroup, SecurityGroupGetResponse
+from .definition.ssl_decryption import SslDecryptionPolicy, SslDecryptionPolicyGetResponse
+from .definition.ssl_decryption_utd_profile import (
+    SslDecryptionUtdProfilePolicy,
+    SslDecryptionUtdProfilePolicyGetResponse,
+)
+from .definition.traffic_data import TrafficDataPolicy, TrafficDataPolicyGetResponse
+from .definition.url_filtering import UrlFilteringPolicy, UrlFilteringPolicyGetResponse
+from .definition.vpn_membership import VPNMembershipPolicy, VPNMembershipPolicyGetResponse
+from .definition.zone_based_firewall import ZoneBasedFWPolicy, ZoneBasedFWPolicyGetResponse
 from .localized import LocalizedPolicy
 from .policy_definition import (
-    Carrier,
+    BasicPolicyActionType,
+    CarrierType,
+    ControlPathType,
     DNSTypeEntryType,
     MultiRegionRole,
     OriginProtocol,
-    PathType,
     PLPEntryType,
-    PolicyActionType,
     ServiceType,
     TLOCActionType,
 )
@@ -69,20 +87,29 @@ from .security import SecurityPolicy, UnifiedSecurityPolicy
 
 AnyPolicyDefinition = Annotated[
     Union[
-        RuleSet,
-        SecurityGroup,
-        ZoneBasedFWPolicy,
-        TrafficDataPolicy,
-        QoSMapPolicy,
-        RewritePolicy,
+        AclIPv6Policy,
+        AclPolicy,
+        AdvancedInspectionProfilePolicy,
+        AdvancedMalwareProtectionPolicy,
+        CflowdPolicy,
         ControlPolicy,
-        VPNMembershipPolicy,
+        IntrusionPreventionPolicy,
+        DeviceAccessIPv6Policy,
+        DeviceAccessPolicy,
+        DnsSecurityPolicy,
         HubAndSpokePolicy,
         MeshPolicy,
-        AclPolicy,
-        AclIPv6Policy,
-        DeviceAccessPolicy,
-        DeviceAccessIPv6Policy,
+        QoSMapPolicy,
+        RewritePolicy,
+        RoutePolicy,
+        RuleSet,
+        SecurityGroup,
+        SslDecryptionPolicy,
+        SslDecryptionUtdProfilePolicy,
+        TrafficDataPolicy,
+        UrlFilteringPolicy,
+        VPNMembershipPolicy,
+        ZoneBasedFWPolicy,
     ],
     Field(discriminator="type"),
 ]
@@ -98,6 +125,7 @@ AnyPolicyList = Annotated[
         DataIPv6PrefixList,
         DataPrefixList,
         ExpandedCommunityList,
+        ExtendedCommunityList,
         FQDNList,
         GeoLocationList,
         IPSSignatureList,
@@ -113,7 +141,10 @@ AnyPolicyList = Annotated[
         RegionList,
         SiteList,
         SLAClassList,
+        ThreatGridApiKeyList,
         TLOCList,
+        TrunkGroupList,
+        UmbrellaDataList,
         URLBlockList,
         URLAllowList,
         VPNList,
@@ -122,17 +153,88 @@ AnyPolicyList = Annotated[
     Field(discriminator="type"),
 ]
 
+AnyPolicyListInfo = Annotated[
+    Union[
+        AppListInfo,
+        AppProbeClassListInfo,
+        ASPathListInfo,
+        ClassMapListInfo,
+        ColorListInfo,
+        CommunityListInfo,
+        DataIPv6PrefixListInfo,
+        DataPrefixListInfo,
+        ExpandedCommunityListInfo,
+        ExtendedCommunityListInfo,
+        FQDNListInfo,
+        GeoLocationListInfo,
+        IPSSignatureListInfo,
+        IPv6PrefixListInfo,
+        LocalAppListInfo,
+        LocalDomainListInfo,
+        MirrorListInfo,
+        PolicerListInfo,
+        PortListInfo,
+        PreferredColorGroupListInfo,
+        PrefixListInfo,
+        ProtocolNameListInfo,
+        RegionListInfo,
+        SiteListInfo,
+        SLAClassListInfo,
+        ThreatGridApiKeyListInfo,
+        TLOCListInfo,
+        TrunkGroupListInfo,
+        UmbrellaDataListInfo,
+        URLAllowListInfo,
+        URLBlockListInfo,
+        VPNListInfo,
+        ZoneListInfo,
+    ],
+    Field(discriminator="type"),
+]
+
+AnyPolicyDefinitionInfo = Annotated[
+    Union[
+        AdvancedInspectionProfilePolicyGetResponse,
+        AdvancedMalwareProtectionPolicyGetResponse,
+        AclIPv6PolicyGetResponse,
+        AclPolicyGetResponse,
+        CflowdPolicyGetResponse,
+        ControlPolicyGetResponse,
+        DeviceAccessIPv6PolicyGetResponse,
+        DeviceAccessPolicyGetResponse,
+        DnsSecurityPolicyGetResponse,
+        IntrusionPreventionPolicyGetResponse,
+        HubAndSpokePolicyGetResponse,
+        MeshPolicyGetResponse,
+        QoSMapPolicyGetResponse,
+        RewritePolicyGetResponse,
+        RoutePolicyGetResponse,
+        RuleSetGetResponse,
+        SecurityGroupGetResponse,
+        SslDecryptionPolicyGetResponse,
+        SslDecryptionUtdProfilePolicyGetResponse,
+        TrafficDataPolicyGetResponse,
+        UrlFilteringPolicyGetResponse,
+        VPNMembershipPolicyGetResponse,
+        ZoneBasedFWPolicyGetResponse,
+    ],
+    Field(discriminator="type"),
+]
+
 
 __all__ = (
     "AclIPv6Policy",
     "AclPolicy",
+    "AdvancedInspectionProfilePolicy",
+    "AdvancedMalwareProtectionPolicy",
     "AnyPolicyList",
-    "AnyPolicyList",
+    "AnyPolicyDefinitionInfo",
     "AppList",
     "AppProbeClassList",
     "ASPathList",
-    "Carrier",
+    "CarrierType",
     "CentralizedPolicy",
+    "CflowdPolicy",
     "ClassMapList",
     "ColorList",
     "CommunityList",
@@ -141,12 +243,14 @@ __all__ = (
     "DataPrefixList",
     "DeviceAccessIPv6Policy",
     "DeviceAccessPolicy",
+    "DnsSecurityPolicy",
     "DNSTypeEntryType",
-    "EncapType",
     "ExpandedCommunityList",
+    "ExtendedCommunityList",
     "FQDNList",
     "GeoLocationList",
     "HubAndSpokePolicy",
+    "IntrusionPreventionPolicy",
     "IPSSignatureList",
     "IPv6PrefixList",
     "LocalAppList",
@@ -156,12 +260,10 @@ __all__ = (
     "MirrorList",
     "MultiRegionRole",
     "OriginProtocol",
-    "PathPreference",
-    "PathType",
+    "ControlPathType",
     "PLPEntryType",
-    "PolicerExceedAction",
     "PolicerList",
-    "PolicyActionType",
+    "BasicPolicyActionType",
     "PortList",
     "PreferredColorGroupList",
     "PrefixList",
@@ -170,19 +272,26 @@ __all__ = (
     "QoSMapPolicy",
     "RegionList",
     "RewritePolicy",
+    "RoutePolicy",
     "RuleSet",
     "SecurityGroup",
     "SecurityPolicy",
     "ServiceType",
     "SiteList",
     "SLAClassList",
+    "SslDecryptionPolicy",
+    "SslDecryptionUtdProfilePolicy",
+    "ThreatGridApiKeyList",
     "TLOCActionType",
     "TLOCList",
+    "TrunkGroupList",
+    "UmbrellaDataList",
     "TrafficDataDirection",
     "TrafficDataPolicy",
     "UnifiedSecurityPolicy",
     "URLBlockList",
     "URLAllowList",
+    "UrlFilteringPolicy",
     "VPNList",
     "VPNMembershipPolicy",
     "ZoneBasedFWPolicy",

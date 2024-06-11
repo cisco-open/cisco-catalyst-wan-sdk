@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
+from catalystwan.models.configuration.feature_profile.common import RefIdItem
 
 SLAClassCriteria = Literal[
     "loss",
@@ -42,12 +43,6 @@ def check_jitter_ms(cls, jitter: Optional[Global]):
     if jitter is not None:
         assert 1 <= jitter.value <= 1000
     return jitter
-
-
-class SLAAppProbeClass(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-
-    ref_id: Global[UUID] = Field(serialization_alias="refId", validation_alias="refId")
 
 
 class FallbackBestTunnel(BaseModel):
@@ -101,8 +96,8 @@ class SLAClassListEntry(BaseModel):
     latency: Optional[Global[int]] = None
     loss: Optional[Global[int]] = None
     jitter: Optional[Global[int]] = None
-    app_probe_class: Optional[SLAAppProbeClass] = Field(
-        validation_alias="appProbeClass", serialization_alias="appProbeClass"
+    app_probe_class: Optional[RefIdItem] = Field(
+        default=None, validation_alias="appProbeClass", serialization_alias="appProbeClass"
     )
     fallback_best_tunnel: Optional[FallbackBestTunnel] = Field(
         default=None, validation_alias="fallbackBestTunnel", serialization_alias="fallbackBestTunnel"
@@ -115,18 +110,21 @@ class SLAClassListEntry(BaseModel):
 
 
 class SLAClassParcel(_ParcelBase):
+    model_config = ConfigDict(populate_by_name=True)
+    type_: Literal["sla-class"] = Field(default="sla-class", exclude=True)
     entries: List[SLAClassListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
 
     def add_entry(
         self,
-        app_probe_class_id: UUID,
+        app_probe_class_id: Optional[UUID] = None,
         loss: Optional[int] = None,
         jitter: Optional[int] = None,
         latency: Optional[int] = None,
     ):
+        ref = RefIdItem(ref_id=as_global(str(app_probe_class_id))) if app_probe_class_id is not None else None
         self.entries.append(
             SLAClassListEntry(
-                app_probe_class=SLAAppProbeClass(ref_id=as_global(app_probe_class_id)),
+                app_probe_class=ref,
                 loss=as_global(loss) if loss is not None else None,
                 jitter=as_global(jitter) if jitter is not None else None,
                 latency=as_global(latency) if latency is not None else None,

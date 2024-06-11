@@ -2,13 +2,14 @@
 
 from typing import List, Literal, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
+from catalystwan.models.common import Duplex, Speed
 
 
 class StaticMacAddress(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     mac_address: Union[Global[str], Variable] = Field(serialization_alias="macaddr", validation_alias="macaddr")
     vlan: Union[Global[int], Variable]
@@ -22,10 +23,6 @@ SwitchportMode = Literal[
     "trunk",
 ]
 
-Duplex = Literal[
-    "full",
-    "half",
-]
 
 PortControl = Literal[
     "auto",
@@ -47,15 +44,17 @@ ControlDirection = Literal[
 
 
 class SwitchportInterface(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     interface_name: Union[Global[str], Variable] = Field(serialization_alias="ifName", validation_alias="ifName")
-    mode: Optional[Global[SwitchportMode]] = None
-    shutdown: Optional[Union[Global[bool], Variable, Default[bool]]] = Default[bool](value=True)
-    speed: Optional[Union[Global[str], Variable, Default[None]]] = Default[None](value=None)
-    duplex: Optional[Union[Global[Duplex], Variable, Default[None]]] = Default[None](value=None)
-    switchport_access_vlan: Optional[Union[Global[int], Variable, Default[None]]] = Field(
-        serialization_alias="switchportAccessVlan", validation_alias="switchportAccessVlan", default=None
+    mode: Global[SwitchportMode] = as_default("access", SwitchportMode)
+    shutdown: Union[Global[bool], Variable, Default[bool]] = Default[bool](value=True)
+    speed: Union[Global[Speed], Variable, Default[None]] = Default[None](value=None)
+    duplex: Union[Global[Duplex], Variable, Default[None]] = Default[None](value=None)
+    switchport_access_vlan: Union[Global[int], Variable, Default[None]] = Field(
+        serialization_alias="switchportAccessVlan",
+        validation_alias="switchportAccessVlan",
+        default=Default[None](value=None),
     )
     switchport_trunk_allowed_vlans: Optional[Union[Global[str], Variable, Default[None]]] = Field(
         serialization_alias="switchportTrunkAllowedVlans", validation_alias="switchportTrunkAllowedVlans", default=None
@@ -81,8 +80,8 @@ class SwitchportInterface(BaseModel):
     enable_periodic_reauth: Optional[Union[Global[bool], Variable, Default[None]]] = Field(
         serialization_alias="enablePeriodicReauth", validation_alias="enablePeriodicReauth", default=None
     )
-    inactivity: Optional[Union[Global[int], Variable, Default[None]]] = None
-    reauthentication: Optional[Union[Global[int], Variable, Default[int]]] = None
+    inactivity: Union[Global[int], Variable, Default[None]] = Default[None](value=None)
+    reauthentication: Union[Global[int], Variable, Default[int]] = as_default(3600)
     control_direction: Optional[Union[Global[ControlDirection], Variable, Default[None]]] = Field(
         serialization_alias="controlDirection", validation_alias="controlDirection", default=None
     )
@@ -100,22 +99,14 @@ class SwitchportInterface(BaseModel):
     )
 
 
-class SwitchportData(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+class SwitchportParcel(_ParcelBase):
+    type_: Literal["switchport"] = Field(default="switchport", exclude=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    interface: Optional[List[SwitchportInterface]] = None
-    age_time: Optional[Union[Global[int], Variable, Default[int]]] = Field(
-        serialization_alias="ageTime", validation_alias="ageTime", default=Default[int](value=300)
+    interface: List[SwitchportInterface] = Field(default_factory=list, validation_alias=AliasPath("data", "interface"))
+    age_time: Union[Global[int], Variable, Default[int]] = Field(
+        default=Default[int](value=300), validation_alias=AliasPath("data", "ageTime")
     )
-    static_mac_address: Optional[List[StaticMacAddress]] = Field(
-        serialization_alias="staticMacAddress", validation_alias="staticMacAddress", default=None
+    static_mac_address: List[StaticMacAddress] = Field(
+        default_factory=list, validation_alias=AliasPath("data", "staticMacAddress")
     )
-
-
-class SwitchportCreationPayload(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-
-    name: str
-    description: Optional[str] = None
-    data: SwitchportData
-    metadata: Optional[dict] = None

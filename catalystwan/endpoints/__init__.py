@@ -61,11 +61,12 @@ from uuid import UUID
 from packaging.specifiers import SpecifierSet  # type: ignore
 from packaging.version import Version  # type: ignore
 from pydantic import BaseModel
-from typing_extensions import Annotated, get_args, get_origin
+from typing_extensions import get_args, get_origin
 
 from catalystwan.abstractions import APIEndpointClient, APIEndpointClientResponse
 from catalystwan.exceptions import APIEndpointError, APIRequestPayloadTypeError, APIVersionError, APIViewError
 from catalystwan.typed_list import DataSequence
+from catalystwan.utils.model import resolve_nested_base_model_unions
 from catalystwan.utils.session_type import SessionType
 
 BASE_PATH: Final[str] = "/dataservice"
@@ -112,6 +113,19 @@ class TypeSpecifier:
     @classmethod
     def model_union(cls, models: Sequence[type]) -> TypeSpecifier:
         return TypeSpecifier(present=True, payload_union_model_types=models)
+
+    @classmethod
+    def resolve_nested(cls, annotation: Any, models_types: List[type]) -> List[type]:
+        try:
+            return resolve_nested_base_model_unions(annotation)
+        except TypeError:
+            raise APIEndpointError(f"Expected: {PayloadType}")
+
+    @property
+    def payload_model_set(self) -> Optional[Set[type]]:
+        if self.payload_union_model_types is not None:
+            return set(self.payload_union_model_types)
+        return None
 
 
 @dataclass
@@ -161,16 +175,18 @@ class APIEndpoints:
     """
 
     @classmethod
-    def _prepare_payload(cls, payload: PayloadType, force_json: bool = False) -> PreparedPayload:
+    def _prepare_payload(
+        cls, payload: PayloadType, force_json: bool = False, context: Dict[str, Any] = {}
+    ) -> PreparedPayload:
         """Helper method to prepare data for sending based on type"""
         if force_json or isinstance(payload, dict):
             return PreparedPayload(data=json.dumps(payload), headers={"content-type": "application/json"})
         if isinstance(payload, (str, bytes)):
             return PreparedPayload(data=payload)
         elif isinstance(payload, (BaseModel)):
-            return cls._prepare_basemodel_payload(payload)
+            return cls._prepare_basemodel_payload(payload, context)
         elif isinstance(payload, Sequence) and not isinstance(payload, (str, bytes)):
-            return cls._prepare_sequence_payload(payload)  # type: ignore[arg-type]
+            return cls._prepare_sequence_payload(payload, context)  # type: ignore[arg-type]
             # offender is List[JSON] which is also a Sequence can be ignored as long as force_json is passed correctly
         elif isinstance(payload, CustomPayloadType):
             return payload.prepared()
@@ -178,26 +194,27 @@ class APIEndpoints:
             raise APIRequestPayloadTypeError(payload)
 
     @classmethod
-    def _prepare_basemodel_payload(cls, payload: BaseModel) -> PreparedPayload:
+    def _prepare_basemodel_payload(cls, payload: BaseModel, context: Dict[str, Any] = {}) -> PreparedPayload:
         """Helper method to prepare BaseModel instance for sending"""
         return PreparedPayload(
-            data=payload.model_dump_json(exclude_none=True, by_alias=True), headers={"content-type": "application/json"}
+            data=payload.model_dump_json(exclude_none=True, by_alias=True, context=context),
+            headers={"content-type": "application/json"},
         )
 
     @classmethod
-    def _prepare_sequence_payload(cls, payload: Iterable[BaseModel]) -> PreparedPayload:
+    def _prepare_sequence_payload(cls, payload: Iterable[BaseModel], context: Dict[str, Any] = {}) -> PreparedPayload:
         """Helper method to prepare sequences for sending"""
         items = []
         for item in payload:
-            items.append(item.model_dump(exclude_none=True, by_alias=True))
+            items.append(item.model_dump(exclude_none=True, by_alias=True, context=context))
         data = json.dumps(items)
         return PreparedPayload(data=data, headers={"content-type": "application/json"})
 
     @classmethod
-    def _prepare_params(cls, params: RequestParamsType) -> Dict[str, Any]:
+    def _prepare_params(cls, params: RequestParamsType, context: Dict[str, Any] = {}) -> Dict[str, Any]:
         """Helper method to prepare params for sending"""
         if isinstance(params, BaseModel):
-            return params.model_dump(exclude_none=True, by_alias=True)
+            return params.model_dump(exclude_none=True, by_alias=True, context=context)
         return params
 
     def __init__(self, client: APIEndpointClient):
@@ -215,10 +232,11 @@ class APIEndpoints:
     ) -> APIEndpointClientResponse:
         """Prepares and sends request using client protocol"""
         _kwargs = dict(kwargs)
+        context = dict(api_version=self._api_version)
         if payload is not None:
-            _kwargs.update(self._prepare_payload(payload, force_json_payload).asdict())
+            _kwargs.update(self._prepare_payload(payload, force_json_payload, context).asdict())
         if params is not None:
-            _kwargs.update({"params": self._prepare_params(params)})
+            _kwargs.update({"params": self._prepare_params(params, context)})
         return self._client.request(method, self._basepath + url, **_kwargs)
 
     @property
@@ -441,27 +459,10 @@ class request(APIEndpointsDecorator):
                     and issubclass(type_args[0], BaseModel)
                 ):
                     return TypeSpecifier(True, type_origin, type_args[0], None, False, is_optional)
-            # Check if Annnotated[Union[PayloadModelType, ...]], only unions of pydantic models allowed
-            elif type_origin == Annotated:
-                if annotated_origin := get_args(annotation):
-                    if (len(annotated_origin) >= 1) and get_origin(annotated_origin[0]) == Union:
-                        if (
-                            (type_args := get_args(annotated_origin[0]))
-                            and all(isclass(t) for t in type_args)
-                            and all(issubclass(t, BaseModel) for t in type_args)
-                        ):
-                            return TypeSpecifier.model_union(models=list(type_args))
-            # Check if Union[PayloadModelType, ...], only unions of pydantic models allowed
-            elif type_origin == Union:
-                if (
-                    (type_args := get_args(annotation))
-                    and all(isclass(t) for t in type_args)
-                    and all(issubclass(t, BaseModel) for t in type_args)
-                ):
-                    return TypeSpecifier.model_union(models=list(type_args))
-            raise APIEndpointError(f"Expected: {PayloadType} but found payload {annotation}")
-        else:
-            raise APIEndpointError(f"Expected: {PayloadType} but found payload {annotation}")
+            else:
+                models = TypeSpecifier.resolve_nested(annotation, [])
+                return TypeSpecifier.model_union(models)
+        raise APIEndpointError(f"'payload' param must be annotated with supported type: {PayloadType}")
 
     def check_params(self):
         """Checks params in decorated method definition

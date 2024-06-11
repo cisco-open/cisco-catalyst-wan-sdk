@@ -40,6 +40,7 @@ from catalystwan.api.templates.models.system_vsmart_model import SystemVsmart
 from catalystwan.dataclasses import Device, DeviceTemplateInfo, FeatureTemplateInfo, FeatureTemplatesTypes, TemplateInfo
 from catalystwan.endpoints.configuration_device_template import FeatureToCLIPayload
 from catalystwan.exceptions import AttachedError, TemplateNotFoundError
+from catalystwan.models.templates import DeviceTemplateInformation, FeatureTemplateInformation
 from catalystwan.response import ManagerResponse
 from catalystwan.typed_list import DataSequence
 from catalystwan.utils.device_model import DeviceModel
@@ -698,3 +699,19 @@ class TemplatesAPI:
         config = CiscoConfParse(response["config"].splitlines())
         logger.debug(f"Template loaded from {device.hostname}.")
         return config
+
+    def get_feature_templates(self) -> DataSequence[FeatureTemplateInformation]:
+        endpoint = "/dataservice/template/feature"
+        fr_templates = self.session.get(endpoint)
+        return fr_templates.dataseq(FeatureTemplateInformation)
+
+    def get_device_templates(self) -> DataSequence[DeviceTemplateInformation]:
+        endpoint = "/dataservice/template/device"
+        params = {"feature": "all"}
+        templates = self.session.get(url=endpoint, params=params)
+        return templates.dataseq(DeviceTemplateInformation)
+
+    def get_device_template(self, template_id: str) -> DeviceTemplate:
+        endpoint = f"/dataservice/template/device/object/{template_id}"
+        response = self.session.get(endpoint)
+        return DeviceTemplate(**response.json())
