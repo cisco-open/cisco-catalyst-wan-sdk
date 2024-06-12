@@ -1,7 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Dict, List, Optional, Set, Tuple, TypeVar, Union, cast
+from typing import Any, ClassVar, Dict, List, Optional, Sequence, Set, Tuple, TypeVar, Union, cast
 from uuid import UUID, uuid4
 
 from packaging.version import Version
@@ -230,8 +230,8 @@ class UX2Config(BaseModel):
             profile_parcel["parcel"]["type_"] = profile_parcel["header"]["type"]
         return values
 
-    def parcels_with_origin(self, origin: Set[UUID]) -> List[AnyParcel]:
-        return [p.parcel for p in self.profile_parcels if p.header.origin in origin]
+    def transformed_parcels_with_origin(self, origin: Set[UUID]) -> List[TransformedParcel]:
+        return [p for p in self.profile_parcels if p.header.origin in origin]
 
 
 class ConfigTransformResult(BaseModel):
@@ -379,6 +379,12 @@ class UX2ConfigPushReport(BaseModel):
     config_groups: List[ConfigGroupReport] = Field(
         default_factory=list, serialization_alias="ConfigGroups", validation_alias="ConfigGroups"
     )
+    policy_groups: List[PolicyGroupReport] = Field(
+        default_factory=list, serialization_alias="PolicyGroups", validation_alias="PolicyGroups"
+    )
+    topology_groups: List[TopologyGroupReport] = Field(
+        default_factory=list, serialization_alias="TopologyGroups", validation_alias="TopologyGroups"
+    )
     standalone_feature_profiles: List[FeatureProfileBuildReport] = Field(
         default_factory=list,
         serialization_alias="StandaloneFeatureProfiles",
@@ -391,6 +397,14 @@ class UX2ConfigPushReport(BaseModel):
         default_factory=list, serialization_alias="FailedPushParcels", validation_alias="FailedPushParcels"
     )
 
+    @property
+    def groups(self) -> Sequence[_GroupReportBase]:
+        groups: List[_GroupReportBase] = list()
+        groups.extend(self.config_groups)
+        groups.extend(self.policy_groups)
+        groups.extend(self.topology_groups)
+        return groups
+
     def add_report(self, name: str, uuid: UUID, feature_profiles: List[FeatureProfileBuildReport]) -> None:
         self.config_groups.append(ConfigGroupReport(name=name, uuid=uuid, feature_profiles=feature_profiles))
 
@@ -401,8 +415,8 @@ class UX2ConfigPushReport(BaseModel):
         self.standalone_feature_profiles.extend(feature_profiles)
 
     def set_failed_push_parcels_flat_list(self):
-        for config_group in self.config_groups:
-            for feature_profile in config_group.feature_profiles:
+        for group in self.groups:
+            for feature_profile in group.feature_profiles:
                 for failed_parcel in feature_profile.failed_parcels:
                     self.failed_push_parcels.append(failed_parcel)
 
@@ -417,8 +431,9 @@ class UX2ConfigPushReport(BaseModel):
     def get_summary(self) -> str:
         created_parcels = 0
         failed_parcels = 0
-        for config_group in self.config_groups:
-            for feature_profile in config_group.feature_profiles:
+
+        for group in self.groups:
+            for feature_profile in group.feature_profiles:
                 created_parcels += len(feature_profile.created_parcels)
                 failed_parcels += len(feature_profile.failed_parcels)
         all_parcels = created_parcels + failed_parcels
@@ -542,6 +557,8 @@ class PolicyConvertContext:
 
 
 @dataclass
-class PolicyPushContext:
+class PushContext:
     default_policy_object_profile_id: Optional[UUID] = None
-    id_lookup: Dict[UUID, UUID] = {}  # universal lookup for finding pushed item id by origin id
+    id_lookup: Dict[UUID, UUID] = field(
+        default_factory=dict
+    )  # universal lookup for finding pushed item id by origin id
