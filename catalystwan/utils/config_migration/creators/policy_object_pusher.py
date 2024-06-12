@@ -6,7 +6,7 @@ from uuid import UUID
 
 from catalystwan.api.feature_profile_api import PolicyObjectFeatureProfileAPI
 from catalystwan.exceptions import ManagerHTTPError
-from catalystwan.models.configuration.config_migration import UX2Config, UX2ConfigPushResult
+from catalystwan.models.configuration.config_migration import PolicyPushContext, UX2Config, UX2ConfigPushResult
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, RefIdItem
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, Parcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import (
@@ -119,23 +119,26 @@ class PolicyObjectPusher:
         ux2_config: UX2Config,
         session: ManagerSession,
         push_result: UX2ConfigPushResult,
+        push_context: PolicyPushContext,
         progress: Callable[[str, int, int], None],
     ) -> None:
         self._ux2_config = ux2_config
         self._policy_object_api: PolicyObjectFeatureProfileAPI = session.api.sdwan_feature_profiles.policy_object
         self._push_result: UX2ConfigPushResult = push_result
         self._progress: Callable[[str, int, int], None] = progress
-        self._pushed_objects_map: Dict[UUID, UUID] = {}
+        self.push_context = push_context
 
     def push(self):
-        default_profile_id = self.get_or_create_default_policy_object_profile()
-        self.push_groups_of_interests_objects(default_profile_id)
+        profile_id = self.push_context.default_policy_object_profile_id
+        self.push_context.default_policy_object_profile_id = profile_id
+        self.push_groups_of_interests_objects(profile_id)
 
-    def push_groups_of_interests_objects(self, default_profile_id: UUID):
+    def push_groups_of_interests_objects(self):
         # TODO: fix typing issues in this method, probably we need literal containig AnyPolicyObjectType type_
         def cast_(parcel: AnyParcel) -> AnyPolicyObjectParcel:
             return parcel  # type: ignore
 
+        default_profile_id = self.push_context.default_policy_object_profile_id
         profile_rollback = self._push_result.rollback.add_default_policy_object_profile_id(default_profile_id)
 
         # will hold system created parcels id by type and name when detected
@@ -173,12 +176,12 @@ class PolicyObjectPusher:
                 continue
 
             try:
-                update_parcels_references(parcel, self._pushed_objects_map)
+                update_parcels_references(parcel, self.push_context.id_lookup)
 
                 parcel_id = self._policy_object_api.create(profile_id=default_profile_id, payload=parcel).id
                 profile_rollback.add_parcel(parcel.type_, parcel_id)
                 self._push_result.report.groups_of_interest.add_created(parcel.parcel_name, parcel_id)
-                self._pushed_objects_map[transformed_parcel.header.origin] = parcel_id
+                self.push_context.id_lookup[transformed_parcel.header.origin] = parcel_id
 
                 self._progress(
                     f"Creating Policy Object Parcel: {parcel.parcel_name}",

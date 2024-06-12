@@ -1,6 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
-from typing import Callable, Dict, List, Set, Tuple, cast
+from typing import Callable, Dict, List, Optional, Set, Tuple, cast
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -9,6 +9,7 @@ from catalystwan.api.builders.feature_profiles.report import FeatureProfileBuild
 from catalystwan.endpoints.configuration_group import ProfileId
 from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.config_migration import (
+    PolicyPushContext,
     TransformedFeatureProfile,
     TransformedParcel,
     UX2Config,
@@ -38,10 +39,15 @@ class UX2ConfigPusher:
         progress: Callable[[str, int, int], None],
     ) -> None:
         self._session = session
+        self._policy_push_context = PolicyPushContext()
         self._config_map = self._create_config_map(ux2_config)
         self._push_result = UX2ConfigPushResult()
         self._policy_object_pusher = PolicyObjectPusher(
-            ux2_config=ux2_config, session=session, progress=progress, push_result=self._push_result
+            ux2_config=ux2_config,
+            session=session,
+            progress=progress,
+            push_result=self._push_result,
+            push_context=self._policy_push_context,
         )
         self._ux2_config = ux2_config
         self._progress = progress
@@ -56,8 +62,9 @@ class UX2ConfigPusher:
         self._create_cloud_credentials()
         self._create_config_groups()
         self._policy_object_pusher.push()
-        dpop = self._policy_object_pusher.get_or_create_default_policy_object_profile()
-        self._create_topology_groups(dpop)  # needs to be executed after vpn parcels and groups of interests are created
+        self._create_topology_groups(
+            self._policy_push_context.default_policy_object_profile_id
+        )  # needs to be executed after vpn parcels and groups of interests are created
         self._push_result.report.set_failed_push_parcels_flat_list()
         logger.debug(f"Configuration push completed. Rollback configuration {self._push_result}")
         return self._push_result
@@ -102,6 +109,7 @@ class UX2ConfigPusher:
                     uuid=cg_id,
                     feature_profiles=created_profiles,
                 )
+                self.policy_push_context.id_lookup[transformed_config_group.header.origin] = cg_id
 
     def _create_feature_profile_and_parcels(self, feature_profiles_ids: List[UUID]) -> List[FeatureProfileBuildReport]:
         feature_profiles: List[FeatureProfileBuildReport] = []
@@ -124,6 +132,7 @@ class UX2ConfigPusher:
                 profile = pusher.push(transformed_feature_profile.feature_profile, parcels, self._config_map.parcel_map)
                 feature_profiles.append(profile)
                 self._push_result.rollback.add_feature_profile(profile.profile_uuid, profile_type)
+                self._policy_push_context.id_lookup[transformed_feature_profile.header.origin] = profile.profile_uuid
             except ManagerHTTPError as e:
                 logger.error(f"Error occured during [{fp_name}] feature profile creation: {e}")
             except Exception:
@@ -143,7 +152,10 @@ class UX2ConfigPusher:
                 parcels.append(transformed_parcel)
         return parcels
 
-    def _create_topology_groups(self, default_policy_object_profile_id: UUID):
+    def _create_topology_groups(self, default_policy_object_profile_id: Optional[UUID]):
+        if default_policy_object_profile_id is None:
+            logger.error("Cannot create Topology Group without Default Policy Object Profile")
+            return
         profile_origin_map: Dict[str, Tuple[UUID, Set[UUID]]] = {}
         profile_api = self._session.api.sdwan_feature_profiles.topology
         group_api = self._session.endpoints.configuration.topology_group

@@ -539,3 +539,9 @@ class PolicyConvertContext:
                 if parcel.vpn_id.value is not None:
                     context.lan_vpn_map[parcel.parcel_name] = parcel.vpn_id.value
         return context
+
+
+@dataclass
+class PolicyPushContext:
+    default_policy_object_profile_id: Optional[UUID] = None
+    id_lookup: Dict[UUID, UUID] = {}  # universal lookup for finding pushed item id by origin id
