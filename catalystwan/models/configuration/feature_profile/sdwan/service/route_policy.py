@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from __future__ import annotations
 
 from ipaddress import IPv4Address, IPv6Address
@@ -6,7 +7,15 @@ from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
+from catalystwan.api.configuration_groups.parcel import (
+    Default,
+    Global,
+    Variable,
+    _ParcelBase,
+    as_default,
+    as_global,
+    as_variable,
+)
 
 BaseAction = Literal["reject", "accept"]
 Community = Literal["internet", "local-AS", "no-advertise", "no-export"]
@@ -27,6 +36,10 @@ class ReferenceId(BaseModel):
         populate_by_name=True,
     )
     ref_id: UUID = Field(..., serialization_alias="refId", validation_alias="refId")
+
+    @classmethod
+    def from_uuid(cls, uuid: UUID) -> ReferenceId:
+        return cls(ref_id=uuid)
 
 
 class StandardCommunityList(BaseModel):
@@ -49,6 +62,13 @@ class StandardCommunityList(BaseModel):
         min_length=1,
     )
 
+    @classmethod
+    def create(cls, standard_community_list: List[UUID], criteria: Criteria = "OR") -> StandardCommunityList:
+        return cls(
+            standard_community_list=[ReferenceId.from_uuid(i) for i in standard_community_list],
+            criteria=as_global(criteria, Criteria),
+        )
+
 
 class ExpandedCommunityList(BaseModel):
     """
@@ -65,6 +85,10 @@ class ExpandedCommunityList(BaseModel):
         validation_alias="expandedCommunityList",
         description="Select a expanded community list",
     )
+
+    @classmethod
+    def create(cls, expanded_community_list: UUID) -> ExpandedCommunityList:
+        return cls(expanded_community_list=ReferenceId.from_uuid(expanded_community_list))
 
 
 class MatchEntry(BaseModel):
@@ -113,6 +137,51 @@ class MatchEntry(BaseModel):
         default=None, serialization_alias="ipv6NextHop", validation_alias="ipv6NextHop", description="Ipv6 Next Hop"
     )
 
+    def set_as_path_list(self, as_path_list: UUID) -> None:
+        self.as_path_list = ReferenceId.from_uuid(as_path_list)
+
+    def set_community_list(
+        self,
+        expanded_community_list: Optional[UUID] = None,
+        standard_community_list: Optional[List[UUID]] = None,
+        criteria: Criteria = "or",
+    ) -> None:
+        if expanded_community_list and standard_community_list:
+            raise ValueError("Only one community list should be set")
+
+        if expanded_community_list:
+            self.community_list = ExpandedCommunityList.create(expanded_community_list)
+
+        if standard_community_list:
+            self.community_list = StandardCommunityList.create(standard_community_list, criteria)
+
+    def set_ext_community_list(self, ext_community_list: UUID) -> None:
+        self.ext_community_list = ReferenceId.from_uuid(ext_community_list)
+
+    def set_bgp_local_preference(self, bgp_local_preference: int) -> None:
+        self.bgp_local_preference = as_global(bgp_local_preference)
+
+    def set_metric(self, metric: int) -> None:
+        self.metric = as_global(metric)
+
+    def set_omp_tag(self, omp_tag: int) -> None:
+        self.omp_tag = as_global(omp_tag)
+
+    def set_ospf_tag(self, ospf_tag: int) -> None:
+        self.ospf_tag = as_global(ospf_tag)
+
+    def set_ipv4_address(self, ipv4_address: UUID) -> None:
+        self.ipv4_address = ReferenceId.from_uuid(ipv4_address)
+
+    def set_ipv4_next_hop(self, ipv4_next_hop: UUID) -> None:
+        self.ipv4_next_hop = ReferenceId.from_uuid(ipv4_next_hop)
+
+    def set_ipv6_address(self, ipv6_address: UUID) -> None:
+        self.ipv6_address = ReferenceId.from_uuid(ipv6_address)
+
+    def set_ipv6_next_hop(self, ipv6_next_hop: UUID) -> None:
+        self.ipv6_next_hop = ReferenceId.from_uuid(ipv6_next_hop)
+
 
 class SetAsPath(BaseModel):
     """
@@ -123,6 +192,10 @@ class SetAsPath(BaseModel):
         populate_by_name=True,
     )
     prepend: Optional[List[Global[int]]] = None
+
+    @classmethod
+    def from_list(cls, prepend: List[int]) -> SetAsPath:
+        return cls(prepend=[as_global(i) for i in prepend])
 
 
 class SetCommunity(BaseModel):
@@ -135,6 +208,12 @@ class SetCommunity(BaseModel):
     )
     additive: Union[Global[bool], Default[bool]] = as_default(False)
     community: Optional[Union[Global[str], Global[Community], Variable]] = None
+
+    def set_community_as_variable(self, variable_name: str) -> None:
+        self.community = as_variable(value=variable_name)
+
+    def set_community_as_global(self, community: str) -> None:
+        self.community = as_global(community)
 
 
 class Accept(BaseModel):
@@ -152,51 +231,91 @@ class Accept(BaseModel):
         validation_alias="enableAcceptAction",
         description="Enable Accept Action",
     )
-    set_as_path: Optional[SetAsPath] = Field(
+    as_path: Optional[SetAsPath] = Field(
         default=None, serialization_alias="setAsPath", validation_alias="setAsPath", description="Set AS Path"
     )
-    set_community: Optional[SetCommunity] = Field(
+    community: Optional[SetCommunity] = Field(
         default=None, serialization_alias="setCommunity", validation_alias="setCommunity", description="Set Community"
     )
-    set_local_preference: Optional[Global[int]] = Field(
+    local_preference: Optional[Global[int]] = Field(
         default=None,
         serialization_alias="setLocalPreference",
         validation_alias="setLocalPreference",
         description="Set Local Preference",
     )
-    set_metric: Optional[Global[int]] = Field(
+    metric: Optional[Global[int]] = Field(
         default=None, serialization_alias="setMetric", validation_alias="setMetric", description="Set Metric"
     )
-    set_metric_type: Optional[Global[MetricType]] = Field(
+    metric_type: Optional[Global[MetricType]] = Field(
         default=None,
         serialization_alias="setMetricType",
         validation_alias="setMetricType",
         description="Set Metric Type",
     )
-    set_omp_tag: Optional[Global[int]] = Field(
+    omp_tag: Optional[Global[int]] = Field(
         default=None, serialization_alias="setOmpTag", validation_alias="setOmpTag", description="Set OMP Tag"
     )
-    set_origin: Optional[Global[Origin]] = Field(
+    origin: Optional[Global[Origin]] = Field(
         default=None, serialization_alias="setOrigin", validation_alias="setOrigin", description="Set Origin"
     )
-    set_ospf_tag: Optional[Global[int]] = Field(
+    ospf_tag: Optional[Global[int]] = Field(
         default=None, serialization_alias="setOspfTag", validation_alias="setOspfTag", description="Set OSPF Tag"
     )
-    set_weight: Optional[Global[int]] = Field(
+    weight: Optional[Global[int]] = Field(
         default=None, serialization_alias="setWeight", validation_alias="setWeight", description="Set Weight"
     )
-    set_ipv4_next_hop: Optional[Global[IPv4Address]] = Field(
+    ipv4_next_hop: Optional[Global[IPv4Address]] = Field(
         default=None,
         serialization_alias="setIpv4NextHop",
         validation_alias="setIpv4NextHop",
         description="Set Ipv4 Next Hop",
     )
-    set_ipv6_next_hop: Optional[Global[IPv6Address]] = Field(
+    ipv6_next_hop: Optional[Global[IPv6Address]] = Field(
         default=None,
         serialization_alias="setIpv6NextHop",
         validation_alias="setIpv6NextHop",
         description="Set Ipv6 Next Hop",
     )
+
+    def set_as_path(self, prepend: List[int]) -> None:
+        self.as_path = SetAsPath.from_list(prepend)
+
+    def set_community_as_global(self, additive: bool, community: str) -> None:
+        set_community = SetCommunity(additive=as_global(additive))
+        set_community.set_community_as_global(community)
+        self.community = set_community
+
+    def set_community_as_variable(self, additive: bool, community: str) -> None:
+        set_community = SetCommunity(additive=as_global(additive))
+        set_community.set_community_as_variable(community)
+        self.community = set_community
+
+    def set_local_preference(self, set_local_preference: int) -> None:
+        self.local_preference = set_local_preference
+
+    def set_metric(self, set_metric: int) -> None:
+        self.metric = as_global(set_metric)
+
+    def set_metric_type(self, set_metric_type: MetricType) -> None:
+        self.metric_type = as_global(set_metric_type, MetricType)
+
+    def set_omp_tag(self, set_omp_tag: int) -> None:
+        self.omp_tag = as_global(set_omp_tag)
+
+    def set_origin(self, set_origin: Origin) -> None:
+        self.origin = as_global(set_origin, Origin)
+
+    def set_ospf_tag(self, set_ospf_tag: int) -> None:
+        self.ospf_tag = as_global(set_ospf_tag)
+
+    def set_weight(self, set_weight: int) -> None:
+        self.weight = as_global(set_weight)
+
+    def set_ipv4_next_hop(self, set_ipv4_next_hop: IPv4Address) -> None:
+        self.ipv4_next_hop = set_ipv4_next_hop
+
+    def set_ipv6_next_hop(self, set_ipv6_next_hop: Optional[IPv6Address]) -> None:
+        self.ipv6_next_hop = set_ipv6_next_hop
 
 
 class AcceptActions(BaseModel):
@@ -247,6 +366,34 @@ class RoutePolicySequence(BaseModel):
         default=None, description="Define list of actions", max_length=1, min_length=1
     )
 
+    def set_protocol(self, protocol: Protocol):
+        self.protocol = Global[Protocol](value=protocol)
+
+    def add_accept_action(self, accept: Accept) -> None:
+        self.actions = [AcceptActions(accept=accept)]
+
+    def add_match_entry(self, match_entry: MatchEntry) -> None:
+        self.match_entries = [match_entry]
+
+    @classmethod
+    def create(
+        cls,
+        sequence_id: int,
+        sequence_name: str,
+        base_action: BaseAction = "reject",
+        protocol: Protocol = "IPV4",
+        match_entries: Optional[List[MatchEntry]] = None,
+        actions: Optional[List[Union[AcceptActions, RejectActions]]] = None,
+    ) -> RoutePolicySequence:
+        return cls(
+            sequence_id=as_global(sequence_id),
+            sequence_name=as_global(sequence_name),
+            base_action=as_global(base_action, BaseAction),
+            protocol=as_global(protocol, Protocol),
+            match_entries=match_entries,
+            actions=actions,
+        )
+
 
 class RoutePolicyParcel(_ParcelBase):
     type_: Literal["route-policy"] = Field(default="route-policy", exclude=True)
@@ -262,3 +409,9 @@ class RoutePolicyParcel(_ParcelBase):
     sequences: List[RoutePolicySequence] = Field(
         default=[], validation_alias=AliasPath("data", "sequences"), description="Route Policy List"
     )
+
+    def set_default_action(self, default_action: DefaultAction):
+        self.default_action = Global[DefaultAction](value=default_action)
+
+    def add_sequence(self, sequence: RoutePolicySequence) -> None:
+        self.sequences.append(sequence)

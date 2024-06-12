@@ -147,8 +147,8 @@ class RoutePolicyRuleSequence(PolicyDefinitionSequenceBase):
     def add_ospf_tag_action(self, ospf_tag: int):
         self._insert_action_in_set(OspfTagEntry(value=ospf_tag))
 
-    def add_weight_action(self, weigth: int):
-        self._insert_action_in_set(WeightEntry(value=weigth))
+    def add_weight_action(self, weight: int):
+        self._insert_action_in_set(WeightEntry(value=weight))
 
 
 class RoutePolicy(PolicyDefinitionBase, DefinitionWithSequencesCommonBase):

@@ -1,10 +1,10 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
-from ipaddress import IPv4Interface, IPv6Interface
+from ipaddress import IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Union, cast
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 from typing_extensions import Annotated
 
 from catalystwan.api.configuration_groups.parcel import Global, as_global
@@ -40,6 +40,13 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object.securi
     BlockPageAction,
     UrlFilteringParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import (
+    Accept,
+    MatchEntry,
+    RoutePolicyParcel,
+    RoutePolicySequence,
+    SetCommunity,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import DeviceAccessIPv4Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import (
     MatchEntries as DeviceAccessIPv4MatchEntries,
@@ -69,9 +76,29 @@ from catalystwan.models.policy.definition.dns_security import DnsSecurityPolicy,
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
 from catalystwan.models.policy.definition.intrusion_prevention import IntrusionPreventionPolicy
 from catalystwan.models.policy.definition.mesh import MeshPolicy
+from catalystwan.models.policy.definition.route_policy import RoutePolicy
 from catalystwan.models.policy.definition.ssl_decryption import SslDecryptionPolicy
 from catalystwan.models.policy.definition.ssl_decryption_utd_profile import SslDecryptionUtdProfilePolicy
 from catalystwan.models.policy.definition.url_filtering import UrlFilteringPolicy
+from catalystwan.models.policy.policy_definition import (
+    AddressEntry,
+    AdvancedCommunityEntry,
+    AsPathActionEntry,
+    AsPathListMatchEntry,
+    CommunityAdditiveEntry,
+    CommunityEntry,
+    ExpandedCommunityListEntry,
+    ExtendedCommunityEntry,
+    LocalPreferenceEntry,
+    MetricEntry,
+    MetricTypeEntry,
+    NextHopActionEntry,
+    NextHopMatchEntry,
+    OMPTagEntry,
+    OriginEntry,
+    OspfTagEntry,
+    WeightEntry,
+)
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.utils import convert_varname
 
@@ -95,6 +122,7 @@ Output = Optional[
             DnsParcel,
             DeviceAccessIPv6Parcel,
             DeviceAccessIPv4Parcel,
+            RoutePolicyParcel,
         ],
         Field(discriminator="type_"),
     ]
@@ -144,6 +172,17 @@ def conditional_split(s: str, seps: List[str]) -> List[str]:
         if sep in s:
             return s.split(sep)
     raise CatalystwanConverterCantConvertException(f"None of the separators {seps} found in {s}")
+
+
+def get_field_default_value(model: BaseModel, field_name: str) -> str:
+    field = model.model_fields[field_name]
+    return field.default
+
+
+def is_field_eq(model: BaseModel, in_: BaseModel) -> bool:
+    model_field = get_field_default_value(model, "field")
+    target_field = in_.field
+    return model_field == target_field
 
 
 def advanced_malware_protection(
@@ -396,6 +435,99 @@ def device_access_ipv4(in_: DeviceAccessPolicy, uuid: UUID, context: PolicyConve
     return out
 
 
+def route(in_: RoutePolicy, uuid: UUID, context: PolicyConvertContext) -> RoutePolicyParcel:
+    out = RoutePolicyParcel(**_get_parcel_name_desc(in_))
+    out.set_default_action(in_.default_action.type)
+    for in_seq in in_.sequences:
+        out_seq = RoutePolicySequence.create(
+            sequence_id=in_seq.sequence_id,
+            sequence_name=in_seq.sequence_name,
+            base_action=in_seq.base_action,
+        )
+        sequence_ip_type = in_seq.sequence_ip_type
+        if sequence_ip_type:
+            protocol = "ALL" if sequence_ip_type == "both" else sequence_ip_type.upper()
+            out_seq.set_protocol(protocol)
+        out_match = MatchEntry()
+
+        for in_entry in in_seq.match.entries:
+            if is_field_eq(AsPathListMatchEntry, in_entry):
+                out_match.set_as_path_list(in_entry.ref)
+            elif is_field_eq(ExpandedCommunityListEntry, in_entry):
+                out_match.set_community_list(expanded_community_list=in_entry.ref)
+            elif is_field_eq(AdvancedCommunityEntry, in_entry):
+                # Advanced matches to standard, because it has a list of UUIDs and a match flag
+                out_match.set_community_list(
+                    standard_community_list=in_entry.refs, criteria=in_entry.match_flag.upper()
+                )
+            elif is_field_eq(ExtendedCommunityEntry, in_entry):
+                out_match.set_ext_community_list(in_entry.ref)
+            elif is_field_eq(LocalPreferenceEntry, in_entry):
+                # Local preference is matches to bgp
+                out_match.set_bgp_local_preference(in_entry.value)
+            elif is_field_eq(MetricEntry, in_entry):
+                out_match.set_metric(in_entry.value)
+            elif is_field_eq(OMPTagEntry, in_entry):
+                out_match.set_omp_tag(in_entry.value)
+            elif is_field_eq(OspfTagEntry, in_entry):
+                out_match.set_ospf_tag(in_entry.value)
+            elif is_field_eq(AddressEntry, in_entry):
+                # Don't know what to do with this
+                out_match.set_ipv4_address(in_entry.ref)
+                out_match.set_ipv6_address(in_entry.ref)
+            elif is_field_eq(NextHopMatchEntry, in_entry):
+                # Don't know what to do with this
+                out_match.set_ipv4_next_hop(in_entry.ref)
+                out_match.set_ipv6_next_hop(in_entry.ref)
+
+        out_seq.add_match_entry(out_match)
+
+        accept = Accept()
+        community = SetCommunity()
+        actions = in_seq.actions
+        action_set_entries = []
+        if len(actions) == 1:
+            params = actions[0]
+            action_set_entries = params.parameter
+
+        for in_action in action_set_entries:
+            if is_field_eq(AsPathActionEntry, in_action):
+                accept.set_as_path(in_action.value.prepend)
+            elif is_field_eq(CommunityEntry, in_action):
+                if in_action.value:
+                    community.set_community_as_global(in_action.value)
+                if in_action.vip_variable_name:
+                    community.set_community_as_variable(in_action.vip_variable_name)
+            elif is_field_eq(CommunityAdditiveEntry, in_action):
+                community.additive = as_global(in_action.value)
+            elif is_field_eq(LocalPreferenceEntry, in_action):
+                accept.set_local_preference(in_action.value)
+            elif is_field_eq(MetricEntry, in_action):
+                accept.set_metric(in_action.value)
+            elif is_field_eq(MetricTypeEntry, in_action):
+                accept.set_metric_type(in_action.value)
+            elif is_field_eq(OspfTagEntry, in_action):
+                accept.set_ospf_tag(in_action.value)
+            elif is_field_eq(OriginEntry, in_action):
+                accept.set_origin(in_action.value.upper())
+            elif is_field_eq(OMPTagEntry, in_action):
+                accept.set_omp_tag(in_action.value)
+            elif is_field_eq(WeightEntry, in_action):
+                accept.set_weight(in_action.value)
+            elif is_field_eq(NextHopActionEntry, in_action):
+                if isinstance(in_action.value, IPv4Address):
+                    accept.set_ipv4_next_hop(in_action.value)
+                if isinstance(in_action.value, IPv6Address):
+                    accept.set_ipv6_next_hop(in_action.value)
+
+        if action_set_entries:
+            out_seq.add_accept_action(accept)
+
+        out.add_sequence(out_seq)
+
+    return out
+
+
 def mesh(in_: MeshPolicy, uuid: UUID, context: PolicyConvertContext) -> MeshParcel:
     target_vpns = context.lan_vpns_by_list_id[in_.definition.vpn_list]
     mesh_sites: List[str] = []
@@ -541,6 +673,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     DnsSecurityPolicy: dns_security,
     DeviceAccessIPv6Policy: device_access_ipv6,
     DeviceAccessPolicy: device_access_ipv4,
+    RoutePolicy: route,
 }
 
 
