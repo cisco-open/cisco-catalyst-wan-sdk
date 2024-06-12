@@ -1,6 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
-from typing import Callable, Dict, List, Set, Tuple, cast
+from typing import Callable, Dict, List, Optional, Set, Tuple, cast
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -9,6 +9,8 @@ from catalystwan.api.builders.feature_profiles.report import FeatureProfileBuild
 from catalystwan.endpoints.configuration_group import ProfileId
 from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.config_migration import (
+    PushContext,
+    TopologyGroupReport,
     TransformedFeatureProfile,
     TransformedParcel,
     UX2Config,
@@ -38,10 +40,15 @@ class UX2ConfigPusher:
         progress: Callable[[str, int, int], None],
     ) -> None:
         self._session = session
+        self._push_context = PushContext()
         self._config_map = self._create_config_map(ux2_config)
         self._push_result = UX2ConfigPushResult()
         self._policy_object_pusher = PolicyObjectPusher(
-            ux2_config=ux2_config, session=session, progress=progress, push_result=self._push_result
+            ux2_config=ux2_config,
+            session=session,
+            progress=progress,
+            push_result=self._push_result,
+            push_context=self._push_context,
         )
         self._ux2_config = ux2_config
         self._progress = progress
@@ -55,10 +62,10 @@ class UX2ConfigPusher:
     def push(self) -> UX2ConfigPushResult:
         self._create_cloud_credentials()
         self._create_config_groups()
-
         self._policy_object_pusher.push()
-        dpop = self._policy_object_pusher.get_or_create_default_policy_object_profile()
-        self._create_topology_groups(dpop)  # needs to be executed after vpn parcels and groups of interests are created
+        self._create_topology_groups(
+            self._push_context.default_policy_object_profile_id
+        )  # needs to be executed after vpn parcels and groups of interests are created
         self._push_result.report.set_failed_push_parcels_flat_list()
         logger.debug(f"Configuration push completed. Rollback configuration {self._push_result}")
         return self._push_result
@@ -103,6 +110,7 @@ class UX2ConfigPusher:
                     uuid=cg_id,
                     feature_profiles=created_profiles,
                 )
+                self._push_context.id_lookup[transformed_config_group.header.origin] = cg_id
 
     def _create_feature_profile_and_parcels(self, feature_profiles_ids: List[UUID]) -> List[FeatureProfileBuildReport]:
         feature_profiles: List[FeatureProfileBuildReport] = []
@@ -144,7 +152,10 @@ class UX2ConfigPusher:
                 parcels.append(transformed_parcel)
         return parcels
 
-    def _create_topology_groups(self, default_policy_object_profile_id: UUID):
+    def _create_topology_groups(self, default_policy_object_profile_id: Optional[UUID]):
+        if default_policy_object_profile_id is None:
+            logger.error("Cannot create Topology Group without Default Policy Object Profile")
+            return
         profile_origin_map: Dict[str, Tuple[UUID, Set[UUID]]] = {}
         profile_api = self._session.api.sdwan_feature_profiles.topology
         group_api = self._session.endpoints.configuration.topology_group
@@ -176,14 +187,27 @@ class UX2ConfigPusher:
                     i + 1,
                     len(ttps),
                 )
+                profile_report = FeatureProfileBuildReport(profile_name=group.name, profile_uuid=profile_id)
+                group_report = TopologyGroupReport(name=group.name, uuid=group_id, feature_profiles=[profile_report])
+                self._push_result.report.topology_groups.append(group_report)
             except ManagerHTTPError as e:
                 logger.error(f"Error occured during topology group creation: {e}")
+                continue
 
-            for parcel in self._ux2_config.parcels_with_origin(origins):
+            for transformed_parcel in self._ux2_config.transformed_parcels_with_origin(origins):
+                parcel = transformed_parcel.parcel
                 if isinstance(parcel, (CustomControlParcel, HubSpokeParcel, MeshParcel)):
                     try:
-                        profile_api.create_parcel(profile_id, parcel)
+                        parcel_id = profile_api.create_parcel(profile_id, parcel).id
+                        profile_report.add_created_parcel(parcel_name=parcel.parcel_name, parcel_uuid=parcel_id)
                     except ManagerHTTPError as e:
-                        logger.error(f"Error occured during topology profile creation: {e}")
+                        logger.error(f"Error occured during topology profile parcel creation: {e}")
+                        profile_report.add_failed_parcel(
+                            parcel_name=parcel.parcel_name,
+                            parcel_type=parcel.type_,
+                            error_info=e.info,
+                            request=e.request,
+                        )
+                        self._push_context.id_lookup[transformed_parcel.header.origin] = parcel_id
                 else:
                     logger.warning(f"Unexpected parcel type {type(parcel)}")
