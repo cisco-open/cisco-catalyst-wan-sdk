@@ -179,7 +179,7 @@ def get_field_default_value(model: BaseModel, field_name: str) -> str:
     return field.default
 
 
-def is_field_eq(model: BaseModel, in_: BaseModel) -> bool:
+def is_field_eq(model: Type[BaseModel], in_: BaseModel) -> bool:
     model_field = get_field_default_value(model, "field")
     target_field = in_.field
     return model_field == target_field
@@ -472,13 +472,15 @@ def route(in_: RoutePolicy, uuid: UUID, context: PolicyConvertContext) -> RouteP
             elif is_field_eq(OspfTagEntry, in_entry):
                 out_match.set_ospf_tag(in_entry.value)
             elif is_field_eq(AddressEntry, in_entry):
-                # Don't know what to do with this
-                out_match.set_ipv4_address(in_entry.ref)
-                out_match.set_ipv6_address(in_entry.ref)
+                if sequence_ip_type == "ipv4":
+                    out_match.set_ipv4_address(in_entry.ref)
+                elif sequence_ip_type == "ipv6":
+                    out_match.set_ipv6_address(in_entry.ref)
             elif is_field_eq(NextHopMatchEntry, in_entry):
-                # Don't know what to do with this
-                out_match.set_ipv4_next_hop(in_entry.ref)
-                out_match.set_ipv6_next_hop(in_entry.ref)
+                if sequence_ip_type == "ipv4":
+                    out_match.set_ipv4_next_hop(in_entry.ref)
+                elif sequence_ip_type == "ipv6":
+                    out_match.set_ipv6_next_hop(in_entry.ref)
 
         out_seq.add_match_entry(out_match)
 

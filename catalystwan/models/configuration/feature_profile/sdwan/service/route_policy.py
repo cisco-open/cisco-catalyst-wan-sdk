@@ -144,7 +144,7 @@ class MatchEntry(BaseModel):
         self,
         expanded_community_list: Optional[UUID] = None,
         standard_community_list: Optional[List[UUID]] = None,
-        criteria: Criteria = "or",
+        criteria: Criteria = "OR",
     ) -> None:
         if expanded_community_list and standard_community_list:
             raise ValueError("Only one community list should be set")
@@ -290,8 +290,8 @@ class Accept(BaseModel):
         set_community.set_community_as_variable(community)
         self.community = set_community
 
-    def set_local_preference(self, set_local_preference: int) -> None:
-        self.local_preference = set_local_preference
+    def set_local_preference(self, preference: int) -> None:
+        self.local_preference = as_global(preference)
 
     def set_metric(self, set_metric: int) -> None:
         self.metric = as_global(set_metric)
