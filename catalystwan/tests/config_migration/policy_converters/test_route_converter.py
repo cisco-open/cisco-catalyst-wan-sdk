@@ -4,8 +4,9 @@ from ipaddress import IPv4Address
 from typing import cast
 from uuid import uuid4
 
+from catalystwan.api.configuration_groups.parcel import as_global
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
-from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import ReferenceId, RoutePolicyParcel
 from catalystwan.models.policy.definition.route_policy import RoutePolicy, RoutePolicyRuleSequence
 from catalystwan.models.policy.policy_definition import AdvancedCommunityEntry, PolicyAcceptRejectAction
 from catalystwan.utils.config_migration.converters.policy.policy_definitions import convert
@@ -21,12 +22,8 @@ class TestRoutePolicyConverter(unittest.TestCase):
         path_list_ref = uuid4()
         next_hop_ref = uuid4()
         standard_community_list_ref = [uuid4(), uuid4()]
-        expanded_community_list_ref = uuid4()
         extended_community_list_ref = uuid4()
-        rule_sequence = RoutePolicyRuleSequence(
-            sequence_id=1,
-            sequence_name="test_sequence",
-        )
+        rule_sequence = RoutePolicyRuleSequence(sequence_id=1, sequence_name="test_sequence", sequence_ip_type="ipv4")
         rule_sequence.match_address(
             address_ref=address_ref,
         )
@@ -54,17 +51,12 @@ class TestRoutePolicyConverter(unittest.TestCase):
         rule_sequence.match_peer(
             address=IPv4Address("10.2.3.4"),
         )
-        rule_sequence.match_community_list()
         rule_sequence.match_standard_community_list(
             community_list_entry=AdvancedCommunityEntry(
                 match_flag="and",
                 refs=standard_community_list_ref,
             )
         )
-        rule_sequence.match_expanded_community_list(
-            expanded_community_list_ref=expanded_community_list_ref,
-        )
-        rule_sequence.match_expanded_inline_community_list(variable_name="expanded_community_list")
         rule_sequence.match_extended_community_list(
             extended_community_ref=extended_community_list_ref,
         )
@@ -82,10 +74,6 @@ class TestRoutePolicyConverter(unittest.TestCase):
         )
         rule_sequence.add_originator_action(
             originator=IPv4Address("9.9.9.9"),
-        )
-        rule_sequence.add_community_by_value_action(
-            community_additive=True,
-            community_entry="test_community",
         )
         rule_sequence.add_community_by_variable_action(
             variable="test_community_variable",
@@ -133,3 +121,36 @@ class TestRoutePolicyConverter(unittest.TestCase):
         assert sequence.sequence_name.value == "test_sequence"
         assert len(sequence.match_entries) == 1
         match_entries = sequence.match_entries[0]
+
+        assert match_entries.ipv4_address.ref_id == address_ref
+        assert match_entries.as_path_list.ref_id == path_list_ref
+        assert match_entries.bgp_local_preference.value == 100
+        assert match_entries.metric.value == 100
+        assert match_entries.ipv4_next_hop.ref_id == next_hop_ref
+        assert match_entries.omp_tag.value == 100
+        # assert match_entries.peer: there is not peer in the match_entries
+        # assert match_entries.origin: there is not origin in the match_entries
+        assert match_entries.community_list.criteria.value == "AND"
+        assert match_entries.community_list.standard_community_list == [
+            ReferenceId.from_uuid(u) for u in standard_community_list_ref
+        ]
+        assert match_entries.ext_community_list.ref_id == extended_community_list_ref
+
+        assert len(sequence.actions) == 1
+        accept = sequence.actions[0].accept
+
+        # assert accept.aggregator: there is not aggregator in the accept
+        assert accept.as_path.prepend == [as_global(i) for i in [100, 200]]
+        # assert accept.as_path.exclude: there is not exclude in the accept
+        # assert accept.atomic_aggregate: there is not atomic_aggregate in the accept
+        assert accept.origin.value == "IGP"
+        # assert accept.originator: there is not originator in the accept
+        assert accept.community.additive == as_global(True)
+        assert accept.community.community.value == "{{test_community_variable}}"
+        assert accept.local_preference.value == 100
+        assert accept.metric.value == 100
+        assert accept.metric_type.value == "type1"
+        assert accept.ipv4_next_hop.value == IPv4Address("8.8.8.7")
+        assert accept.omp_tag.value == 100
+        assert accept.ospf_tag.value == 100
+        assert accept.weight.value == 100

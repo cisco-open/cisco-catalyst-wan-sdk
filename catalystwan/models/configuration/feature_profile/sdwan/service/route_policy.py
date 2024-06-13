@@ -312,10 +312,10 @@ class Accept(BaseModel):
         self.weight = as_global(set_weight)
 
     def set_ipv4_next_hop(self, set_ipv4_next_hop: IPv4Address) -> None:
-        self.ipv4_next_hop = set_ipv4_next_hop
+        self.ipv4_next_hop = as_global(set_ipv4_next_hop)
 
-    def set_ipv6_next_hop(self, set_ipv6_next_hop: Optional[IPv6Address]) -> None:
-        self.ipv6_next_hop = set_ipv6_next_hop
+    def set_ipv6_next_hop(self, set_ipv6_next_hop: IPv6Address) -> None:
+        self.ipv6_next_hop = as_global(set_ipv6_next_hop)
 
 
 class AcceptActions(BaseModel):
