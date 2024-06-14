@@ -28,7 +28,7 @@ class ReferencesUpdater(ABC):
 def update_parcels_references(
     parcel: AnyParcel,
     pushed_objects_map: Dict[UUID, UUID],
-    updaters_map: Mapping[type[AnyParcel], Type[ReferencesUpdater]],
+    updaters_map: Mapping[Type[AnyParcel], Type[ReferencesUpdater]],
 ) -> None:
     if ref_updater := updaters_map.get(type(parcel)):
         ref_updater(parcel, pushed_objects_map=pushed_objects_map).update_references()
