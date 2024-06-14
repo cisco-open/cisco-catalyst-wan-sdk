@@ -21,7 +21,8 @@ from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_cont
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
 from catalystwan.session import ManagerSession
-from catalystwan.utils.config_migration.creators.policy_object_pusher import PolicyObjectPusher
+from catalystwan.utils.config_migration.creators.groups_of_interests_pusher import GroupsOfInterestPusher
+from catalystwan.utils.config_migration.creators.security_policy_pusher import SecurityPolicyPusher
 from catalystwan.utils.config_migration.factories.parcel_pusher import ParcelPusherFactory
 
 logger = logging.getLogger(__name__)
@@ -43,13 +44,22 @@ class UX2ConfigPusher:
         self._push_context = PushContext()
         self._config_map = self._create_config_map(ux2_config)
         self._push_result = UX2ConfigPushResult()
-        self._policy_object_pusher = PolicyObjectPusher(
+
+        self._groups_of_interests_pusher = GroupsOfInterestPusher(
             ux2_config=ux2_config,
             session=session,
             progress=progress,
             push_result=self._push_result,
             push_context=self._push_context,
         )
+        self._security_policy_pusher = SecurityPolicyPusher(
+            ux2_config=ux2_config,
+            session=session,
+            progress=progress,
+            push_result=self._push_result,
+            push_context=self._push_context,
+        )
+
         self._ux2_config = ux2_config
         self._progress = progress
 
@@ -62,7 +72,8 @@ class UX2ConfigPusher:
     def push(self) -> UX2ConfigPushResult:
         self._create_cloud_credentials()
         self._create_config_groups()
-        self._policy_object_pusher.push()
+        self._groups_of_interests_pusher.push()
+        self._security_policy_pusher.push()
         self._create_topology_groups(
             self._push_context.default_policy_object_profile_id
         )  # needs to be executed after vpn parcels and groups of interests are created

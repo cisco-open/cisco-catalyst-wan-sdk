@@ -393,6 +393,9 @@ class UX2ConfigPushReport(BaseModel):
     groups_of_interest: GroupsOfInterestBuildReport = Field(
         default=GroupsOfInterestBuildReport(), serialization_alias="groupsOfIterest", validation_alias="groupsOfIterest"
     )
+
+    security_policies: List[FeatureProfileBuildReport] = []
+
     failed_push_parcels: List[FailedParcel] = Field(
         default_factory=list, serialization_alias="FailedPushParcels", validation_alias="FailedPushParcels"
     )
