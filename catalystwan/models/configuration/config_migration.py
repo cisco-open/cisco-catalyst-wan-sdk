@@ -538,8 +538,8 @@ class PolicyConvertContext:
     ssl_profile_residues: Dict[UUID, SslProfileResidues] = field(default_factory=dict)
     url_filtering_target_vpns: Dict[UUID, List[VpnId]] = field(default_factory=dict)
 
-    def get_vpn_id_to_vpn_name_map(self):
-        vpn_map = {}
+    def get_vpn_id_to_vpn_name_map(self) -> Dict[Union[str, int], List[str]]:
+        vpn_map: Dict[Union[str, int], List[str]] = {}
         for k, v in self.lan_vpn_map.items():
             vpn_map[v] = vpn_map.get(v, [])
             vpn_map[v].append(k)

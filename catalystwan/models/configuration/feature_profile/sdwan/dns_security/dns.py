@@ -35,7 +35,7 @@ class TargetVpns(BaseModel):
             local_domain_bypass_enabled=as_global(local_domain_bypass_enabled),
             uid=as_global(str(uid)),
             umbrella_default=as_global(umbrella_default),
-            vpns=as_global([(vpn) for vpn in vpns]),  # convert a bit
+            vpns=as_global([vpn for vpn in vpns]),
         )
 
 
@@ -74,10 +74,6 @@ class DnsParcel(_ParcelBase):
         elif self.match_all_vpn == Global[bool](value=False) and self.target_vpns is None:
             raise ValueError("if match_all_vpn is false field target_vpns should be in payload")
         return self
-
-    def add_target_vpn(self):
-        if self.target_vpns is None:
-            self.target_vpns = []
 
     @classmethod
     def create(
