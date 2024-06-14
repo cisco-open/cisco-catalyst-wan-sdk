@@ -146,7 +146,7 @@ def dns_security(in_: DnsSecurityPolicy, uuid: UUID, context: PolicyConvertConte
     )
 
 
-def target_vpn_convert(target_vpn: TargetVpn, vpn_id_to_map: Dict[int, List[str]]) -> TargetVpns:
+def target_vpn_convert(target_vpn: TargetVpn, vpn_id_to_map: Dict[Union[str, int], List[str]]) -> TargetVpns:
     vpn_names = []
     for vpn in target_vpn.vpns:
         if not (mapped_name := vpn_id_to_map.get(vpn)):
