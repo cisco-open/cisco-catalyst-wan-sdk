@@ -41,6 +41,7 @@ ProfileType = Literal[
     "global",  # automatically created global cellulargateway feature profile
     "sig-security",
     "topology",
+    "dns-security",
 ]
 
 SchemaType = Literal[

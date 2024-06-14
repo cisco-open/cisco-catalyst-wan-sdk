@@ -8,7 +8,7 @@ from catalystwan.api.feature_profile_api import PolicyObjectFeatureProfileAPI
 from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.config_migration import PushContext, UX2Config, UX2ConfigPushResult
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, RefIdItem
-from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, Parcel, list_types
+from catalystwan.models.configuration.feature_profile.parcel import AnyDnsSecurityParcel, AnyParcel, Parcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import (
     AdvancedInspectionProfileParcel,
     AnyPolicyObjectParcel,
@@ -89,14 +89,23 @@ class AdvancedInspectionProfileReferencesUpdater(ReferencesUpdater):
             self.parcel.url_filtering = RefIdItem.from_uuid(v2_uuid)
 
 
+class DnsSecurityReferencesUpdater(ReferencesUpdater):
+    def update_references(self):
+        if local_domain_bypass_list := self.parcel.local_domain_bypass_list:
+            v2_uuid = self.get_target_uuid(UUID(local_domain_bypass_list.ref_id.value))
+            self.parcel.local_domain_bypass_list = RefIdItem.from_uuid(v2_uuid)
+
+
 REFERENCES_UPDATER_MAPPING: Mapping[type, Type[ReferencesUpdater]] = {
     UrlFilteringParcel: UrlFilteringReferencesUpdater,
     SslDecryptionProfileParcel: SslProfileReferencesUpdater,
     IntrusionPreventionParcel: IntrusionPreventionReferencesUpdater,
     AdvancedInspectionProfileParcel: AdvancedInspectionProfileReferencesUpdater,
+    AnyDnsSecurityParcel: DnsSecurityReferencesUpdater,
 }
 
 POLICY_OBJECTS_PUSH_ORDER: Mapping[Type[AnyParcel], int] = {
+    AnyDnsSecurityParcel: 1,
     UrlFilteringParcel: 1,
     SslDecryptionProfileParcel: 1,
     IntrusionPreventionParcel: 1,
@@ -124,6 +133,7 @@ class PolicyObjectPusher:
     ) -> None:
         self._ux2_config = ux2_config
         self._policy_object_api: PolicyObjectFeatureProfileAPI = session.api.sdwan_feature_profiles.policy_object
+        self.dns = session.api.sdwan_feature_profiles.dns_security
         self._push_result: UX2ConfigPushResult = push_result
         self._progress: Callable[[str, int, int], None] = progress
         self.push_context = push_context
@@ -132,6 +142,37 @@ class PolicyObjectPusher:
         profile_id = self.get_or_create_default_policy_object_profile()
         self.push_context.default_policy_object_profile_id = profile_id
         self.push_groups_of_interests_objects()
+        self.push_dns_security_groups()
+
+    def push_dns_security_groups(self):
+        dns_security_groups = [
+            transformed_parcel
+            for transformed_parcel in self._ux2_config.profile_parcels
+            if type(transformed_parcel.parcel) in list_types(AnyDnsSecurityParcel)
+        ]
+
+        for i, dns_sec_group in enumerate(dns_security_groups):
+            try:
+                update_parcels_references(dns_sec_group.parcel, self.push_context.id_lookup)
+                pid = self.dns.create_profile(
+                    dns_sec_group.parcel.parcel_name, dns_sec_group.parcel.parcel_description
+                ).id
+                self._push_result.rollback.add_feature_profile(pid, "dns-security")
+                parcel_id = self.dns.create_parcel(pid, dns_sec_group.parcel).id
+                self._push_result.report.groups_of_interest.add_created(
+                    dns_sec_group.parcel.parcel_name, parcel_id
+                )  # policy group??
+                self.push_context.id_lookup[dns_sec_group.header.origin] = parcel_id
+
+                self._progress(
+                    f"Creating DNS Security Groups: {dns_sec_group.parcel.parcel_name}",
+                    i + 1,
+                    len(dns_security_groups),
+                )
+
+            except ManagerHTTPError as e:
+                logger.error(f"Error occured during DNS Security policy creation: {e.info}")
+                self._push_result.report.groups_of_interest.add_failed(dns_sec_group.parcel, e)  # to discuss
 
     def push_groups_of_interests_objects(self):
         default_profile_id = self.push_context.default_policy_object_profile_id

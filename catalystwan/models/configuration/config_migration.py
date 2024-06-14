@@ -532,10 +532,18 @@ class PolicyConvertContext:
     sites_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
     lan_vpns_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
     amp_target_vpns_id: Dict[UUID, List[VpnId]] = field(default_factory=dict)
+    dns_security_umbrella_data: Dict[UUID, UUID] = field(default_factory=dict)
     intrusion_prevention_target_vpns_id: Dict[UUID, List[VpnId]] = field(default_factory=dict)
     ssl_decryption_residues: Dict[UUID, SslDecryptioneResidues] = field(default_factory=dict)
     ssl_profile_residues: Dict[UUID, SslProfileResidues] = field(default_factory=dict)
     url_filtering_target_vpns: Dict[UUID, List[VpnId]] = field(default_factory=dict)
+
+    def get_vpn_id_to_vpn_name_map(self):
+        vpn_map = {}
+        for k, v in self.lan_vpn_map.items():
+            vpn_map[v] = vpn_map.get(v, [])
+            vpn_map[v].append(k)
+        return vpn_map
 
     @staticmethod
     def from_configs(
@@ -553,6 +561,7 @@ class PolicyConvertContext:
             if isinstance(parcel, LanVpnParcel):
                 if parcel.vpn_id.value is not None:
                     context.lan_vpn_map[parcel.parcel_name] = parcel.vpn_id.value
+
         return context
 
 
