@@ -209,8 +209,8 @@ IntRangeStr = Annotated[
     BeforeValidator(int_range_str_validator),
 ]
 
-BasicPolicyActionType = Literal["accept", "drop"]
-
+AcceptDropActionType = Literal["accept", "drop"]
+AcceptRejectActionType = Literal["accept", "reject"]
 PolicyMatchEntryDestinationPort = Literal[161, 22]
 
 CarrierType = Literal[

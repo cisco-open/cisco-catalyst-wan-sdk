@@ -6,10 +6,12 @@ from uuid import UUID
 
 from pydantic import ConfigDict, Field
 
+from catalystwan.models.common import AcceptRejectActionType, SequenceIpType
 from catalystwan.models.policy.policy_definition import (
     ActionSet,
     AddressEntry,
     AdvancedCommunityEntry,
+    AdvancedCommunityMatchFlag,
     AggregatorActionEntry,
     AggregatorActionEntryValue,
     AsPathActionEntry,
@@ -35,7 +37,6 @@ from catalystwan.models.policy.policy_definition import (
     OspfTagEntry,
     PeerEntry,
     PolicyAcceptRejectAction,
-    PolicyAcceptRejectActionType,
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
@@ -49,7 +50,7 @@ class RoutePolicyRuleSequence(PolicyDefinitionSequenceBase):
     sequence_type: Literal["vedgeRoute"] = Field(
         default="vedgeRoute", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
-    base_action: PolicyAcceptRejectActionType = Field(
+    base_action: AcceptRejectActionType = Field(
         default="reject", serialization_alias="baseAction", validation_alias="baseAction"
     )
 
@@ -86,8 +87,12 @@ class RoutePolicyRuleSequence(PolicyDefinitionSequenceBase):
     def match_community_list(self):
         pass
 
-    def match_standard_community_list(self, community_list_entry: AdvancedCommunityEntry):
-        self._insert_match(community_list_entry)
+    def match_standard_community_list(self, match_flag: AdvancedCommunityMatchFlag, community_lists: List[UUID]):
+        ace = AdvancedCommunityEntry(
+            match_flag=match_flag,
+            refs=community_lists,
+        )
+        self._insert_match(ace)
 
     def match_expanded_community_list(self, expanded_community_list_ref: UUID):
         self._insert_match(ExpandedCommunityListEntry(ref=expanded_community_list_ref))
@@ -98,56 +103,56 @@ class RoutePolicyRuleSequence(PolicyDefinitionSequenceBase):
     def match_extended_community_list(self, extended_community_ref: UUID):
         self._insert_match(ExtendedCommunityEntry(ref=extended_community_ref))
 
-    def add_aggregator_action(self, aggregator_value: int, ip_address: Union[IPv4Address, IPv6Address]):
+    def associate_aggregator_action(self, aggregator_value: int, ip_address: Union[IPv4Address, IPv6Address]):
         self._insert_action_in_set(
             AggregatorActionEntry(value=AggregatorActionEntryValue(aggregator=aggregator_value, ip_address=ip_address))
         )
 
-    def add_as_path_action(self, prepend_action: List[int], exclude_action: List[int]):
+    def associate_as_path_action(self, prepend_action: List[int], exclude_action: List[int]):
         self._insert_action_in_set(
             AsPathActionEntry(value=AsPathActionEntryValue(prepend=prepend_action, exclude=exclude_action))
         )
 
-    def add_atomic_aggregate_action(self):
+    def associate_atomic_aggregate_action(self):
         self._insert_action_in_set(AtomicAggregateActionEntry())
 
-    def add_origin_action(self, origin: Literal["egp", "igp", "incomplete"]):
+    def associate_origin_action(self, origin: Literal["egp", "igp", "incomplete"]):
         self._insert_action_in_set(OriginEntry(value=origin))
 
-    def add_originator_action(self, originator: IPv4Address):
+    def associate_originator_action(self, originator: IPv4Address):
         self._insert_action_in_set(OriginatorEntry(value=originator))
 
-    def add_community_by_value_action(self, community_entry: str, community_additive: bool = False):
+    def associate_community_by_value_action(self, community_entry: str, community_additive: bool = False):
         self._insert_action_in_set(CommunityEntry(value=community_entry))
 
         if community_additive:
             self._insert_action_in_set(CommunityAdditiveEntry())
 
-    def add_community_by_variable_action(self, variable: str, community_additive: bool = False):
+    def associate_community_by_variable_action(self, variable: str, community_additive: bool = False):
         self._insert_action_in_set(CommunityEntry(vip_variable_name=variable))
 
         if community_additive:
             self._insert_action_in_set(CommunityAdditiveEntry())
 
-    def add_local_preference_action(self, value: int):
+    def associate_local_preference_action(self, value: int):
         self._insert_action_in_set(LocalPreferenceEntry(value=value))
 
-    def add_metric_action(self, value: int):
+    def associate_metric_action(self, value: int):
         self._insert_action_in_set(MetricEntry(value=value))
 
-    def add_nexthop_action(self, nexthop: Union[IPv4Address, IPv6Address]):
+    def associate_nexthop_action(self, nexthop: Union[IPv4Address, IPv6Address]):
         self._insert_action_in_set(NextHopActionEntry(value=nexthop))
 
-    def add_metric_type_action(self, metric_type: MetricType):
+    def associate_metric_type_action(self, metric_type: MetricType):
         self._insert_action_in_set(MetricTypeEntry(value=metric_type))
 
-    def add_omp_tag_action(self, omp_tag: int):
+    def associate_omp_tag_action(self, omp_tag: int):
         self._insert_action_in_set(OMPTagEntry(value=omp_tag))
 
-    def add_ospf_tag_action(self, ospf_tag: int):
+    def associate_ospf_tag_action(self, ospf_tag: int):
         self._insert_action_in_set(OspfTagEntry(value=ospf_tag))
 
-    def add_weight_action(self, weight: int):
+    def associate_weight_action(self, weight: int):
         self._insert_action_in_set(WeightEntry(value=weight))
 
 
@@ -160,6 +165,18 @@ class RoutePolicy(PolicyDefinitionBase, DefinitionWithSequencesCommonBase):
         serialization_alias="defaultAction",
         validation_alias="defaultAction",
     )
+
+    def add_sequence(
+        self, id: int, name: str, base_action: AcceptRejectActionType, ip_type: SequenceIpType
+    ) -> RoutePolicyRuleSequence:
+        sequence = RoutePolicyRuleSequence(
+            sequence_id=id,
+            sequence_name=name,
+            base_action=base_action,
+            sequence_ip_type=ip_type,
+        )
+        self.sequences.append(sequence)
+        return sequence
 
 
 class RoutePolicyEditPayload(RoutePolicy, PolicyDefinitionId):

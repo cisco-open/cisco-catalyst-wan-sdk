@@ -361,8 +361,8 @@ class GroupsOfInterestBuildReport(BaseModel):
         default_factory=list, serialization_alias="failedParcels", validation_alias="failedParcels"
     )
 
-    def add_created(self, name: str, id_: UUID):
-        self.created_parcels.append((name, id_))
+    def add_created(self, name: str, id: UUID):
+        self.created_parcels.append((name, id))
 
     def add_failed(self, parcel: AnyParcel, error: ManagerHTTPError):
         failed_parcel = FailedParcel(
@@ -524,18 +524,6 @@ class SslDecryptioneResidues:
     profiles: List[UrlProfile]
 
 
-@dataclass(frozen=True)
-class DeviceAccessSequenceDataPrefixRef:
-    sequence_id: int
-    source_origin: Optional[UUID] = None
-    destination_origin: Optional[UUID] = None
-
-
-@dataclass
-class DeviceAccessResidues:
-    sequences: List[DeviceAccessSequenceDataPrefixRef] = field(default_factory=list)
-
-
 @dataclass
 class PolicyConvertContext:
     # conversion input
@@ -552,7 +540,6 @@ class PolicyConvertContext:
     ssl_decryption_residues: Dict[UUID, SslDecryptioneResidues] = field(default_factory=dict)
     ssl_profile_residues: Dict[UUID, SslProfileResidues] = field(default_factory=dict)
     url_filtering_target_vpns: Dict[UUID, List[VpnId]] = field(default_factory=dict)
-    device_access: Dict[UUID, DeviceAccessResidues] = field(default_factory=dict)
 
     def get_vpn_id_to_vpn_name_map(self) -> Dict[Union[str, int], List[str]]:
         vpn_map: Dict[Union[str, int], List[str]] = {}

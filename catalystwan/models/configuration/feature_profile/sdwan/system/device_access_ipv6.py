@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Literal, Optional, Union, overload
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_variable
-from catalystwan.models.common import BasicPolicyActionType, PolicyMatchEntryDestinationPort
+from catalystwan.models.common import AcceptDropActionType, PolicyMatchEntryDestinationPort
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
 from catalystwan.utils.type_check import is_str_uuid
 
@@ -62,8 +62,8 @@ class MatchEntries(BaseModel):
 class Sequence(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True, validate_assignment=True)
 
-    base_action: Union[Global[BasicPolicyActionType], Default[Literal[BasicPolicyActionType]]] = Field(
-        default=Default[Literal[BasicPolicyActionType]](value="accept"),
+    base_action: Union[Global[AcceptDropActionType], Default[Literal[AcceptDropActionType]]] = Field(
+        default=Default[Literal[AcceptDropActionType]](value="accept"),
         validation_alias="BasicPolicyActionType",
         serialization_alias="BasicPolicyActionType",
     )
@@ -73,8 +73,8 @@ class Sequence(BaseModel):
     sequence_id: Global[int] = Field(validation_alias="sequenceId", serialization_alias="sequenceId")
     sequence_name: Global[str] = Field(validation_alias="sequenceName", serialization_alias="sequenceName")
 
-    def set_base_action(self, base_action: BasicPolicyActionType):
-        self.base_action = Global[BasicPolicyActionType](value=base_action)
+    def set_base_action(self, base_action: AcceptDropActionType):
+        self.base_action = Global[AcceptDropActionType](value=base_action)
 
     @overload
     def match_destination_data_prefix(self, destination_prefix: str):
@@ -141,11 +141,11 @@ class Sequence(BaseModel):
         cls,
         sequence_id: int,
         sequence_name: str,
-        base_action: BasicPolicyActionType,
+        base_action: AcceptDropActionType,
         match_entries: MatchEntries,
     ) -> "Sequence":
         return cls(
-            base_action=Global[BasicPolicyActionType](value=base_action),
+            base_action=Global[AcceptDropActionType](value=base_action),
             match_entries=match_entries,
             sequence_id=Global[int](value=sequence_id),
             sequence_name=Global[str](value=sequence_name),
@@ -157,22 +157,22 @@ class DeviceAccessIPv6Parcel(_ParcelBase):
 
     type_: Literal["ipv6-device-access-policy"] = Field(default="ipv6-device-access-policy", exclude=True)
 
-    default_action: Union[Global[BasicPolicyActionType], Default[BasicPolicyActionType]] = Field(
-        default=Default[BasicPolicyActionType](value="drop"), validation_alias=AliasPath("data", "defaultAction")
+    default_action: Union[Global[AcceptDropActionType], Default[AcceptDropActionType]] = Field(
+        default=Default[AcceptDropActionType](value="drop"), validation_alias=AliasPath("data", "defaultAction")
     )
     sequences: List[Sequence] = Field(
         default=[], validation_alias=AliasPath("data", "sequences"), description="Device Access Control List"
     )
 
-    def set_default_action(self, default_action: BasicPolicyActionType) -> None:
-        self.default_action = Global[BasicPolicyActionType](value=default_action)
+    def set_default_action(self, default_action: AcceptDropActionType) -> None:
+        self.default_action = Global[AcceptDropActionType](value=default_action)
 
     def add_sequence(
         self,
         sequence_id: int,
         sequence_name: str,
         destination_port: PolicyMatchEntryDestinationPort,
-        base_action: Optional[BasicPolicyActionType] = None,
+        base_action: Optional[AcceptDropActionType] = None,
     ) -> Sequence:
         payload: Dict[str, Any] = {
             "sequence_id": Global[int](value=sequence_id),
@@ -182,7 +182,7 @@ class DeviceAccessIPv6Parcel(_ParcelBase):
             ),
         }
         if base_action is not None:
-            payload["base_action"] = Global[BasicPolicyActionType](value=base_action)
+            payload["base_action"] = Global[AcceptDropActionType](value=base_action)
 
         sequences = Sequence(**payload)
         self.sequences.append(sequences)

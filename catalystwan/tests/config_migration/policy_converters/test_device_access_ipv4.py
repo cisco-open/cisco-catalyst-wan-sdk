@@ -7,7 +7,7 @@ from uuid import uuid4
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import DeviceAccessIPv4Parcel
 from catalystwan.models.policy.definition.device_access import DeviceAccessPolicy, DeviceAccessPolicySequence
-from catalystwan.models.policy.policy_definition import BasicPolicyAction
+from catalystwan.models.policy.policy_definition import PolicyAcceptDropAction
 from catalystwan.utils.config_migration.converters.policy.policy_definitions import convert
 
 
@@ -24,7 +24,7 @@ class TestDeviceAccessIPv4Converter(unittest.TestCase):
             name="device_access_ipv4",
             description="test_description",
             sequences=[],
-            default_action=BasicPolicyAction(type="drop"),
+            default_action=PolicyAcceptDropAction(type="drop"),
         )
         seq = DeviceAccessPolicySequence(
             sequence_id=1,
@@ -57,10 +57,6 @@ class TestDeviceAccessIPv4Converter(unittest.TestCase):
         assert seq.match_entries.source_data_prefix.source_data_prefix_list.ref_id.value == str(source_data_prefix_uuid)
         assert seq.match_entries.source_ports.value == [30, 31, 32, 80]
 
-        assert len(self.context.device_access) == 1
-        assert self.context.device_access[uuid].sequences[0].destination_origin == destination_data_prefix_uuid
-        assert self.context.device_access[uuid].sequences[0].source_origin == source_data_prefix_uuid
-
     def test_device_access_ipv4_convert_when_prefix_list_is_ip(self):
         # Arrange
         destination_ip = [IPv4Interface("10.0.0.1/32"), IPv4Interface("10.0.0.2/32")]
@@ -70,7 +66,7 @@ class TestDeviceAccessIPv4Converter(unittest.TestCase):
             name="device_access_ipv4",
             description="test_description",
             sequences=[],
-            default_action=BasicPolicyAction(type="drop"),
+            default_action=PolicyAcceptDropAction(type="drop"),
         )
         seq = DeviceAccessPolicySequence(
             sequence_id=1,

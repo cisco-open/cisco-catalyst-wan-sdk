@@ -10,7 +10,8 @@ from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, m
 from typing_extensions import Annotated, Literal
 
 from catalystwan.models.common import (
-    BasicPolicyActionType,
+    AcceptDropActionType,
+    AcceptRejectActionType,
     CarrierType,
     ControlPathType,
     EncapType,
@@ -1039,9 +1040,6 @@ class Action(BaseModel):
     pass
 
 
-PolicyAcceptRejectActionType = Literal["accept", "reject"]
-
-
 class PolicyDefinitionSequenceBase(BaseModel):
     sequence_id: int = Field(default=0, serialization_alias="sequenceId", validation_alias="sequenceId")
     sequence_name: str = Field(serialization_alias="sequenceName", validation_alias="sequenceName")
@@ -1149,11 +1147,11 @@ class PolicyActionBase(BaseModel):
 
 
 class PolicyAcceptRejectAction(PolicyActionBase):
-    type: PolicyAcceptRejectActionType
+    type: AcceptRejectActionType
 
 
-class BasicPolicyAction(PolicyActionBase):
-    type: BasicPolicyActionType
+class PolicyAcceptDropAction(PolicyActionBase):
+    type: AcceptDropActionType
 
 
 class InfoTag(BaseModel):

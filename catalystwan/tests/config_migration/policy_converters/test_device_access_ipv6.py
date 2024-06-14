@@ -10,7 +10,7 @@ from catalystwan.models.policy.definition.device_access_ipv6 import (
     DeviceAccessIPv6Policy,
     DeviceAccessIPv6PolicySequence,
 )
-from catalystwan.models.policy.policy_definition import BasicPolicyAction
+from catalystwan.models.policy.policy_definition import PolicyAcceptDropAction
 from catalystwan.utils.config_migration.converters.policy.policy_definitions import convert
 
 
@@ -27,7 +27,7 @@ class TestDeviceAccessIpv6Converter(unittest.TestCase):
             name="device_access_ipv6",
             description="test_description",
             sequences=[],
-            default_action=BasicPolicyAction(type="drop"),
+            default_action=PolicyAcceptDropAction(type="drop"),
         )
         seq = DeviceAccessIPv6PolicySequence(
             sequence_id=1,
@@ -60,10 +60,6 @@ class TestDeviceAccessIpv6Converter(unittest.TestCase):
         assert seq.match_entries.source_data_prefix.source_data_prefix_list.ref_id.value == str(source_data_prefix_uuid)
         assert seq.match_entries.source_ports.value == [30, 31, 32, 80]
 
-        assert len(self.context.device_access) == 1
-        assert self.context.device_access[uuid].sequences[0].destination_origin == destination_data_prefix_uuid
-        assert self.context.device_access[uuid].sequences[0].source_origin == source_data_prefix_uuid
-
     def test_device_access_ipv6_convert_when_prefix_list_is_ip(self):
         # Arrange
         destination_ip = [IPv6Interface("::3e46/128"), IPv6Interface("::3e47/128")]
@@ -73,7 +69,7 @@ class TestDeviceAccessIpv6Converter(unittest.TestCase):
             name="device_access_ipv6",
             description="test_description",
             sequences=[],
-            default_action=BasicPolicyAction(type="drop"),
+            default_action=PolicyAcceptDropAction(type="drop"),
         )
         seq = DeviceAccessIPv6PolicySequence(
             sequence_id=1,

@@ -7,9 +7,8 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 from typing_extensions import Annotated
 
+from catalystwan.models.common import AcceptDropActionType
 from catalystwan.models.policy.policy_definition import (
-    BasicPolicyAction,
-    BasicPolicyActionType,
     ClassMapAction,
     ClassMapListEntry,
     CountAction,
@@ -25,6 +24,7 @@ from catalystwan.models.policy.policy_definition import (
     PacketLengthEntry,
     PLPEntry,
     PolicerAction,
+    PolicyAcceptDropAction,
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
@@ -71,7 +71,7 @@ class AclIPv6PolicySequence(PolicyDefinitionSequenceBase):
     sequence_type: Literal["aclv6"] = Field(
         default="aclv6", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
-    base_action: BasicPolicyActionType = Field(
+    base_action: AcceptDropActionType = Field(
         default="accept", serialization_alias="baseAction", validation_alias="baseAction"
     )
     match: AclIPv6PolicySequenceMatch = AclIPv6PolicySequenceMatch()
@@ -146,15 +146,15 @@ class AclIPv6PolicySequence(PolicyDefinitionSequenceBase):
 
 class AclIPv6Policy(AclIPv6PolicyHeader, DefinitionWithSequencesCommonBase):
     sequences: List[AclIPv6PolicySequence] = []
-    default_action: BasicPolicyAction = Field(
-        default=BasicPolicyAction(type="drop"),
+    default_action: PolicyAcceptDropAction = Field(
+        default=PolicyAcceptDropAction(type="drop"),
         serialization_alias="defaultAction",
         validation_alias="defaultAction",
     )
     model_config = ConfigDict(populate_by_name=True)
 
     def add_acl_sequence(
-        self, name: str = "Access Control List", base_action: BasicPolicyActionType = "accept"
+        self, name: str = "Access Control List", base_action: AcceptDropActionType = "accept"
     ) -> AclIPv6PolicySequence:
         seq = AclIPv6PolicySequence(
             sequence_name=name,

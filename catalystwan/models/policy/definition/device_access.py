@@ -7,9 +7,8 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 from typing_extensions import Annotated
 
+from catalystwan.models.common import AcceptDropActionType
 from catalystwan.models.policy.policy_definition import (
-    BasicPolicyAction,
-    BasicPolicyActionType,
     CountAction,
     DefinitionWithSequencesCommonBase,
     DestinationDataPrefixListEntry,
@@ -17,6 +16,7 @@ from catalystwan.models.policy.policy_definition import (
     DestinationPortEntry,
     DeviceAccessProtocol,
     Match,
+    PolicyAcceptDropAction,
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
@@ -53,7 +53,7 @@ class DeviceAccessPolicySequence(PolicyDefinitionSequenceBase):
     sequence_type: Literal["deviceaccesspolicy"] = Field(
         default="deviceaccesspolicy", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
-    base_action: BasicPolicyActionType = Field(
+    base_action: AcceptDropActionType = Field(
         default="accept", serialization_alias="baseAction", validation_alias="baseAction"
     )
     match: DeviceAccessPolicySequenceMatch = DeviceAccessPolicySequenceMatch()
@@ -84,8 +84,8 @@ class DeviceAccessPolicySequence(PolicyDefinitionSequenceBase):
 
 class DeviceAccessPolicy(DeviceAccessPolicyHeader, DefinitionWithSequencesCommonBase):
     sequences: List[DeviceAccessPolicySequence] = []
-    default_action: BasicPolicyAction = Field(
-        default=BasicPolicyAction(type="drop"),
+    default_action: PolicyAcceptDropAction = Field(
+        default=PolicyAcceptDropAction(type="drop"),
         serialization_alias="defaultAction",
         validation_alias="defaultAction",
     )
@@ -94,7 +94,7 @@ class DeviceAccessPolicy(DeviceAccessPolicyHeader, DefinitionWithSequencesCommon
     def add_acl_sequence(
         self,
         name: str = "Device Access Control List",
-        base_action: BasicPolicyActionType = "accept",
+        base_action: AcceptDropActionType = "accept",
         device_access_protocol: Optional[DeviceAccessProtocol] = None,
     ) -> DeviceAccessPolicySequence:
         seq = DeviceAccessPolicySequence(

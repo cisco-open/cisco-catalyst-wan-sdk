@@ -16,11 +16,10 @@ from catalystwan.api.configuration_groups.parcel import (
     as_global,
     as_variable,
 )
+from catalystwan.models.common import AcceptRejectActionType
 
-BaseAction = Literal["reject", "accept"]
 Community = Literal["internet", "local-AS", "no-advertise", "no-export"]
 Criteria = Literal["OR", "AND", "EXACT"]
-DefaultAction = Literal["reject", "accept"]
 Protocol = Literal["IPV4", "IPV6", "BOTH"]
 MetricType = Literal["type1", "type2"]
 Origin = Literal["EGP", "IGP", "Incomplete"]
@@ -137,51 +136,6 @@ class MatchEntry(BaseModel):
         default=None, serialization_alias="ipv6NextHop", validation_alias="ipv6NextHop", description="Ipv6 Next Hop"
     )
 
-    def set_as_path_list(self, as_path_list: UUID) -> None:
-        self.as_path_list = ReferenceId.from_uuid(as_path_list)
-
-    def set_community_list(
-        self,
-        expanded_community_list: Optional[UUID] = None,
-        standard_community_list: Optional[List[UUID]] = None,
-        criteria: Criteria = "OR",
-    ) -> None:
-        if expanded_community_list and standard_community_list:
-            raise ValueError("Only one community list should be set")
-
-        if expanded_community_list:
-            self.community_list = ExpandedCommunityList.create(expanded_community_list)
-
-        if standard_community_list:
-            self.community_list = StandardCommunityList.create(standard_community_list, criteria)
-
-    def set_ext_community_list(self, ext_community_list: UUID) -> None:
-        self.ext_community_list = ReferenceId.from_uuid(ext_community_list)
-
-    def set_bgp_local_preference(self, bgp_local_preference: int) -> None:
-        self.bgp_local_preference = as_global(bgp_local_preference)
-
-    def set_metric(self, metric: int) -> None:
-        self.metric = as_global(metric)
-
-    def set_omp_tag(self, omp_tag: int) -> None:
-        self.omp_tag = as_global(omp_tag)
-
-    def set_ospf_tag(self, ospf_tag: int) -> None:
-        self.ospf_tag = as_global(ospf_tag)
-
-    def set_ipv4_address(self, ipv4_address: UUID) -> None:
-        self.ipv4_address = ReferenceId.from_uuid(ipv4_address)
-
-    def set_ipv4_next_hop(self, ipv4_next_hop: UUID) -> None:
-        self.ipv4_next_hop = ReferenceId.from_uuid(ipv4_next_hop)
-
-    def set_ipv6_address(self, ipv6_address: UUID) -> None:
-        self.ipv6_address = ReferenceId.from_uuid(ipv6_address)
-
-    def set_ipv6_next_hop(self, ipv6_next_hop: UUID) -> None:
-        self.ipv6_next_hop = ReferenceId.from_uuid(ipv6_next_hop)
-
 
 class SetAsPath(BaseModel):
     """
@@ -208,12 +162,6 @@ class SetCommunity(BaseModel):
     )
     additive: Union[Global[bool], Default[bool]] = as_default(False)
     community: Optional[Union[Global[str], Global[Community], Variable]] = None
-
-    def set_community_as_variable(self, variable_name: str) -> None:
-        self.community = as_variable(value=variable_name)
-
-    def set_community_as_global(self, community: str) -> None:
-        self.community = as_global(community)
 
 
 class Accept(BaseModel):
@@ -277,46 +225,6 @@ class Accept(BaseModel):
         description="Set Ipv6 Next Hop",
     )
 
-    def set_as_path(self, prepend: List[int]) -> None:
-        self.as_path = SetAsPath.from_list(prepend)
-
-    def set_community_as_global(self, additive: bool, community: str) -> None:
-        set_community = SetCommunity(additive=as_global(additive))
-        set_community.set_community_as_global(community)
-        self.community = set_community
-
-    def set_community_as_variable(self, additive: bool, community: str) -> None:
-        set_community = SetCommunity(additive=as_global(additive))
-        set_community.set_community_as_variable(community)
-        self.community = set_community
-
-    def set_local_preference(self, preference: int) -> None:
-        self.local_preference = as_global(preference)
-
-    def set_metric(self, set_metric: int) -> None:
-        self.metric = as_global(set_metric)
-
-    def set_metric_type(self, set_metric_type: MetricType) -> None:
-        self.metric_type = as_global(set_metric_type, MetricType)
-
-    def set_omp_tag(self, set_omp_tag: int) -> None:
-        self.omp_tag = as_global(set_omp_tag)
-
-    def set_origin(self, set_origin: Origin) -> None:
-        self.origin = as_global(set_origin, Origin)
-
-    def set_ospf_tag(self, set_ospf_tag: int) -> None:
-        self.ospf_tag = as_global(set_ospf_tag)
-
-    def set_weight(self, set_weight: int) -> None:
-        self.weight = as_global(set_weight)
-
-    def set_ipv4_next_hop(self, set_ipv4_next_hop: IPv4Address) -> None:
-        self.ipv4_next_hop = as_global(set_ipv4_next_hop)
-
-    def set_ipv6_next_hop(self, set_ipv6_next_hop: IPv6Address) -> None:
-        self.ipv6_next_hop = as_global(set_ipv6_next_hop)
-
 
 class AcceptActions(BaseModel):
     model_config = ConfigDict(
@@ -345,10 +253,10 @@ class RoutePolicySequence(BaseModel):
     sequence_name: Global[str] = Field(
         ..., serialization_alias="sequenceName", validation_alias="sequenceName", description="Sequence Name"
     )
-    base_action: Union[Global[BaseAction], Default[BaseAction]] = Field(
-        default=as_default("reject", BaseAction),
-        serialization_alias="baseAction",
-        validation_alias="baseAction",
+    base_action: Union[Global[AcceptRejectActionType], Default[AcceptRejectActionType]] = Field(
+        default=as_default("reject", AcceptRejectActionType),
+        serialization_alias="routePolicyActionType",
+        validation_alias="routePolicyActionType",
         description="Base Action",
     )
     protocol: Union[Global[Protocol], Default[Protocol]] = Field(
@@ -366,21 +274,121 @@ class RoutePolicySequence(BaseModel):
         default=None, description="Define list of actions", max_length=1, min_length=1
     )
 
-    def set_protocol(self, protocol: Protocol):
-        self.protocol = Global[Protocol](value=protocol)
+    @property
+    def _action(self) -> Union[AcceptActions, RejectActions]:
+        if self.actions is None:
+            if self.base_action is None:
+                self.base_action = Global[AcceptRejectActionType](value="accept")
+            if self.base_action.value == "accept":
+                self.actions = [(AcceptActions(accept=Accept()))]
+            else:
+                self.actions = [(RejectActions(reject=as_default(True)))]
+        return self.actions[0]
 
-    def add_accept_action(self, accept: Accept) -> None:
-        self.actions = [AcceptActions(accept=accept)]
+    @property
+    def _accept_action(self) -> Accept:
+        action = self._action
+        assert isinstance(action, AcceptActions), "Sequence action must be set to accept"
+        return action.accept
 
-    def add_match_entry(self, match_entry: MatchEntry) -> None:
-        self.match_entries = [match_entry]
+    @property
+    def _entry(self) -> MatchEntry:
+        if self.match_entries is None:
+            self.match_entries = [MatchEntry()]
+        return self.match_entries[0]
+
+    def match_as_path_list(self, as_path_list: UUID) -> None:
+        self._entry.as_path_list = ReferenceId.from_uuid(as_path_list)
+
+    def match_community_list(
+        self,
+        expanded_community_list: Optional[UUID] = None,
+        standard_community_list: Optional[List[UUID]] = None,
+        criteria: Criteria = "OR",
+    ) -> None:
+        if expanded_community_list and standard_community_list:
+            raise ValueError("Only one community list should be set")
+
+        if expanded_community_list:
+            self._entry.community_list = ExpandedCommunityList.create(expanded_community_list)
+
+        if standard_community_list:
+            self._entry.community_list = StandardCommunityList.create(standard_community_list, criteria)
+
+    def match_ext_community_list(self, ext_community_list: UUID) -> None:
+        self._entry.ext_community_list = ReferenceId.from_uuid(ext_community_list)
+
+    def match_bgp_local_preference(self, bgp_local_preference: int) -> None:
+        self._entry.bgp_local_preference = as_global(bgp_local_preference)
+
+    def match_metric(self, metric: int) -> None:
+        self._entry.metric = as_global(metric)
+
+    def match_omp_tag(self, omp_tag: int) -> None:
+        self._entry.omp_tag = as_global(omp_tag)
+
+    def match_ospf_tag(self, ospf_tag: int) -> None:
+        self._entry.ospf_tag = as_global(ospf_tag)
+
+    def match_ipv4_address(self, ipv4_address: UUID) -> None:
+        self._entry.ipv4_address = ReferenceId.from_uuid(ipv4_address)
+
+    def match_ipv4_next_hop(self, ipv4_next_hop: UUID) -> None:
+        self._entry.ipv4_next_hop = ReferenceId.from_uuid(ipv4_next_hop)
+
+    def match_ipv6_address(self, ipv6_address: UUID) -> None:
+        self._entry.ipv6_address = ReferenceId.from_uuid(ipv6_address)
+
+    def match_ipv6_next_hop(self, ipv6_next_hop: UUID) -> None:
+        self._entry.ipv6_next_hop = ReferenceId.from_uuid(ipv6_next_hop)
+
+    def associate_reject_action(self) -> None:
+        self.actions = [(RejectActions(reject=as_default(True)))]
+
+    def associate_as_path_action(self, prepend: List[int]) -> None:
+        self._accept_action.as_path = SetAsPath.from_list(prepend)
+
+    def associate_community_action(self, additive: bool, community: str) -> None:
+        set_community = SetCommunity(additive=as_global(additive), community=as_global(community))
+        self._accept_action.community = set_community
+
+    def associate_community_variable_action(self, additive: bool, community: str) -> None:
+        set_community = SetCommunity(additive=as_global(additive), community=as_variable(community))
+        self._accept_action.community = set_community
+
+    def associate_local_preference_action(self, preference: int) -> None:
+        self._accept_action.local_preference = as_global(preference)
+
+    def associate_metric_action(self, set_metric: int) -> None:
+        self._accept_action.metric = as_global(set_metric)
+
+    def associate_metric_type_action(self, set_metric_type: MetricType) -> None:
+        self._accept_action.metric_type = as_global(set_metric_type, MetricType)
+
+    def associate_omp_tag_action(self, set_omp_tag: int) -> None:
+        self._accept_action.omp_tag = as_global(set_omp_tag)
+
+    def associate_origin_action(self, set_origin: Origin) -> None:
+        self._accept_action.origin = as_global(set_origin, Origin)
+
+    def associate_ospf_tag_action(self, set_ospf_tag: int) -> None:
+        self._accept_action.ospf_tag = as_global(set_ospf_tag)
+
+    def associate_weight_action(self, set_weight: int) -> None:
+        self._accept_action.weight = as_global(set_weight)
+
+    def associate_ipv4_next_hop_action(self, set_ipv4_next_hop: IPv4Address) -> None:
+        self._accept_action.ipv4_next_hop = as_global(set_ipv4_next_hop)
+
+    def associate_ipv6_next_hop_action(self, set_ipv6_next_hop: IPv6Address) -> None:
+        self._accept_action.ipv6_next_hop = as_global(set_ipv6_next_hop)
 
     @classmethod
     def create(
         cls,
         sequence_id: int,
         sequence_name: str,
-        base_action: BaseAction = "reject",
+        base_action: AcceptRejectActionType = "reject",
         protocol: Protocol = "IPV4",
         match_entries: Optional[List[MatchEntry]] = None,
         actions: Optional[List[Union[AcceptActions, RejectActions]]] = None,
@@ -388,7 +396,7 @@ class RoutePolicySequence(BaseModel):
         return cls(
             sequence_id=as_global(sequence_id),
             sequence_name=as_global(sequence_name),
-            base_action=as_global(base_action, BaseAction),
+            base_action=as_global(base_action, AcceptRejectActionType),
             protocol=as_global(protocol, Protocol),
             match_entries=match_entries,
             actions=actions,
@@ -401,17 +409,26 @@ class RoutePolicyParcel(_ParcelBase):
         extra="forbid",
         populate_by_name=True,
     )
-    default_action: Union[Global[DefaultAction], Default[DefaultAction]] = Field(
-        default=as_default("reject", DefaultAction),
-        validation_alias=AliasPath("data", "defaultAction"),
+    default_action: Union[Global[AcceptRejectActionType], Default[AcceptRejectActionType]] = Field(
+        default=as_default("reject", AcceptRejectActionType),
+        validation_alias=AliasPath("data", "routePolicyActionType"),
         description="Default Action",
     )
     sequences: List[RoutePolicySequence] = Field(
         default=[], validation_alias=AliasPath("data", "sequences"), description="Route Policy List"
     )
 
-    def set_default_action(self, default_action: DefaultAction):
-        self.default_action = Global[DefaultAction](value=default_action)
+    def set_default_action(self, default_action: AcceptRejectActionType):
+        self.default_action = Global[AcceptRejectActionType](value=default_action)
 
-    def add_sequence(self, sequence: RoutePolicySequence) -> None:
+    def add_sequence(
+        self, id_: int, name: str, base_action: AcceptRejectActionType, protocol: Protocol
+    ) -> RoutePolicySequence:
+        sequence = RoutePolicySequence(
+            sequence_id=as_global(id_),
+            sequence_name=as_global(name),
+            base_action=as_global(base_action, AcceptRejectActionType),
+            protocol=as_global(protocol, Protocol),
+        )
         self.sequences.append(sequence)
+        return sequence

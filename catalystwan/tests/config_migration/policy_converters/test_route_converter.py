@@ -7,8 +7,8 @@ from uuid import uuid4
 from catalystwan.api.configuration_groups.parcel import as_global
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import ReferenceId, RoutePolicyParcel
-from catalystwan.models.policy.definition.route_policy import RoutePolicy, RoutePolicyRuleSequence
-from catalystwan.models.policy.policy_definition import AdvancedCommunityEntry, PolicyAcceptRejectAction
+from catalystwan.models.policy.definition.route_policy import RoutePolicy
+from catalystwan.models.policy.policy_definition import PolicyAcceptRejectAction
 from catalystwan.utils.config_migration.converters.policy.policy_definitions import convert
 
 
@@ -23,7 +23,14 @@ class TestRoutePolicyConverter(unittest.TestCase):
         next_hop_ref = uuid4()
         standard_community_list_ref = [uuid4(), uuid4()]
         extended_community_list_ref = uuid4()
-        rule_sequence = RoutePolicyRuleSequence(sequence_id=1, sequence_name="test_sequence", sequence_ip_type="ipv4")
+        uuid = uuid4()
+
+        route_policy = RoutePolicy(
+            name="test_route_policy",
+            description="description",
+            default_action=PolicyAcceptRejectAction(type="accept"),
+        )
+        rule_sequence = route_policy.add_sequence(id=1, name="test_sequence", base_action="accept", ip_type="ipv4")
         rule_sequence.match_address(
             address_ref=address_ref,
         )
@@ -51,62 +58,51 @@ class TestRoutePolicyConverter(unittest.TestCase):
         rule_sequence.match_peer(
             address=IPv4Address("10.2.3.4"),
         )
-        rule_sequence.match_standard_community_list(
-            community_list_entry=AdvancedCommunityEntry(
-                match_flag="and",
-                refs=standard_community_list_ref,
-            )
-        )
+        rule_sequence.match_standard_community_list(match_flag="and", community_lists=standard_community_list_ref)
         rule_sequence.match_extended_community_list(
             extended_community_ref=extended_community_list_ref,
         )
-        rule_sequence.add_aggregator_action(
+        rule_sequence.associate_aggregator_action(
             aggregator_value=100,
             ip_address=IPv4Address("10.2.3.2"),
         )
-        rule_sequence.add_as_path_action(
+        rule_sequence.associate_as_path_action(
             prepend_action=[100, 200],
             exclude_action=[300, 400],
         )
-        rule_sequence.add_atomic_aggregate_action()
-        rule_sequence.add_origin_action(
+        rule_sequence.associate_atomic_aggregate_action()
+        rule_sequence.associate_origin_action(
             origin="igp",
         )
-        rule_sequence.add_originator_action(
+        rule_sequence.associate_originator_action(
             originator=IPv4Address("9.9.9.9"),
         )
-        rule_sequence.add_community_by_variable_action(
+        rule_sequence.associate_community_by_variable_action(
             variable="test_community_variable",
             community_additive=True,
         )
-        rule_sequence.add_local_preference_action(
+        rule_sequence.associate_local_preference_action(
             value=100,
         )
-        rule_sequence.add_metric_action(
+        rule_sequence.associate_metric_action(
             value=100,
         )
-        rule_sequence.add_nexthop_action(
+        rule_sequence.associate_nexthop_action(
             nexthop=IPv4Address("8.8.8.7"),
         )
-        rule_sequence.add_metric_type_action(
+        rule_sequence.associate_metric_type_action(
             metric_type="type1",
         )
-        rule_sequence.add_omp_tag_action(
+        rule_sequence.associate_omp_tag_action(
             omp_tag=100,
         )
-        rule_sequence.add_ospf_tag_action(
+        rule_sequence.associate_ospf_tag_action(
             ospf_tag=100,
         )
-        rule_sequence.add_weight_action(
+        rule_sequence.associate_weight_action(
             weight=100,
         )
-        route_policy = RoutePolicy(
-            name="test_route_policy",
-            description="description",
-            default_action=PolicyAcceptRejectAction(type="accept"),
-            sequences=[rule_sequence],
-        )
-        uuid = uuid4()
+
         # Act
         parcel = cast(RoutePolicyParcel, convert(route_policy, uuid, context=self.context))
         # Assert

@@ -10,8 +10,6 @@ from typing_extensions import Annotated
 from catalystwan.api.configuration_groups.parcel import Global, as_global
 from catalystwan.models.common import PolicyMatchEntryDestinationPort, int_range_str_validator
 from catalystwan.models.configuration.config_migration import (
-    DeviceAccessResidues,
-    DeviceAccessSequenceDataPrefixRef,
     PolicyConvertContext,
     SslDecryptioneResidues,
     SslProfileResidues,
@@ -41,14 +39,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object.securi
     UrlFilteringParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import (
-    Accept,
     Criteria,
-    MatchEntry,
     Origin,
     Protocol,
     RoutePolicyParcel,
-    RoutePolicySequence,
-    SetCommunity,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import DeviceAccessIPv4Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import (
@@ -235,7 +229,7 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
     out = Ipv4AclParcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
     for in_seq in in_.sequences:
-        out_seq = out.add_sequence(name=in_seq.sequence_name, id_=in_seq.sequence_id, base_action=in_seq.base_action)
+        out_seq = out.add_sequence(name=in_seq.sequence_name, id=in_seq.sequence_id, base_action=in_seq.base_action)
         for in_entry in in_seq.match.entries:
             if in_entry.field == "destinationDataPrefixList" and in_entry.ref:
                 out_seq.match_destination_data_prefix_list(in_entry.ref[0])
@@ -305,7 +299,6 @@ def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context) -> Ipv6AclParcel:
 def device_access_ipv6(
     in_: DeviceAccessIPv6Policy, uuid: UUID, context: PolicyConvertContext
 ) -> DeviceAccessIPv6Parcel:
-    residues = DeviceAccessResidues()
     out = DeviceAccessIPv6Parcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
     for in_seq in in_.sequences:
@@ -317,14 +310,11 @@ def device_access_ipv6(
                 destination_port=Global[PolicyMatchEntryDestinationPort](value=161)
             ),  # will be overwritten
         )
-        destination_origin = None
-        source_origin = None
         for in_entry in in_seq.match.entries:
             if in_entry.field == "destinationDataIpv6PrefixList":
                 if in_entry.ref:
                     d_ref = in_entry.ref[0]
                     seq.match_destination_data_prefix(str(d_ref))
-                    destination_origin = d_ref
             elif in_entry.field == "destinationIpv6":
                 d_network_ipv6 = conditional_split(in_entry.value, [",", " "])
                 seq.match_destination_data_prefix([IPv6Interface(v) for v in d_network_ipv6])
@@ -335,26 +325,16 @@ def device_access_ipv6(
                 if in_entry.ref:
                     s_ref = in_entry.ref[0]
                     seq.match_source_data_prefix(str(s_ref))
-                    source_origin = s_ref
             elif in_entry.field == "sourceIpv6":
                 s_network_ipv6 = conditional_split(in_entry.value, [",", " "])
                 seq.match_source_data_prefix([IPv6Interface(v) for v in s_network_ipv6])
             elif in_entry.field == "sourcePort":
                 seq.match_source_ports(as_num_list(as_num_ranges_list(in_entry.value)))
-        if destination_origin is not None or source_origin is not None:
-            prefixes = DeviceAccessSequenceDataPrefixRef(
-                sequence_id=in_seq.sequence_id,
-                destination_origin=destination_origin,
-                source_origin=source_origin,
-            )
-            residues.sequences.append(prefixes)
         out.sequences.append(seq)
-    context.device_access[uuid] = residues
     return out
 
 
 def device_access_ipv4(in_: DeviceAccessPolicy, uuid: UUID, context: PolicyConvertContext) -> DeviceAccessIPv4Parcel:
-    residues = DeviceAccessResidues()
     out = DeviceAccessIPv4Parcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
     for in_seq in in_.sequences:
@@ -366,14 +346,11 @@ def device_access_ipv4(in_: DeviceAccessPolicy, uuid: UUID, context: PolicyConve
                 destination_port=Global[PolicyMatchEntryDestinationPort](value=161)
             ),  # will be overwritten
         )
-        destination_origin = None
-        source_origin = None
         for in_entry in in_seq.match.entries:
             if in_entry.field == "destinationDataPrefixList":
                 if in_entry.ref:
                     d_ref = in_entry.ref[0]
                     seq.match_destination_data_prefix(str(d_ref))
-                    destination_origin = d_ref
             elif in_entry.field == "destinationIp":
                 if in_entry.value is not None:
                     d_network_ipv6 = conditional_split(in_entry.value, [",", " "])
@@ -387,7 +364,6 @@ def device_access_ipv4(in_: DeviceAccessPolicy, uuid: UUID, context: PolicyConve
                 if in_entry.ref:
                     s_ref = in_entry.ref[0]
                     seq.match_source_data_prefix(str(s_ref))
-                    source_origin = s_ref
             elif in_entry.field == "sourceIp":
                 if in_entry.value is not None:
                     s_network_ipv6 = conditional_split(in_entry.value, [",", " "])
@@ -396,15 +372,7 @@ def device_access_ipv4(in_: DeviceAccessPolicy, uuid: UUID, context: PolicyConve
                     seq.match_source_data_prefix(in_entry.vipVariableName)
             elif in_entry.field == "sourcePort":
                 seq.match_source_ports(as_num_list(as_num_ranges_list(in_entry.value)))
-        if destination_origin is not None or source_origin is not None:
-            prefixes = DeviceAccessSequenceDataPrefixRef(
-                sequence_id=in_seq.sequence_id,
-                destination_origin=destination_origin,
-                source_origin=source_origin,
-            )
-            residues.sequences.append(prefixes)
         out.sequences.append(seq)
-    context.device_access[uuid] = residues
     return out
 
 
@@ -412,98 +380,80 @@ def route(in_: RoutePolicy, uuid: UUID, context: PolicyConvertContext) -> RouteP
     out = RoutePolicyParcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
     for in_seq in in_.sequences:
-        out_seq = RoutePolicySequence.create(
-            sequence_id=in_seq.sequence_id,
-            sequence_name=in_seq.sequence_name,
-            base_action=in_seq.base_action,
-        )
         sequence_ip_type = in_seq.sequence_ip_type
-        if sequence_ip_type:
+        if sequence_ip_type is not None:
             protocol = "BOTH" if sequence_ip_type == "all" else sequence_ip_type.upper()
-            out_seq.set_protocol(cast(Protocol, protocol))
-        out_match = MatchEntry()
+        out_seq = out.add_sequence(
+            id_=in_seq.sequence_id,
+            name=in_seq.sequence_name,
+            base_action=in_seq.base_action,
+            protocol=cast(Protocol, protocol),
+        )
 
         for in_entry in in_seq.match.entries:
             if in_entry.field == "asPath":
-                out_match.set_as_path_list(in_entry.ref)
+                out_seq.match_as_path_list(in_entry.ref)
             elif in_entry.field == "expandedCommunity":
-                out_match.set_community_list(expanded_community_list=in_entry.ref)
+                out_seq.match_community_list(expanded_community_list=in_entry.ref)
             elif in_entry.field == "advancedCommunity":
                 # Advanced matches to standard, because it has a list of UUIDs and a match flag
-                out_match.set_community_list(
+                out_seq.match_community_list(
                     standard_community_list=in_entry.refs, criteria=cast(Criteria, in_entry.match_flag.upper())
                 )
             elif in_entry.field == "extCommunity":
-                out_match.set_ext_community_list(in_entry.ref)
+                out_seq.match_ext_community_list(in_entry.ref)
             elif in_entry.field == "localPreference":
                 # Local preference is matches to bgp
-                out_match.set_bgp_local_preference(in_entry.value)
+                out_seq.match_bgp_local_preference(in_entry.value)
             elif in_entry.field == "metric":
-                out_match.set_metric(in_entry.value)
+                out_seq.match_metric(in_entry.value)
             elif in_entry.field == "ompTag":
-                out_match.set_omp_tag(in_entry.value)
+                out_seq.match_omp_tag(in_entry.value)
             elif in_entry.field == "ospfTag":
-                out_match.set_ospf_tag(in_entry.value)
+                out_seq.match_ospf_tag(in_entry.value)
             elif in_entry.field == "address":
                 if sequence_ip_type == "ipv4":
-                    out_match.set_ipv4_address(in_entry.ref)
+                    out_seq.match_ipv4_address(in_entry.ref)
                 elif sequence_ip_type == "ipv6":
-                    out_match.set_ipv6_address(in_entry.ref)
+                    out_seq.match_ipv6_address(in_entry.ref)
             elif in_entry.field == "nextHop":
                 if sequence_ip_type == "ipv4":
-                    out_match.set_ipv4_next_hop(in_entry.ref)
+                    out_seq.match_ipv4_next_hop(in_entry.ref)
                 elif sequence_ip_type == "ipv6":
-                    out_match.set_ipv6_next_hop(in_entry.ref)
+                    out_seq.match_ipv6_next_hop(in_entry.ref)
 
-        out_seq.add_match_entry(out_match)
+        community_additive = any(
+            [action.value for action in in_seq.actions[0].parameter if action.field == "communityAdditive"]
+        )
 
-        accept = Accept()
-        community = SetCommunity()
-        actions = in_seq.actions
-        action_set_entries = []
-        if len(actions) == 1:
-            params = actions[0]
-            action_set_entries = params.parameter
-
-        for in_action in action_set_entries:
+        for in_action in in_seq.actions[0].parameter:
             if in_action.field == "asPath":
-                accept.set_as_path(in_action.value.prepend)
+                out_seq.associate_as_path_action(in_action.value.prepend)
             elif in_action.field == "community":
                 if in_action.value:
-                    community.set_community_as_global(in_action.value)
+                    out_seq.associate_community_action(community_additive, in_action.value)
                 if in_action.vip_variable_name:
-                    community.set_community_as_variable(in_action.vip_variable_name)
-            elif in_action.field == "communityAdditive":
-                community.additive = as_global(True if in_action.value == "true" else False)
+                    out_seq.associate_community_variable_action(community_additive, in_action.vip_variable_name)
             elif in_action.field == "localPreference":
-                accept.set_local_preference(in_action.value)
+                out_seq.associate_local_preference_action(in_action.value)
             elif in_action.field == "metric":
-                accept.set_metric(in_action.value)
+                out_seq.associate_metric_action(in_action.value)
             elif in_action.field == "metricType":
-                accept.set_metric_type(in_action.value)
+                out_seq.associate_metric_type_action(in_action.value)
             elif in_action.field == "ospfTag":
-                accept.set_ospf_tag(in_action.value)
+                out_seq.associate_ospf_tag_action(in_action.value)
             elif in_action.field == "origin":
                 origin = "Incomplete" if in_action.value == "incomplete" else in_action.value.upper()
-                accept.set_origin(cast(Origin, origin))
+                out_seq.associate_origin_action(cast(Origin, origin))
             elif in_action.field == "ompTag":
-                accept.set_omp_tag(in_action.value)
+                out_seq.associate_omp_tag_action(in_action.value)
             elif in_action.field == "weight":
-                accept.set_weight(in_action.value)
+                out_seq.associate_weight_action(in_action.value)
             elif in_action.field == "nextHop":
                 if isinstance(in_action.value, IPv4Address):
-                    accept.set_ipv4_next_hop(in_action.value)
+                    out_seq.associate_ipv4_next_hop_action(in_action.value)
                 if isinstance(in_action.value, IPv6Address):
-                    accept.set_ipv6_next_hop(in_action.value)
-
-        if community.community:
-            accept.community = community
-
-        if action_set_entries:
-            out_seq.add_accept_action(accept)
-
-        out.add_sequence(out_seq)
-
+                    out_seq.associate_ipv6_next_hop_action(in_action.value)
     return out
 
 
