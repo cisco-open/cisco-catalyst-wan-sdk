@@ -100,10 +100,10 @@ class NetworkDecryptionRuleSequence(PolicyDefinitionSequenceBase):
         self._insert_match(DestinationIPEntry(value=destination_ip_entry))
 
     def match_source_networks_by_variable(self, variable_name: str):
-        self._insert_match(SourceIPEntry(vipVariableName=variable_name))
+        self._insert_match(SourceIPEntry(vip_variable_name=variable_name))
 
     def match_destination_networks_by_variable(self, variable_name: str):
-        self._insert_match(DestinationIPEntry(vipVariableName=variable_name))
+        self._insert_match(DestinationIPEntry(vip_variable_name=variable_name))
 
     def match_applications(self, application_ref: UUID):
         self._insert_match(AppListEntry(ref=application_ref))

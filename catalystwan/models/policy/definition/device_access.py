@@ -7,14 +7,13 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 from typing_extensions import Annotated
 
-from catalystwan.models.common import AcceptDropActionType
+from catalystwan.models.common import AcceptDropActionType, DeviceAccessProtocolPort
 from catalystwan.models.policy.policy_definition import (
     CountAction,
     DefinitionWithSequencesCommonBase,
     DestinationDataPrefixListEntry,
     DestinationIPEntry,
     DestinationPortEntry,
-    DeviceAccessProtocol,
     Match,
     PolicyAcceptDropAction,
     PolicyDefinitionBase,
@@ -60,7 +59,7 @@ class DeviceAccessPolicySequence(PolicyDefinitionSequenceBase):
     actions: List[DeviceAccessPolicySequenceActions] = []
     model_config = ConfigDict(populate_by_name=True)
 
-    def match_device_access_protocol(self, port: DeviceAccessProtocol) -> None:
+    def match_device_access_protocol(self, port: DeviceAccessProtocolPort) -> None:
         self._insert_match(DestinationPortEntry.from_port_set_and_ranges(ports={port}))
 
     def match_source_data_prefix_list(self, data_prefix_list_id: UUID) -> None:
@@ -95,7 +94,7 @@ class DeviceAccessPolicy(DeviceAccessPolicyHeader, DefinitionWithSequencesCommon
         self,
         name: str = "Device Access Control List",
         base_action: AcceptDropActionType = "accept",
-        device_access_protocol: Optional[DeviceAccessProtocol] = None,
+        device_access_protocol: Optional[DeviceAccessProtocolPort] = None,
     ) -> DeviceAccessPolicySequence:
         seq = DeviceAccessPolicySequence(
             sequence_name=name,

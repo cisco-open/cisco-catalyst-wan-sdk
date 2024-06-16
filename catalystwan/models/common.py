@@ -211,7 +211,7 @@ IntRangeStr = Annotated[
 
 AcceptDropActionType = Literal["accept", "drop"]
 AcceptRejectActionType = Literal["accept", "reject"]
-PolicyMatchEntryDestinationPort = Literal[161, 22]
+DeviceAccessProtocolPort = Literal[161, 22]
 
 CarrierType = Literal[
     "default",

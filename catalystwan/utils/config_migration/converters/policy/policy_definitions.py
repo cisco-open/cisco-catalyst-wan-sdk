@@ -7,8 +7,8 @@ from uuid import UUID
 from pydantic import Field
 from typing_extensions import Annotated
 
-from catalystwan.api.configuration_groups.parcel import Global, as_global
-from catalystwan.models.common import PolicyMatchEntryDestinationPort, int_range_str_validator
+from catalystwan.api.configuration_groups.parcel import as_global
+from catalystwan.models.common import DeviceAccessProtocolPort, int_range_str_validator
 from catalystwan.models.configuration.config_migration import (
     PolicyConvertContext,
     SslDecryptioneResidues,
@@ -45,19 +45,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy
     RoutePolicyParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import DeviceAccessIPv4Parcel
-from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import (
-    MatchEntries as DeviceAccessIPv4MatchEntries,
-)
-from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import (
-    Sequence as DeviceAccessIPv4Sequence,
-)
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import DeviceAccessIPv6Parcel
-from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import (
-    MatchEntries as DeviceAccessIpv6MatchEntries,
-)
-from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import (
-    Sequence as DeviceAccessIPv6Sequence,
-)
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
@@ -235,8 +223,8 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
                 out_seq.match_destination_data_prefix_list(in_entry.ref[0])
 
             elif in_entry.field == "destinationIp":
-                if in_entry.vipVariableName is not None:
-                    varname = convert_varname(in_entry.vipVariableName)
+                if in_entry.vip_variable_name is not None:
+                    varname = convert_varname(in_entry.vip_variable_name)
                     out_seq.match_destination_data_prefix_variable(varname)
                 elif in_entry.value is not None:
                     out_seq.match_destination_data_prefix(IPv4Interface(in_entry.value))
@@ -274,8 +262,8 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
                 out_seq.match_destination_data_prefix_list(in_entry.ref[0])
 
             elif in_entry.field == "sourceIp":
-                if in_entry.vipVariableName is not None:
-                    varname = convert_varname(in_entry.vipVariableName)
+                if in_entry.vip_variable_name is not None:
+                    varname = convert_varname(in_entry.vip_variable_name)
                     out_seq.match_source_data_prefix_variable(varname)
                 elif in_entry.value is not None:
                     out_seq.match_source_data_prefix(IPv4Interface(in_entry.value))
@@ -302,35 +290,32 @@ def device_access_ipv6(
     out = DeviceAccessIPv6Parcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
     for in_seq in in_.sequences:
-        seq = DeviceAccessIPv6Sequence.create(
-            sequence_id=in_seq.sequence_id,
-            sequence_name=in_seq.sequence_name,
+        port_str = next(e.value for e in in_seq.match.entries if e.field == "destinationPort")
+        port = cast(DeviceAccessProtocolPort, int(port_str))
+        seq = out.add_sequence(
+            id=in_seq.sequence_id,
+            name=in_seq.sequence_name,
+            destination_port=port,
             base_action=in_seq.base_action,
-            match_entries=DeviceAccessIpv6MatchEntries(
-                destination_port=Global[PolicyMatchEntryDestinationPort](value=161)
-            ),  # will be overwritten
         )
         for in_entry in in_seq.match.entries:
             if in_entry.field == "destinationDataIpv6PrefixList":
                 if in_entry.ref:
-                    d_ref = in_entry.ref[0]
-                    seq.match_destination_data_prefix(str(d_ref))
+                    seq.match_destination_data_prefix_list(in_entry.ref[0])
             elif in_entry.field == "destinationIpv6":
                 d_network_ipv6 = conditional_split(in_entry.value, [",", " "])
-                seq.match_destination_data_prefix([IPv6Interface(v) for v in d_network_ipv6])
+                seq.match_destination_data_prefixes([IPv6Interface(v) for v in d_network_ipv6])
             elif in_entry.field == "destinationPort":
-                destination_port = cast(PolicyMatchEntryDestinationPort, int(in_entry.value))
+                destination_port = cast(DeviceAccessProtocolPort, int(in_entry.value))
                 seq.match_destination_port(destination_port)
             elif in_entry.field == "sourceDataIpv6PrefixList":
                 if in_entry.ref:
-                    s_ref = in_entry.ref[0]
-                    seq.match_source_data_prefix(str(s_ref))
+                    seq.match_source_data_prefix_list(in_entry.ref[0])
             elif in_entry.field == "sourceIpv6":
                 s_network_ipv6 = conditional_split(in_entry.value, [",", " "])
-                seq.match_source_data_prefix([IPv6Interface(v) for v in s_network_ipv6])
+                seq.match_source_data_prefixes([IPv6Interface(v) for v in s_network_ipv6])
             elif in_entry.field == "sourcePort":
                 seq.match_source_ports(as_num_list(as_num_ranges_list(in_entry.value)))
-        out.sequences.append(seq)
     return out
 
 
@@ -338,41 +323,35 @@ def device_access_ipv4(in_: DeviceAccessPolicy, uuid: UUID, context: PolicyConve
     out = DeviceAccessIPv4Parcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
     for in_seq in in_.sequences:
-        seq = DeviceAccessIPv4Sequence.create(
-            sequence_id=in_seq.sequence_id,
-            sequence_name=in_seq.sequence_name,
+        port_str = next(e.value for e in in_seq.match.entries if e.field == "destinationPort")
+        port = cast(DeviceAccessProtocolPort, int(port_str))
+        seq = out.add_sequence(
+            id=in_seq.sequence_id,
+            name=in_seq.sequence_name,
+            destination_port=port,
             base_action=in_seq.base_action,
-            match_entries=DeviceAccessIPv4MatchEntries(
-                destination_port=Global[PolicyMatchEntryDestinationPort](value=161)
-            ),  # will be overwritten
         )
         for in_entry in in_seq.match.entries:
             if in_entry.field == "destinationDataPrefixList":
                 if in_entry.ref:
-                    d_ref = in_entry.ref[0]
-                    seq.match_destination_data_prefix(str(d_ref))
+                    seq.match_destination_data_prefix_list(in_entry.ref[0])
             elif in_entry.field == "destinationIp":
                 if in_entry.value is not None:
                     d_network_ipv6 = conditional_split(in_entry.value, [",", " "])
-                    seq.match_destination_data_prefix([IPv4Interface(v) for v in d_network_ipv6])
-                elif in_entry.vipVariableName is not None:
-                    seq.match_destination_data_prefix(in_entry.vipVariableName)
-            elif in_entry.field == "destinationPort":
-                destination_port = cast(PolicyMatchEntryDestinationPort, int(in_entry.value))
-                seq.match_destination_port(destination_port)
+                    seq.match_destination_data_prefixes([IPv4Interface(v) for v in d_network_ipv6])
+                elif in_entry.vip_variable_name is not None:
+                    seq.match_destination_data_prefix_variable(in_entry.vip_variable_name)
             elif in_entry.field == "sourceDataPrefixList":
                 if in_entry.ref:
-                    s_ref = in_entry.ref[0]
-                    seq.match_source_data_prefix(str(s_ref))
+                    seq.match_source_data_prefix_list(in_entry.ref[0])
             elif in_entry.field == "sourceIp":
                 if in_entry.value is not None:
                     s_network_ipv6 = conditional_split(in_entry.value, [",", " "])
-                    seq.match_source_data_prefix([IPv4Interface(v) for v in s_network_ipv6])
-                elif in_entry.vipVariableName is not None:
-                    seq.match_source_data_prefix(in_entry.vipVariableName)
+                    seq.match_source_data_prefixes([IPv4Interface(v) for v in s_network_ipv6])
+                elif in_entry.vip_variable_name is not None:
+                    seq.match_source_data_prefix_variable(in_entry.vip_variable_name)
             elif in_entry.field == "sourcePort":
                 seq.match_source_ports(as_num_list(as_num_ranges_list(in_entry.value)))
-        out.sequences.append(seq)
     return out
 
 

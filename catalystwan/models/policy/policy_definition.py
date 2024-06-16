@@ -108,8 +108,6 @@ LossProtectionType = Literal[
     "packetDuplication",
 ]
 
-DeviceAccessProtocol = Literal[22, 161]
-
 AdvancedCommunityMatchFlag = Literal["or", "and", "exact"]
 
 MetricType = Literal["type1", "type2"]
@@ -184,7 +182,7 @@ class DSCPEntry(BaseModel):
 class SourceIPEntry(BaseModel):
     field: Literal["sourceIp"] = "sourceIp"
     value: Optional[str] = Field(default=None, description="IP network specifiers separate by space")
-    vipVariableName: Optional[str] = Field(
+    vip_variable_name: Optional[str] = Field(
         default=None, serialization_alias="vipVariableName", validation_alias="vipVariableName"
     )
 
@@ -219,7 +217,7 @@ class SourcePortEntry(BaseModel):
 class DestinationIPEntry(BaseModel):
     field: Literal["destinationIp"] = "destinationIp"
     value: Optional[str] = Field(default=None)
-    vipVariableName: Optional[str] = Field(
+    vip_variable_name: Optional[str] = Field(
         default=None, serialization_alias="vipVariableName", validation_alias="vipVariableName"
     )
 

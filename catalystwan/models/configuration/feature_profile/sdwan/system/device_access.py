@@ -1,13 +1,13 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Interface
-from typing import Any, Dict, List, Literal, Optional, Union, overload
+from typing import List, Literal, Optional, Union
+from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_variable
-from catalystwan.models.common import AcceptDropActionType, PolicyMatchEntryDestinationPort
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_global, as_variable
+from catalystwan.models.common import AcceptDropActionType, DeviceAccessProtocolPort
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
-from catalystwan.utils.type_check import is_str_uuid
 
 
 class SourceDataPrefix(BaseModel):
@@ -48,7 +48,7 @@ class MatchEntries(BaseModel):
     destination_data_prefix: Optional[Union[DestinationIPPrefix, DestinationDataPrefix]] = Field(
         default=None, validation_alias="destinationDataPrefix", serialization_alias="destinationDataPrefix"
     )
-    destination_port: Global[PolicyMatchEntryDestinationPort] = Field(
+    destination_port: Global[DeviceAccessProtocolPort] = Field(
         validation_alias="destinationPort", serialization_alias="destinationPort"
     )
     source_data_prefix: Optional[Union[SourceIPPrefix, SourceDataPrefix]] = Field(
@@ -76,62 +76,34 @@ class Sequence(BaseModel):
     def set_base_action(self, base_action: AcceptDropActionType):
         self.base_action = Global[AcceptDropActionType](value=base_action)
 
-    @overload
-    def match_destination_data_prefix(self, destination_prefix: str):
-        ...
+    def match_destination_data_prefixes(self, prefixes: List[IPv4Interface]):
+        self.match_entries.destination_data_prefix = DestinationIPPrefix(
+            destination_ip_prefix_list=Global[List[IPv4Interface]](value=prefixes)
+        )
 
-    @overload
-    def match_destination_data_prefix(self, destination_prefix: List[str]):
-        ...
+    def match_destination_data_prefix_list(self, list_id: UUID):
+        self.match_entries.destination_data_prefix = DestinationDataPrefix(
+            destination_data_prefix_list=RefIdItem.from_uuid(list_id)
+        )
 
-    @overload
-    def match_destination_data_prefix(self, destination_prefix: List[IPv4Interface]):
-        ...
+    def match_destination_data_prefix_variable(self, variable_name: str):
+        self.match_entries.destination_data_prefix = DestinationIPPrefix(
+            destination_ip_prefix_list=as_variable(value=variable_name)
+        )
 
-    def match_destination_data_prefix(self, destination_prefix):
-        if isinstance(destination_prefix, str):
-            if is_str_uuid(destination_prefix):
-                self.match_entries.destination_data_prefix = DestinationDataPrefix(
-                    destination_data_prefix_list=RefIdItem(ref_id=Global[str](value=destination_prefix))
-                )
-            else:
-                self.match_entries.destination_data_prefix = DestinationIPPrefix(
-                    destination_ip_prefix_list=as_variable(value=destination_prefix)
-                )
-        else:
-            self.match_entries.destination_data_prefix = DestinationIPPrefix(
-                destination_ip_prefix_list=Global[List[IPv4Interface]](value=destination_prefix)
-            )
+    def match_destination_port(self, port: DeviceAccessProtocolPort):
+        self.match_entries.destination_port = Global[DeviceAccessProtocolPort](value=port)
 
-    def match_destination_port(self, port: PolicyMatchEntryDestinationPort):
-        self.match_entries.destination_port = Global[PolicyMatchEntryDestinationPort](value=port)
+    def match_source_data_prefixes(self, prefixes: List[IPv4Interface]):
+        self.match_entries.source_data_prefix = SourceIPPrefix(
+            source_ip_prefix_list=Global[List[IPv4Interface]](value=prefixes)
+        )
 
-    @overload
-    def match_source_data_prefix(self, source_prefix: str):
-        ...
+    def match_source_data_prefix_list(self, list_id: UUID):
+        self.match_entries.source_data_prefix = SourceDataPrefix(source_data_prefix_list=RefIdItem.from_uuid(list_id))
 
-    @overload
-    def match_source_data_prefix(self, source_prefix: List[str]):
-        ...
-
-    @overload
-    def match_source_data_prefix(self, source_prefix: List[IPv4Interface]):
-        ...
-
-    def match_source_data_prefix(self, source_prefix):
-        if isinstance(source_prefix, str):
-            if is_str_uuid(source_prefix):
-                self.match_entries.source_data_prefix = SourceDataPrefix(
-                    source_data_prefix_list=RefIdItem(ref_id=Global[str](value=source_prefix))
-                )
-            else:
-                self.match_entries.source_data_prefix = SourceIPPrefix(
-                    source_ip_prefix_list=as_variable(value=source_prefix)
-                )
-        else:
-            self.match_entries.source_data_prefix = SourceIPPrefix(
-                source_ip_prefix_list=Global[List[IPv4Interface]](value=source_prefix)
-            )
+    def match_source_data_prefix_variable(self, variable_name: str):
+        self.match_entries.source_data_prefix = SourceIPPrefix(source_ip_prefix_list=as_variable(value=variable_name))
 
     def match_source_ports(self, ports: List[int]):
         self.match_entries.source_ports = Global[List[int]](value=ports)
@@ -169,21 +141,17 @@ class DeviceAccessIPv4Parcel(_ParcelBase):
 
     def add_sequence(
         self,
-        sequence_id: int,
-        sequence_name: str,
-        destination_port: PolicyMatchEntryDestinationPort,
-        base_action: Optional[AcceptDropActionType] = None,
+        id: int,
+        name: str,
+        destination_port: DeviceAccessProtocolPort,
+        base_action: AcceptDropActionType,
     ) -> Sequence:
-        payload: Dict[str, Any] = {
-            "sequence_id": Global[int](value=sequence_id),
-            "sequence_name": Global[str](value=sequence_name),
-            "match_entries": MatchEntries(
-                destination_port=Global[PolicyMatchEntryDestinationPort](value=destination_port)
-            ),
-        }
-        if base_action is not None:
-            payload["base_action"] = Global[AcceptDropActionType](value=base_action)
-
-        sequence = Sequence(**payload)
+        match_entries = MatchEntries(destination_port=as_global(destination_port, DeviceAccessProtocolPort))
+        sequence = Sequence.create(
+            sequence_id=id,
+            sequence_name=name,
+            base_action=base_action,
+            match_entries=match_entries,
+        )
         self.sequences.append(sequence)
         return sequence
