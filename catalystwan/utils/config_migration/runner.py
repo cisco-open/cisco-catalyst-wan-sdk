@@ -9,7 +9,7 @@ from catalystwan.models.configuration.feature_profile.parcel import Parcel, list
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
 from catalystwan.session import ManagerSession
 from catalystwan.typed_list import DataSequence
-from catalystwan.utils.config_migration.creators.policy_object_pusher import get_parcel_ordering_value
+from catalystwan.utils.config_migration.creators.groups_of_interests_pusher import get_parcel_ordering_value
 from catalystwan.workflows.config_migration import (
     collect_ux1_config,
     log_progress,

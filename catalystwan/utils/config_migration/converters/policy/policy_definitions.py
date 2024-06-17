@@ -17,6 +17,7 @@ from catalystwan.models.configuration.config_migration import (
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
+from catalystwan.models.configuration.feature_profile.sdwan.dns_security.dns import DnsParcel, TargetVpns
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.aip import (
     AdvancedInspectionProfileParcel,
 )
@@ -46,6 +47,7 @@ from catalystwan.models.policy.definition.access_control_list_ipv6 import AclIPv
 from catalystwan.models.policy.definition.aip import AdvancedInspectionProfilePolicy
 from catalystwan.models.policy.definition.amp import AdvancedMalwareProtectionPolicy
 from catalystwan.models.policy.definition.control import ControlPolicy
+from catalystwan.models.policy.definition.dns_security import DnsSecurityPolicy, TargetVpn
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
 from catalystwan.models.policy.definition.intrusion_prevention import IntrusionPreventionPolicy
 from catalystwan.models.policy.definition.mesh import MeshPolicy
@@ -72,6 +74,7 @@ Output = Optional[
             SslDecryptionParcel,
             SslDecryptionProfileParcel,
             UrlFilteringParcel,
+            DnsParcel,
         ],
         Field(discriminator="type_"),
     ]
@@ -117,6 +120,41 @@ def control(in_: ControlPolicy, uuid: UUID, context) -> CustomControlParcel:
     out = CustomControlParcel(**_get_parcel_name_desc(in_))
     # TODO: convert definition
     return out
+
+
+def dns_security(in_: DnsSecurityPolicy, uuid: UUID, context: PolicyConvertContext) -> DnsParcel:
+    vpn_id_to_map = context.get_vpn_id_to_vpn_name_map()
+
+    if umbrella_data := in_.definition.umbrella_data:
+        context.dns_security_umbrella_data[uuid] = umbrella_data.ref
+
+    _target_vpns = (
+        [target_vpn_convert(target_vpn, vpn_id_to_map) for target_vpn in in_.definition.target_vpns]
+        if in_.definition.target_vpns
+        else None
+    )
+
+    _local_domain_bypass_list = (
+        in_.definition.local_domain_bypass_list.ref if in_.definition.local_domain_bypass_list else None
+    )
+
+    return DnsParcel.create(
+        **_get_parcel_name_desc(in_),
+        **in_.definition.model_dump(exclude={"local_domain_bypass_list", "umbrella_data", "target_vpns"}),
+        target_vpns=_target_vpns,
+        local_domain_bypass_list=_local_domain_bypass_list,
+    )
+
+
+def target_vpn_convert(target_vpn: TargetVpn, vpn_id_to_map: Dict[Union[str, int], List[str]]) -> TargetVpns:
+    vpn_names = []
+    for vpn in target_vpn.vpns:
+        if not (mapped_name := vpn_id_to_map.get(vpn)):
+            raise CatalystwanConverterCantConvertException(f"Cannot find the TargetVPN with id: {vpn}")
+
+        vpn_names.extend(mapped_name)
+
+    return TargetVpns.create(**target_vpn.model_dump(exclude={"vpns"}), vpns=vpn_names)
 
 
 def hubspoke(in_: HubAndSpokePolicy, uuid: UUID, context: PolicyConvertContext) -> HubSpokeParcel:
@@ -349,6 +387,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     SslDecryptionPolicy: ssl_decryption,
     SslDecryptionUtdProfilePolicy: ssl_profile,
     UrlFilteringPolicy: url_filtering,
+    DnsSecurityPolicy: dns_security,
 }
 
 

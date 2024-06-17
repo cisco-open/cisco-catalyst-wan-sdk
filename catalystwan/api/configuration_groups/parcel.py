@@ -133,6 +133,13 @@ class Default(ParcelAttribute, Generic[T]):
     value: Optional[T] = None
 
 
+def as_optional_global(value: Any, generic_alias: Any = None):
+    if value is None:
+        return None
+
+    return as_global(value, generic_alias)
+
+
 def as_global(value: Any, generic_alias: Any = None):
     """Produces Global object given only value (type is induced from value)
 
