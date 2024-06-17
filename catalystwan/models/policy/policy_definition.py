@@ -176,7 +176,7 @@ class ProtocolEntry(BaseModel):
 
 class DSCPEntry(BaseModel):
     field: Literal["dscp"] = "dscp"
-    value: str = Field(description="0-63 single numbers separate by space")
+    value: SpaceSeparatedPositiveIntList = Field(description="0-63 single numbers separate by space")
 
 
 class SourceIPEntry(BaseModel):

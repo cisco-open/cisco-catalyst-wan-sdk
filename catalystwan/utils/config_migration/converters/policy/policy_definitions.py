@@ -111,7 +111,7 @@ def as_num_ranges_list(p: str) -> List[Union[int, Tuple[int, int]]]:
         if hi is None:
             num_list.append(low)
         else:
-            num_list.append((hi, low))
+            num_list.append((low, hi))
     return num_list
 
 
@@ -234,7 +234,7 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
                 out_seq.match_destination_ports(portlist)
 
             elif in_entry.field == "dscp":
-                out_seq.match_dscp([int(s) for s in in_entry.value.split()])
+                out_seq.match_dscp(in_entry.value)
 
             elif in_entry.field == "packetLength":
                 low, hi = int_range_str_validator(in_entry.value, False)
@@ -259,7 +259,7 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
                 out_seq.match_protocol(protocols)
 
             elif in_entry.field == "sourceDataPrefixList" and in_entry.ref:
-                out_seq.match_destination_data_prefix_list(in_entry.ref[0])
+                out_seq.match_source_data_prefix_list(in_entry.ref[0])
 
             elif in_entry.field == "sourceIp":
                 if in_entry.vip_variable_name is not None:
@@ -274,6 +274,24 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
 
             elif in_entry.field == "tcp":
                 out_seq.match_tcp()
+
+        for in_action in in_seq.actions:
+            if in_action.type == "set":
+                for param in in_action.parameter:
+                    if param.field == "dscp":
+                        out_seq.associate_set_dscp_action(dscp=int(param.value[0]))
+                    elif param.field == "nextHop":
+                        out_seq.associate_set_next_hop_action(next_hop=cast(IPv4Address, param.value))
+            elif in_action.type == "count":
+                out_seq.associate_counter_action(name=in_action.parameter)
+            elif in_action.type == "class":
+                logger.warning(f"Cannot convert {in_action}, no equivalent field in {type(out)}")
+            elif in_action.type == "log":
+                out_seq.associate_log_action()
+            elif in_action.type == "mirror":
+                out_seq.associate_mirror_action(mirror=in_action.parameter.ref)
+            elif in_action.type == "policer":
+                out_seq.associate_policer_action(in_action.parameter.ref)
 
     return out
 

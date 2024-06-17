@@ -221,9 +221,8 @@ class Sequence(BaseModel):
         self._entry.destination_data_prefix = DestinationDataPrefix(destination_ip_prefix=value)
 
     def match_destination_data_prefix_list(self, prefix: UUID):
-        value = as_global(str(prefix))
         self._entry.destination_data_prefix = DestinationDataPrefixList(
-            destination_data_prefix_list=RefIdItem(ref_id=value)
+            destination_data_prefix_list=RefIdItem.from_uuid(prefix)
         )
 
     def match_destination_ports(self, ports: List[Union[int, Tuple[int, int]]]):
@@ -264,8 +263,7 @@ class Sequence(BaseModel):
         self._entry.source_data_prefix = SourceDataPrefix(source_ip_prefix=value)
 
     def match_source_data_prefix_list(self, prefix: UUID):
-        value = as_global(str(prefix))
-        self._entry.source_data_prefix = SourceDataPrefixList(source_data_prefix_list=RefIdItem(ref_id=value))
+        self._entry.source_data_prefix = SourceDataPrefixList(source_data_prefix_list=RefIdItem.from_uuid(prefix))
 
     def match_source_ports(self, ports: List[Union[int, Tuple[int, int]]]):
         """
