@@ -7,7 +7,7 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 from typing_extensions import Annotated
 
-from catalystwan.models.common import EncapType, TLOCColor
+from catalystwan.models.common import AcceptRejectActionType, EncapType, TLOCColor
 from catalystwan.models.policy.policy_definition import (
     AffinityEntry,
     CarrierEntry,
@@ -30,7 +30,6 @@ from catalystwan.models.policy.policy_definition import (
     OriginProtocol,
     PathTypeEntry,
     PolicyAcceptRejectAction,
-    PolicyAcceptRejectActionType,
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
@@ -120,7 +119,7 @@ class ControlPolicyRouteSequence(PolicyDefinitionSequenceBase):
     sequence_type: Literal["route"] = Field(
         default="route", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
-    base_action: PolicyAcceptRejectActionType = Field(
+    base_action: AcceptRejectActionType = Field(
         default="reject", serialization_alias="baseAction", validation_alias="baseAction"
     )
     match: ControlPolicyRouteSequenceMatch = ControlPolicyRouteSequenceMatch()
@@ -239,7 +238,7 @@ class ControlPolicyTLOCSequence(PolicyDefinitionSequenceBase):
     sequence_type: Literal["tloc"] = Field(
         default="tloc", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
-    base_action: PolicyAcceptRejectActionType = Field(
+    base_action: AcceptRejectActionType = Field(
         default="reject", serialization_alias="baseAction", validation_alias="baseAction"
     )
     match: ControlPolicyTLOCSequenceMatch = ControlPolicyTLOCSequenceMatch()
@@ -323,7 +322,7 @@ class ControlPolicy(ControlPolicyHeader, DefinitionWithSequencesCommonBase):
     model_config = ConfigDict(populate_by_name=True)
 
     def add_route_sequence(
-        self, name: str = "Route", base_action: PolicyAcceptRejectActionType = "reject"
+        self, name: str = "Route", base_action: AcceptRejectActionType = "reject"
     ) -> ControlPolicyRouteSequence:
         seq = ControlPolicyRouteSequence(
             sequence_name=name,
@@ -334,7 +333,7 @@ class ControlPolicy(ControlPolicyHeader, DefinitionWithSequencesCommonBase):
         return seq
 
     def add_tloc_sequence(
-        self, name: str = "TLOC", base_action: PolicyAcceptRejectActionType = "reject"
+        self, name: str = "TLOC", base_action: AcceptRejectActionType = "reject"
     ) -> ControlPolicyTLOCSequence:
         seq = ControlPolicyTLOCSequence(
             sequence_name=name,

@@ -361,8 +361,8 @@ class GroupsOfInterestBuildReport(BaseModel):
         default_factory=list, serialization_alias="failedParcels", validation_alias="failedParcels"
     )
 
-    def add_created(self, name: str, id_: UUID):
-        self.created_parcels.append((name, id_))
+    def add_created(self, name: str, id: UUID):
+        self.created_parcels.append((name, id))
 
     def add_failed(self, parcel: AnyParcel, error: ManagerHTTPError):
         failed_parcel = FailedParcel(

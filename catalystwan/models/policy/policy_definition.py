@@ -10,7 +10,8 @@ from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, m
 from typing_extensions import Annotated, Literal
 
 from catalystwan.models.common import (
-    BasicPolicyActionType,
+    AcceptDropActionType,
+    AcceptRejectActionType,
     CarrierType,
     ControlPathType,
     EncapType,
@@ -107,8 +108,6 @@ LossProtectionType = Literal[
     "packetDuplication",
 ]
 
-DeviceAccessProtocol = Literal[22, 161]
-
 AdvancedCommunityMatchFlag = Literal["or", "and", "exact"]
 
 MetricType = Literal["type1", "type2"]
@@ -183,7 +182,7 @@ class DSCPEntry(BaseModel):
 class SourceIPEntry(BaseModel):
     field: Literal["sourceIp"] = "sourceIp"
     value: Optional[str] = Field(default=None, description="IP network specifiers separate by space")
-    vipVariableName: Optional[str] = Field(
+    vip_variable_name: Optional[str] = Field(
         default=None, serialization_alias="vipVariableName", validation_alias="vipVariableName"
     )
 
@@ -218,7 +217,7 @@ class SourcePortEntry(BaseModel):
 class DestinationIPEntry(BaseModel):
     field: Literal["destinationIp"] = "destinationIp"
     value: Optional[str] = Field(default=None)
-    vipVariableName: Optional[str] = Field(
+    vip_variable_name: Optional[str] = Field(
         default=None, serialization_alias="vipVariableName", validation_alias="vipVariableName"
     )
 
@@ -1039,9 +1038,6 @@ class Action(BaseModel):
     pass
 
 
-PolicyAcceptRejectActionType = Literal["accept", "reject"]
-
-
 class PolicyDefinitionSequenceBase(BaseModel):
     sequence_id: int = Field(default=0, serialization_alias="sequenceId", validation_alias="sequenceId")
     sequence_name: str = Field(serialization_alias="sequenceName", validation_alias="sequenceName")
@@ -1149,11 +1145,11 @@ class PolicyActionBase(BaseModel):
 
 
 class PolicyAcceptRejectAction(PolicyActionBase):
-    type: PolicyAcceptRejectActionType
+    type: AcceptRejectActionType
 
 
-class BasicPolicyAction(PolicyActionBase):
-    type: BasicPolicyActionType
+class PolicyAcceptDropAction(PolicyActionBase):
+    type: AcceptDropActionType
 
 
 class InfoTag(BaseModel):

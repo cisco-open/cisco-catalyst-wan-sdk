@@ -1,14 +1,14 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
-from ipaddress import IPv4Interface
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Union
+from ipaddress import IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Union, cast
 from uuid import UUID
 
 from pydantic import Field
 from typing_extensions import Annotated
 
 from catalystwan.api.configuration_groups.parcel import as_global
-from catalystwan.models.common import int_range_str_validator
+from catalystwan.models.common import DeviceAccessProtocolPort, int_range_str_validator
 from catalystwan.models.configuration.config_migration import (
     PolicyConvertContext,
     SslDecryptioneResidues,
@@ -38,6 +38,14 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object.securi
     BlockPageAction,
     UrlFilteringParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import (
+    Criteria,
+    Origin,
+    Protocol,
+    RoutePolicyParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import DeviceAccessIPv4Parcel
+from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import DeviceAccessIPv6Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
@@ -47,10 +55,13 @@ from catalystwan.models.policy.definition.access_control_list_ipv6 import AclIPv
 from catalystwan.models.policy.definition.aip import AdvancedInspectionProfilePolicy
 from catalystwan.models.policy.definition.amp import AdvancedMalwareProtectionPolicy
 from catalystwan.models.policy.definition.control import ControlPolicy
+from catalystwan.models.policy.definition.device_access import DeviceAccessPolicy
+from catalystwan.models.policy.definition.device_access_ipv6 import DeviceAccessIPv6Policy
 from catalystwan.models.policy.definition.dns_security import DnsSecurityPolicy, TargetVpn
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
 from catalystwan.models.policy.definition.intrusion_prevention import IntrusionPreventionPolicy
 from catalystwan.models.policy.definition.mesh import MeshPolicy
+from catalystwan.models.policy.definition.route_policy import RoutePolicy
 from catalystwan.models.policy.definition.ssl_decryption import SslDecryptionPolicy
 from catalystwan.models.policy.definition.ssl_decryption_utd_profile import SslDecryptionUtdProfilePolicy
 from catalystwan.models.policy.definition.url_filtering import UrlFilteringPolicy
@@ -75,6 +86,9 @@ Output = Optional[
             SslDecryptionProfileParcel,
             UrlFilteringParcel,
             DnsParcel,
+            DeviceAccessIPv6Parcel,
+            DeviceAccessIPv4Parcel,
+            RoutePolicyParcel,
         ],
         Field(discriminator="type_"),
     ]
@@ -99,6 +113,31 @@ def as_num_ranges_list(p: str) -> List[Union[int, Tuple[int, int]]]:
         else:
             num_list.append((hi, low))
     return num_list
+
+
+def as_num_list(ports_list: List[Union[int, Tuple[int, int]]]) -> List[int]:
+    """
+    applicable to device access port list
+    [(30, 35), 80] -> [30 31 32 33 34 35 80]
+    """
+    num_list: List[int] = []
+    for val in ports_list:
+        if isinstance(val, int):
+            num_list.append(val)
+        elif isinstance(val, tuple):
+            num_list.extend(range(val[1], val[0] + 1))
+    num_list = sorted(list(set(num_list)))
+    return num_list
+
+
+def conditional_split(s: str, seps: List[str]) -> List[str]:
+    """
+    split s by first sep found in seps
+    """
+    for sep in seps:
+        if sep in s:
+            return s.split(sep)
+    raise CatalystwanConverterCantConvertException(f"None of the separators {seps} found in {s}")
 
 
 def advanced_malware_protection(
@@ -180,36 +219,36 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
     for in_seq in in_.sequences:
         out_seq = out.add_sequence(name=in_seq.sequence_name, id_=in_seq.sequence_id, base_action=in_seq.base_action)
         for in_entry in in_seq.match.entries:
-            if "destinationDataPrefixList" == in_entry.field and in_entry.ref:
+            if in_entry.field == "destinationDataPrefixList" and in_entry.ref:
                 out_seq.match_destination_data_prefix_list(in_entry.ref[0])
 
-            elif "destinationIp" == in_entry.field:
-                if in_entry.vipVariableName is not None:
-                    varname = convert_varname(in_entry.vipVariableName)
+            elif in_entry.field == "destinationIp":
+                if in_entry.vip_variable_name is not None:
+                    varname = convert_varname(in_entry.vip_variable_name)
                     out_seq.match_destination_data_prefix_variable(varname)
                 elif in_entry.value is not None:
                     out_seq.match_destination_data_prefix(IPv4Interface(in_entry.value))
 
-            elif "destinationPort" == in_entry.field:
+            elif in_entry.field == "destinationPort":
                 portlist = as_num_ranges_list(in_entry.value)
                 out_seq.match_destination_ports(portlist)
 
-            elif "dscp" == in_entry.field:
+            elif in_entry.field == "dscp":
                 out_seq.match_dscp([int(s) for s in in_entry.value.split()])
 
-            elif "packetLength" == in_entry.field:
+            elif in_entry.field == "packetLength":
                 low, hi = int_range_str_validator(in_entry.value, False)
                 if hi is None:
                     out_seq.match_packet_length(low)
                 else:
                     out_seq.match_packet_length((low, hi))
 
-            elif "plp" == in_entry.field:
+            elif in_entry.field == "plp":
                 logger.warning(
                     f"{Ipv4AclParcel.__name__} has no field matching plp found in {AclPolicy.__name__}: {in_.name}"
                 )
 
-            elif "protocol" == in_entry.field:
+            elif in_entry.field == "protocol":
                 protocols: List[int] = []
                 for val in in_entry.value.split():
                     low, hi = int_range_str_validator(val, False)
@@ -219,21 +258,21 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
                         protocols.extend(range(low, hi + 1))
                 out_seq.match_protocol(protocols)
 
-            elif "sourceDataPrefixList" == in_entry.field and in_entry.ref:
+            elif in_entry.field == "sourceDataPrefixList" and in_entry.ref:
                 out_seq.match_destination_data_prefix_list(in_entry.ref[0])
 
-            elif "sourceIp" == in_entry.field:
-                if in_entry.vipVariableName is not None:
-                    varname = convert_varname(in_entry.vipVariableName)
+            elif in_entry.field == "sourceIp":
+                if in_entry.vip_variable_name is not None:
+                    varname = convert_varname(in_entry.vip_variable_name)
                     out_seq.match_source_data_prefix_variable(varname)
                 elif in_entry.value is not None:
                     out_seq.match_source_data_prefix(IPv4Interface(in_entry.value))
 
-            elif "sourcePort" == in_entry.field:
+            elif in_entry.field == "sourcePort":
                 portlist = as_num_ranges_list(in_entry.value)
                 out_seq.match_destination_ports(portlist)
 
-            elif "tcp" == in_entry.field:
+            elif in_entry.field == "tcp":
                 out_seq.match_tcp()
 
     return out
@@ -242,6 +281,158 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
 def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context) -> Ipv6AclParcel:
     out = Ipv6AclParcel(**_get_parcel_name_desc(in_))
     # TODO: convert definition
+    return out
+
+
+def device_access_ipv6(
+    in_: DeviceAccessIPv6Policy, uuid: UUID, context: PolicyConvertContext
+) -> DeviceAccessIPv6Parcel:
+    out = DeviceAccessIPv6Parcel(**_get_parcel_name_desc(in_))
+    out.set_default_action(in_.default_action.type)
+    for in_seq in in_.sequences:
+        port_str = next(e.value for e in in_seq.match.entries if e.field == "destinationPort")
+        port = cast(DeviceAccessProtocolPort, int(port_str))
+        seq = out.add_sequence(
+            id_=in_seq.sequence_id,
+            name=in_seq.sequence_name,
+            destination_port=port,
+            base_action=in_seq.base_action,
+        )
+        for in_entry in in_seq.match.entries:
+            if in_entry.field == "destinationDataIpv6PrefixList":
+                if in_entry.ref:
+                    seq.match_destination_data_prefix_list(in_entry.ref[0])
+            elif in_entry.field == "destinationIpv6":
+                d_network_ipv6 = conditional_split(in_entry.value, [",", " "])
+                seq.match_destination_data_prefixes([IPv6Interface(v) for v in d_network_ipv6])
+            elif in_entry.field == "destinationPort":
+                destination_port = cast(DeviceAccessProtocolPort, int(in_entry.value))
+                seq.match_destination_port(destination_port)
+            elif in_entry.field == "sourceDataIpv6PrefixList":
+                if in_entry.ref:
+                    seq.match_source_data_prefix_list(in_entry.ref[0])
+            elif in_entry.field == "sourceIpv6":
+                s_network_ipv6 = conditional_split(in_entry.value, [",", " "])
+                seq.match_source_data_prefixes([IPv6Interface(v) for v in s_network_ipv6])
+            elif in_entry.field == "sourcePort":
+                seq.match_source_ports(as_num_list(as_num_ranges_list(in_entry.value)))
+    return out
+
+
+def device_access_ipv4(in_: DeviceAccessPolicy, uuid: UUID, context: PolicyConvertContext) -> DeviceAccessIPv4Parcel:
+    out = DeviceAccessIPv4Parcel(**_get_parcel_name_desc(in_))
+    out.set_default_action(in_.default_action.type)
+    for in_seq in in_.sequences:
+        port_str = next(e.value for e in in_seq.match.entries if e.field == "destinationPort")
+        port = cast(DeviceAccessProtocolPort, int(port_str))
+        seq = out.add_sequence(
+            id_=in_seq.sequence_id,
+            name=in_seq.sequence_name,
+            destination_port=port,
+            base_action=in_seq.base_action,
+        )
+        for in_entry in in_seq.match.entries:
+            if in_entry.field == "destinationDataPrefixList":
+                if in_entry.ref:
+                    seq.match_destination_data_prefix_list(in_entry.ref[0])
+            elif in_entry.field == "destinationIp":
+                if in_entry.value is not None:
+                    d_network_ipv6 = conditional_split(in_entry.value, [",", " "])
+                    seq.match_destination_data_prefixes([IPv4Interface(v) for v in d_network_ipv6])
+                elif in_entry.vip_variable_name is not None:
+                    seq.match_destination_data_prefix_variable(in_entry.vip_variable_name)
+            elif in_entry.field == "sourceDataPrefixList":
+                if in_entry.ref:
+                    seq.match_source_data_prefix_list(in_entry.ref[0])
+            elif in_entry.field == "sourceIp":
+                if in_entry.value is not None:
+                    s_network_ipv6 = conditional_split(in_entry.value, [",", " "])
+                    seq.match_source_data_prefixes([IPv4Interface(v) for v in s_network_ipv6])
+                elif in_entry.vip_variable_name is not None:
+                    seq.match_source_data_prefix_variable(in_entry.vip_variable_name)
+            elif in_entry.field == "sourcePort":
+                seq.match_source_ports(as_num_list(as_num_ranges_list(in_entry.value)))
+    return out
+
+
+def route(in_: RoutePolicy, uuid: UUID, context: PolicyConvertContext) -> RoutePolicyParcel:
+    out = RoutePolicyParcel(**_get_parcel_name_desc(in_))
+    out.set_default_action(in_.default_action.type)
+    for in_seq in in_.sequences:
+        sequence_ip_type = in_seq.sequence_ip_type
+        if sequence_ip_type is not None:
+            protocol = "BOTH" if sequence_ip_type == "all" else sequence_ip_type.upper()
+        out_seq = out.add_sequence(
+            id_=in_seq.sequence_id,
+            name=in_seq.sequence_name,
+            base_action=in_seq.base_action,
+            protocol=cast(Protocol, protocol),
+        )
+
+        for in_entry in in_seq.match.entries:
+            if in_entry.field == "asPath":
+                out_seq.match_as_path_list(in_entry.ref)
+            elif in_entry.field == "expandedCommunity":
+                out_seq.match_community_list(expanded_community_list=in_entry.ref)
+            elif in_entry.field == "advancedCommunity":
+                # Advanced matches to standard, because it has a list of UUIDs and a match flag
+                out_seq.match_community_list(
+                    standard_community_list=in_entry.refs, criteria=cast(Criteria, in_entry.match_flag.upper())
+                )
+            elif in_entry.field == "extCommunity":
+                out_seq.match_ext_community_list(in_entry.ref)
+            elif in_entry.field == "localPreference":
+                # Local preference is matches to bgp
+                out_seq.match_bgp_local_preference(in_entry.value)
+            elif in_entry.field == "metric":
+                out_seq.match_metric(in_entry.value)
+            elif in_entry.field == "ompTag":
+                out_seq.match_omp_tag(in_entry.value)
+            elif in_entry.field == "ospfTag":
+                out_seq.match_ospf_tag(in_entry.value)
+            elif in_entry.field == "address":
+                if sequence_ip_type == "ipv4":
+                    out_seq.match_ipv4_address(in_entry.ref)
+                elif sequence_ip_type == "ipv6":
+                    out_seq.match_ipv6_address(in_entry.ref)
+            elif in_entry.field == "nextHop":
+                if sequence_ip_type == "ipv4":
+                    out_seq.match_ipv4_next_hop(in_entry.ref)
+                elif sequence_ip_type == "ipv6":
+                    out_seq.match_ipv6_next_hop(in_entry.ref)
+
+        community_additive = any(
+            [action.value for action in in_seq.actions[0].parameter if action.field == "communityAdditive"]
+        )
+
+        for in_action in in_seq.actions[0].parameter:
+            if in_action.field == "asPath":
+                out_seq.associate_as_path_action(in_action.value.prepend)
+            elif in_action.field == "community":
+                if in_action.value:
+                    out_seq.associate_community_action(community_additive, in_action.value)
+                if in_action.vip_variable_name:
+                    out_seq.associate_community_variable_action(community_additive, in_action.vip_variable_name)
+            elif in_action.field == "localPreference":
+                out_seq.associate_local_preference_action(in_action.value)
+            elif in_action.field == "metric":
+                out_seq.associate_metric_action(in_action.value)
+            elif in_action.field == "metricType":
+                out_seq.associate_metric_type_action(in_action.value)
+            elif in_action.field == "ospfTag":
+                out_seq.associate_ospf_tag_action(in_action.value)
+            elif in_action.field == "origin":
+                origin = "Incomplete" if in_action.value == "incomplete" else in_action.value.upper()
+                out_seq.associate_origin_action(cast(Origin, origin))
+            elif in_action.field == "ompTag":
+                out_seq.associate_omp_tag_action(in_action.value)
+            elif in_action.field == "weight":
+                out_seq.associate_weight_action(in_action.value)
+            elif in_action.field == "nextHop":
+                if isinstance(in_action.value, IPv4Address):
+                    out_seq.associate_ipv4_next_hop_action(in_action.value)
+                if isinstance(in_action.value, IPv6Address):
+                    out_seq.associate_ipv6_next_hop_action(in_action.value)
     return out
 
 
@@ -388,6 +579,9 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     SslDecryptionUtdProfilePolicy: ssl_profile,
     UrlFilteringPolicy: url_filtering,
     DnsSecurityPolicy: dns_security,
+    DeviceAccessIPv6Policy: device_access_ipv6,
+    DeviceAccessPolicy: device_access_ipv4,
+    RoutePolicy: route,
 }
 
 

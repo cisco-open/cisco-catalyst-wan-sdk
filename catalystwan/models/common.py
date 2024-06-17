@@ -1,4 +1,4 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from dataclasses import InitVar, dataclass, field
 from typing import Any, Dict, Iterator, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union
@@ -209,7 +209,9 @@ IntRangeStr = Annotated[
     BeforeValidator(int_range_str_validator),
 ]
 
-BasicPolicyActionType = Literal["accept", "drop"]
+AcceptDropActionType = Literal["accept", "drop"]
+AcceptRejectActionType = Literal["accept", "reject"]
+DeviceAccessProtocolPort = Literal[161, 22]
 
 CarrierType = Literal[
     "default",

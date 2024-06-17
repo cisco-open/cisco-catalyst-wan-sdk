@@ -1,17 +1,13 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv6Interface
-from typing import Any, Dict, List, Literal, Optional, Union, overload
+from typing import List, Literal, Optional, Union
+from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_global, as_variable
+from catalystwan.models.common import AcceptDropActionType, DeviceAccessProtocolPort
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
-from catalystwan.utils.type_check import is_str_uuid
-
-BaseAction = Literal[
-    "accept",
-    "drop",
-]
-DestinationPort = Literal[161, 22]
 
 
 class SourceDataPrefix(BaseModel):
@@ -52,7 +48,7 @@ class MatchEntries(BaseModel):
     destination_data_prefix: Optional[Union[DestinationIPPrefix, DestinationDataPrefix]] = Field(
         default=None, validation_alias="destinationDataPrefix", serialization_alias="destinationDataPrefix"
     )
-    destination_port: Global[DestinationPort] = Field(
+    destination_port: Global[DeviceAccessProtocolPort] = Field(
         validation_alias="destinationPort", serialization_alias="destinationPort"
     )
     source_data_prefix: Optional[Union[SourceIPPrefix, SourceDataPrefix]] = Field(
@@ -66,10 +62,10 @@ class MatchEntries(BaseModel):
 class Sequence(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True, validate_assignment=True)
 
-    base_action: Union[Global[BaseAction], Default[Literal[BaseAction]]] = Field(
-        default=Default[Literal[BaseAction]](value="accept"),
-        validation_alias="baseAction",
-        serialization_alias="baseAction",
+    base_action: Union[Global[AcceptDropActionType], Default[Literal[AcceptDropActionType]]] = Field(
+        default=Default[Literal[AcceptDropActionType]](value="accept"),
+        validation_alias="BasicPolicyActionType",
+        serialization_alias="BasicPolicyActionType",
     )
     match_entries: MatchEntries = Field(
         validation_alias="matchEntries", serialization_alias="matchEntries", description="Define match conditions"
@@ -77,65 +73,55 @@ class Sequence(BaseModel):
     sequence_id: Global[int] = Field(validation_alias="sequenceId", serialization_alias="sequenceId")
     sequence_name: Global[str] = Field(validation_alias="sequenceName", serialization_alias="sequenceName")
 
-    def set_base_action(self, base_action: BaseAction):
-        self.base_action = Global[BaseAction](value=base_action)
+    def set_base_action(self, base_action: AcceptDropActionType):
+        self.base_action = Global[AcceptDropActionType](value=base_action)
 
-    @overload
-    def match_destination_data_prefix(self, destination_prefix: str):
-        ...
+    def match_destination_data_prefixes(self, prefixes: List[IPv6Interface]):
+        self.match_entries.destination_data_prefix = DestinationIPPrefix(
+            destination_ip_prefix_list=Global[List[IPv6Interface]](value=prefixes)
+        )
 
-    @overload
-    def match_destination_data_prefix(self, destination_prefix: List[str]):
-        ...
+    def match_destination_data_prefix_list(self, list_id: UUID):
+        self.match_entries.destination_data_prefix = DestinationDataPrefix(
+            destination_data_prefix_list=RefIdItem.from_uuid(list_id)
+        )
 
-    @overload
-    def match_destination_data_prefix(self, destination_prefix: List[IPv6Interface]):
-        ...
+    def match_destination_data_prefix_variable(self, variable_name: str):
+        self.match_entries.destination_data_prefix = DestinationIPPrefix(
+            destination_ip_prefix_list=as_variable(value=variable_name)
+        )
 
-    def match_destination_data_prefix(self, destination_prefix):
-        if isinstance(destination_prefix, str):
-            if is_str_uuid(destination_prefix):
-                self.match_entries.destination_data_prefix = DestinationDataPrefix(
-                    destination_data_prefix_list=RefIdItem(ref_id=Global[str](value=destination_prefix))
-                )
-            else:
-                self.match_entries.destination_data_prefix = DestinationIPPrefix(
-                    destination_ip_prefix_list=Variable(value=destination_prefix)
-                )
-        else:
-            self.match_entries.destination_data_prefix = DestinationIPPrefix(
-                destination_ip_prefix_list=Global[List[IPv6Interface]](value=destination_prefix)
-            )
+    def match_destination_port(self, port: DeviceAccessProtocolPort):
+        self.match_entries.destination_port = Global[DeviceAccessProtocolPort](value=port)
 
-    @overload
-    def match_source_data_prefix(self, source_prefix: str):
-        ...
+    def match_source_data_prefixes(self, prefixes: List[IPv6Interface]):
+        self.match_entries.source_data_prefix = SourceIPPrefix(
+            source_ip_prefix_list=Global[List[IPv6Interface]](value=prefixes)
+        )
 
-    @overload
-    def match_source_data_prefix(self, source_prefix: List[str]):
-        ...
+    def match_source_data_prefix_list(self, list_id: UUID):
+        self.match_entries.source_data_prefix = SourceDataPrefix(source_data_prefix_list=RefIdItem.from_uuid(list_id))
 
-    @overload
-    def match_source_data_prefix(self, source_prefix: List[IPv6Interface]):
-        ...
-
-    def match_source_data_prefix(self, source_prefix):
-        if isinstance(source_prefix, str):
-            if is_str_uuid(source_prefix):
-                self.match_entries.source_data_prefix = SourceDataPrefix(
-                    source_data_prefix_list=RefIdItem(ref_id=Global[str](value=source_prefix))
-                )
-            else:
-                self.match_entries.source_data_prefix = SourceIPPrefix(
-                    source_ip_prefix_list=Variable(value=source_prefix)
-                )
-        else:
-            self.match_entries.source_data_prefix = SourceIPPrefix(
-                source_ip_prefix_list=Global[List[IPv6Interface]](value=source_prefix)
-            )
+    def match_source_data_prefix_variable(self, variable_name: str):
+        self.match_entries.source_data_prefix = SourceIPPrefix(source_ip_prefix_list=as_variable(value=variable_name))
 
     def match_source_ports(self, ports: List[int]):
         self.match_entries.source_ports = Global[List[int]](value=ports)
+
+    @classmethod
+    def create(
+        cls,
+        sequence_id: int,
+        sequence_name: str,
+        base_action: AcceptDropActionType,
+        match_entries: MatchEntries,
+    ) -> "Sequence":
+        return cls(
+            base_action=Global[AcceptDropActionType](value=base_action),
+            match_entries=match_entries,
+            sequence_id=Global[int](value=sequence_id),
+            sequence_name=Global[str](value=sequence_name),
+        )
 
 
 class DeviceAccessIPv6Parcel(_ParcelBase):
@@ -143,31 +129,29 @@ class DeviceAccessIPv6Parcel(_ParcelBase):
 
     type_: Literal["ipv6-device-access-policy"] = Field(default="ipv6-device-access-policy", exclude=True)
 
-    default_action: Union[Global[BaseAction], Default[BaseAction]] = Field(
-        default=Default[BaseAction](value="drop"), validation_alias=AliasPath("data", "defaultAction")
+    default_action: Union[Global[AcceptDropActionType], Default[AcceptDropActionType]] = Field(
+        default=Default[AcceptDropActionType](value="drop"), validation_alias=AliasPath("data", "defaultAction")
     )
     sequences: List[Sequence] = Field(
         default=[], validation_alias=AliasPath("data", "sequences"), description="Device Access Control List"
     )
 
-    def set_default_action(self, default_action: BaseAction) -> None:
-        self.default_action = Global[BaseAction](value=default_action)
+    def set_default_action(self, default_action: AcceptDropActionType) -> None:
+        self.default_action = Global[AcceptDropActionType](value=default_action)
 
     def add_sequence(
         self,
-        sequence_id: int,
-        sequence_name: str,
-        destination_port: DestinationPort,
-        base_action: Optional[BaseAction] = None,
+        id_: int,
+        name: str,
+        destination_port: DeviceAccessProtocolPort,
+        base_action: AcceptDropActionType,
     ) -> Sequence:
-        payload: Dict[str, Any] = {
-            "sequence_id": Global[int](value=sequence_id),
-            "sequence_name": Global[str](value=sequence_name),
-            "match_entries": MatchEntries(destination_port=Global[DestinationPort](value=destination_port)),
-        }
-        if base_action is not None:
-            payload["base_action"] = Global[BaseAction](value=base_action)
-
-        sequences = Sequence(**payload)
-        self.sequences.append(sequences)
-        return sequences
+        match_entries = MatchEntries(destination_port=as_global(destination_port, DeviceAccessProtocolPort))
+        sequence = Sequence.create(
+            sequence_id=id_,
+            sequence_name=name,
+            base_action=base_action,
+            match_entries=match_entries,
+        )
+        self.sequences.append(sequence)
+        return sequence

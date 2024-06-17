@@ -5,7 +5,7 @@ from uuid import UUID
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_global, as_variable
-from catalystwan.models.common import BasicPolicyActionType
+from catalystwan.models.common import AcceptDropActionType
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
 
 IcmpIPv4Messages = Literal[
@@ -165,7 +165,7 @@ class Sequence(BaseModel):
     actions: Optional[List[Union[AcceptAction, DropAction]]] = Field(
         default=None, description="Define list of actions", max_length=1, min_length=1
     )
-    base_action: Optional[Union[Global[BasicPolicyActionType], Default[Literal["accept"]]]] = Field(
+    base_action: Optional[Union[Global[AcceptDropActionType], Default[Literal["accept"]]]] = Field(
         default=None, validation_alias="baseAction", serialization_alias="baseAction"
     )
     match_entries: Optional[List[MatchEntry]] = Field(
@@ -187,7 +187,7 @@ class Sequence(BaseModel):
     def _action(self) -> Union[AcceptAction, DropAction]:
         if self.actions is None:
             if self.base_action is None:
-                self.base_action = Global[BasicPolicyActionType](value="accept")
+                self.base_action = Global[AcceptDropActionType](value="accept")
             if self.base_action.value == "accept":
                 self.actions = [(AcceptAction(accept=Accept()))]
             else:
@@ -311,19 +311,19 @@ class Sequence(BaseModel):
 class Ipv4AclParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True, validate_assignment=True)
     type_: Literal["ipv4-acl"] = Field(default="ipv4-acl", exclude=True)
-    default_action: Union[Global[BasicPolicyActionType], Default[Literal["drop"]]] = Field(
+    default_action: Union[Global[AcceptDropActionType], Default[Literal["drop"]]] = Field(
         default=Default[Literal["drop"]](value="drop"), validation_alias=AliasPath("data", "defaultAction")
     )
     sequences: List[Sequence] = Field(
         default=[], validation_alias=AliasPath("data", "sequences"), description="Access Control List"
     )
 
-    def set_default_action(self, action: BasicPolicyActionType):
-        self.default_action = as_global(action, BasicPolicyActionType)
+    def set_default_action(self, action: AcceptDropActionType):
+        self.default_action = as_global(action, AcceptDropActionType)
 
-    def add_sequence(self, name: str, id_: int, base_action: Optional[BasicPolicyActionType] = None) -> Sequence:
+    def add_sequence(self, name: str, id_: int, base_action: Optional[AcceptDropActionType] = None) -> Sequence:
         seq = Sequence(
-            base_action=as_global(base_action, BasicPolicyActionType) if base_action is not None else None,
+            base_action=as_global(base_action, AcceptDropActionType) if base_action is not None else None,
             sequence_id=as_global(id_),
             sequence_name=as_global(name),
         )

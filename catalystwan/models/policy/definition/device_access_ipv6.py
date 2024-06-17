@@ -7,16 +7,15 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 from typing_extensions import Annotated
 
+from catalystwan.models.common import AcceptDropActionType, DeviceAccessProtocolPort
 from catalystwan.models.policy.policy_definition import (
-    BasicPolicyAction,
-    BasicPolicyActionType,
     CountAction,
     DefinitionWithSequencesCommonBase,
     DestinationDataIPv6PrefixListEntry,
     DestinationIPv6Entry,
     DestinationPortEntry,
-    DeviceAccessProtocol,
     Match,
+    PolicyAcceptDropAction,
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
@@ -53,14 +52,14 @@ class DeviceAccessIPv6PolicySequence(PolicyDefinitionSequenceBase):
     sequence_type: Literal["deviceaccesspolicyv6"] = Field(
         default="deviceaccesspolicyv6", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
-    base_action: BasicPolicyActionType = Field(
+    base_action: AcceptDropActionType = Field(
         default="accept", serialization_alias="baseAction", validation_alias="baseAction"
     )
     match: DeviceAccessIPv6PolicySequenceMatch = DeviceAccessIPv6PolicySequenceMatch()
     actions: List[DeviceAccessIPv6PolicySequenceActions] = []
     model_config = ConfigDict(populate_by_name=True)
 
-    def match_device_access_protocol(self, port: DeviceAccessProtocol) -> None:
+    def match_device_access_protocol(self, port: DeviceAccessProtocolPort) -> None:
         self._insert_match(DestinationPortEntry.from_port_set_and_ranges(ports={port}))
 
     def match_source_data_prefix_list(self, data_prefix_list_id: UUID) -> None:
@@ -84,8 +83,8 @@ class DeviceAccessIPv6PolicySequence(PolicyDefinitionSequenceBase):
 
 class DeviceAccessIPv6Policy(DeviceAccessIPv6PolicyHeader, DefinitionWithSequencesCommonBase):
     sequences: List[DeviceAccessIPv6PolicySequence] = []
-    default_action: BasicPolicyAction = Field(
-        default=BasicPolicyAction(type="drop"),
+    default_action: PolicyAcceptDropAction = Field(
+        default=PolicyAcceptDropAction(type="drop"),
         serialization_alias="defaultAction",
         validation_alias="defaultAction",
     )
@@ -94,8 +93,8 @@ class DeviceAccessIPv6Policy(DeviceAccessIPv6PolicyHeader, DefinitionWithSequenc
     def add_acl_sequence(
         self,
         name: str = "Device Access Control List",
-        base_action: BasicPolicyActionType = "accept",
-        device_access_protocol: Optional[DeviceAccessProtocol] = None,
+        base_action: AcceptDropActionType = "accept",
+        device_access_protocol: Optional[DeviceAccessProtocolPort] = None,
     ) -> DeviceAccessIPv6PolicySequence:
         seq = DeviceAccessIPv6PolicySequence(
             sequence_name=name,
