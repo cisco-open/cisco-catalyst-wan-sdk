@@ -167,10 +167,10 @@ class RoutePolicy(PolicyDefinitionBase, DefinitionWithSequencesCommonBase):
     )
 
     def add_sequence(
-        self, id: int, name: str, base_action: AcceptRejectActionType, ip_type: SequenceIpType
+        self, id_: int, name: str, base_action: AcceptRejectActionType, ip_type: SequenceIpType
     ) -> RoutePolicyRuleSequence:
         sequence = RoutePolicyRuleSequence(
-            sequence_id=id,
+            sequence_id=id_,
             sequence_name=name,
             base_action=base_action,
             sequence_ip_type=ip_type,

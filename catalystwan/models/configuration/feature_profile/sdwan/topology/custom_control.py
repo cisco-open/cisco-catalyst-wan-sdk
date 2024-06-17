@@ -319,11 +319,11 @@ class CustomControlParcel(_ParcelBase):
         return self.target
 
     def add_sequence(
-        self, name: str, id: int, type_: SequenceType, ip_type: SequenceIpType, base_action: BaseAction
+        self, name: str, id_: int, type_: SequenceType, ip_type: SequenceIpType, base_action: BaseAction
     ) -> Sequence:
         seq = Sequence(
             base_action=as_global(base_action, BaseAction),
-            sequence_id=as_global(id),
+            sequence_id=as_global(id_),
             sequence_ip_type=as_global(ip_type, SequenceIpType),
             sequence_name=as_global(name),
             sequence_type=as_global(type_, SequenceType),

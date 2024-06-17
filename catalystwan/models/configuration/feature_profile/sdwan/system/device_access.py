@@ -141,14 +141,14 @@ class DeviceAccessIPv4Parcel(_ParcelBase):
 
     def add_sequence(
         self,
-        id: int,
+        id_: int,
         name: str,
         destination_port: DeviceAccessProtocolPort,
         base_action: AcceptDropActionType,
     ) -> Sequence:
         match_entries = MatchEntries(destination_port=as_global(destination_port, DeviceAccessProtocolPort))
         sequence = Sequence.create(
-            sequence_id=id,
+            sequence_id=id_,
             sequence_name=name,
             base_action=base_action,
             match_entries=match_entries,

@@ -30,7 +30,7 @@ class TestRoutePolicyConverter(unittest.TestCase):
             description="description",
             default_action=PolicyAcceptRejectAction(type="accept"),
         )
-        rule_sequence = route_policy.add_sequence(id=1, name="test_sequence", base_action="accept", ip_type="ipv4")
+        rule_sequence = route_policy.add_sequence(id_=1, name="test_sequence", base_action="accept", ip_type="ipv4")
         rule_sequence.match_address(
             address_ref=address_ref,
         )

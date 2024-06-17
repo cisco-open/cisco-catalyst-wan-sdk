@@ -323,10 +323,10 @@ class Ipv6AclParcel(_ParcelBase):
     def set_default_action(self, action: BaseAction):
         self.default_action = as_global(action, BaseAction)
 
-    def add_sequence(self, name: str, id: int, base_action: Optional[BaseAction] = None) -> Sequence:
+    def add_sequence(self, name: str, id_: int, base_action: Optional[BaseAction] = None) -> Sequence:
         seq = Sequence(
             base_action=as_global(base_action, BaseAction) if base_action is not None else None,
-            sequence_id=as_global(id),
+            sequence_id=as_global(id_),
             sequence_name=as_global(name),
         )
         if self.sequences is None:

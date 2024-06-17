@@ -217,7 +217,7 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
     out = Ipv4AclParcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
     for in_seq in in_.sequences:
-        out_seq = out.add_sequence(name=in_seq.sequence_name, id=in_seq.sequence_id, base_action=in_seq.base_action)
+        out_seq = out.add_sequence(name=in_seq.sequence_name, id_=in_seq.sequence_id, base_action=in_seq.base_action)
         for in_entry in in_seq.match.entries:
             if in_entry.field == "destinationDataPrefixList" and in_entry.ref:
                 out_seq.match_destination_data_prefix_list(in_entry.ref[0])
@@ -293,7 +293,7 @@ def device_access_ipv6(
         port_str = next(e.value for e in in_seq.match.entries if e.field == "destinationPort")
         port = cast(DeviceAccessProtocolPort, int(port_str))
         seq = out.add_sequence(
-            id=in_seq.sequence_id,
+            id_=in_seq.sequence_id,
             name=in_seq.sequence_name,
             destination_port=port,
             base_action=in_seq.base_action,
@@ -326,7 +326,7 @@ def device_access_ipv4(in_: DeviceAccessPolicy, uuid: UUID, context: PolicyConve
         port_str = next(e.value for e in in_seq.match.entries if e.field == "destinationPort")
         port = cast(DeviceAccessProtocolPort, int(port_str))
         seq = out.add_sequence(
-            id=in_seq.sequence_id,
+            id_=in_seq.sequence_id,
             name=in_seq.sequence_name,
             destination_port=port,
             base_action=in_seq.base_action,
