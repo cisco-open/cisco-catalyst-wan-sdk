@@ -6,7 +6,6 @@ import json
 import logging
 from difflib import Differ
 from typing import TYPE_CHECKING
-from pathlib import Path
 
 from attr import define  # type: ignore
 from ciscoconfparse import CiscoConfParse  # type: ignore
