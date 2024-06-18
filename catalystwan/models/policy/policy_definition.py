@@ -22,7 +22,7 @@ from catalystwan.models.common import (
     SequenceIpType,
     ServiceChainNumber,
     ServiceType,
-    SpaceSeparatedPositiveIntList,
+    SpaceSeparatedNonNegativeIntList,
     SpaceSeparatedUUIDList,
     TLOCActionType,
     TLOCColor,
@@ -176,7 +176,7 @@ class ProtocolEntry(BaseModel):
 
 class DSCPEntry(BaseModel):
     field: Literal["dscp"] = "dscp"
-    value: SpaceSeparatedPositiveIntList = Field(description="0-63 single numbers separate by space")
+    value: SpaceSeparatedNonNegativeIntList = Field(description="0-63 single numbers separate by space")
 
 
 class SourceIPEntry(BaseModel):
@@ -285,8 +285,8 @@ class AsPathListMatchEntry(BaseModel):
 
 
 class AsPathActionEntryValue(BaseModel):
-    prepend: SpaceSeparatedPositiveIntList
-    exclude: SpaceSeparatedPositiveIntList
+    prepend: SpaceSeparatedNonNegativeIntList
+    exclude: SpaceSeparatedNonNegativeIntList
 
 
 class AsPathActionEntry(BaseModel):

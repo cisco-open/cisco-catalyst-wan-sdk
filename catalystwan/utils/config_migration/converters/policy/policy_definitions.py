@@ -419,38 +419,39 @@ def route(in_: RoutePolicy, uuid: UUID, context: PolicyConvertContext) -> RouteP
                 elif sequence_ip_type == "ipv6":
                     out_seq.match_ipv6_next_hop(in_entry.ref)
 
-        community_additive = any(
-            [action.value for action in in_seq.actions[0].parameter if action.field == "communityAdditive"]
-        )
-
-        for in_action in in_seq.actions[0].parameter:
-            if in_action.field == "asPath":
-                out_seq.associate_as_path_action(in_action.value.prepend)
-            elif in_action.field == "community":
-                if in_action.value:
-                    out_seq.associate_community_action(community_additive, in_action.value)
-                if in_action.vip_variable_name:
-                    out_seq.associate_community_variable_action(community_additive, in_action.vip_variable_name)
-            elif in_action.field == "localPreference":
-                out_seq.associate_local_preference_action(in_action.value)
-            elif in_action.field == "metric":
-                out_seq.associate_metric_action(in_action.value)
-            elif in_action.field == "metricType":
-                out_seq.associate_metric_type_action(in_action.value)
-            elif in_action.field == "ospfTag":
-                out_seq.associate_ospf_tag_action(in_action.value)
-            elif in_action.field == "origin":
-                origin = "Incomplete" if in_action.value == "incomplete" else in_action.value.upper()
-                out_seq.associate_origin_action(cast(Origin, origin))
-            elif in_action.field == "ompTag":
-                out_seq.associate_omp_tag_action(in_action.value)
-            elif in_action.field == "weight":
-                out_seq.associate_weight_action(in_action.value)
-            elif in_action.field == "nextHop":
-                if isinstance(in_action.value, IPv4Address):
-                    out_seq.associate_ipv4_next_hop_action(in_action.value)
-                if isinstance(in_action.value, IPv6Address):
-                    out_seq.associate_ipv6_next_hop_action(in_action.value)
+        if in_seq.base_action == "accept":
+            for in_action in in_seq.actions:
+                community_additive = any(
+                    [action.value for action in in_action.parameter if action.field == "communityAdditive"]
+                )
+                for in_param in in_action.parameter:
+                    if in_param.field == "asPath":
+                        out_seq.associate_as_path_action(in_param.value.prepend)
+                    elif in_param.field == "community":
+                        if in_param.value:
+                            out_seq.associate_community_action(community_additive, in_param.value)
+                        if in_param.vip_variable_name:
+                            out_seq.associate_community_variable_action(community_additive, in_param.vip_variable_name)
+                    elif in_param.field == "localPreference":
+                        out_seq.associate_local_preference_action(in_param.value)
+                    elif in_param.field == "metric":
+                        out_seq.associate_metric_action(in_param.value)
+                    elif in_param.field == "metricType":
+                        out_seq.associate_metric_type_action(in_param.value)
+                    elif in_param.field == "ospfTag":
+                        out_seq.associate_ospf_tag_action(in_param.value)
+                    elif in_param.field == "origin":
+                        origin = "Incomplete" if in_param.value == "incomplete" else in_param.value.upper()
+                        out_seq.associate_origin_action(cast(Origin, origin))
+                    elif in_param.field == "ompTag":
+                        out_seq.associate_omp_tag_action(in_param.value)
+                    elif in_param.field == "weight":
+                        out_seq.associate_weight_action(in_param.value)
+                    elif in_param.field == "nextHop":
+                        if isinstance(in_param.value, IPv4Address):
+                            out_seq.associate_ipv4_next_hop_action(in_param.value)
+                        if isinstance(in_param.value, IPv6Address):
+                            out_seq.associate_ipv6_next_hop_action(in_param.value)
     return out
 
 
