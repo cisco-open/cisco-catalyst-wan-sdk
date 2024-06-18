@@ -167,9 +167,10 @@ class AclPolicy(AclPolicyHeader, DefinitionWithSequencesCommonBase):
         self.default_action = PolicyAcceptDropAction(type=action)
 
     def add_sequence(
-        self, name: str = "Access Control List", base_action: AcceptDropActionType = "accept"
+        self, id_: int, name: str = "Access Control List", base_action: AcceptDropActionType = "accept"
     ) -> AclPolicySequence:
         seq = AclPolicySequence(
+            sequence_id=id_,
             sequence_name=name,
             base_action=base_action,
             sequence_ip_type="ipv4",

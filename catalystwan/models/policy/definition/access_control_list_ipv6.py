@@ -1,7 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from ipaddress import IPv4Address, IPv6Network
-from typing import Any, List, Literal, Set, Tuple, Union
+from ipaddress import IPv6Address, IPv6Network
+from typing import List, Literal, Set, Tuple, Union
 from uuid import UUID
 
 from pydantic import ConfigDict, Field
@@ -9,6 +9,7 @@ from typing_extensions import Annotated
 
 from catalystwan.models.common import AcceptDropActionType
 from catalystwan.models.policy.policy_definition import (
+    ActionSet,
     ClassMapAction,
     ClassMapListEntry,
     CountAction,
@@ -56,7 +57,16 @@ AclIPv6PolicySequenceMatchEntry = Annotated[
     Field(discriminator="field"),
 ]
 
-AclIPv6PolicySequenceActions = Any  # TODO
+AclIPv6PolicySequenceActions = Annotated[
+    Union[
+        CountAction,
+        LogAction,
+        MirrorAction,
+        ClassMapAction,
+        PolicerAction,
+    ],
+    Field(discriminator="type"),
+]
 
 
 class AclIPv6PolicyHeader(PolicyDefinitionBase):
@@ -75,7 +85,7 @@ class AclIPv6PolicySequence(PolicyDefinitionSequenceBase):
         default="accept", serialization_alias="baseAction", validation_alias="baseAction"
     )
     match: AclIPv6PolicySequenceMatch = AclIPv6PolicySequenceMatch()
-    actions: List[AclIPv6PolicySequenceActions] = []
+    actions: List[Union[AclIPv6PolicySequenceActions, ActionSet]] = []
     model_config = ConfigDict(populate_by_name=True)
 
     def match_next_header(self, next_header: int) -> None:
@@ -114,8 +124,8 @@ class AclIPv6PolicySequence(PolicyDefinitionSequenceBase):
     def match_class_map_list_entry(self, class_map_list_id: UUID) -> None:
         self._insert_match(ClassMapListEntry(ref=class_map_list_id))
 
-    def match_traffic_class(self, traffic_class: int) -> None:
-        self._insert_match(TrafficClassEntry(value=str(traffic_class)))
+    def match_traffic_class(self, traffic_class: List[int]) -> None:
+        self._insert_match(TrafficClassEntry(value=" ".join([str(tc) for tc in traffic_class])))
 
     def associate_count_action(self, counter_name: str) -> None:
         self._insert_action(CountAction(parameter=counter_name))
@@ -124,7 +134,7 @@ class AclIPv6PolicySequence(PolicyDefinitionSequenceBase):
         self._insert_action(LogAction())
 
     @accept_action
-    def associate_next_hop_action(self, next_hop: IPv4Address) -> None:
+    def associate_next_hop_action(self, next_hop: IPv6Address) -> None:
         self._insert_action_in_set(NextHopActionEntry(value=next_hop))
 
     @accept_action
@@ -153,10 +163,14 @@ class AclIPv6Policy(AclIPv6PolicyHeader, DefinitionWithSequencesCommonBase):
     )
     model_config = ConfigDict(populate_by_name=True)
 
-    def add_acl_sequence(
-        self, name: str = "Access Control List", base_action: AcceptDropActionType = "accept"
+    def set_default_action(self, action: AcceptDropActionType):
+        self.default_action = PolicyAcceptDropAction(type=action)
+
+    def add_sequence(
+        self, id_: int, name: str = "Access Control List", base_action: AcceptDropActionType = "accept"
     ) -> AclIPv6PolicySequence:
         seq = AclIPv6PolicySequence(
+            sequence_id=id_,
             sequence_name=name,
             base_action=base_action,
             sequence_ip_type="ipv6",

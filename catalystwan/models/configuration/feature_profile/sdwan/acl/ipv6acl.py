@@ -5,12 +5,8 @@ from uuid import UUID
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, _ParcelBase, as_global
+from catalystwan.models.common import AcceptDropActionType
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
-
-BaseAction = Literal[
-    "accept",
-    "drop",
-]
 
 
 class SourceDataPrefixList(BaseModel):
@@ -180,7 +176,7 @@ class DropAction(BaseModel):
 class Sequence(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     actions: Optional[List[Union[AcceptAction, DropAction]]] = Field(default=None, description="Define list of actions")
-    base_action: Optional[Union[Global[BaseAction], Default[Literal["accept"]]]] = Field(
+    base_action: Optional[Union[Global[AcceptDropActionType], Default[Literal["accept"]]]] = Field(
         default=None, validation_alias="baseAction", serialization_alias="baseAction"
     )
     match_entries: Optional[List[MatchEntry]] = Field(
@@ -200,7 +196,7 @@ class Sequence(BaseModel):
     def _action(self) -> Union[AcceptAction, DropAction]:
         if self.actions is None:
             if self.base_action is None:
-                self.base_action = Global[BaseAction](value="accept")
+                self.base_action = Global[AcceptDropActionType](value="accept")
             if self.base_action.value == "accept":
                 self.actions = [(AcceptAction(accept=Accept()))]
             else:
@@ -229,8 +225,8 @@ class Sequence(BaseModel):
         value = as_global(str(prefix))
         self._entry.destination_data_prefix = DestinationDataPrefix(destination_ip_prefix=value)
 
-    def match_destination_data_prefix_list(self, prefix: UUID):
-        value = as_global(str(prefix))
+    def match_destination_data_prefix_list(self, list_id: UUID):
+        value = as_global(str(list_id))
         self._entry.destination_data_prefix = DestinationDataPrefixList(
             destination_data_prefix_list=RefIdItem(ref_id=value)
         )
@@ -262,8 +258,8 @@ class Sequence(BaseModel):
         value = as_global(str(prefix))
         self._entry.source_data_prefix = SourceDataPrefix(source_ip_prefix=value)
 
-    def match_source_data_prefix_list(self, prefix: UUID):
-        value = as_global(str(prefix))
+    def match_source_data_prefix_list(self, list_id: UUID):
+        value = as_global(str(list_id))
         self._entry.source_data_prefix = SourceDataPrefixList(source_data_prefix_list=RefIdItem(ref_id=value))
 
     def match_source_ports(self, ports: List[Union[int, Tuple[int, int]]]):
@@ -303,8 +299,8 @@ class Sequence(BaseModel):
     def associate_policer_action(self, policer: UUID):
         self._accept_action.policer = RefIdItem(ref_id=as_global(str(policer)))
 
-    def associate_set_traffic_class_action(self, classes: List[int]):
-        self._accept_action.set_traffic_class = as_global(classes)
+    def associate_set_traffic_class_action(self, traffic_class: int):
+        self._accept_action.set_traffic_class = as_global(traffic_class)
 
     def associate_set_next_hop_action(self, next_hop: IPv6Address):
         self._accept_action.set_next_hop = as_global(str(next_hop))
@@ -313,19 +309,19 @@ class Sequence(BaseModel):
 class Ipv6AclParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["ipv6-acl"] = Field(default="ipv6-acl", exclude=True)
-    default_action: Union[Global[BaseAction], Default[Literal["drop"]]] = Field(
+    default_action: Union[Global[AcceptDropActionType], Default[Literal["drop"]]] = Field(
         default=Default[Literal["drop"]](value="drop"), validation_alias=AliasPath("data", "defaultAction")
     )
     sequences: List[Sequence] = Field(
         default=[], validation_alias=AliasPath("data", "sequences"), description="Access Control List"
     )
 
-    def set_default_action(self, action: BaseAction):
-        self.default_action = as_global(action, BaseAction)
+    def set_default_action(self, action: AcceptDropActionType):
+        self.default_action = as_global(action, AcceptDropActionType)
 
-    def add_sequence(self, name: str, id_: int, base_action: Optional[BaseAction] = None) -> Sequence:
+    def add_sequence(self, name: str, id_: int, base_action: Optional[AcceptDropActionType] = None) -> Sequence:
         seq = Sequence(
-            base_action=as_global(base_action, BaseAction) if base_action is not None else None,
+            base_action=as_global(base_action, AcceptDropActionType) if base_action is not None else None,
             sequence_id=as_global(id_),
             sequence_name=as_global(name),
         )

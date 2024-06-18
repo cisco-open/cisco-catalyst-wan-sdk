@@ -132,12 +132,12 @@ def as_num_list(ports_list: List[Union[int, Tuple[int, int]]]) -> List[int]:
 
 def conditional_split(s: str, seps: List[str]) -> List[str]:
     """
-    split s by first sep found in seps
+    split s by first sep in seps
     """
     for sep in seps:
         if sep in s:
             return s.split(sep)
-    raise CatalystwanConverterCantConvertException(f"None of the separators {seps} found in {s}")
+    raise CatalystwanConverterCantConvertException(f"None of the separators {seps} in {s}")
 
 
 def advanced_malware_protection(
@@ -219,6 +219,9 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
     for in_seq in in_.sequences:
         out_seq = out.add_sequence(name=in_seq.sequence_name, id_=in_seq.sequence_id, base_action=in_seq.base_action)
         for in_entry in in_seq.match.entries:
+            if in_entry.field == "class":
+                logger.warning(f"{out.type_} has no field matching '{in_entry.field}' found in {in_.type}: {in_.name}")
+
             if in_entry.field == "destinationDataPrefixList" and in_entry.ref:
                 out_seq.match_destination_data_prefix_list(in_entry.ref[0])
 
@@ -244,9 +247,7 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
                     out_seq.match_packet_length((low, hi))
 
             elif in_entry.field == "plp":
-                logger.warning(
-                    f"{Ipv4AclParcel.__name__} has no field matching plp found in {AclPolicy.__name__}: {in_.name}"
-                )
+                logger.warning(f"{out.type_} has no field matching '{in_entry.field}' found in {in_.type}: {in_.name}")
 
             elif in_entry.field == "protocol":
                 protocols: List[int] = []
@@ -285,7 +286,7 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
             elif in_action.type == "count":
                 out_seq.associate_counter_action(name=in_action.parameter)
             elif in_action.type == "class":
-                logger.warning(f"Cannot convert {in_action}, no equivalent field in {type(out)}")
+                logger.warning(f"{out.type_} has no field matching '{in_action.type}' found in {in_.type}: {in_.name}")
             elif in_action.type == "log":
                 out_seq.associate_log_action()
             elif in_action.type == "mirror":
@@ -296,9 +297,72 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
     return out
 
 
-def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context) -> Ipv6AclParcel:
+def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> Ipv6AclParcel:
     out = Ipv6AclParcel(**_get_parcel_name_desc(in_))
-    # TODO: convert definition
+    out.set_default_action(in_.default_action.type)
+    for in_seq in in_.sequences:
+        out_seq = out.add_sequence(name=in_seq.sequence_name, id_=in_seq.sequence_id, base_action=in_seq.base_action)
+        for in_entry in in_seq.match.entries:
+            if in_entry.field == "class":
+                logger.warning(f"{out.type_} has no field matching '{in_entry.field}' found in {in_.type}: {in_.name}")
+
+            if in_entry.field == "destinationDataIpv6PrefixList" and in_entry.ref:
+                out_seq.match_destination_data_prefix_list(in_entry.ref[0])
+
+            elif in_entry.field == "destinationIpv6":
+                out_seq.match_destination_data_prefix(IPv6Interface(in_entry.value))
+
+            elif in_entry.field == "destinationPort":
+                portlist = as_num_ranges_list(in_entry.value)
+                out_seq.match_destination_ports(portlist)
+
+            elif in_entry.field == "nextHeader":
+                logger.warning(f"{out.type_} has no field matching '{in_entry.field}' found in {in_.type}: {in_.name}")
+
+            elif in_entry.field == "packetLength":
+                low, hi = int_range_str_validator(in_entry.value, False)
+                if hi is None:
+                    out_seq.match_packet_length(low)
+                else:
+                    out_seq.match_packet_length((low, hi))
+
+            elif in_entry.field == "plp":
+                logger.warning(f"{out.type_} has no field matching '{in_entry.field}' found in {in_.type}: {in_.name}")
+
+            elif in_entry.field == "sourceDataIpv6PrefixList" and in_entry.ref:
+                out_seq.match_source_data_prefix_list(in_entry.ref[0])
+
+            elif in_entry.field == "sourceIpv6":
+                out_seq.match_source_data_prefix(IPv6Interface(in_entry.value))
+
+            elif in_entry.field == "sourcePort":
+                portlist = as_num_ranges_list(in_entry.value)
+                out_seq.match_destination_ports(portlist)
+
+            elif in_entry.field == "tcp":
+                out_seq.match_tcp()
+
+            elif in_entry.field == "trafficClass":
+                out_seq.match_traffic_class(classes=list(map(int, in_entry.value.split())))
+
+        for in_action in in_seq.actions:
+            if in_action.type == "set":
+                for param in in_action.parameter:
+                    if param.field == "nextHop":
+                        out_seq.associate_set_next_hop_action(next_hop=cast(IPv6Address, param.value))
+                    elif param.field == "trafficClass":
+                        out_seq.associate_set_traffic_class_action(traffic_class=int(param.value))
+            elif in_action.type == "count":
+                out_seq.associate_counter_action(name=in_action.parameter)
+            elif in_action.type == "class":
+                logger.warning(f"{out.type_} has no field matching '{in_action.type}' found in {in_.type}: {in_.name}")
+            elif in_action.type == "log":
+                out_seq.associate_log_action()
+            elif in_action.type == "mirror":
+                out_seq.associate_mirror_action(mirror=in_action.parameter.ref)
+            elif in_action.type == "policer":
+                out_seq.associate_policer_action(in_action.parameter.ref)
+
     return out
 
 
@@ -358,7 +422,7 @@ def device_access_ipv4(in_: DeviceAccessPolicy, uuid: UUID, context: PolicyConve
                     d_network_ipv6 = conditional_split(in_entry.value, [",", " "])
                     seq.match_destination_data_prefixes([IPv4Interface(v) for v in d_network_ipv6])
                 elif in_entry.vip_variable_name is not None:
-                    seq.match_destination_data_prefix_variable(in_entry.vip_variable_name)
+                    seq.match_destination_data_prefix_variable(convert_varname(in_entry.vip_variable_name))
             elif in_entry.field == "sourceDataPrefixList":
                 if in_entry.ref:
                     seq.match_source_data_prefix_list(in_entry.ref[0])
@@ -367,7 +431,7 @@ def device_access_ipv4(in_: DeviceAccessPolicy, uuid: UUID, context: PolicyConve
                     s_network_ipv6 = conditional_split(in_entry.value, [",", " "])
                     seq.match_source_data_prefixes([IPv4Interface(v) for v in s_network_ipv6])
                 elif in_entry.vip_variable_name is not None:
-                    seq.match_source_data_prefix_variable(in_entry.vip_variable_name)
+                    seq.match_source_data_prefix_variable(convert_varname(in_entry.vip_variable_name))
             elif in_entry.field == "sourcePort":
                 seq.match_source_ports(as_num_list(as_num_ranges_list(in_entry.value)))
     return out
@@ -431,7 +495,9 @@ def route(in_: RoutePolicy, uuid: UUID, context: PolicyConvertContext) -> RouteP
                         if in_param.value:
                             out_seq.associate_community_action(community_additive, in_param.value)
                         if in_param.vip_variable_name:
-                            out_seq.associate_community_variable_action(community_additive, in_param.vip_variable_name)
+                            out_seq.associate_community_variable_action(
+                                community_additive, convert_varname(in_param.vip_variable_name)
+                            )
                     elif in_param.field == "localPreference":
                         out_seq.associate_local_preference_action(in_param.value)
                     elif in_param.field == "metric":
