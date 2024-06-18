@@ -6,6 +6,7 @@ import json
 import logging
 from difflib import Differ
 from typing import TYPE_CHECKING
+from pathlib import Path
 
 from attr import define  # type: ignore
 from ciscoconfparse import CiscoConfParse  # type: ignore
@@ -60,6 +61,16 @@ class CLITemplate:
         config = session.get_json(endpoint)
         self.config = CiscoConfParse(config["config"].splitlines())
         logger.debug(f"Template loaded from {device.hostname}.")
+        return self.config
+
+    def load_from_file(self, file: str) -> CiscoConfParse:
+        """Load CLI config from file.
+        Args:
+            file: The path of the file to be loaded.
+        Returns:
+            CiscoConfParse: Loaded template.
+        """
+        self.config = CiscoConfParse(file)
         return self.config
 
     def generate_payload(self) -> dict:
