@@ -7,6 +7,7 @@ from uuid import uuid4
 from requests import Request
 
 from catalystwan import USER_AGENT
+from catalystwan.exceptions import CatalystwanException
 from catalystwan.vmanage_auth import UnauthorizedAccessError, vManageAuth
 
 
@@ -28,7 +29,7 @@ class MockResponse:
         return self._text
 
 
-def mocked_requests_method(*args, **kwargs):
+def mock_request_j_security_check(*args, **kwargs):
     url_response = {
         "https://1.1.1.1:1111/j_security_check": {
             "admin": MockResponse(200, ""),
@@ -44,12 +45,24 @@ def mocked_requests_method(*args, **kwargs):
     return MockResponse(404, "error")
 
 
+def mock_valid_token(*args, **kw):
+    return MockResponse(200, "valid-token")
+
+
+def mock_invalid_token_status(*args, **kw):
+    return MockResponse(503, "invalid-token")
+
+
+def mock_invalid_token_format(*args, **kw):
+    return MockResponse(200, "<html>error</html>")
+
+
 class TestvManageAuth(TestCase):
     def setUp(self):
         self.base_url = "https://1.1.1.1:1111"
         self.password = str(uuid4())
 
-    @mock.patch("requests.post", side_effect=mocked_requests_method)
+    @mock.patch("requests.post", side_effect=mock_request_j_security_check)
     def test_get_cookie(self, mock_post):
         # Arrange
         username = "admin"
@@ -69,7 +82,7 @@ class TestvManageAuth(TestCase):
             headers={"Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT},
         )
 
-    @mock.patch("requests.post", side_effect=mocked_requests_method)
+    @mock.patch("requests.post", side_effect=mock_request_j_security_check)
     def test_get_cookie_invalid_username(self, mock_post):
         # Arrange
         username = "invalid_username"
@@ -91,22 +104,37 @@ class TestvManageAuth(TestCase):
         )
 
     @mock.patch("requests.cookies.RequestsCookieJar")
-    @mock.patch("requests.get", side_effect=mocked_requests_method)
+    @mock.patch("requests.get", side_effect=mock_valid_token)
     def test_fetch_token(self, mock_get, cookies):
         # Arrange
         valid_url = "https://1.1.1.1:1111/dataservice/client/token"
         auth = vManageAuth(self.base_url, "admin", self.password)
 
         # Act
-        auth.fetch_token(cookies)
+        token = auth.fetch_token(cookies)
 
         # Assert
+        self.assertEqual(token, "valid-token")
         mock_get.assert_called_with(
             url=valid_url,
             verify=False,
             headers={"Content-Type": "application/json", "User-Agent": USER_AGENT},
             cookies=cookies,
         )
+
+    @mock.patch("requests.cookies.RequestsCookieJar")
+    @mock.patch("requests.get", side_effect=mock_invalid_token_status)
+    def test_incorrect_xsrf_token_status(self, mock_get, cookies):
+        auth = vManageAuth("http://invalid.response", "admin", self.password)
+        with self.assertRaises(CatalystwanException):
+            auth.fetch_token(cookies)
+
+    @mock.patch("requests.cookies.RequestsCookieJar")
+    @mock.patch("requests.get", side_effect=mock_invalid_token_format)
+    def test_incorrect_xsrf_token_format(self, mock_get, cookies):
+        auth = vManageAuth("http://invalid.response", "admin", self.password)
+        with self.assertRaises(CatalystwanException):
+            auth.fetch_token(cookies)
 
 
 if __name__ == "__main__":

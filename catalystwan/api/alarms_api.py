@@ -53,7 +53,12 @@ class AlarmsAPI:
             >>> alarms = AlarmsAPI(session).get()
             >>> critical_alarms = alarms.filter(severity=Severity.CRITICAL)
         """
-        query: Dict[str, Any] = {"query": {"condition": "AND", "rules": []}}
+        query: Dict[str, Any] = {
+            "query": {
+                "condition": "AND",
+                "rules": [{"field": "active", "type": "boolean", "value": ["true"], "operator": "equal"}],
+            }
+        }
         if from_time:
             query["query"]["rules"].append(
                 {
