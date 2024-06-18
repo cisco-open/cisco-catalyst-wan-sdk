@@ -49,8 +49,12 @@ class HardwareRootCA(BaseModel):
 class Certificate(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     certificate_signing: str = Field(serialization_alias="certificateSigning", validation_alias="certificateSigning")
-    validity_period: str = Field(serialization_alias="validityPeriod", validation_alias="validityPeriod")
-    retrieve_interval: str = Field(serialization_alias="retrieveInterval", validation_alias="retrieveInterval")
+    validity_period: Optional[str] = Field(
+        default=None, serialization_alias="validityPeriod", validation_alias="validityPeriod"
+    )
+    retrieve_interval: Optional[str] = Field(
+        default=None, serialization_alias="retrieveInterval", validation_alias="retrieveInterval"
+    )
     first_name: Optional[str] = Field(default=None, serialization_alias="firstName", validation_alias="firstName")
     last_name: Optional[str] = Field(default=None, serialization_alias="lastName", validation_alias="lastName")
     email: Optional[str] = Field(default=None)
