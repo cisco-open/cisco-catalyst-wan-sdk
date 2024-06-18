@@ -125,7 +125,7 @@ def as_num_list(ports_list: List[Union[int, Tuple[int, int]]]) -> List[int]:
         if isinstance(val, int):
             num_list.append(val)
         elif isinstance(val, tuple):
-            num_list.extend(range(val[1], val[0] + 1))
+            num_list.extend(range(min(val), max(val) + 1))
     num_list = sorted(list(set(num_list)))
     return num_list
 
