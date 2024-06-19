@@ -122,8 +122,8 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     def match_dns_response(self) -> None:
         self._insert_match(DNSEntry(value="response"))
 
-    def match_dscp(self, dscp: int) -> None:
-        self._insert_match(DSCPEntry(value=str(dscp)))
+    def match_dscp(self, dscp: List[int]) -> None:
+        self._insert_match(DSCPEntry(value=dscp))
 
     def match_icmp(self, icmp_message_types: List[ICMPMessageType]) -> None:
         self._insert_match(ICMPMessageEntry(value=icmp_message_types))
@@ -187,7 +187,7 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
 
     @accept_action
     def associate_dscp_action(self, dscp: int) -> None:
-        self._insert_action_in_set(DSCPEntry(value=str(dscp)))
+        self._insert_action_in_set(DSCPEntry(value=[dscp]))
 
     @accept_action
     def associate_forwarding_class_action(self, fwclass: str) -> None:

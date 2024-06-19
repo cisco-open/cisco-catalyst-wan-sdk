@@ -1,7 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from ipaddress import IPv4Address, IPv4Network
-from typing import Any, List, Literal, Set, Tuple, Union
+from typing import List, Literal, Set, Tuple, Union
 from uuid import UUID
 
 from pydantic import ConfigDict, Field
@@ -9,6 +9,7 @@ from typing_extensions import Annotated
 
 from catalystwan.models.policy.policy_definition import (
     AcceptDropActionType,
+    ActionSet,
     ClassMapAction,
     ClassMapListEntry,
     CountAction,
@@ -56,7 +57,16 @@ AclPolicySequenceMatchEntry = Annotated[
     Field(discriminator="field"),
 ]
 
-AclPolicySequenceActions = Any  # TODO
+AclPolicySequenceActions = Annotated[
+    Union[
+        CountAction,
+        LogAction,
+        MirrorAction,
+        ClassMapAction,
+        PolicerAction,
+    ],
+    Field(discriminator="type"),
+]
 
 
 class AclPolicyHeader(PolicyDefinitionBase):
@@ -75,11 +85,11 @@ class AclPolicySequence(PolicyDefinitionSequenceBase):
         default="accept", serialization_alias="baseAction", validation_alias="baseAction"
     )
     match: AclPolicySequenceMatch = AclPolicySequenceMatch()
-    actions: List[AclPolicySequenceActions] = []
+    actions: List[Union[AclPolicySequenceActions, ActionSet]] = []
     model_config = ConfigDict(populate_by_name=True)
 
-    def match_dscp(self, dscp: int) -> None:
-        self._insert_match(DSCPEntry(value=str(dscp)))
+    def match_dscp(self, dscp: List[int]) -> None:
+        self._insert_match(DSCPEntry(value=dscp))
 
     def match_packet_length(self, packet_lengths: Tuple[int, int]) -> None:
         self._insert_match(PacketLengthEntry.from_range(packet_lengths))
@@ -125,7 +135,7 @@ class AclPolicySequence(PolicyDefinitionSequenceBase):
 
     @accept_action
     def associate_dscp_action(self, dscp: int) -> None:
-        self._insert_action_in_set(DSCPEntry(value=str(dscp)))
+        self._insert_action_in_set(DSCPEntry(value=[dscp]))
 
     @accept_action
     def associate_next_hop_action(self, next_hop: IPv4Address) -> None:
@@ -153,10 +163,14 @@ class AclPolicy(AclPolicyHeader, DefinitionWithSequencesCommonBase):
     )
     model_config = ConfigDict(populate_by_name=True)
 
-    def add_acl_sequence(
-        self, name: str = "Access Control List", base_action: AcceptDropActionType = "accept"
+    def set_default_action(self, action: AcceptDropActionType):
+        self.default_action = PolicyAcceptDropAction(type=action)
+
+    def add_sequence(
+        self, id_: int, name: str = "Access Control List", base_action: AcceptDropActionType = "accept"
     ) -> AclPolicySequence:
         seq = AclPolicySequence(
+            sequence_id=id_,
             sequence_name=name,
             base_action=base_action,
             sequence_ip_type="ipv4",

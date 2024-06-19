@@ -7,7 +7,7 @@ from uuid import UUID
 from annotated_types import Ge, Le
 from packaging.specifiers import SpecifierSet  # type: ignore
 from packaging.version import Version  # type: ignore
-from pydantic import PlainSerializer, PositiveInt, SerializationInfo, ValidationInfo
+from pydantic import NonNegativeInt, PlainSerializer, PositiveInt, SerializationInfo, ValidationInfo
 from pydantic.fields import FieldInfo
 from pydantic.functional_validators import BeforeValidator
 from typing_extensions import Annotated
@@ -171,8 +171,8 @@ SpaceSeparatedUUIDList = Annotated[
 ]
 
 
-SpaceSeparatedPositiveIntList = Annotated[
-    List[PositiveInt],
+SpaceSeparatedNonNegativeIntList = Annotated[
+    List[NonNegativeInt],
     PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
     BeforeValidator(str_as_positive_int_list),
 ]
