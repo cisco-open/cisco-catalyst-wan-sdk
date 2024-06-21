@@ -56,7 +56,7 @@ class TestDeviceAccessIPv4Converter(unittest.TestCase):
         inseq.associate_policer_list_action(policer_list_id=exp_action_policer_list_id)
 
         # Act
-        outs = convert(in_=ins, uuid=uuid4(), context=self.context)
+        outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
 
         # Assert
         assert isinstance(outs, Ipv4AclParcel)
@@ -117,7 +117,7 @@ class TestDeviceAccessIPv4Converter(unittest.TestCase):
         inseq.associate_log_action()
 
         # Act
-        outs = convert(in_=ins, uuid=uuid4(), context=self.context)
+        outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
 
         # Assert
         assert isinstance(outs, Ipv4AclParcel)

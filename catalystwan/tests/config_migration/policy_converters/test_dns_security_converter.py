@@ -2,6 +2,7 @@ import unittest
 from uuid import uuid4
 
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
+from catalystwan.models.configuration.feature_profile.sdwan.dns_security.dns import DnsParcel
 from catalystwan.models.policy.definition.dns_security import DnsSecurityDefinition, DnsSecurityPolicy, TargetVpn
 from catalystwan.models.policy.policy_definition import Reference
 from catalystwan.utils.config_migration.converters.policy.policy_definitions import convert
@@ -26,8 +27,9 @@ class TestDnsSecurityConverter(unittest.TestCase):
             ),
         )
 
-        parcel = convert(policy, self.uuid, self.context)
+        parcel = convert(policy, self.uuid, self.context).output
 
+        assert isinstance(parcel, DnsParcel)
         assert parcel.parcel_name == "test1"
         assert parcel.parcel_description == "destription 1"
         assert parcel.child_org_id is None
@@ -54,8 +56,9 @@ class TestDnsSecurityConverter(unittest.TestCase):
             ),
         )
 
-        parcel = convert(policy, self.uuid, self.context)
+        parcel = convert(policy, self.uuid, self.context).output
 
+        assert isinstance(parcel, DnsParcel)
         assert parcel.parcel_name == "test2"
         assert parcel.child_org_id.value == str(12345)
         assert parcel.dns_crypt.value is False
@@ -82,8 +85,9 @@ class TestDnsSecurityConverter(unittest.TestCase):
             ),
         )
 
-        parcel = convert(policy, self.uuid, self.context)
+        parcel = convert(policy, self.uuid, self.context).output
 
+        assert isinstance(parcel, DnsParcel)
         assert parcel.parcel_name == "test3"
         assert parcel.child_org_id.value == str(65645645)
         assert parcel.dns_crypt.value is False
@@ -111,8 +115,9 @@ class TestDnsSecurityConverter(unittest.TestCase):
             ),
         )
 
-        parcel = convert(policy, self.uuid, self.context)
+        parcel = convert(policy, self.uuid, self.context).output
 
+        assert isinstance(parcel, DnsParcel)
         assert parcel.parcel_name == "test4"
         assert parcel.child_org_id is None
         assert parcel.dns_crypt.value is True

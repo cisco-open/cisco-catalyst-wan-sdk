@@ -2,6 +2,9 @@ import unittest
 from uuid import uuid4
 
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.url_filtering import (
+    UrlFilteringParcel,
+)
 from catalystwan.models.policy.definition.url_filtering import (
     BLOCK_PAGE_CONTENT_HEADER,
     UrlFilteringDefinition,
@@ -32,8 +35,9 @@ class TestUrlFilteringConverter(unittest.TestCase):
             ),
         )
 
-        parcel = url_filtering(policy, uuid=self.uuid, context=self.context)
+        parcel = url_filtering(policy, uuid=self.uuid, context=self.context).output
 
+        assert isinstance(parcel, UrlFilteringParcel)
         assert parcel.parcel_name == "policy1"
         assert parcel.web_reputation.value == "trustworthy"
         assert parcel.web_categories_action.value == "allow"
@@ -64,8 +68,9 @@ class TestUrlFilteringConverter(unittest.TestCase):
             ),
         )
 
-        parcel = url_filtering(policy, uuid=self.uuid, context=self.context)
+        parcel = url_filtering(policy, uuid=self.uuid, context=self.context).output
 
+        assert isinstance(parcel, UrlFilteringParcel)
         assert parcel.parcel_name == "policy2"
         assert parcel.web_reputation.value == "suspicious"
         assert parcel.web_categories_action.value == "allow"
@@ -97,8 +102,9 @@ class TestUrlFilteringConverter(unittest.TestCase):
             ),
         )
 
-        parcel = url_filtering(policy, uuid=self.uuid, context=self.context)
+        parcel = url_filtering(policy, uuid=self.uuid, context=self.context).output
 
+        assert isinstance(parcel, UrlFilteringParcel)
         assert parcel.parcel_name == "policy3"
         assert parcel.web_reputation.value == "high-risk"
         assert parcel.web_categories_action.value == "block"

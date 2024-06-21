@@ -422,29 +422,27 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
 
     # Policy Definitions
     for policy_definition in ux1.policies.policy_definitions:
-        try:
-            pd_parcel = convert_policy_definition(policy_definition, policy_definition.definition_id, policy_context)
-            if pd_parcel is not None:
-                header = TransformHeader(
-                    type=pd_parcel._get_parcel_type(),
-                    origin=policy_definition.definition_id,
-                    origname=policy_definition.name,
-                )
-                ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pd_parcel))
-            else:
-                transform_result.add_unsupported_item(
-                    name=policy_definition.name, uuid=policy_definition.definition_id, type=policy_definition.type
-                )
-        except CatalystwanConverterCantConvertException as e:
-            exception_message = (
-                f"Policy Definition {policy_definition.type} {policy_definition.definition_id} {policy_definition.name}"
-                f"was not converted: {e}"
+        pd_result = convert_policy_definition(policy_definition, policy_definition.definition_id, policy_context)
+        pd_parcel = pd_result.output
+        pd_status = pd_result.status
+        if pd_status == "unsupported":
+            transform_result.add_unsupported_item(
+                name=policy_definition.name, uuid=policy_definition.definition_id, type=policy_definition.type
             )
-            logger.warning(exception_message)
+        elif pd_status == "failed":
             transform_result.add_failed_conversion_parcel(
-                exception_message=exception_message,
+                exception_message="\n".join(pd_result.info),
                 policy=policy_definition,
             )
+        elif pd_parcel is not None:
+            header = TransformHeader(
+                type=pd_parcel._get_parcel_type(),
+                origin=policy_definition.definition_id,
+                origname=policy_definition.name,
+                status=pd_status,
+                info=pd_result.info,
+            )
+            ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pd_parcel))
 
     # Topology Group and Profile
     topology_sources = [p.definition_id for p in ux1.policies.policy_definitions if p.type in TOPOLOGY_POLICIES]

@@ -58,7 +58,7 @@ class TestDeviceAccessIPv6Converter(unittest.TestCase):
         inseq.associate_traffic_class_action(traffic_class=exp_action_traffic_class)
 
         # Act
-        outs = convert(in_=ins, uuid=uuid4(), context=self.context)
+        outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
 
         # Assert
         assert isinstance(outs, Ipv6AclParcel)
@@ -119,7 +119,7 @@ class TestDeviceAccessIPv6Converter(unittest.TestCase):
         inseq.associate_log_action()
 
         # Act
-        outs = convert(in_=ins, uuid=uuid4(), context=self.context)
+        outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
 
         # Assert
         assert isinstance(outs, Ipv6AclParcel)

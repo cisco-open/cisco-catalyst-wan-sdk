@@ -380,9 +380,9 @@ def zone(in_: ZoneList, context) -> ConvertResult[SecurityZoneListParcel]:
     return ConvertResult[SecurityZoneListParcel](output=out, status="complete")
 
 
-OP = TypeVar("OP", AnyPolicyObjectParcel, None)
+OPL = TypeVar("OPL", AnyPolicyObjectParcel, None)
 Input = AnyPolicyList
-Output = ConvertResult[OP]
+Output = ConvertResult[OPL]
 
 
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
