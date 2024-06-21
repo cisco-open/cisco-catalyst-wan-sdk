@@ -14,7 +14,7 @@ class TestMirrorConverter(unittest.TestCase):
             ],
         )
 
-        v2_parcel = mirror(mirror_v1, context=None)
+        v2_parcel = mirror(mirror_v1, context=None).output
 
         assert type(v2_parcel) is MirrorParcel
 
@@ -26,6 +26,6 @@ class TestMirrorConverter(unittest.TestCase):
             ],
         )
 
-        v2_parcel = mirror(mirror_v1, context=None)
+        v2_parcel = mirror(mirror_v1, context=None).output
 
         assert type(v2_parcel) is MirrorParcel
