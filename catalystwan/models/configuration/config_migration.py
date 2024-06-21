@@ -1,7 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Dict, List, Optional, Sequence, Set, Tuple, TypeVar, Union, cast
+from typing import Any, ClassVar, Dict, Generic, List, Literal, Optional, Sequence, Set, Tuple, TypeVar, Union, cast
 from uuid import UUID, uuid4
 
 from packaging.version import Version
@@ -33,6 +33,11 @@ from catalystwan.models.templates import FeatureTemplateInformation, TemplateInf
 from catalystwan.version import parse_api_version
 
 T = TypeVar("T", bound=AnyParcel)
+TO = TypeVar("TO")
+
+ConvertOutputStatus = Literal["complete", "partial"]
+ConvertAbortStatus = Literal["failed", "unsupported"]
+ConvertStatus = Literal[ConvertOutputStatus, ConvertAbortStatus]
 
 
 class VersionInfo(BaseModel):
@@ -145,6 +150,8 @@ class TransformHeader(BaseModel):
     origin: UUID = Field(description="Original UUID of converted item")
     origname: Optional[str] = None
     subelements: Set[UUID] = Field(default_factory=set)
+    status: ConvertOutputStatus = Field(default="complete")
+    info: List[str] = Field(default_factory=list)
 
 
 class TransformedTopologyGroup(BaseModel):
@@ -183,6 +190,13 @@ class FailedConversionItem(BaseModel):
         ]
     ] = Field(default=None)
     exception_message: str = Field(serialization_alias="exceptionMessage", validation_alias="exceptionMessage")
+
+
+class UnsupportedConversionItem(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    name: str
+    uuid: UUID
+    type: Optional[str] = None
 
 
 class UX2Config(BaseModel):
@@ -242,6 +256,11 @@ class ConfigTransformResult(BaseModel):
     )
     failed_items: List[FailedConversionItem] = Field(
         default_factory=list, serialization_alias="failedConversionItems", validation_alias="failedConversionItems"
+    )
+    unsupported_items: List[UnsupportedConversionItem] = Field(
+        default_factory=list,
+        serialization_alias="unsupportedConversionItems",
+        validation_alias="unsupportedConversionItems",
     )
 
     def add_suffix_to_names(self) -> None:
@@ -304,6 +323,14 @@ class ConfigTransformResult(BaseModel):
                 exception_message=exception_message,
             )
         )
+
+    def add_unsupported_item(self, name: str, uuid: UUID, type: Optional[str] = None):
+        item = UnsupportedConversionItem(
+            name=name,
+            uuid=uuid,
+            type=type,
+        )
+        self.unsupported_items.append(item)
 
 
 class _GroupReportBase(BaseModel):
@@ -574,3 +601,10 @@ class PushContext:
     id_lookup: Dict[UUID, UUID] = field(
         default_factory=dict
     )  # universal lookup for finding pushed item id by origin id
+
+
+@dataclass
+class ConvertResult(Generic[TO]):
+    status: ConvertStatus = "complete"
+    output: Optional[TO] = None
+    info: List[str] = field(default_factory=list)

@@ -1,9 +1,11 @@
 from logging import getLogger
 from re import match
-from typing import Any, Callable, Dict, List, Mapping, Optional, Type, cast
+from typing import Any, Callable, Dict, List, Mapping, Type, TypeVar, cast
+
+from pydantic import ValidationError
 
 from catalystwan.models.common import int_range_serializer, int_range_str_validator
-from catalystwan.models.configuration.config_migration import PolicyConvertContext
+from catalystwan.models.configuration.config_migration import ConvertResult, PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import (
     AnyPolicyObjectParcel,
     ApplicationListParcel,
@@ -66,7 +68,6 @@ from catalystwan.models.policy import (
 from catalystwan.models.policy.list.region import RegionList, RegionListInfo
 from catalystwan.models.policy.list.site import SiteList, SiteListInfo
 from catalystwan.models.policy.list.vpn import VPNList, VPNListInfo
-from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 
 logger = getLogger(__name__)
 
@@ -75,73 +76,74 @@ def _get_parcel_name_desc(policy_list: AnyPolicyList) -> Dict[str, Any]:
     return dict(parcel_name=policy_list.name, parcel_description=policy_list.description)
 
 
-def app_probe(in_: AppProbeClassList, context) -> AppProbeParcel:
+def app_probe(in_: AppProbeClassList, context) -> ConvertResult[AppProbeParcel]:
     out = AppProbeParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_fowarding_class(entry.forwarding_class)
-    return out
+    return ConvertResult[AppProbeParcel](output=out, status="complete")
 
 
-def app_list(in_: AppList, context) -> ApplicationListParcel:
+def app_list(in_: AppList, context) -> ConvertResult[ApplicationListParcel]:
     out = ApplicationListParcel(**_get_parcel_name_desc(in_))
     for app in set(in_.list_all_app()):
         out.add_application(app)
     for app_family in set(in_.list_all_app_family()):
         out.add_application_family(app_family)
-    return out
+    return ConvertResult[ApplicationListParcel](output=out, status="complete")
 
 
-def as_path(in_: ASPathList, context) -> AsPathParcel:
+def as_path(in_: ASPathList, context) -> ConvertResult[AsPathParcel]:
     out = AsPathParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_as_path(entry.as_path)
-    return out
+    return ConvertResult[AsPathParcel](output=out, status="complete")
 
 
-def class_map(in_: ClassMapList, context) -> FowardingClassParcel:
+def class_map(in_: ClassMapList, context) -> ConvertResult[FowardingClassParcel]:
     out = FowardingClassParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_queue(entry.queue)
-    return out
+    return ConvertResult[FowardingClassParcel](output=out, status="complete")
 
 
-def color(in_: ColorList, context) -> ColorParcel:
+def color(in_: ColorList, context) -> ConvertResult[ColorParcel]:
     out = ColorParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_color(entry.color)
-    return out
+    return ConvertResult[ColorParcel](output=out, status="complete")
 
 
-def community(in_: CommunityList, context) -> StandardCommunityParcel:
+def community(in_: CommunityList, context) -> ConvertResult[StandardCommunityParcel]:
     out = StandardCommunityParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out._add_community(entry.community)
-    return out
+    return ConvertResult[StandardCommunityParcel](output=out, status="complete")
 
 
-def data_prefix_ipv6(in_: DataIPv6PrefixList, context) -> IPv6DataPrefixParcel:
+def data_prefix_ipv6(in_: DataIPv6PrefixList, context) -> ConvertResult[IPv6DataPrefixParcel]:
     out = IPv6DataPrefixParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_prefix(entry.ipv6_prefix)
-    return out
+    return ConvertResult[IPv6DataPrefixParcel](output=out, status="complete")
 
 
-def data_prefix(in_: DataPrefixList, context) -> DataPrefixParcel:
+def data_prefix(in_: DataPrefixList, context) -> ConvertResult[DataPrefixParcel]:
     out = DataPrefixParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_data_prefix(entry.ip_prefix)
-    return out
+    return ConvertResult[DataPrefixParcel](output=out, status="complete")
 
 
-def expanded_community(in_: ExpandedCommunityList, context) -> ExpandedCommunityParcel:
+def expanded_community(in_: ExpandedCommunityList, context) -> ConvertResult[ExpandedCommunityParcel]:
     out = ExpandedCommunityParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_community(entry.community)
-    return out
+    return ConvertResult[ExpandedCommunityParcel](output=out, status="complete")
 
 
-def extended_community(in_: ExtendedCommunityList, context) -> ExtendedCommunityParcel:
+def extended_community(in_: ExtendedCommunityList, context) -> ConvertResult[ExtendedCommunityParcel]:
     out = ExtendedCommunityParcel(**_get_parcel_name_desc(in_))
+    result = ConvertResult[ExtendedCommunityParcel](output=out, status="complete")
 
     # v2 models allow folowing entries:
     # soo ipv4_addr:port OR rt as_number:community_number
@@ -152,79 +154,86 @@ def extended_community(in_: ExtendedCommunityList, context) -> ExtendedCommunity
 
     for entry in in_.entries:
         if (pattern_match := match(entry_pattern, entry.community)) is None:
-            raise CatalystwanConverterCantConvertException(
+            result.status = "failed"
+            result.info.append(
                 f"Extended community entr: {entry.community} does not meet expected pattern: "
                 "'soo ipv4:port OR rt int:int'"
             )
+            return result
 
         out._add_community(pattern_match[1])
 
-    return out
+    return result
 
 
-def fqdn(in_: FQDNList, context) -> FQDNDomainParcel:
+def fqdn(in_: FQDNList, context) -> ConvertResult[FQDNDomainParcel]:
     out = FQDNDomainParcel(**_get_parcel_name_desc(in_))
     out.from_fqdns([entry.pattern for entry in in_.entries])
-    return out
+    return ConvertResult[FQDNDomainParcel](output=out, status="complete")
 
 
-def mirror(in_: MirrorList, context) -> MirrorParcel:
-    if len(in_.entries) != 1:
-        raise CatalystwanConverterCantConvertException("Mirror list shall contain exactly one entry.")
+def mirror(in_: MirrorList, context) -> ConvertResult[MirrorParcel]:
+    result = ConvertResult[MirrorParcel](output=None)
+    if len(in_.entries) == 0:
+        result.status = "failed"
+        result.info.append("Expected MirrorList has exactly one entry")
+    elif len(in_.entries) >= 1:
+        dst_ip = in_.entries[0].remote_dest
+        src_ip = in_.entries[0].source
+        result.output = MirrorParcel.create(remote_dest_ip=dst_ip, source_ip=src_ip, **_get_parcel_name_desc(in_))
+        if len(in_.entries) > 1:
+            result.status = "partial"
+            result.info.append("Expected MirrorList has exactly one entry")
+    return result
 
-    dst_ip = in_.entries[0].remote_dest
-    src_ip = in_.entries[0].source
 
-    return MirrorParcel.create(remote_dest_ip=dst_ip, source_ip=src_ip, **_get_parcel_name_desc(in_))
-
-
-def geo_location(in_: GeoLocationList, context) -> GeoLocationListParcel:
+def geo_location(in_: GeoLocationList, context) -> ConvertResult[GeoLocationListParcel]:
     out = GeoLocationListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         if entry.country is not None:
             out.add_country(entry.country)
         if entry.continent is not None:
             out.add_continent(entry.continent)
-    return out
+    return ConvertResult[GeoLocationListParcel](output=out, status="complete")
 
 
-def ips_signature(in_: IPSSignatureList, context) -> IPSSignatureParcel:
+def ips_signature(in_: IPSSignatureList, context) -> ConvertResult[IPSSignatureParcel]:
     out = IPSSignatureParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_signature(f"{entry.generator_id}:{entry.signature_id}")
-    return out
+    return ConvertResult[IPSSignatureParcel](output=out, status="complete")
 
 
-def prefix_ipv6(in_: IPv6PrefixList, context) -> IPv6PrefixListParcel:
+def prefix_ipv6(in_: IPv6PrefixList, context) -> ConvertResult[IPv6PrefixListParcel]:
     out = IPv6PrefixListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_prefix(ipv6_network=entry.ipv6_prefix, ge=entry.ge, le=entry.le)
-    return out
+    return ConvertResult[IPv6PrefixListParcel](output=out, status="complete")
 
 
 # TODO: def local_app(in_: LocalAppList):
-def local_domain(in_: LocalDomainList, context) -> LocalDomainParcel:
+def local_domain(in_: LocalDomainList, context) -> ConvertResult[LocalDomainParcel]:
     out = LocalDomainParcel(**_get_parcel_name_desc(in_))
     out.from_local_domains([entry.name_server for entry in in_.entries])
-    return out
+    return ConvertResult[LocalDomainParcel](output=out, status="complete")
 
 
 # TODO: def mirror_list(in_: MirrorList):
-def policer(in_: PolicerList, context) -> PolicerParcel:
+def policer(in_: PolicerList, context) -> ConvertResult[PolicerParcel]:
     out = PolicerParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_entry(burst=entry.burst, exceed=entry.exceed, rate=entry.rate)
-    return out
+    return ConvertResult[PolicerParcel](output=out, status="complete")
 
 
-def port(in_: PortList, context) -> SecurityPortParcel:
+def port(in_: PortList, context) -> ConvertResult[SecurityPortParcel]:
     out = SecurityPortParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out._add_port(int_range_serializer(entry.port))
-    return out
+    return ConvertResult[SecurityPortParcel](output=out, status="complete")
 
 
-def preferred_color_group(in_: PreferredColorGroupList, context) -> PreferredColorGroupParcel:
+def preferred_color_group(in_: PreferredColorGroupList, context) -> ConvertResult[PreferredColorGroupParcel]:
     out = PreferredColorGroupParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_primary(
@@ -241,24 +250,24 @@ def preferred_color_group(in_: PreferredColorGroupList, context) -> PreferredCol
                 color_preference=list(entry.tertiary_preference.color_preference),
                 path_preference=entry.tertiary_preference.path_preference,
             )
-    return out
+    return ConvertResult[PreferredColorGroupParcel](output=out, status="complete")
 
 
-def prefix(in_: PrefixList, context) -> PrefixListParcel:
+def prefix(in_: PrefixList, context) -> ConvertResult[PrefixListParcel]:
     out = PrefixListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_prefix(entry.ip_prefix)
-    return out
+    return ConvertResult[PrefixListParcel](output=out, status="complete")
 
 
-def protocol(in_: ProtocolNameList, context) -> ProtocolListParcel:
+def protocol(in_: ProtocolNameList, context) -> ConvertResult[ProtocolListParcel]:
     out = ProtocolListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_protocol(entry.protocol_name)
-    return out
+    return ConvertResult[ProtocolListParcel](output=out, status="complete")
 
 
-def region(in_: RegionListInfo, context: PolicyConvertContext) -> None:
+def region(in_: RegionListInfo, context: PolicyConvertContext) -> ConvertResult[None]:
     list_id = in_.list_id
     region_id_flatlist: List[int] = []
     context.regions_by_list_id[list_id] = []
@@ -272,8 +281,10 @@ def region(in_: RegionListInfo, context: PolicyConvertContext) -> None:
         if num in region_id_flatlist:
             context.regions_by_list_id[list_id].append(name)
 
+    return ConvertResult[None](status="complete")
 
-def site(in_: SiteListInfo, context: PolicyConvertContext) -> None:
+
+def site(in_: SiteListInfo, context: PolicyConvertContext) -> ConvertResult[None]:
     list_id = in_.list_id
     site_id_flatlist: List[int] = []
     context.sites_by_list_id[list_id] = []
@@ -287,8 +298,10 @@ def site(in_: SiteListInfo, context: PolicyConvertContext) -> None:
         if num in site_id_flatlist:
             context.sites_by_list_id[list_id].append(name)
 
+    return ConvertResult[None](status="complete")
 
-def sla_class(in_: SLAClassList, context) -> SLAClassParcel:
+
+def sla_class(in_: SLAClassList, context) -> ConvertResult[SLAClassParcel]:
     out = SLAClassParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         # TODO: modernize SLAClassList model (UX1)
@@ -315,32 +328,32 @@ def sla_class(in_: SLAClassList, context) -> SLAClassParcel:
                 latency_variance=latency,
                 loss_variance=loss,
             )
-    return out
+    return ConvertResult[SLAClassParcel](output=out, status="complete")
 
 
-def tloc(in_: TLOCList, context) -> TlocParcel:
+def tloc(in_: TLOCList, context) -> ConvertResult[TlocParcel]:
     out = TlocParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         _preference = str(entry.preference) if entry.preference is not None else None
         out.add_entry(tloc=entry.tloc, color=entry.color, encapsulation=entry.encap, preference=_preference)
-    return out
+    return ConvertResult[TlocParcel](output=out, status="complete")
 
 
-def url_allow(in_: URLAllowList, context) -> URLAllowParcel:
+def url_allow(in_: URLAllowList, context) -> ConvertResult[URLAllowParcel]:
     out = URLAllowParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_url(entry.pattern)
-    return out
+    return ConvertResult[URLAllowParcel](output=out, status="complete")
 
 
-def url_block(in_: URLBlockList, context) -> URLBlockParcel:
+def url_block(in_: URLBlockList, context) -> ConvertResult[URLBlockParcel]:
     out = URLBlockParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_url(entry.pattern)
-    return out
+    return ConvertResult[URLBlockParcel](output=out, status="complete")
 
 
-def vpn(in_: VPNListInfo, context: PolicyConvertContext):
+def vpn(in_: VPNListInfo, context: PolicyConvertContext) -> ConvertResult[None]:
     list_id = in_.list_id
     vpn_id_flatlist: List[int] = []
     context.lan_vpns_by_list_id[list_id] = []
@@ -354,19 +367,22 @@ def vpn(in_: VPNListInfo, context: PolicyConvertContext):
         if num in vpn_id_flatlist:
             context.lan_vpns_by_list_id[list_id].append(name)
 
+    return ConvertResult[None](status="complete")
 
-def zone(in_: ZoneList, context) -> SecurityZoneListParcel:
+
+def zone(in_: ZoneList, context) -> ConvertResult[SecurityZoneListParcel]:
     out = SecurityZoneListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         if entry.interface is not None:
             out.add_interface(entry.interface)
         if entry.vpn is not None:
             out.add_vpn(int_range_serializer(entry.vpn))
-    return out
+    return ConvertResult[SecurityZoneListParcel](output=out, status="complete")
 
 
+OP = TypeVar("OP", AnyPolicyObjectParcel, None)
 Input = AnyPolicyList
-Output = Optional[AnyPolicyObjectParcel]
+Output = ConvertResult[OP]
 
 
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
@@ -402,8 +418,9 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
 }
 
 
-def _not_supported(in_: Input, *args, **kwargs) -> None:
+def _not_supported(in_: Input, *args, **kwargs) -> ConvertResult[None]:
     logger.warning(f"Not Supported Conversion of Policy List: '{in_.type}' '{in_.name}'")
+    return ConvertResult[None](status="unsupported")
 
 
 def _find_converter(in_: Input) -> Callable[..., Output]:
@@ -415,6 +432,10 @@ def _find_converter(in_: Input) -> Callable[..., Output]:
 
 def convert(in_: Input, context: PolicyConvertContext) -> Output:
     result = _find_converter(in_)(in_, context)
-    if result is not None:
-        result.model_validate(result)
+    if result.output is not None:
+        try:
+            result.output.model_validate(result.output)
+        except ValidationError as e:
+            result.status = "failed"
+            result.info.append(str(e))
     return result

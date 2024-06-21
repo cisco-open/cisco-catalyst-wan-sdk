@@ -398,22 +398,27 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
 
     # Policy Lists
     for policy_list in ux1.policies.policy_lists:
-        try:
-            pl_parcel = convert_policy_list(policy_list, policy_context)
-            if pl_parcel is not None:
-                header = TransformHeader(
-                    type=pl_parcel._get_parcel_type(), origin=policy_list.list_id, origname=policy_list.name
-                )
-                ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pl_parcel))
-        except CatalystwanConverterCantConvertException as e:
-            exception_message = (
-                f"Policy List {policy_list.type} {policy_list.list_id} {policy_list.name}" f"was not converted: {e}"
+        pl_result = convert_policy_list(policy_list, policy_context)
+        pl_parcel = pl_result.output
+        pl_status = pl_result.status
+        if pl_status == "unsupported":
+            transform_result.add_unsupported_item(
+                name=policy_list.name, uuid=policy_list.list_id, type=policy_list.type
             )
-            logger.warning(exception_message)
+        elif pl_status == "failed":
             transform_result.add_failed_conversion_parcel(
-                exception_message=exception_message,
+                exception_message="\n".join(pl_result.info),
                 policy=policy_list,
             )
+        elif pl_parcel is not None:
+            header = TransformHeader(
+                type=pl_parcel._get_parcel_type(),
+                origin=policy_list.list_id,
+                origname=policy_list.name,
+                status=pl_status,
+                info=pl_result.info,
+            )
+            ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pl_parcel))
 
     # Policy Definitions
     for policy_definition in ux1.policies.policy_definitions:
@@ -426,6 +431,10 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
                     origname=policy_definition.name,
                 )
                 ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pd_parcel))
+            else:
+                transform_result.add_unsupported_item(
+                    name=policy_definition.name, uuid=policy_definition.definition_id, type=policy_definition.type
+                )
         except CatalystwanConverterCantConvertException as e:
             exception_message = (
                 f"Policy Definition {policy_definition.type} {policy_definition.definition_id} {policy_definition.name}"
