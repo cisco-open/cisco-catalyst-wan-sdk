@@ -608,3 +608,7 @@ class ConvertResult(Generic[TO]):
     status: ConvertStatus = "complete"
     output: Optional[TO] = None
     info: List[str] = field(default_factory=list)
+
+    def update_status(self, status: ConvertStatus, message: str):
+        self.status = status
+        self.info.append(message)

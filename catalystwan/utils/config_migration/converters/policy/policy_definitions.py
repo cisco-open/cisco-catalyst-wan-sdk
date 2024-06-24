@@ -225,11 +225,16 @@ def hubspoke(in_: HubAndSpokePolicy, uuid: UUID, context: PolicyConvertContext) 
 def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> ConvertResult[Ipv4AclParcel]:
     out = Ipv4AclParcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
+    result = ConvertResult[Ipv4AclParcel](output=out)
     for in_seq in in_.sequences:
         out_seq = out.add_sequence(name=in_seq.sequence_name, id_=in_seq.sequence_id, base_action=in_seq.base_action)
         for in_entry in in_seq.match.entries:
             if in_entry.field == "class":
-                logger.warning(f"{out.type_} has no field matching '{in_entry.field}' found in {in_.type}: {in_.name}")
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains entry "
+                    f"{in_entry.field} = {in_entry.ref} which cannot be converted",
+                )
 
             if in_entry.field == "destinationDataPrefixList" and in_entry.ref:
                 out_seq.match_destination_data_prefix_list(in_entry.ref[0])
@@ -256,7 +261,11 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> ConvertResult[Ipv4AclParcel]
                     out_seq.match_packet_length((low, hi))
 
             elif in_entry.field == "plp":
-                logger.warning(f"{out.type_} has no field matching '{in_entry.field}' found in {in_.type}: {in_.name}")
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains entry "
+                    f"{in_entry.field} = {in_entry.value} which cannot be converted",
+                )
 
             elif in_entry.field == "protocol":
                 protocols: List[int] = []
@@ -295,7 +304,11 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> ConvertResult[Ipv4AclParcel]
             elif in_action.type == "count":
                 out_seq.associate_counter_action(name=in_action.parameter)
             elif in_action.type == "class":
-                logger.warning(f"{out.type_} has no field matching '{in_action.type}' found in {in_.type}: {in_.name}")
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains action "
+                    f"{in_action.type} = {in_action.parameter} which cannot be converted",
+                )
             elif in_action.type == "log":
                 out_seq.associate_log_action()
             elif in_action.type == "mirror":
@@ -303,17 +316,22 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> ConvertResult[Ipv4AclParcel]
             elif in_action.type == "policer":
                 out_seq.associate_policer_action(in_action.parameter.ref)
 
-    return ConvertResult[Ipv4AclParcel](output=out)
+    return result
 
 
 def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[Ipv6AclParcel]:
     out = Ipv6AclParcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
+    result = ConvertResult[Ipv6AclParcel](output=out)
     for in_seq in in_.sequences:
         out_seq = out.add_sequence(name=in_seq.sequence_name, id_=in_seq.sequence_id, base_action=in_seq.base_action)
         for in_entry in in_seq.match.entries:
             if in_entry.field == "class":
-                logger.warning(f"{out.type_} has no field matching '{in_entry.field}' found in {in_.type}: {in_.name}")
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains entry "
+                    f"{in_entry.field} = {in_entry.ref} which cannot be converted",
+                )
 
             if in_entry.field == "destinationDataIpv6PrefixList" and in_entry.ref:
                 out_seq.match_destination_data_prefix_list(in_entry.ref[0])
@@ -326,7 +344,11 @@ def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> Co
                 out_seq.match_destination_ports(portlist)
 
             elif in_entry.field == "nextHeader":
-                logger.warning(f"{out.type_} has no field matching '{in_entry.field}' found in {in_.type}: {in_.name}")
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains entry "
+                    f"{in_entry.field} = {in_entry.value} which cannot be converted",
+                )
 
             elif in_entry.field == "packetLength":
                 low, hi = int_range_str_validator(in_entry.value, False)
@@ -336,7 +358,11 @@ def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> Co
                     out_seq.match_packet_length((low, hi))
 
             elif in_entry.field == "plp":
-                logger.warning(f"{out.type_} has no field matching '{in_entry.field}' found in {in_.type}: {in_.name}")
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains entry "
+                    f"{in_entry.field} = {in_entry.value} which cannot be converted",
+                )
 
             elif in_entry.field == "sourceDataIpv6PrefixList" and in_entry.ref:
                 out_seq.match_source_data_prefix_list(in_entry.ref[0])
@@ -364,7 +390,11 @@ def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> Co
             elif in_action.type == "count":
                 out_seq.associate_counter_action(name=in_action.parameter)
             elif in_action.type == "class":
-                logger.warning(f"{out.type_} has no field matching '{in_action.type}' found in {in_.type}: {in_.name}")
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains action "
+                    f"{in_action.type} = {in_action.parameter} which cannot be converted",
+                )
             elif in_action.type == "log":
                 out_seq.associate_log_action()
             elif in_action.type == "mirror":
@@ -372,7 +402,7 @@ def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> Co
             elif in_action.type == "policer":
                 out_seq.associate_policer_action(in_action.parameter.ref)
 
-    return ConvertResult[Ipv6AclParcel](output=out)
+    return result
 
 
 def device_access_ipv6(
