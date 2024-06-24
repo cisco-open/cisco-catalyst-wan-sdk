@@ -144,4 +144,7 @@ class ConfigGroupAPI:
         """
         config_groups = self.get()
         for config_group in config_groups:
+            if config_group.devices:
+                self.disassociate(str(config_group.id), config_group.devices)
+
             self.delete(config_group.id)
