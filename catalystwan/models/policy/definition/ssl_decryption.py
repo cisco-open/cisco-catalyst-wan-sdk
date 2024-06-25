@@ -106,7 +106,7 @@ class NetworkDecryptionRuleSequence(PolicyDefinitionSequenceBase):
         self._insert_match(DestinationIPEntry(vip_variable_name=variable_name))
 
     def match_applications(self, application_ref: UUID):
-        self._insert_match(AppListEntry(ref=application_ref))
+        self._insert_match(AppListEntry(ref=[application_ref]))
 
 
 class SslDecryptionSettings(BaseModel):

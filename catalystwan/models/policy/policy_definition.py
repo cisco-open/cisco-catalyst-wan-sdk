@@ -180,6 +180,8 @@ class DSCPEntry(BaseModel):
 
 
 class SourceIPEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     field: Literal["sourceIp"] = "sourceIp"
     value: Optional[str] = Field(default=None, description="IP network specifiers separate by space")
     vip_variable_name: Optional[str] = Field(
@@ -215,6 +217,8 @@ class SourcePortEntry(BaseModel):
 
 
 class DestinationIPEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     field: Literal["destinationIp"] = "destinationIp"
     value: Optional[str] = Field(default=None)
     vip_variable_name: Optional[str] = Field(
@@ -584,12 +588,12 @@ class DNSAppListEntry(BaseModel):
 
 class AppListEntry(BaseModel):
     field: Literal["appList"] = "appList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList
 
 
 class AppListFlatEntry(BaseModel):
     field: Literal["appListFlat"] = "appListFlat"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList
 
 
 class SourceFQDNListEntry(BaseModel):
@@ -599,32 +603,32 @@ class SourceFQDNListEntry(BaseModel):
 
 class DestinationFQDNListEntry(BaseModel):
     field: Literal["destinationFqdnList"] = "destinationFqdnList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList
 
 
 class SourceGeoLocationListEntry(BaseModel):
     field: Literal["sourceGeoLocationList"] = "sourceGeoLocationList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList
 
 
 class DestinationGeoLocationListEntry(BaseModel):
     field: Literal["destinationGeoLocationList"] = "destinationGeoLocationList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList
 
 
 class ProtocolNameListEntry(BaseModel):
     field: Literal["protocolNameList"] = "protocolNameList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList
 
 
 class SourcePortListEntry(BaseModel):
     field: Literal["sourcePortList"] = "sourcePortList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList
 
 
 class SourceScalableGroupTagListEntry(BaseModel):
     field: Literal["sourceScalableGroupTagList"] = "sourceScalableGroupTagList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList
 
 
 class DestinationPortListEntry(BaseModel):
@@ -634,16 +638,12 @@ class DestinationPortListEntry(BaseModel):
 
 class DestinationScalableGroupTagListEntry(BaseModel):
     field: Literal["destinationScalableGroupTagList"] = "destinationScalableGroupTagList"
-    ref: UUID
+    ref: SpaceSeparatedUUIDList
 
 
 class RuleSetListEntry(BaseModel):
     field: Literal["ruleSetList"] = "ruleSetList"
-    ref: str
-
-    @staticmethod
-    def from_rule_set_ids(rule_set_ids: Set[UUID]) -> "RuleSetListEntry":
-        return RuleSetListEntry(ref=" ".join(str(rule_set_ids)))
+    ref: SpaceSeparatedUUIDList
 
 
 class PolicerListEntry(BaseModel):

@@ -7,6 +7,7 @@ from typing import List, Literal, Optional, Union
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from typing_extensions import Self
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_default, as_global
 from catalystwan.models.common import (
@@ -288,7 +289,16 @@ class RefIdItem(BaseModel):
 
 
 class RefIdList(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,
+    )
+
     ref_id: Global[List[str]] = Field(..., serialization_alias="refId", validation_alias="refId")
+
+    @classmethod
+    def from_uuids(cls, uuids: List[UUID]) -> Self:
+        return cls(ref_id=as_global([str(uuid) for uuid in uuids]))
 
 
 class MultiRegionFabric(BaseModel):

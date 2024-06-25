@@ -109,6 +109,8 @@ ParcelType = Literal[
     "wirelesslan",
     "cellular-profile",
     "wan/vpn/interface/ethpppoe",
+    "unified/ngfirewall",
+    "policy",
 ]
 
 

@@ -111,7 +111,7 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     model_config = ConfigDict(populate_by_name=True)
 
     def match_app_list(self, app_list_id: UUID) -> None:
-        self._insert_match(AppListEntry(ref=app_list_id))
+        self._insert_match(AppListEntry(ref=[app_list_id]))
 
     def match_dns_app_list(self, dns_app_list_id: UUID) -> None:
         self._insert_match(DNSAppListEntry(ref=dns_app_list_id))
