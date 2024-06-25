@@ -117,6 +117,10 @@ class Reference(BaseModel):
     ref: UUID
 
 
+class ReferenceList(BaseModel):
+    ref: SpaceSeparatedUUIDList
+
+
 class VariableName(BaseModel):
     vip_variable_name: str = Field(serialization_alias="vipVariableName", validation_alias="vipVariableName")
 

@@ -12,6 +12,7 @@ from catalystwan.models.policy.policy_definition import (
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
     Reference,
+    ReferenceList,
     VariableName,
 )
 
@@ -86,7 +87,7 @@ class IPv4Rule(RuleBase):
     destination_port: Optional[str] = Field(
         default=None, serialization_alias="destinationPort", validation_alias="destinationPort"
     )
-    destination_port_list: Optional[Reference] = Field(
+    destination_port_list: Optional[ReferenceList] = Field(
         default=None, serialization_alias="destinationPortList", validation_alias="destinationPortList"
     )
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
@@ -253,7 +254,7 @@ class RuleSet(PolicyDefinitionBase):
             if destination_geo_location_list_id
             else None,
             destination_port=destination_port,
-            destination_port_list=Reference(ref=destination_port_list_id) if destination_port_list_id else None,
+            destination_port_list=ReferenceList(ref=[destination_port_list_id]) if destination_port_list_id else None,
             protocol=" ".join(str(p) for p in protocols) if protocols else None,
             protocol_name=" ".join(p for p in protocol_names) if protocol_names else None,
             protocol_name_list=Reference(ref=protocol_name_list_id) if protocol_name_list_id else None,

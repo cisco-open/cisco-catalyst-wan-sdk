@@ -57,7 +57,9 @@ class HighSpeedLoggingEntry(BaseModel):
     vrf: str
     server_ip: IPvAnyAddress = Field(serialization_alias="serverIp", validation_alias="serverIp")
     port: str
-    source_interface: Optional[str] = Field(serialization_alias="sourceInterface", validation_alias="sourceInterface")
+    source_interface: Optional[str] = Field(
+        default=None, serialization_alias="sourceInterface", validation_alias="sourceInterface"
+    )
     model_config = ConfigDict(populate_by_name=True)
 
 

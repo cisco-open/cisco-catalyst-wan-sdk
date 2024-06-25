@@ -182,10 +182,10 @@ class TestSequenceMatchConverters(unittest.TestCase):
         assert not self._convert_result.info
 
     def test_convert_source_ip_with_variable_name(self) -> None:
-        in_ = SourceIPEntry(vip_variable_name="some_var")
+        in_ = SourceIPEntry(vip_variable_name="{{some_var}}")
         out_ = convert_sequence_match_entry(in_, self._convert_result)
         assert type(out_) is SourceIp
-        assert out_.source_ip.ipv4_value.value == "some_var"
+        assert out_.source_ip.ipv4_value.value == "{{some_var}}"
         assert self._convert_result.status == "complete"
         assert not self._convert_result.info
 
@@ -198,10 +198,10 @@ class TestSequenceMatchConverters(unittest.TestCase):
         assert not self._convert_result.info
 
     def test_convert_dst_ip_with_variable_name(self) -> None:
-        in_ = DestinationIPEntry(vip_variable_name="some_var")
+        in_ = DestinationIPEntry(vip_variable_name="{{some_var}}")
         out_ = convert_sequence_match_entry(in_, self._convert_result)
         assert type(out_) is DestinationIp
-        assert out_.destination_ip.ipv4_value.value == "some_var"
+        assert out_.destination_ip.ipv4_value.value == "{{some_var}}"
         assert self._convert_result.status == "complete"
         assert not self._convert_result.info
 
