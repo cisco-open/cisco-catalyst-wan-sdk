@@ -2,6 +2,9 @@ import unittest
 from uuid import uuid4
 
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.amp import (
+    AdvancedMalwareProtectionParcel,
+)
 from catalystwan.models.policy.definition.amp import (
     AdvancedMalwareProtectionDefinition,
     AdvancedMalwareProtectionPolicy,
@@ -31,8 +34,9 @@ class TestAdvancedMalwareProtectionConverter(unittest.TestCase):
         )
 
         uuid = uuid4()
-        parcel = convert(amp_v1_entry, uuid, context=self.context)
+        parcel = convert(amp_v1_entry, uuid, context=self.context).output
 
+        assert isinstance(parcel, AdvancedMalwareProtectionParcel)
         assert parcel.parcel_name == "amp_security"
         assert parcel.match_all_vpn.value is False
         assert parcel.file_reputation_cloud_server.value == "eur"
@@ -63,8 +67,9 @@ class TestAdvancedMalwareProtectionConverter(unittest.TestCase):
         )
 
         uuid = uuid4()
-        parcel = convert(amp_v1_entry, uuid, context=self.context)
+        parcel = convert(amp_v1_entry, uuid, context=self.context).output
 
+        assert isinstance(parcel, AdvancedMalwareProtectionParcel)
         assert parcel.parcel_name == "amp_unified"
         assert parcel.match_all_vpn.value is True
         assert parcel.file_reputation_cloud_server.value == "eur"
@@ -93,8 +98,9 @@ class TestAdvancedMalwareProtectionConverter(unittest.TestCase):
         )
 
         uuid = uuid4()
-        parcel = convert(amp_v1_entry, uuid, context=self.context)
+        parcel = convert(amp_v1_entry, uuid, context=self.context).output
 
+        assert isinstance(parcel, AdvancedMalwareProtectionParcel)
         assert parcel.parcel_name == "amp_empty_literals"
         assert parcel.match_all_vpn.value is True
         assert parcel.file_reputation_cloud_server.value == "eur"

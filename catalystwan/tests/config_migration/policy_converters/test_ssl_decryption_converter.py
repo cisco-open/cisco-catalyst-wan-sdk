@@ -4,6 +4,9 @@ from uuid import uuid4
 
 from catalystwan.models.common import VpnId
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.ssl_decryption import (
+    SslDecryptionParcel,
+)
 from catalystwan.models.policy.definition.ssl_decryption import (
     CaCertBundle,
     ControlPolicyBaseAction,
@@ -50,8 +53,9 @@ class TestSslDecryptionConverter(unittest.TestCase):
         uuid = uuid4()
 
         # Act
-        parcel = convert(ssl_decryption_v1_entry, uuid, context=self.context)
+        parcel = convert(ssl_decryption_v1_entry, uuid, context=self.context).output
         # Assert
+        assert isinstance(parcel, SslDecryptionParcel)
         assert parcel.parcel_name == "ssl_decryption"
         assert parcel.parcel_description == "test_description"
         assert parcel.ssl_enable.value is True
@@ -99,8 +103,9 @@ class TestSslDecryptionConverter(unittest.TestCase):
         uuid = uuid4()
 
         # Act
-        parcel = convert(ssl_decryption_v1_entry, uuid, context=self.context)
+        parcel = convert(ssl_decryption_v1_entry, uuid, context=self.context).output
         # # Assert
+        assert isinstance(parcel, SslDecryptionParcel)
         assert parcel.ca_cert_bundle.default.value is False
         assert parcel.ca_cert_bundle.file_name.value == "certificate.ca-bundle"
         assert parcel.ca_cert_bundle.bundle_string.value == "fdsfsdfsdfsd\nfsfs\n\n"

@@ -3,6 +3,9 @@ import unittest
 from uuid import uuid4
 
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.aip import (
+    AdvancedInspectionProfileParcel,
+)
 from catalystwan.models.policy.definition.aip import (
     AdvancedInspectionProfileDefinition,
     AdvancedInspectionProfilePolicy,
@@ -35,8 +38,9 @@ class TestAdvancedInspectionProfileParcel(unittest.TestCase):
         )
         uuid = uuid4()
         # Act
-        parcel = convert(aip, uuid, context=self.context)
+        parcel = convert(aip, uuid, context=self.context).output
         # Assert
+        assert isinstance(parcel, AdvancedInspectionProfileParcel)
         assert parcel.parcel_name == "aip"
         assert parcel.parcel_description == "test_description"
         assert parcel.tls_decryption_action.value == "skipDecrypt"

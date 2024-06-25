@@ -1,15 +1,16 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
 from ipaddress import IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Union, cast
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, TypeVar, Union, cast
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import Field, ValidationError
 from typing_extensions import Annotated
 
 from catalystwan.api.configuration_groups.parcel import as_global
 from catalystwan.models.common import DeviceAccessProtocolPort, int_range_str_validator
 from catalystwan.models.configuration.config_migration import (
+    ConvertResult,
     PolicyConvertContext,
     SslDecryptioneResidues,
     SslProfileResidues,
@@ -70,8 +71,9 @@ from catalystwan.utils.config_migration.converters.utils import convert_varname
 
 logger = logging.getLogger(__name__)
 
+
 Input = AnyPolicyDefinition
-Output = Optional[
+OutputItem = Optional[
     Annotated[
         Union[
             CustomControlParcel,
@@ -93,6 +95,8 @@ Output = Optional[
         Field(discriminator="type_"),
     ]
 ]
+OPD = TypeVar("OPD", OutputItem, None)
+Output = ConvertResult[OPD]
 
 
 def _get_parcel_name_desc(policy_definition: AnyPolicyDefinition) -> Dict[str, Any]:
@@ -142,26 +146,37 @@ def conditional_split(s: str, seps: List[str]) -> List[str]:
 
 def advanced_malware_protection(
     in_: AdvancedMalwareProtectionPolicy, uuid: UUID, context: PolicyConvertContext
-) -> AdvancedMalwareProtectionParcel:
-    if not in_.definition.file_reputation_alert:
-        raise CatalystwanConverterCantConvertException("AMP file reputation alert shall not be an empty str.")
-
+) -> ConvertResult[AdvancedMalwareProtectionParcel]:
     if vpn_list := in_.definition.target_vpns:
         context.amp_target_vpns_id[uuid] = vpn_list
-
+    if not in_.definition.file_reputation_alert:
+        return ConvertResult[AdvancedMalwareProtectionParcel](
+            status="failed", info=["AMP file reputation alert shall not be an empty str."]
+        )
     definition_dump = in_.definition.model_dump(exclude={"target_vpns"})
-    return AdvancedMalwareProtectionParcel.create(**_get_parcel_name_desc(in_), **definition_dump)
+    return ConvertResult[AdvancedMalwareProtectionParcel](
+        output=AdvancedMalwareProtectionParcel.create(**_get_parcel_name_desc(in_), **definition_dump)
+    )
 
 
-def control(in_: ControlPolicy, uuid: UUID, context) -> CustomControlParcel:
-    if not context:
-        raise CatalystwanConverterCantConvertException(f"Additional context required for {ControlPolicy.__name__}")
-    out = CustomControlParcel(**_get_parcel_name_desc(in_))
+def control(in_: ControlPolicy, uuid: UUID, context) -> ConvertResult[CustomControlParcel]:
+    # out = CustomControlParcel(**_get_parcel_name_desc(in_))
     # TODO: convert definition
-    return out
+    return ConvertResult[CustomControlParcel](output=None, status="unsupported")
 
 
-def dns_security(in_: DnsSecurityPolicy, uuid: UUID, context: PolicyConvertContext) -> DnsParcel:
+def dns_security(in_: DnsSecurityPolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[DnsParcel]:
+    errors: List[str] = []
+
+    def target_vpn_convert(target_vpn: TargetVpn, vpn_id_to_map: Dict[Union[str, int], List[str]]) -> TargetVpns:
+        vpn_names = []
+        for vpn in target_vpn.vpns:
+            if not (mapped_name := vpn_id_to_map.get(vpn)):
+                errors.append(f"Cannot find TargetVPN with id: {vpn}")
+            else:
+                vpn_names.extend(mapped_name)
+        return TargetVpns.create(**target_vpn.model_dump(exclude={"vpns"}), vpns=vpn_names)
+
     vpn_id_to_map = context.get_vpn_id_to_vpn_name_map()
 
     if umbrella_data := in_.definition.umbrella_data:
@@ -177,26 +192,20 @@ def dns_security(in_: DnsSecurityPolicy, uuid: UUID, context: PolicyConvertConte
         in_.definition.local_domain_bypass_list.ref if in_.definition.local_domain_bypass_list else None
     )
 
-    return DnsParcel.create(
-        **_get_parcel_name_desc(in_),
-        **in_.definition.model_dump(exclude={"local_domain_bypass_list", "umbrella_data", "target_vpns"}),
-        target_vpns=_target_vpns,
-        local_domain_bypass_list=_local_domain_bypass_list,
+    result = ConvertResult[DnsParcel](
+        output=DnsParcel.create(
+            **_get_parcel_name_desc(in_),
+            **in_.definition.model_dump(exclude={"local_domain_bypass_list", "umbrella_data", "target_vpns"}),
+            target_vpns=_target_vpns,
+            local_domain_bypass_list=_local_domain_bypass_list,
+        ),
+        info=errors,
+        status="failed" if errors else "complete",
     )
+    return result
 
 
-def target_vpn_convert(target_vpn: TargetVpn, vpn_id_to_map: Dict[Union[str, int], List[str]]) -> TargetVpns:
-    vpn_names = []
-    for vpn in target_vpn.vpns:
-        if not (mapped_name := vpn_id_to_map.get(vpn)):
-            raise CatalystwanConverterCantConvertException(f"Cannot find the TargetVPN with id: {vpn}")
-
-        vpn_names.extend(mapped_name)
-
-    return TargetVpns.create(**target_vpn.model_dump(exclude={"vpns"}), vpns=vpn_names)
-
-
-def hubspoke(in_: HubAndSpokePolicy, uuid: UUID, context: PolicyConvertContext) -> HubSpokeParcel:
+def hubspoke(in_: HubAndSpokePolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[HubSpokeParcel]:
     target_vpns = context.lan_vpns_by_list_id[in_.definition.vpn_list]
     out = HubSpokeParcel(**_get_parcel_name_desc(in_))
     out.target.vpn.value.extend(target_vpns)
@@ -210,17 +219,22 @@ def hubspoke(in_: HubAndSpokePolicy, uuid: UUID, context: PolicyConvertContext) 
         ospoke = out.add_spoke(isubdef.name, list(set(osites)))
         ospoke.add_hub_site(list(set(ohubs)), 1)
         out.selected_hubs.value = list(set(ohubs))
-    return out
+    return ConvertResult[HubSpokeParcel](output=out)
 
 
-def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
+def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> ConvertResult[Ipv4AclParcel]:
     out = Ipv4AclParcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
+    result = ConvertResult[Ipv4AclParcel](output=out)
     for in_seq in in_.sequences:
         out_seq = out.add_sequence(name=in_seq.sequence_name, id_=in_seq.sequence_id, base_action=in_seq.base_action)
         for in_entry in in_seq.match.entries:
             if in_entry.field == "class":
-                logger.warning(f"{out.type_} has no field matching '{in_entry.field}' found in {in_.type}: {in_.name}")
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains entry "
+                    f"{in_entry.field} = {in_entry.ref} which cannot be converted",
+                )
 
             if in_entry.field == "destinationDataPrefixList" and in_entry.ref:
                 out_seq.match_destination_data_prefix_list(in_entry.ref[0])
@@ -247,7 +261,11 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
                     out_seq.match_packet_length((low, hi))
 
             elif in_entry.field == "plp":
-                logger.warning(f"{out.type_} has no field matching '{in_entry.field}' found in {in_.type}: {in_.name}")
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains entry "
+                    f"{in_entry.field} = {in_entry.value} which cannot be converted",
+                )
 
             elif in_entry.field == "protocol":
                 protocols: List[int] = []
@@ -286,7 +304,11 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
             elif in_action.type == "count":
                 out_seq.associate_counter_action(name=in_action.parameter)
             elif in_action.type == "class":
-                logger.warning(f"{out.type_} has no field matching '{in_action.type}' found in {in_.type}: {in_.name}")
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains action "
+                    f"{in_action.type} = {in_action.parameter} which cannot be converted",
+                )
             elif in_action.type == "log":
                 out_seq.associate_log_action()
             elif in_action.type == "mirror":
@@ -294,17 +316,22 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> Ipv4AclParcel:
             elif in_action.type == "policer":
                 out_seq.associate_policer_action(in_action.parameter.ref)
 
-    return out
+    return result
 
 
-def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> Ipv6AclParcel:
+def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[Ipv6AclParcel]:
     out = Ipv6AclParcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
+    result = ConvertResult[Ipv6AclParcel](output=out)
     for in_seq in in_.sequences:
         out_seq = out.add_sequence(name=in_seq.sequence_name, id_=in_seq.sequence_id, base_action=in_seq.base_action)
         for in_entry in in_seq.match.entries:
             if in_entry.field == "class":
-                logger.warning(f"{out.type_} has no field matching '{in_entry.field}' found in {in_.type}: {in_.name}")
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains entry "
+                    f"{in_entry.field} = {in_entry.ref} which cannot be converted",
+                )
 
             if in_entry.field == "destinationDataIpv6PrefixList" and in_entry.ref:
                 out_seq.match_destination_data_prefix_list(in_entry.ref[0])
@@ -317,7 +344,11 @@ def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> Ip
                 out_seq.match_destination_ports(portlist)
 
             elif in_entry.field == "nextHeader":
-                logger.warning(f"{out.type_} has no field matching '{in_entry.field}' found in {in_.type}: {in_.name}")
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains entry "
+                    f"{in_entry.field} = {in_entry.value} which cannot be converted",
+                )
 
             elif in_entry.field == "packetLength":
                 low, hi = int_range_str_validator(in_entry.value, False)
@@ -327,7 +358,11 @@ def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> Ip
                     out_seq.match_packet_length((low, hi))
 
             elif in_entry.field == "plp":
-                logger.warning(f"{out.type_} has no field matching '{in_entry.field}' found in {in_.type}: {in_.name}")
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains entry "
+                    f"{in_entry.field} = {in_entry.value} which cannot be converted",
+                )
 
             elif in_entry.field == "sourceDataIpv6PrefixList" and in_entry.ref:
                 out_seq.match_source_data_prefix_list(in_entry.ref[0])
@@ -355,7 +390,11 @@ def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> Ip
             elif in_action.type == "count":
                 out_seq.associate_counter_action(name=in_action.parameter)
             elif in_action.type == "class":
-                logger.warning(f"{out.type_} has no field matching '{in_action.type}' found in {in_.type}: {in_.name}")
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains action "
+                    f"{in_action.type} = {in_action.parameter} which cannot be converted",
+                )
             elif in_action.type == "log":
                 out_seq.associate_log_action()
             elif in_action.type == "mirror":
@@ -363,12 +402,12 @@ def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> Ip
             elif in_action.type == "policer":
                 out_seq.associate_policer_action(in_action.parameter.ref)
 
-    return out
+    return result
 
 
 def device_access_ipv6(
     in_: DeviceAccessIPv6Policy, uuid: UUID, context: PolicyConvertContext
-) -> DeviceAccessIPv6Parcel:
+) -> ConvertResult[DeviceAccessIPv6Parcel]:
     out = DeviceAccessIPv6Parcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
     for in_seq in in_.sequences:
@@ -398,10 +437,12 @@ def device_access_ipv6(
                 seq.match_source_data_prefixes([IPv6Interface(v) for v in s_network_ipv6])
             elif in_entry.field == "sourcePort":
                 seq.match_source_ports(as_num_list(as_num_ranges_list(in_entry.value)))
-    return out
+    return ConvertResult[DeviceAccessIPv6Parcel](output=out)
 
 
-def device_access_ipv4(in_: DeviceAccessPolicy, uuid: UUID, context: PolicyConvertContext) -> DeviceAccessIPv4Parcel:
+def device_access_ipv4(
+    in_: DeviceAccessPolicy, uuid: UUID, context: PolicyConvertContext
+) -> ConvertResult[DeviceAccessIPv4Parcel]:
     out = DeviceAccessIPv4Parcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
     for in_seq in in_.sequences:
@@ -434,10 +475,10 @@ def device_access_ipv4(in_: DeviceAccessPolicy, uuid: UUID, context: PolicyConve
                     seq.match_source_data_prefix_variable(convert_varname(in_entry.vip_variable_name))
             elif in_entry.field == "sourcePort":
                 seq.match_source_ports(as_num_list(as_num_ranges_list(in_entry.value)))
-    return out
+    return ConvertResult[DeviceAccessIPv4Parcel](output=out)
 
 
-def route(in_: RoutePolicy, uuid: UUID, context: PolicyConvertContext) -> RoutePolicyParcel:
+def route(in_: RoutePolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[RoutePolicyParcel]:
     out = RoutePolicyParcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
     for in_seq in in_.sequences:
@@ -518,10 +559,10 @@ def route(in_: RoutePolicy, uuid: UUID, context: PolicyConvertContext) -> RouteP
                             out_seq.associate_ipv4_next_hop_action(in_param.value)
                         if isinstance(in_param.value, IPv6Address):
                             out_seq.associate_ipv6_next_hop_action(in_param.value)
-    return out
+    return ConvertResult[RoutePolicyParcel](output=out)
 
 
-def mesh(in_: MeshPolicy, uuid: UUID, context: PolicyConvertContext) -> MeshParcel:
+def mesh(in_: MeshPolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[MeshParcel]:
     target_vpns = context.lan_vpns_by_list_id[in_.definition.vpn_list]
     mesh_sites: List[str] = []
     for region in in_.definition.regions:
@@ -530,10 +571,12 @@ def mesh(in_: MeshPolicy, uuid: UUID, context: PolicyConvertContext) -> MeshParc
     out = MeshParcel(**_get_parcel_name_desc(in_))
     out.target.vpn.value = target_vpns
     out.sites.value = mesh_sites
-    return out
+    return ConvertResult[MeshParcel](output=out)
 
 
-def ssl_decryption(in_: SslDecryptionPolicy, uuid: UUID, context: PolicyConvertContext) -> SslDecryptionParcel:
+def ssl_decryption(
+    in_: SslDecryptionPolicy, uuid: UUID, context: PolicyConvertContext
+) -> ConvertResult[SslDecryptionParcel]:
     definition_dump = in_.definition.settings.model_dump(
         exclude={"certificate_lifetime", "ca_cert_bundle", "unknown_status"}
     )
@@ -550,18 +593,19 @@ def ssl_decryption(in_: SslDecryptionPolicy, uuid: UUID, context: PolicyConvertC
             sequences=in_.definition.sequences, profiles=in_.definition.profiles
         )
 
-    return SslDecryptionParcel.create(
+    out = SslDecryptionParcel.create(
         **_get_parcel_name_desc(in_),
         **definition_dump,
         ca_cert_bundle=ca_cert_bundle,
         certificate_lifetime=certificate_lifetime,
         unknown_status=unknown_status,
     )
+    return ConvertResult[SslDecryptionParcel](output=out)
 
 
 def ssl_profile(
     in_: SslDecryptionUtdProfilePolicy, uuid: UUID, context: PolicyConvertContext
-) -> SslDecryptionProfileParcel:
+) -> ConvertResult[SslDecryptionProfileParcel]:
     definition_dump = in_.definition.model_dump(
         exclude={"filtered_url_white_list", "filtered_url_black_list", "url_white_list", "url_black_list"}
     )
@@ -575,17 +619,18 @@ def ssl_profile(
             filtered_url_white_list=in_.definition.filtered_url_white_list,
         )
 
-    return SslDecryptionProfileParcel.create(
+    out = SslDecryptionProfileParcel.create(
         **_get_parcel_name_desc(in_),
         **definition_dump,
         url_allowed_list=url_allowed_list,
         url_blocked_list=url_blocked_list,
     )
+    return ConvertResult[SslDecryptionProfileParcel](output=out)
 
 
 def advanced_inspection_profile(
     in_: AdvancedInspectionProfilePolicy, uuid: UUID, context: PolicyConvertContext
-) -> AdvancedInspectionProfileParcel:
+) -> ConvertResult[AdvancedInspectionProfileParcel]:
     intrusion_prevention_ref = in_.definition.intrusion_prevention.ref if in_.definition.intrusion_prevention else None
     url_filtering_ref = in_.definition.url_filtering.ref if in_.definition.url_filtering else None
     advanced_malware_protection_ref = (
@@ -595,7 +640,7 @@ def advanced_inspection_profile(
         in_.definition.ssl_utd_decrypt_profile.ref if in_.definition.ssl_utd_decrypt_profile else None
     )
 
-    return AdvancedInspectionProfileParcel.create(
+    out = AdvancedInspectionProfileParcel.create(
         **_get_parcel_name_desc(in_),
         tls_decryption_action=in_.definition.tls_decryption_action,
         intrusion_prevention=intrusion_prevention_ref,
@@ -603,9 +648,12 @@ def advanced_inspection_profile(
         advanced_malware_protection=advanced_malware_protection_ref,
         ssl_decryption_profile=ssl_decryption_profile_ref,
     )
+    return ConvertResult[AdvancedInspectionProfileParcel](output=out)
 
 
-def url_filtering(in_: UrlFilteringPolicy, uuid: UUID, context: PolicyConvertContext) -> UrlFilteringParcel:
+def url_filtering(
+    in_: UrlFilteringPolicy, uuid: UUID, context: PolicyConvertContext
+) -> ConvertResult[UrlFilteringParcel]:
     block_page_action_map: Dict[str, BlockPageAction] = {"text": "text", "redirectUrl": "redirect-url"}
     definition_dump = in_.definition.model_dump(
         exclude={"target_vpns", "url_white_list", "url_black_list", "logging", "block_page_action"}
@@ -631,12 +679,12 @@ def url_filtering(in_: UrlFilteringPolicy, uuid: UUID, context: PolicyConvertCon
         url_allowed_list=url_allowed_list,
         url_blocked_list=url_blocked_list,
     )
-    return out
+    return ConvertResult[UrlFilteringParcel](output=out)
 
 
 def intrusion_prevention(
     in_: IntrusionPreventionPolicy, uuid: UUID, context: PolicyConvertContext
-) -> IntrusionPreventionParcel:
+) -> ConvertResult[IntrusionPreventionParcel]:
     if vpn_list := in_.definition.target_vpns:
         context.intrusion_prevention_target_vpns_id[uuid] = vpn_list
 
@@ -644,11 +692,12 @@ def intrusion_prevention(
     signature_white_list = definition_dump.pop("signature_white_list", None)
     signature_allowed_list = signature_white_list.get("ref") if signature_white_list else None
 
-    return IntrusionPreventionParcel.create(
+    out = IntrusionPreventionParcel.create(
         **_get_parcel_name_desc(in_),
         **definition_dump,
         signature_allowed_list=signature_allowed_list,
     )
+    return ConvertResult[IntrusionPreventionParcel](output=out)
 
 
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
@@ -670,8 +719,9 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
 }
 
 
-def _not_supported(in_: Input, *args, **kwargs) -> None:
+def _not_supported(in_: Input, *args, **kwargs) -> ConvertResult[None]:
     logger.warning(f"Not Supported Conversion of Policy Definition: '{in_.type}' '{in_.name}'")
+    return ConvertResult[None](status="unsupported")
 
 
 def _find_converter(in_: Input) -> Callable[..., Output]:
@@ -683,6 +733,10 @@ def _find_converter(in_: Input) -> Callable[..., Output]:
 
 def convert(in_: Input, uuid: UUID, context: PolicyConvertContext) -> Output:
     result = _find_converter(in_)(in_, uuid, context)
-    if result is not None:
-        result.model_validate(result)
+    if result.output is not None:
+        try:
+            result.output.model_validate(result.output)
+        except ValidationError as e:
+            result.status = "failed"
+            result.info.append(str(e))
     return result

@@ -1,7 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import unittest
 from ipaddress import IPv4Address
-from typing import cast
 from uuid import uuid4
 
 from catalystwan.api.configuration_groups.parcel import as_global
@@ -104,8 +103,9 @@ class TestRoutePolicyConverter(unittest.TestCase):
         )
 
         # Act
-        parcel = cast(RoutePolicyParcel, convert(route_policy, uuid, context=self.context))
+        parcel = convert(route_policy, uuid, context=self.context).output
         # Assert
+        assert isinstance(parcel, RoutePolicyParcel)
         assert parcel.parcel_name == "test_route_policy"
         assert parcel.parcel_description == "description"
         assert parcel.default_action.value == "accept"

@@ -4,6 +4,9 @@ from uuid import uuid4
 
 from catalystwan.api.configuration_groups.parcel import as_global
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.ssl_decryption_profile import (
+    SslDecryptionProfileParcel,
+)
 from catalystwan.models.policy.definition.ssl_decryption_utd_profile import (
     SslDecryptionUtdProfileDefinition,
     SslDecryptionUtdProfilePolicy,
@@ -40,8 +43,9 @@ class TestSslDecryptionConverter(unittest.TestCase):
         )
         uuid = uuid4()
         # Act
-        parcel = convert(ssl_decryption_profile, uuid, context=self.context)
+        parcel = convert(ssl_decryption_profile, uuid, context=self.context).output
         # Assert
+        assert isinstance(parcel, SslDecryptionProfileParcel)
         assert parcel.parcel_name == "ssl_decryption"
         assert parcel.parcel_description == "test_description"
         assert parcel.decrypt_categories.value == ["auctions", "computer-and-internet-security"]

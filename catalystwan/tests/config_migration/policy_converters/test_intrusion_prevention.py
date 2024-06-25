@@ -3,6 +3,9 @@ import unittest
 from uuid import uuid4
 
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.intrusion_prevention import (
+    IntrusionPreventionParcel,
+)
 from catalystwan.models.policy.definition.intrusion_prevention import (
     IntrusionPreventionDefinition,
     IntrusionPreventionPolicy,
@@ -31,8 +34,9 @@ class TestIntrusionPreventionConverter(unittest.TestCase):
         )
         uuid = uuid4()
         # Act
-        parcel = convert(ipp, uuid, context=self.context)
+        parcel = convert(ipp, uuid, context=self.context).output
         # Assert
+        assert isinstance(parcel, IntrusionPreventionParcel)
         assert parcel.parcel_name == "ip_unified"
         assert parcel.signature_set.value == "balanced"
         assert parcel.inspection_mode.value == "detection"
@@ -59,9 +63,10 @@ class TestIntrusionPreventionConverter(unittest.TestCase):
         )
         uuid = uuid4()
         # Act
-        parcel = convert(ipp, uuid, context=self.context)
+        parcel = convert(ipp, uuid, context=self.context).output
 
         # Assert
+        assert isinstance(parcel, IntrusionPreventionParcel)
         assert parcel.parcel_name == "ip_security"
         assert parcel.signature_set.value == "connectivity"
         assert parcel.inspection_mode.value == "protection"

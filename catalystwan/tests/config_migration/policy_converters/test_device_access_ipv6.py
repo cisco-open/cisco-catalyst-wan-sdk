@@ -1,7 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import unittest
 from ipaddress import IPv6Interface
-from typing import cast
 from uuid import uuid4
 
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
@@ -42,8 +41,9 @@ class TestDeviceAccessIpv6Converter(unittest.TestCase):
         policy.sequences.append(seq)
         uuid = uuid4()
         # Act
-        parcel = cast(DeviceAccessIPv6Parcel, convert(policy, uuid, context=self.context))
+        parcel = convert(policy, uuid, context=self.context).output
         # Assert
+        assert isinstance(parcel, DeviceAccessIPv6Parcel)
         assert parcel.parcel_name == "device_access_ipv6"
         assert parcel.parcel_description == "test_description"
         assert parcel.default_action.value == "drop"
@@ -84,8 +84,9 @@ class TestDeviceAccessIpv6Converter(unittest.TestCase):
         policy.sequences.append(seq)
         uuid = uuid4()
         # Act
-        parcel = cast(DeviceAccessIPv6Parcel, convert(policy, uuid, context=self.context))
+        parcel = convert(policy, uuid, context=self.context).output
         # Assert
+        assert isinstance(parcel, DeviceAccessIPv6Parcel)
         assert parcel.parcel_name == "device_access_ipv6"
         assert parcel.parcel_description == "test_description"
         assert parcel.default_action.value == "drop"
