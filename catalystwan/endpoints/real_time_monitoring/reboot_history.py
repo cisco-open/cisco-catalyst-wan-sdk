@@ -16,7 +16,7 @@ class RebootEntry(BaseModel):
     severity: Optional[str] = Field(default=None, validation_alias="reload-severity", description=">=17.13 only")
     category: Optional[str] = Field(default=None, validation_alias="reload-category", description=">=17.13 only")
     date_time: datetime = Field(
-        validation_alias=AliasChoices("reboot_date_time-date", "reboot_date_time", "reload-time-date")
+        validation_alias=AliasChoices("reboot_date_time-date", "reboot_date_time", "reload-time-date", "reload-time")
     )
     last_updated: datetime = Field(validation_alias="lastupdated")
     vdevice_name: str = Field(validation_alias="vdevice-name")
