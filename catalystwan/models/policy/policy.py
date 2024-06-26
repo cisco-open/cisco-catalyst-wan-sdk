@@ -27,6 +27,7 @@ class AssemblyItemBase(BaseModel):
 
 class ZoneBasedFWAssemblyItem(AssemblyItemBase):
     type: Literal["zoneBasedFW"] = "zoneBasedFW"
+    entries: Optional[List[NGFirewallZoneListEntry]] = None
 
 
 class NGFirewallAssemblyItem(AssemblyItemBase):

@@ -19,6 +19,7 @@ from catalystwan.models.configuration.feature_profile.common import RefIdItem
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.dns_security.dns import DnsParcel, TargetVpns
+from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import AnyEmbeddedSecurityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.aip import (
     AdvancedInspectionProfileParcel,
 )
@@ -66,8 +67,11 @@ from catalystwan.models.policy.definition.route_policy import RoutePolicy
 from catalystwan.models.policy.definition.ssl_decryption import SslDecryptionPolicy
 from catalystwan.models.policy.definition.ssl_decryption_utd_profile import SslDecryptionUtdProfilePolicy
 from catalystwan.models.policy.definition.url_filtering import UrlFilteringPolicy
+from catalystwan.models.policy.definition.zone_based_firewall import ZoneBasedFWPolicy
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.utils import convert_varname
+
+from .zone_based_firewall import convert_zone_based_fw
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +95,7 @@ OutputItem = Optional[
             DeviceAccessIPv6Parcel,
             DeviceAccessIPv4Parcel,
             RoutePolicyParcel,
+            AnyEmbeddedSecurityParcel,
         ],
         Field(discriminator="type_"),
     ]
@@ -716,6 +721,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     DeviceAccessIPv6Policy: device_access_ipv6,
     DeviceAccessPolicy: device_access_ipv4,
     RoutePolicy: route,
+    ZoneBasedFWPolicy: convert_zone_based_fw,
 }
 
 

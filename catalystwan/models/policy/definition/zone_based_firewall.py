@@ -16,6 +16,7 @@ from catalystwan.models.policy.policy_definition import (
     DefinitionWithSequencesCommonBase,
     DestinationDataPrefixListEntry,
     DestinationFQDNEntry,
+    DestinationFQDNListEntry,
     DestinationGeoLocationEntry,
     DestinationGeoLocationListEntry,
     DestinationIPEntry,
@@ -50,6 +51,7 @@ ZoneBasedFWPolicySequenceEntry = Annotated[
         AppListFlatEntry,
         DestinationDataPrefixListEntry,
         DestinationFQDNEntry,
+        DestinationFQDNListEntry,
         DestinationGeoLocationEntry,
         DestinationGeoLocationListEntry,
         DestinationIPEntry,
@@ -112,9 +114,9 @@ class ZoneBasedFWPolicySequenceWithRuleSets(PolicyDefinitionSequenceBase):
     model_config = ConfigDict(populate_by_name=True)
 
     def match_rule_set_lists(self, rule_set_ids: Set[UUID]) -> None:
-        self._insert_match(RuleSetListEntry.from_rule_set_ids(rule_set_ids))
+        self._insert_match(RuleSetListEntry(ref=list(rule_set_ids)))
 
-    def match_app_list(self, app_list_id: UUID) -> None:
+    def match_app_list(self, app_list_id: List[UUID]) -> None:
         if self.base_action != "inspect":
             raise ValueError("Action must be inspect when Application/Application Family List is selected.")
         self._insert_match(AppListEntry(ref=app_list_id))
@@ -125,10 +127,10 @@ class ZoneBasedFWPolicySequence(PolicyDefinitionSequenceBase):
         default="zoneBasedFW", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
     match: ZoneBasedFWPolicyMatches
-    actions: List[LogAction] = []
+    actions: List[Union[LogAction, AdvancedInspectionProfileAction, ConnectionEventsAction]] = []
     model_config = ConfigDict(populate_by_name=True)
 
-    def match_app_list(self, app_list_id: UUID) -> None:
+    def match_app_list(self, app_list_id: List[UUID]) -> None:
         if self.base_action != "inspect":
             raise ValueError("Action must be inspect when Application/Application Family List is selected.")
         self._insert_match(AppListEntry(ref=app_list_id))
@@ -142,7 +144,7 @@ class ZoneBasedFWPolicySequence(PolicyDefinitionSequenceBase):
     def match_destination_geo_location(self, geo_location: str) -> None:
         self._insert_match(DestinationGeoLocationEntry(value=geo_location))
 
-    def match_destination_geo_location_list(self, geo_location_list_id: UUID) -> None:
+    def match_destination_geo_location_list(self, geo_location_list_id: List[UUID]) -> None:
         self._insert_match(DestinationGeoLocationListEntry(ref=geo_location_list_id))
 
     def match_destination_ip(self, networks: List[IPv4Network]) -> None:
@@ -168,7 +170,7 @@ class ZoneBasedFWPolicySequence(PolicyDefinitionSequenceBase):
         self._insert_match(DestinationPortEntry.from_application_protocols(app_protocols), False)
         self._insert_match(ProtocolEntry.from_application_protocols(app_protocols), False)
 
-    def match_protocol_name_list(self, protocol_name_list_id: UUID) -> None:
+    def match_protocol_name_list(self, protocol_name_list_id: List[UUID]) -> None:
         self._insert_match(ProtocolNameListEntry(ref=protocol_name_list_id))
 
     def match_source_data_prefix_list(self, data_prefix_lists: List[UUID]) -> None:
@@ -183,7 +185,7 @@ class ZoneBasedFWPolicySequence(PolicyDefinitionSequenceBase):
     def match_source_geo_location(self, geo_location: str) -> None:
         self._insert_match(SourceGeoLocationEntry(value=geo_location))
 
-    def match_source_geo_location_list(self, geo_location_list_id: UUID) -> None:
+    def match_source_geo_location_list(self, geo_location_list_id: List[UUID]) -> None:
         self._insert_match(SourceGeoLocationListEntry(ref=geo_location_list_id))
 
     def match_source_ip(self, networks: List[IPv4Network]) -> None:
@@ -192,7 +194,7 @@ class ZoneBasedFWPolicySequence(PolicyDefinitionSequenceBase):
     def match_source_port(self, ports: Set[int] = set(), port_ranges: List[Tuple[int, int]] = []) -> None:
         self._insert_match(SourcePortEntry.from_port_set_and_ranges(ports, port_ranges))
 
-    def match_source_port_list(self, port_list_id: UUID) -> None:
+    def match_source_port_list(self, port_list_id: List[UUID]) -> None:
         self._insert_match(SourcePortListEntry(ref=port_list_id))
 
 
