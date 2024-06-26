@@ -1,7 +1,9 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Network
-from typing import List, Optional, Union
+from typing import List, Optional, Union, cast
 from uuid import UUID
+
+from pydantic import ValidationError
 
 from catalystwan.models.configuration.config_migration import ConvertResult, PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security.ngfirewall import (
@@ -17,6 +19,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.embedded_security.ng
     DestinationPort,
     DestinationPortList,
     DestinationScalableGroupTagList,
+    GeoLocation,
     LogAction,
     Match,
 )
@@ -27,6 +30,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.embedded_security.ng
     NgfirewallParcel,
     NgFirewallSequence,
     Protocol,
+    ProtocolName,
     ProtocolNameList,
     ProtocolNameMatch,
     SourceDataPrefixList,
@@ -46,8 +50,8 @@ from catalystwan.models.policy.definition.zone_based_firewall import ZoneBasedFW
 from catalystwan.models.policy.policy_definition import ActionEntry, MatchEntry
 
 
-def cast_(in_: List[str]):
-    return in_
+def split_value(match_entry) -> List[str]:
+    return match_entry.value.split(" ")
 
 
 def convert_sequence_match_entry(
@@ -79,32 +83,32 @@ def convert_sequence_match_entry(
         return AppListFlat.create(match_entry.ref)
     elif match_entry.field == "sourceIp":
         if match_entry.value is not None:
-            return SourceIp.from_ip_networks(list(map(IPv4Network, match_entry.value.split(" "))))
+            return SourceIp.from_ip_networks(list(map(IPv4Network, split_value(match_entry))))
         elif match_entry.vip_variable_name is not None:
             return SourceIp.from_variable(match_entry.vip_variable_name)
         convert_result.update_status("partial", "SrcIP match entry does not contain value/vipVariableName")
         return None
     elif match_entry.field == "destinationIp":
         if match_entry.value is not None:
-            return DestinationIp.from_ip_networks(list(map(IPv4Network, match_entry.value.split(" "))))
+            return DestinationIp.from_ip_networks(list(map(IPv4Network, split_value(match_entry))))
         elif match_entry.vip_variable_name is not None:
             return DestinationIp.from_variable(match_entry.vip_variable_name)
         convert_result.update_status("partial", "DstIP match entry does not contain value/vipVariableName")
         return None
     elif match_entry.field == "destinationFqdn":
-        return DestinationFqdn.from_domain_names(match_entry.value.split(" "))
+        return DestinationFqdn.from_domain_names(split_value(match_entry))
     elif match_entry.field == "sourcePort":
-        return SourcePort.from_str_list(match_entry.value.split(" "))
+        return SourcePort.from_str_list(split_value(match_entry))
     elif match_entry.field == "destinationPort":
-        return DestinationPort.from_str_list(match_entry.value.split(" "))
+        return DestinationPort.from_str_list(split_value(match_entry))
     elif match_entry.field == "sourceGeoLocation":
-        return SourceGeoLocation.from_geo_locations_list(cast_(match_entry.value.split(" ")))
+        return SourceGeoLocation.from_geo_locations_list(cast(List[GeoLocation], split_value(match_entry)))
     elif match_entry.field == "destinationGeoLocation":
-        return DestinationGeoLocation.from_geo_locations_list(cast_(match_entry.value.split(" ")))
+        return DestinationGeoLocation.from_geo_locations_list(cast(List[GeoLocation], split_value(match_entry)))
     elif match_entry.field == "protocolName":
-        return ProtocolNameMatch.from_protocol_name_list(cast_(match_entry.value.split(" ")))
+        return ProtocolNameMatch.from_protocol_name_list(cast(List[ProtocolName], split_value(match_entry)))
     elif match_entry.field == "protocol":
-        return Protocol.from_protocol_id_list(match_entry.value.split(" "))
+        return Protocol.from_protocol_id_list(split_value(match_entry))
 
     # TODO:
     # SourceIdentityList, SourceSecurityGroup, DestinationSecurityGroup
@@ -169,7 +173,7 @@ def convert_zone_based_fw(
         )
         convert_result.output = parcel
 
-    except Exception as e:
+    except ValidationError as e:
         convert_result.update_status("failed", f"Cannot convert zone based firewall due to error {e}")
 
     return convert_result

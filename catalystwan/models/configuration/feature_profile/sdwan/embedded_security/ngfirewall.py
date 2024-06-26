@@ -3,7 +3,7 @@ from ipaddress import IPv4Network
 from typing import List, Literal, Optional, Union
 from uuid import UUID
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, ValidationError, model_validator
 from typing_extensions import Self
 
 from catalystwan.api.configuration_groups.parcel import Global, Variable, _ParcelBase, as_global
@@ -843,16 +843,19 @@ class NgFirewallSequence(BaseModel):
     )
 
     def add_log_action(self) -> None:
-        if LogAction in map(type, self.actions):
-            raise ValueError("LogAction is already added to NGfirewall sequence")
-
         self.actions.append(LogAction())
 
     def add_aip_action(self, aip_uuid: UUID) -> None:
-        if AipAction in map(type, self.actions):
-            raise ValueError("AipAction is already added to NGfirewall sequence")
-
         self.actions.append(AipAction.from_uuid(aip_uuid))
+
+    @model_validator(mode="after")
+    def validate_model(self):
+        if len(self.actions) > len(set(map(type, self.actions))):
+            raise ValidationError(
+                f"NGFirewall sequence cannot contain actions with the same type. Sequence actions: {self.actions}"
+            )
+
+        return self
 
     @classmethod
     def create(
@@ -891,7 +894,6 @@ class NgfirewallParcel(_ParcelBase):
         default=False, validation_alias="containsUtd", serialization_alias="containsUtd"
     )
     optimized: Optional[bool] = Field(default=True)
-    # temporary
 
     @classmethod
     def create(
