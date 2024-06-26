@@ -146,8 +146,7 @@ def convert(converter: FTConverter, template: FeatureTemplateInformation) -> Con
     if definition is None:
         return ConvertResult(status="failed", output=None, info=["Template definition is empty"])
     template_values = extract_template_values(definition)
-    parcel = converter.create_parcel(template.name, template.description, template_values)
-    return ConvertResult[AnyParcel](status=converter.status, output=parcel, info=converter.info)
+    return converter.convert(template.name, template.description, template_values)
 
 
 def create_parcel_from_template(template: FeatureTemplateInformation) -> ConvertResult[AnyParcel]:

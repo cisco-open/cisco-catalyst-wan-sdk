@@ -751,8 +751,8 @@ class VpnConverter(FTConverter):
         vpn_id = self.get_vpn_id(template_values)
         converter = vpn_converters.get(vpn_id, ServiceVpnConverter)()
         parcel = converter.create_parcel(name, description, template_values)
-        self.info = converter.info
-        self.status = converter.status
+        self._convert_result.info = converter._convert_result.info
+        self._convert_result.status = converter._convert_result.status
         return parcel
 
     def get_vpn_id(self, values: dict) -> int:
