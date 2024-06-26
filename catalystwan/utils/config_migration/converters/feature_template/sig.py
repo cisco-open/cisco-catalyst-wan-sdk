@@ -16,8 +16,10 @@ from catalystwan.utils.config_migration.converters.feature_template.model_defini
     normalize_to_model_definition,
 )
 
+from .base import FTConverter
 
-class SIGTemplateConverter:
+
+class SIGConverter(FTConverter):
     supported_template_types = ("secure-internet-gateway", "cisco_secure_internet_gateway")
 
     PROVIDER_MAP = {

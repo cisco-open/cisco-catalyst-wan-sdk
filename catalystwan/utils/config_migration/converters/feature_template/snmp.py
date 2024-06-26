@@ -4,10 +4,12 @@ from copy import deepcopy
 from catalystwan.api.configuration_groups.parcel import Variable, as_global, as_variable
 from catalystwan.models.configuration.feature_profile.sdwan.system.snmp import Authorization, SNMPParcel
 
+from .base import FTConverter
+
 logger = logging.getLogger(__name__)
 
 
-class SNMPTemplateConverter:
+class SNMPConverter(FTConverter):
     """
     A class for converting template values into a SecurityParcel object.
 

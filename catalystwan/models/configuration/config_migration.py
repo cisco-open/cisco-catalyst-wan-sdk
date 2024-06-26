@@ -612,3 +612,6 @@ class ConvertResult(Generic[TO]):
     def update_status(self, status: ConvertStatus, message: str):
         self.status = status
         self.info.append(message)
+
+    def get_info(self) -> str:
+        return "\n".join(self.info)

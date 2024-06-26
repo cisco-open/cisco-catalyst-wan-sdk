@@ -3,8 +3,10 @@ from copy import deepcopy
 from catalystwan.models.configuration.feature_profile.sdwan.cli.config import ConfigParcel
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 
+from .base import FTConverter
 
-class CliTemplateConverter:
+
+class CliConverter(FTConverter):
     supported_template_types = ("cli-template",)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> ConfigParcel:

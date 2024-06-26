@@ -14,10 +14,12 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_p
 )
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 
+from .base import FTConverter
+
 logger = logging.getLogger(__name__)
 
 
-class CellularProfileTemplateConverter:
+class CellularProfileConverter(FTConverter):
     supported_template_types = ("cellular-cedge-profile",)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> CellularProfileParcel:

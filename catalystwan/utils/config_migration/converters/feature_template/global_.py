@@ -1,7 +1,9 @@
 from catalystwan.models.configuration.feature_profile.sdwan.system import GlobalParcel
 
+from .base import FTConverter
 
-class GlobalTemplateConverter:
+
+class GlobalConverter(FTConverter):
     supported_template_types = ("cedge_global",)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> GlobalParcel:

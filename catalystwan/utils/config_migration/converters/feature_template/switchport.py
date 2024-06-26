@@ -10,8 +10,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.switchport i
     SwitchportParcel,
 )
 
+from .base import FTConverter
 
-class SwitchportTemplateConverter:
+
+class SwitchportConverter(FTConverter):
     supported_template_types = ("switchport",)
 
     delete_keys = ("slot", "module", "subslot")

@@ -9,8 +9,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.other.thousandeyes i
     ProxyConfigStatic,
 )
 
+from .base import FTConverter
 
-class ThousandEyesTemplateConverter:
+
+class ThousandEyesConverter(FTConverter):
     """
     A class for converting template values into a ThousandEyesParcel object.
     """

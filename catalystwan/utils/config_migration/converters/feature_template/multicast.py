@@ -23,8 +23,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.multicast im
     StaticRpAddress,
 )
 
+from .base import FTConverter
 
-class MulticastToMulticastTemplateConverter:
+
+class MulticastToMulticastConverter(FTConverter):
     """This is corner case.
     Multicast Parcel is not a direct conversion from template.
     It is a combination of multiple templates.
@@ -67,7 +69,7 @@ class MulticastToMulticastTemplateConverter:
         }
 
 
-class PimToMulticastTemplateConverter:
+class PimToMulticastConverter(FTConverter):
     """This is corner case.
     Multicast Parcel is not a direct conversion from template.
     It is a combination of multiple templates.
@@ -245,7 +247,7 @@ class PimToMulticastTemplateConverter:
         }
 
 
-class IgmpToMulticastTemplateConverter:
+class IgmpToMulticastConverter(FTConverter):
     """This is corner case.
     Multicast Parcel is not a direct conversion from template.
     It is a combination of multiple templates.

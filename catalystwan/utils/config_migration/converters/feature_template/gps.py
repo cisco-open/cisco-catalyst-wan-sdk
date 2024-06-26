@@ -5,8 +5,10 @@ from catalystwan.api.configuration_groups.parcel import Global
 from catalystwan.models.configuration.feature_profile.sdwan.transport.gps import GpsMode, GpsParcel
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
 
+from .base import FTConverter
 
-class GpsTemplateConverter:
+
+class GpsConverter(FTConverter):
     supported_template_types = ("cellular-cedge-gps-controller",)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> GpsParcel:

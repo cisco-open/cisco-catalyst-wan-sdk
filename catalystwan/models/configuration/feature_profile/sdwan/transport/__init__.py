@@ -1,4 +1,3 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from typing import List, Union
@@ -14,6 +13,7 @@ from .gps import GpsParcel
 from .management.ethernet import InterfaceEthernetParcel as ManagementInterfaceEthernetParcel
 from .t1e1controller import T1E1ControllerParcel
 from .vpn import ManagementVpnParcel, TransportVpnParcel
+from .wan.interface.cellular import InterfaceCellularParcel
 from .wan.interface.ethernet import InterfaceEthernetParcel
 from .wan.interface.gre import InterfaceGreParcel
 from .wan.interface.ipsec import InterfaceIpsecParcel
@@ -37,6 +37,7 @@ AnyTransportVpnSubParcel = Annotated[
         InterfaceIpsecParcel,
         InterfaceEthernetParcel,
         InterfaceMultilinkParcel,
+        InterfaceCellularParcel,
         # Add wan interfaces here
     ],
     Field(discriminator="type_"),

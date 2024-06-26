@@ -4,8 +4,10 @@ from catalystwan.api.configuration_groups.parcel import Global, as_default
 from catalystwan.models.configuration.feature_profile.sdwan.system import SecurityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.security import IntegrityType
 
+from .base import FTConverter
 
-class SecurityTemplateConverter:
+
+class SecurityConverter(FTConverter):
     """
     A class for converting template values into a SecurityParcel object.
 

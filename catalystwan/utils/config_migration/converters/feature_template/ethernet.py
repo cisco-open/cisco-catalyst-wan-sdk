@@ -26,8 +26,10 @@ from catalystwan.utils.config_migration.converters.feature_template.helpers impo
 from catalystwan.utils.config_migration.converters.utils import parse_interface_name
 from catalystwan.utils.config_migration.steps.constants import MANAGEMENT_VPN_ETHERNET
 
+from .base import FTConverter
 
-class ManagementInterfaceEthernetTemplateConverter:
+
+class ManagementInterfaceEthernetConverter(FTConverter):
     supported_template_types = (MANAGEMENT_VPN_ETHERNET,)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceEthernetParcel:

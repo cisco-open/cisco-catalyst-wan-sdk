@@ -5,8 +5,10 @@ from catalystwan.api.configuration_groups.parcel import Global
 from catalystwan.models.configuration.feature_profile.sdwan.system import LoggingParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.logging_parcel import CypherSuite
 
+from .base import FTConverter
 
-class LoggingTemplateConverter:
+
+class LoggingConverter(FTConverter):
     supported_template_types = ("cisco_logging", "logging")
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> LoggingParcel:

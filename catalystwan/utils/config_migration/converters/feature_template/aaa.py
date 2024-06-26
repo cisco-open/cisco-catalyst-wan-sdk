@@ -4,8 +4,10 @@ from typing import List
 from catalystwan.api.configuration_groups.parcel import Global
 from catalystwan.models.configuration.feature_profile.sdwan.system import AAAParcel
 
+from .base import FTConverter
 
-class AAATemplateConverter:
+
+class AAAConverter(FTConverter):
     supported_template_types = ("cisco_aaa", "cedge_aaa", "aaa")
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> AAAParcel:

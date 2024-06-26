@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
 from collections import defaultdict
@@ -24,12 +25,9 @@ from catalystwan.models.configuration.config_migration import (
     VersionInfo,
 )
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
-from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
 from catalystwan.models.configuration.topology_group import TopologyGroup
 from catalystwan.models.policy import AnyPolicyDefinitionInfo
 from catalystwan.session import ManagerSession
-from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
-from catalystwan.utils.config_migration.converters.feature_template import create_parcel_from_template
 from catalystwan.utils.config_migration.converters.feature_template.cloud_credentials import (
     create_cloud_credentials_from_templates,
 )
@@ -58,7 +56,8 @@ from catalystwan.utils.config_migration.steps.constants import (
     WAN_VPN_MULTILINK,
 )
 from catalystwan.utils.config_migration.steps.transform import (
-    handle_multi_parcel_feature_template,
+    convert_multi_parcel_feature_template,
+    convert_single_parcel_feature_template,
     merge_parcels,
     remove_unused_feature_templates,
     resolve_vpn_and_subtemplates_type,
@@ -359,35 +358,12 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
 
     cloud_credential_templates = []
     for ft in ux1.templates.feature_templates:
-        if ft.template_type in SUPPORTED_TEMPLATE_TYPES:
-            try:
-                if ft.template_type in MULTI_PARCEL_FEATURE_TEMPLATES:
-                    transformed_parcels = handle_multi_parcel_feature_template(ft, ux2)
-                    ux2.profile_parcels.extend(transformed_parcels)
-                else:
-                    parcel = cast(AnyParcel, create_parcel_from_template(ft))
-                    ft_template_uuid = UUID(ft.id)
-                    transformed_parcel = TransformedParcel(
-                        header=TransformHeader(
-                            type=parcel._get_parcel_type(),
-                            origin=ft_template_uuid,
-                            subelements=subtemplates_mapping[ft_template_uuid],
-                        ),
-                        parcel=parcel,
-                    )
-                    # Add to UX2. We can indentify the parcels as subelements of the feature profiles by the UUIDs
-                    ux2.profile_parcels.append(transformed_parcel)
-            except (CatalystwanConverterCantConvertException, ValidationError, Exception) as e:
-                exception_message = f"Feature Template ({ft.name})[{ft.template_type}] conversion error: {e}."
-                logger.warning(exception_message)
-                ft.device_type = [""]  # This takes to much space in the logs
-                transform_result.add_failed_conversion_parcel(
-                    exception_message=exception_message,
-                    feature_template=ft,
-                )
-
-        elif ft.template_type in CLOUD_CREDENTIALS_FEATURE_TEMPLATES:
+        if ft.template_type in CLOUD_CREDENTIALS_FEATURE_TEMPLATES:
             cloud_credential_templates.append(ft)
+        elif ft.template_type in MULTI_PARCEL_FEATURE_TEMPLATES:
+            convert_multi_parcel_feature_template(ux2, transform_result, ft, subtemplates_mapping)
+        else:
+            convert_single_parcel_feature_template(ux2, transform_result, ft, subtemplates_mapping)
 
     # Add Cloud Credentials to UX2
     if cloud_credential_templates:
