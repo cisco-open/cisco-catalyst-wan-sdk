@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, Mapping, Type
+from typing import Dict, Mapping, Type, Union, cast
 from uuid import UUID
 
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
@@ -16,12 +16,13 @@ class ReferencesUpdater(ABC):
     def update_references(self):
         pass
 
-    def get_target_uuid(self, origin_uuid: UUID) -> UUID:
-        if v2_uuid := self.pushed_objects_map.get(origin_uuid):
-            return v2_uuid
+    def get_target_uuid(self, origin_uuid: Union[str, UUID]) -> UUID:
+        _origin_uuid: UUID = cast(UUID, UUID(origin_uuid) if type(origin_uuid) is str else origin_uuid)
+        if target_uuid := self.pushed_objects_map.get(_origin_uuid):
+            return target_uuid
 
         raise CatalystwanConverterCantConvertException(
-            f"Cannot find transferred policy object based on v1 API id: {origin_uuid}"
+            f"Cannot find transferred policy object based on v1 API id: {_origin_uuid}"
         )
 
 
