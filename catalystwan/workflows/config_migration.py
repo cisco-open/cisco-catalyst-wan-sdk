@@ -35,6 +35,7 @@ from catalystwan.utils.config_migration.converters.feature_template.cloud_creden
 )
 from catalystwan.utils.config_migration.converters.policy.policy_definitions import convert as convert_policy_definition
 from catalystwan.utils.config_migration.converters.policy.policy_lists import convert as convert_policy_list
+from catalystwan.utils.config_migration.converters.policy.security_policy import convert_security_policy
 from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigPushResult
 from catalystwan.utils.config_migration.reverters.config_reverter import UX2ConfigReverter
 from catalystwan.utils.config_migration.steps.constants import (
@@ -443,6 +444,31 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
                 info=pd_result.info,
             )
             ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pd_parcel))
+
+    # Security policies
+    for security_policy in ux1.policies.security_policies:
+        sp_result = convert_security_policy(security_policy, security_policy.policy_id, policy_context)
+        sp_parcel = sp_result.output
+        sp_status = sp_result.status
+
+        if sp_status == "unsupported":  # move to common
+            transform_result.add_unsupported_item(
+                name=security_policy.policy_name, uuid=security_policy.policy_id, type=security_policy.policy_type
+            )
+        elif sp_status == "failed":
+            transform_result.add_failed_conversion_parcel(
+                exception_message="\n".join(sp_result.info),
+                policy=security_policy,
+            )
+        elif sp_parcel is not None:
+            header = TransformHeader(
+                type=sp_parcel._get_parcel_type(),
+                origin=security_policy.policy_id,
+                origname=security_policy.policy_name,
+                status=sp_status,
+                info=sp_result.info,
+            )
+            ux2.profile_parcels.append(TransformedParcel(header=header, parcel=sp_parcel))
 
     # Topology Group and Profile
     topology_sources = [p.definition_id for p in ux1.policies.policy_definitions if p.type in TOPOLOGY_POLICIES]

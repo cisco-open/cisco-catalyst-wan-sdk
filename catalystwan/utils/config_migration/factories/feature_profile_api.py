@@ -3,6 +3,7 @@ from typing import Callable, Mapping, Union
 from catalystwan.api.feature_profile_api import (
     CliFeatureProfileAPI,
     DnsSecurityFeatureProfileAPI,
+    EmbeddedSecurityFeatureProfileAPI,
     OtherFeatureProfileAPI,
     PolicyObjectFeatureProfileAPI,
     ServiceFeatureProfileAPI,
@@ -22,6 +23,7 @@ FEATURE_PROFILE_API_MAPPING: Mapping[ProfileType, Callable] = {
     "cli": CliFeatureProfileAPI,
     "topology": TopologyFeatureProfileAPI,
     "dns-security": DnsSecurityFeatureProfileAPI,
+    "embedded-security": EmbeddedSecurityFeatureProfileAPI,
 }
 
 FeatureProfile = Union[

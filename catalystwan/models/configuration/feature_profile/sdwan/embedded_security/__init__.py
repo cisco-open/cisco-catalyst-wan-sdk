@@ -6,7 +6,7 @@ from pydantic import Field
 from typing_extensions import Annotated
 
 from .ngfirewall import NgfirewallParcel
-from .policy import PolicyParcel
+from .policy import PolicyParcel, PolicySettings
 
 AnyEmbeddedSecurityParcel = Annotated[
     Union[
@@ -16,7 +16,7 @@ AnyEmbeddedSecurityParcel = Annotated[
     Field(discriminator="type_"),
 ]
 
-__all__ = ("AnyEmbeddedSecurityParcel", "PolicyParcel", "NgfirewallParcel")
+__all__ = ("AnyEmbeddedSecurityParcel", "PolicyParcel", "PolicySettings", "NgfirewallParcel")
 
 
 def __dir__() -> "List[str]":

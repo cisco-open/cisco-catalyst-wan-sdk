@@ -29,7 +29,13 @@ from catalystwan.models.policy.centralized import CentralizedPolicyInfo
 from catalystwan.models.policy.definition.ssl_decryption import NetworkDecryptionRuleSequence, UrlProfile
 from catalystwan.models.policy.definition.zone_based_firewall import ZoneBasedFWPolicyEntry
 from catalystwan.models.policy.localized import LocalizedPolicyInfo
-from catalystwan.models.policy.security import AnySecurityPolicyInfo
+from catalystwan.models.policy.security import (
+    AnySecurityPolicyInfo,
+    HighSpeedLoggingEntry,
+    HighSpeedLoggingList,
+    LoggingEntry,
+    ZoneToNoZoneInternet,
+)
 from catalystwan.models.templates import FeatureTemplateInformation, TemplateInformation
 from catalystwan.version import parse_api_version
 
@@ -553,6 +559,14 @@ class SslDecryptioneResidues:
 
 
 @dataclass
+class SecurityPolicyResidues:
+    high_speed_logging_setting: Optional[Union[HighSpeedLoggingEntry, HighSpeedLoggingList]]
+    logging_setting: Optional[List[LoggingEntry]] = None
+    zone_to_no_zone_internet_setting: Optional[ZoneToNoZoneInternet] = None
+    platform_match_setting: Optional[str] = None
+
+
+@dataclass
 class PolicyConvertContext:
     # conversion input
     region_map: Dict[str, int] = field(default_factory=dict)
@@ -569,6 +583,7 @@ class PolicyConvertContext:
     ssl_profile_residues: Dict[UUID, SslProfileResidues] = field(default_factory=dict)
     url_filtering_target_vpns: Dict[UUID, List[VpnId]] = field(default_factory=dict)
     zone_based_firewall_residues: Dict[UUID, List[ZoneBasedFWPolicyEntry]] = field(default_factory=dict)
+    security_policy_residues: Dict[UUID, SecurityPolicyResidues] = field(default_factory=dict)
 
     def get_vpn_id_to_vpn_name_map(self) -> Dict[Union[str, int], List[str]]:
         vpn_map: Dict[Union[str, int], List[str]] = {}
