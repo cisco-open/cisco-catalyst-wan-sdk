@@ -109,8 +109,10 @@ class UrlFilteringParcel(_ParcelBase):
     url_allowed_list: Optional[RefIdItem] = Field(default=None, validation_alias=AliasPath("data", "urlAllowedList"))
     url_blocked_list: Optional[RefIdItem] = Field(default=None, validation_alias=AliasPath("data", "urlBlockedList"))
     block_page_action: Global[BlockPageAction] = Field(validation_alias=AliasPath("data", "blockPageAction"))
-    block_page_contents: Global[str] = Field(default=None, validation_alias=AliasPath("data", "blockPageContents"))
-    redirect_url: Global[str] = Field(default=None, validation_alias=AliasPath("data", "redirectUrl"))
+    block_page_contents: Optional[Global[str]] = Field(
+        default=None, validation_alias=AliasPath("data", "blockPageContents")
+    )
+    redirect_url: Optional[Global[str]] = Field(default=None, validation_alias=AliasPath("data", "redirectUrl"))
     enable_alerts: Global[bool] = Field(validation_alias=AliasPath("data", "enableAlerts"))
     alerts: Optional[Global[List[Alerts]]] = Field(default=None, validation_alias=AliasPath("data", "alerts"))
 

@@ -94,6 +94,7 @@ class ParcelAttribute(BaseModel):
 # https://github.com/pydantic/pydantic/discussions/6090
 # Usage: Global[str](value="test")
 class Global(ParcelAttribute, Generic[T]):
+    model_config = ConfigDict(populate_by_name=True)
     option_type: OptionType = Field(
         default=OptionType.GLOBAL, serialization_alias="optionType", validation_alias="optionType"
     )

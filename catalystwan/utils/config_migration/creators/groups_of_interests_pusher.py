@@ -5,7 +5,7 @@ from uuid import UUID
 from catalystwan.api.feature_profile_api import PolicyObjectFeatureProfileAPI
 from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.config_migration import PushContext, UX2Config, UX2ConfigPushResult
-from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, RefIdItem
+from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, Parcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import (
     AdvancedInspectionProfileParcel,
@@ -17,65 +17,9 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
 from catalystwan.session import ManagerSession
 from catalystwan.typed_list import DataSequence
 
-from .references_updater import ReferencesUpdater, update_parcels_references
+from .references_updater import update_parcel_references
 
 logger = logging.getLogger(__name__)
-
-
-class UrlFilteringReferencesUpdater(ReferencesUpdater):
-    def update_references(self):
-        if allowed_list := self.parcel.url_allowed_list:
-            v2_uuid = self.get_target_uuid(UUID(allowed_list.ref_id.value))
-            self.parcel.url_allowed_list = RefIdItem.from_uuid(v2_uuid)
-
-        if blocked_list := self.parcel.url_blocked_list:
-            v2_uuid = self.get_target_uuid(UUID(blocked_list.ref_id.value))
-            self.parcel.url_blocked_list = RefIdItem.from_uuid(v2_uuid)
-
-
-class SslProfileReferencesUpdater(ReferencesUpdater):
-    def update_references(self):
-        if allowed_list := self.parcel.url_allowed_list:
-            v2_uuid = self.get_target_uuid(UUID(allowed_list.ref_id.value))
-            self.parcel.url_allowed_list = RefIdItem.from_uuid(v2_uuid)
-
-        if blocked_list := self.parcel.url_blocked_list:
-            v2_uuid = self.get_target_uuid(UUID(blocked_list.ref_id.value))
-            self.parcel.url_blocked_list = RefIdItem.from_uuid(v2_uuid)
-
-
-class IntrusionPreventionReferencesUpdater(ReferencesUpdater):
-    def update_references(self):
-        if allowed_list := self.parcel.signature_allowed_list:
-            v2_uuid = self.get_target_uuid(UUID(allowed_list.ref_id.value))
-            self.parcel.signature_allowed_list = RefIdItem.from_uuid(v2_uuid)
-
-
-class AdvancedInspectionProfileReferencesUpdater(ReferencesUpdater):
-    def update_references(self):
-        if advanced_malware_protection := self.parcel.advanced_malware_protection:
-            v2_uuid = self.get_target_uuid(UUID(advanced_malware_protection.ref_id.value))
-            self.parcel.advanced_malware_protection = RefIdItem.from_uuid(v2_uuid)
-
-        if intrusion_prevention := self.parcel.intrusion_prevention:
-            v2_uuid = self.get_target_uuid(UUID(intrusion_prevention.ref_id.value))
-            self.parcel.intrusion_prevention = RefIdItem.from_uuid(v2_uuid)
-
-        if ssl_decryption_profile := self.parcel.ssl_decryption_profile:
-            v2_uuid = self.get_target_uuid(UUID(ssl_decryption_profile.ref_id.value))
-            self.parcel.ssl_decryption_profile = RefIdItem.from_uuid(v2_uuid)
-
-        if url_filtering := self.parcel.url_filtering:
-            v2_uuid = self.get_target_uuid(UUID(url_filtering.ref_id.value))
-            self.parcel.url_filtering = RefIdItem.from_uuid(v2_uuid)
-
-
-REFERENCES_UPDATER_MAPPING: Mapping[type, Type[ReferencesUpdater]] = {
-    UrlFilteringParcel: UrlFilteringReferencesUpdater,
-    SslDecryptionProfileParcel: SslProfileReferencesUpdater,
-    IntrusionPreventionParcel: IntrusionPreventionReferencesUpdater,
-    AdvancedInspectionProfileParcel: AdvancedInspectionProfileReferencesUpdater,
-}
 
 POLICY_OBJECTS_PUSH_ORDER: Mapping[Type[AnyParcel], int] = {
     UrlFilteringParcel: 1,
@@ -153,8 +97,7 @@ class GroupsOfInterestPusher:
                 continue
 
             try:
-                update_parcels_references(parcel, self.push_context.id_lookup, REFERENCES_UPDATER_MAPPING)
-
+                parcel = update_parcel_references(parcel, self.push_context.id_lookup)
                 parcel_id = self._policy_object_api.create(profile_id=profile_id, payload=parcel).id
                 profile_rollback.add_parcel(parcel.type_, parcel_id)
                 self._push_result.report.groups_of_interest.add_created(parcel.parcel_name, parcel_id)

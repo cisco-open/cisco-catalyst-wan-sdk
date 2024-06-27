@@ -56,7 +56,7 @@ class PolicySettings(BaseModel):
     failure_mode: Optional[Global[FailureMode]] = Field(
         default=None, validation_alias="failureMode", serialization_alias="failureMode"
     )
-    security_logging: NetworkSettings = Field(
+    security_logging: Optional[NetworkSettings] = Field(
         default=None, validation_alias="securityLogging", serialization_alias="securityLogging"
     )
 
@@ -155,7 +155,7 @@ class PolicyParcel(_ParcelBase):
     )
 
     settings: Optional[PolicySettings] = Field(default=None, validation_alias=AliasPath("data", "settings"))
-    app_hosting: AppHosting = Field(default=None, validation_alias=AliasPath("data", "appHosting"))
+    app_hosting: Optional[AppHosting] = Field(default=None, validation_alias=AliasPath("data", "appHosting"))
 
     def add_ng_firewall_assembly(self, ng_firewall_id: UUID, entries: List[NgFirewallEntry] = []) -> None:
         self.assembly.append(
