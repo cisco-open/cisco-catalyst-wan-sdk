@@ -39,7 +39,7 @@ class ManagementInterfaceEthernetConverter(FTConverter):
             parcel_name=name,
             parcel_description=description,
             advanced=self.parse_advanced(data),
-            interface_name=parse_interface_name(data),
+            interface_name=parse_interface_name(self, data),
             interface_description=data.get("description", Default[None](value=None)),
             intf_ip_address=self.parse_ipv4_address(data),
             shutdown=data.get("shutdown"),

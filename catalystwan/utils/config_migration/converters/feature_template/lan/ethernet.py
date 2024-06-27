@@ -114,7 +114,7 @@ class LanInterfaceEthernetConverter(FTConverter):
         return {"parcel_name": name, "parcel_description": description, **values}
 
     def configure_interface_name(self, values: dict) -> None:
-        values["interface_name"] = parse_interface_name(values)
+        values["interface_name"] = parse_interface_name(self, values)
 
     def configure_ethernet_description(self, values: dict) -> None:
         values["ethernet_description"] = values.get("description")

@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 
 from catalystwan.models.configuration.config_migration import ConvertResult
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel
+from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 
 
 class FTConverter:
@@ -21,6 +22,11 @@ class FTConverter:
 
     def convert(self, name: str, description: str, template_values: dict) -> ConvertResult[AnyParcel]:
         """Converts the template values into a parcel."""
-        parcel = self.create_parcel(name, description, template_values)
+        parcel: Optional[AnyParcel] = None
+        try:
+            parcel = self.create_parcel(name, description, template_values)
+        except CatalystwanConverterCantConvertException as e:
+            self._convert_result.update_status("failed", str(e))
+
         self._convert_result.output = parcel
         return self._convert_result

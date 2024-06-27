@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
 from copy import deepcopy
 
@@ -23,15 +24,15 @@ class SNMPConverter(FTConverter):
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> SNMPParcel:
         """
-        Creates a SecurityParcel object based on the provided template values.
+        Creates a SNMPParcel object based on the provided template values.
 
         Args:
-            name (str): The name of the SecurityParcel.
-            description (str): The description of the SecurityParcel.
+            name (str): The name of the SNMPParcel.
+            description (str): The description of the SNMPParcel.
             template_values (dict): A dictionary containing the template values.
 
         Returns:
-            SecurityParcel: A SecurityParcel object with the provided template values.
+            SNMPParcel: A SNMPParcel object with the provided template values.
         """
         values = deepcopy(template_values)
         self.configure_community(values)
@@ -54,4 +55,5 @@ class SNMPConverter(FTConverter):
                     logger.info(
                         f"OID ID is not set, using device specific variable {self.default_view_oid_id.format(i + 1)}"
                     )
+
                 oid["id"] = id_

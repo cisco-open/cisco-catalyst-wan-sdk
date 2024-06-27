@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from copy import deepcopy
 from ipaddress import IPv6Address
 from typing import Optional, Union
@@ -142,4 +143,7 @@ class WanInterfaceIpsecConverter(FTConverter):
 
     def parse_tracker(self, data: dict) -> Default[None]:
         # TODO: Implement tracker
+        self._convert_result.update_status(
+            "partial", "Tracker is set as default value. It should be implemented in the future."
+        )
         return Default[None](value=None)

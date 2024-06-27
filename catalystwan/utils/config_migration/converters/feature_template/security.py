@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from typing import List
 
 from catalystwan.api.configuration_groups.parcel import Global, as_default
@@ -22,8 +23,7 @@ class SecurityConverter(FTConverter):
         "security-vedge",
     )
 
-    @staticmethod
-    def create_parcel(name: str, description: str, template_values: dict) -> SecurityParcel:
+    def create_parcel(self, name: str, description: str, template_values: dict) -> SecurityParcel:
         """
         Creates a SecurityParcel object based on the provided template values.
 

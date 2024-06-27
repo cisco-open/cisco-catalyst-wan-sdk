@@ -44,7 +44,7 @@ class WanInterfaceEthernetConverter(FTConverter):
         data = deepcopy(template_values)
 
         encapsulation = self.parse_encapsulations(data.get("tunnel_interface", {}).get("encapsulation", []))
-        interface_name = parse_interface_name(data)
+        interface_name = parse_interface_name(self, data)
         interface_description = data.get(
             "description", as_global(description)
         )  # Edge case where model doesn't have description but its required
