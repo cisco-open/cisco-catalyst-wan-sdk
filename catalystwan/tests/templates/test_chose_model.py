@@ -15,7 +15,7 @@ class TestChooseModel(unittest.TestCase):
         [
             (key, value)
             for key, value in available_models.items()
-            if key != "cisco_secure_internet_gateway"  # required values
+            if key not in ["cisco_secure_internet_gateway", "vpn_vsmart"]  # required values
         ]
     )
     def test_choose_model(self, model_type, model_cls):

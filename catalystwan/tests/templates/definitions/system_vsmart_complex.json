@@ -8,15 +8,23 @@
     "factoryDefault": false,
     "templateMinVersion": "15.0.0",
     "templateDefinition": {
+        "clock": {
+            "timezone": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "UTC"
+            }
+        },
         "host-name": {
+            "vipValue": "",
+            "vipType": "variableName",
             "vipObjectType": "object",
-            "vipType": "constant",
-            "vipValue": "myhostname"
+            "vipVariableName": "system_host_name"
         },
         "ipv6-strict-control": {
             "vipObjectType": "object",
             "vipType": "constant",
-            "vipValue": true
+            "vipValue": "true"
         },
         "description": {
             "vipObjectType": "object",
@@ -31,22 +39,39 @@
         "system-tunnel-mtu": {
             "vipObjectType": "object",
             "vipType": "constant",
-            "vipValue": "example_mtu_size"
+            "vipValue": 1000
+        },
+        "gps-location": {
+            "latitude": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 37
+            },
+            "longitude": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": -122
+            }
         },
         "device-groups": {
             "vipObjectType": "list",
             "vipType": "constant",
-            "vipValue": "example1,example2"
+            "vipValue": [
+                "example1",
+                "example2"
+            ]
         },
         "system-ip": {
+            "vipValue": "",
+            "vipType": "variableName",
             "vipObjectType": "object",
-            "vipType": "constant",
-            "vipValue": "192.168.1.1"
+            "vipVariableName": "system_system_ip"
         },
         "site-id": {
+            "vipValue": "",
+            "vipType": "variableName",
             "vipObjectType": "object",
-            "vipType": "constant",
-            "vipValue": 500
+            "vipVariableName": "system_site_id"
         },
         "overlay-id": {
             "vipObjectType": "object",
@@ -56,7 +81,9 @@
         "topology": {
             "vipObjectType": "list",
             "vipType": "constant",
-            "vipValue": "Hub and Spoke"
+            "vipValue": [
+                "hub-and-spoke"
+            ]
         },
         "port-offset": {
             "vipObjectType": "object",
@@ -81,22 +108,22 @@
         "track-transport": {
             "vipObjectType": "object",
             "vipType": "constant",
-            "vipValue": true
+            "vipValue": "true"
         },
         "track-default-gateway": {
             "vipObjectType": "object",
             "vipType": "constant",
-            "vipValue": true
+            "vipValue": "true"
         },
         "iptables-enable": {
             "vipObjectType": "object",
             "vipType": "constant",
-            "vipValue": true
+            "vipValue": "true"
         },
         "admin-tech-on-failure": {
             "vipObjectType": "object",
             "vipType": "constant",
-            "vipValue": true
+            "vipValue": "true"
         },
         "idle-timeout": {
             "vipObjectType": "object",
@@ -106,7 +133,61 @@
         "management-region": {
             "vipObjectType": "object",
             "vipType": "constant",
-            "vipValue": true
+            "vipValue": "true"
+        },
+        "tloc-color-compatibility": {
+            "compatible": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "color-1": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "mpls"
+                        },
+                        "priority-order": [
+                            "color-1",
+                            "color-2"
+                        ],
+                        "color-2": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "metro-ethernet"
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "color-1",
+                    "color-2"
+                ]
+            },
+            "incompatible": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "color-1": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "biz-internet"
+                        },
+                        "priority-order": [
+                            "color-1",
+                            "color-2"
+                        ],
+                        "color-2": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "public-internet"
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "color-1",
+                    "color-2"
+                ]
+            }
         }
     }
 }

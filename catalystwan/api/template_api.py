@@ -20,6 +20,7 @@ from catalystwan.api.templates.device_template.device_template import (
 from catalystwan.api.templates.feature_template import FeatureTemplate
 from catalystwan.api.templates.feature_template_field import FeatureTemplateField
 from catalystwan.api.templates.feature_template_payload import FeatureTemplatePayload
+from catalystwan.api.templates.models.aaa_model import AAAModel
 from catalystwan.api.templates.models.cisco_aaa_model import CiscoAAAModel
 from catalystwan.api.templates.models.cisco_banner_model import CiscoBannerModel
 from catalystwan.api.templates.models.cisco_bfd_model import CiscoBFDModel
@@ -38,6 +39,8 @@ from catalystwan.api.templates.models.cli_template import CliTemplateModel
 from catalystwan.api.templates.models.omp_vsmart_model import OMPvSmart
 from catalystwan.api.templates.models.security_vsmart_model import SecurityvSmart
 from catalystwan.api.templates.models.system_vsmart_model import SystemVsmart
+from catalystwan.api.templates.models.vpn_vsmart_interface_model import VpnVsmartInterfaceModel
+from catalystwan.api.templates.models.vpn_vsmart_model import VpnVsmartModel
 from catalystwan.dataclasses import Device, DeviceTemplateInfo, FeatureTemplateInfo, FeatureTemplatesTypes, TemplateInfo
 from catalystwan.endpoints.configuration_device_template import FeatureToCLIPayload
 from catalystwan.exceptions import AttachedError, CatalystwanDeprecationWarning, TemplateNotFoundError
@@ -176,17 +179,19 @@ class TemplatesAPI:
         }
 
         invalid = False
+        msg = {}
         for var in vars:
             if var.property not in payload["deviceTemplateList"][0]["device"][0]:
                 pointer = payload["deviceTemplateList"][0]["device"][0]
                 if var.property not in kwargs["device_specific_vars"]:
                     invalid = True
+                    msg[var.property] = "should be provided in attach method as device_specific_vars kwarg."
                     logger.error(f"{var.property} should be provided in attach method as device_specific_vars kwarg.")
                 else:
                     pointer[var.property] = kwargs["device_specific_vars"][var.property]  # type: ignore
 
         if invalid:
-            raise TypeError()
+            raise TypeError(f"{msg}")
 
         endpoint = "/dataservice/template/device/config/attachfeature"
         logger.info(f"Attaching a template: {name} to the device: {device.hostname}.")
@@ -512,6 +517,7 @@ class TemplatesAPI:
         Method will be deleted if every template's payload will be generated dynamically.
         """
         ported_templates = (
+            AAAModel,
             CiscoAAAModel,
             CiscoBFDModel,
             CiscoBannerModel,
@@ -530,6 +536,8 @@ class TemplatesAPI:
             CliTemplateModel,
             CiscoSecureInternetGatewayModel,
             CiscoOspfv3Model,
+            VpnVsmartModel,
+            VpnVsmartInterfaceModel,
         )
 
         return isinstance(template, ported_templates)

@@ -47,7 +47,7 @@ class DeviceTemplate(BaseModel):
     template_name: str = Field(alias="templateName")
     template_description: str = Field(alias="templateDescription")
     general_templates: List[GeneralTemplate] = Field(alias="generalTemplates")
-    device_role: str = Field(default="sdwan-edge", alias="deviceRole")
+    device_role: str = Field(default=None, alias="deviceRole")
     device_type: DeviceModel = Field(alias="deviceType")
     security_policy_id: str = Field(default="", alias="securityPolicyId")
     policy_id: str = Field(default="", alias="policyId")

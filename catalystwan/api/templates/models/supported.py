@@ -1,5 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
+from catalystwan.api.templates.models.aaa_model import AAAModel
 from catalystwan.api.templates.models.cisco_aaa_model import CiscoAAAModel
 from catalystwan.api.templates.models.cisco_banner_model import CiscoBannerModel
 from catalystwan.api.templates.models.cisco_bfd_model import CiscoBFDModel
@@ -15,8 +16,11 @@ from catalystwan.api.templates.models.cisco_vpn_model import CiscoVPNModel
 from catalystwan.api.templates.models.omp_vsmart_model import OMPvSmart
 from catalystwan.api.templates.models.security_vsmart_model import SecurityvSmart
 from catalystwan.api.templates.models.system_vsmart_model import SystemVsmart
+from catalystwan.api.templates.models.vpn_vsmart_interface_model import VpnVsmartInterfaceModel
+from catalystwan.api.templates.models.vpn_vsmart_model import VpnVsmartModel
 
 available_models = {
+    "aaa": AAAModel,
     "cisco_aaa": CiscoAAAModel,
     "cisco_banner": CiscoBannerModel,
     "cisco_bfd": CiscoBFDModel,
@@ -33,4 +37,6 @@ available_models = {
     "omp_vsmart": OMPvSmart,
     "security_vsmart": SecurityvSmart,
     "system_vsmart": SystemVsmart,
+    "vpn_vsmart": VpnVsmartModel,
+    "vpn_vsmart_interface": VpnVsmartInterfaceModel,
 }
