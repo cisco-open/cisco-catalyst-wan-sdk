@@ -34,7 +34,7 @@ class NGFirewallAssemblyItem(AssemblyItemBase):
     type: Literal["zoneBasedFW"] = "zoneBasedFW"
     entries: List[NGFirewallZoneListEntry] = []
 
-    def add_zone_pair(self, src_zone_id: UUID, dst_zone_id: UUID):
+    def add_zone_pair(self, src_zone_id: ZoneListId, dst_zone_id: UUID):
         self.entries.append(NGFirewallZoneListEntry(src_zone_list_id=src_zone_id, dst_zone_list_id=dst_zone_id))
 
 
