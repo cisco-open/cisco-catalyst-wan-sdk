@@ -177,7 +177,7 @@ class UnifiedSecurityPolicy(PolicyCreationPayload):
     def add_item(self, item: UnifiedSecurityPolicyAssemblyItem) -> None:
         self.policy_definition.assembly.append(item)
 
-    def add_advanced_inspection_profile_(self, definition_id: UUID) -> None:
+    def add_advanced_inspection_profile(self, definition_id: UUID) -> None:
         self.add_item(AdvancedInspectionProfileAssemblyItem(definition_id=definition_id))
 
     def add_ng_firewall(self, definition_id: UUID) -> NGFirewallAssemblyItem:
