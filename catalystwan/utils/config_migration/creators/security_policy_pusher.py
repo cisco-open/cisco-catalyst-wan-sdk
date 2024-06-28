@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Mapping, Type, cast
+from typing import Callable, cast
 from uuid import UUID
 
 from catalystwan.api.builders.feature_profiles.report import FeatureProfileBuildReport
@@ -10,124 +10,14 @@ from catalystwan.models.configuration.config_migration import (
     UX2Config,
     UX2ConfigPushResult,
 )
-from catalystwan.models.configuration.feature_profile.common import RefIdItem, RefIdList
 from catalystwan.models.configuration.feature_profile.parcel import AnyDnsSecurityParcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import NgfirewallParcel, PolicyParcel
-from catalystwan.models.configuration.feature_profile.sdwan.embedded_security.ngfirewall import (
-    AipAction,
-    AppList,
-    AppListFlat,
-    DestinationFqdnList,
-    DestinationGeoLocationList,
-    DestinationPortList,
-    DestinationScalableGroupTagList,
-    NgFirewallSequence,
-    ProtocolNameList,
-    SourceDataPrefixList,
-    SourceGeoLocationList,
-    SourcePortList,
-    SourceScalableGroupTagList,
-)
-from catalystwan.models.configuration.feature_profile.sdwan.embedded_security.policy import (
-    AdvancedInspectionProfile,
-    NgFirewallContainer,
-    NgFirewallEntry,
-    SslDecryption,
-)
+from catalystwan.models.configuration.feature_profile.sdwan.embedded_security.policy import NgFirewallContainer
 from catalystwan.session import ManagerSession
 
-from .references_updater import ReferencesUpdater, update_parcels_references
+from .references_updater import update_parcel_references
 
 logger = logging.getLogger(__name__)
-
-
-class DnsSecurityReferencesUpdater(ReferencesUpdater):
-    def update_references(self) -> None:
-        parcel = cast(AnyDnsSecurityParcel, self.parcel)
-        if local_domain_bypass_list := parcel.local_domain_bypass_list:
-            target_uuid = self.get_target_uuid(local_domain_bypass_list.ref_id.value)
-            parcel.local_domain_bypass_list = RefIdItem.from_uuid(target_uuid)
-
-
-class SecurityPolicyReferencesUpdater(ReferencesUpdater):
-    def _update_ng_firewall_entry_refs(self, entry: NgFirewallEntry) -> None:
-        if type(entry.src_zone) is RefIdItem:
-            entry.src_zone = RefIdItem.from_uuid(self.get_target_uuid(entry.src_zone.ref_id.value))
-
-        if type(entry.dst_zone) is RefIdItem:
-            entry.dst_zone = RefIdItem.from_uuid(self.get_target_uuid(entry.dst_zone.ref_id.value))
-
-    def update_references(self) -> None:
-        parcel = cast(PolicyParcel, self.parcel)
-        for assembly in parcel.assembly:
-            if type(assembly) is SslDecryption:
-                target_uuid = self.get_target_uuid(assembly.ssl_decryption.ref_id.value)
-                assembly.ssl_decryption = RefIdItem.from_uuid(target_uuid)
-            elif type(assembly) is AdvancedInspectionProfile:
-                target_uuid = self.get_target_uuid(assembly.advanced_inspection_profile.ref_id.value)
-                assembly.advanced_inspection_profile = RefIdItem.from_uuid(target_uuid)
-            elif type(assembly) is NgFirewallContainer:
-                target_uuid = self.get_target_uuid(assembly.ng_firewall.ref_id.value)
-                assembly.ng_firewall.ref_id.value = target_uuid
-
-                for entry in assembly.ng_firewall.entries:
-                    self._update_ng_firewall_entry_refs(entry)
-
-
-class NgfirewallReferencesUpdater(ReferencesUpdater):
-    def _update_actions(self, sequence: NgFirewallSequence) -> None:
-        for action in sequence.actions:
-            if type(action) is AipAction:
-                uuid = self.get_target_uuid(action.parameter.ref_id.value)
-                action.parameter = RefIdItem.from_uuid(uuid)
-
-    def _update_match_entries(self, sequence: NgFirewallSequence) -> None:
-        for entry in sequence.match.entries:
-            if type(entry) is SourceDataPrefixList:
-                uuids = entry.source_data_prefix_list.ref_id.value
-                entry.source_data_prefix_list = RefIdList.from_uuids(list(map(self.get_target_uuid, uuids)))
-            elif type(entry) is DestinationFqdnList:
-                uuids = entry.destination_fqdn_list.ref_id.value
-                entry.destination_fqdn_list = RefIdList.from_uuids(list(map(self.get_target_uuid, uuids)))
-            elif type(entry) is SourceGeoLocationList:
-                uuids = entry.source_geo_location_list.ref_id.value
-                entry.source_geo_location_list = RefIdList.from_uuids(list(map(self.get_target_uuid, uuids)))
-            elif type(entry) is DestinationGeoLocationList:
-                uuids = entry.destination_geo_location_list.ref_id.value
-                entry.destination_geo_location_list = RefIdList.from_uuids(list(map(self.get_target_uuid, uuids)))
-            elif type(entry) is SourcePortList:
-                uuids = entry.source_port_list.ref_id.value
-                entry.source_port_list = RefIdList.from_uuids(list(map(self.get_target_uuid, uuids)))
-            elif type(entry) is DestinationPortList:
-                uuids = entry.destination_port_list.ref_id.value
-                entry.destination_port_list = RefIdList.from_uuids(list(map(self.get_target_uuid, uuids)))
-            elif type(entry) is SourceScalableGroupTagList:
-                uuids = entry.source_scalable_group_tag_list.ref_id.value
-                entry.source_scalable_group_tag_list = RefIdList.from_uuids(list(map(self.get_target_uuid, uuids)))
-            elif type(entry) is DestinationScalableGroupTagList:
-                uuids = entry.destination_scalable_group_tag_list.ref_id.value
-                entry.destination_scalable_group_tag_list = RefIdList.from_uuids(list(map(self.get_target_uuid, uuids)))
-            elif type(entry) is ProtocolNameList:
-                uuids = entry.protocol_name_list.ref_id.value
-                entry.protocol_name_list = RefIdList.from_uuids(list(map(self.get_target_uuid, uuids)))
-            elif type(entry) is AppList:
-                entry.app_list = RefIdList.from_uuids(list(map(self.get_target_uuid, entry.app_list.ref_id.value)))
-            elif type(entry) is AppListFlat:
-                uuids = entry.app_list_flat.ref_id.value
-                entry.app_list_flat = RefIdList.from_uuids(list(map(self.get_target_uuid, uuids)))
-
-    def update_references(self) -> None:
-        parcel = cast(NgfirewallParcel, self.parcel)
-        for sequence in parcel.sequences:
-            self._update_match_entries(sequence)
-            self._update_actions(sequence)
-
-
-REFERENCES_UPDATER_MAPPING: Mapping[type, Type[ReferencesUpdater]] = {
-    AnyDnsSecurityParcel: DnsSecurityReferencesUpdater,
-    NgfirewallParcel: NgfirewallReferencesUpdater,
-    PolicyParcel: SecurityPolicyReferencesUpdater,
-}
 
 
 class SecurityPolicyPusher:
@@ -166,7 +56,7 @@ class SecurityPolicyPusher:
         self, profile_id: UUID, firewall: TransformedParcel, report: FeatureProfileBuildReport
     ) -> None:
         parcel = cast(NgfirewallParcel, firewall.parcel)
-        update_parcels_references(parcel, self.push_context.id_lookup, REFERENCES_UPDATER_MAPPING)
+        parcel = update_parcel_references(parcel, self.push_context.id_lookup)
 
         try:
             fw_id = self._embedded_security_api.create_parcel(profile_id, parcel).id
@@ -182,7 +72,7 @@ class SecurityPolicyPusher:
         parcel = cast(PolicyParcel, policy.parcel)
 
         try:
-            update_parcels_references(parcel, self.push_context.id_lookup, REFERENCES_UPDATER_MAPPING)
+            parcel = update_parcel_references(parcel, self.push_context.id_lookup)
             security_policy_parcel_id = self._embedded_security_api.create_parcel(profile_id, parcel).id
             report.add_created_parcel(parcel.parcel_name, security_policy_parcel_id)
             self.push_context.id_lookup[policy.header.origin] = security_policy_parcel_id
@@ -234,7 +124,7 @@ class SecurityPolicyPusher:
             self._progress(msg, i + 1, len(dns_security_policies))
 
             parcel = cast(AnyDnsSecurityParcel, dns_security_policy.parcel)
-            update_parcels_references(parcel, self.push_context.id_lookup, REFERENCES_UPDATER_MAPPING)
+            parcel = update_parcel_references(parcel, self.push_context.id_lookup)
 
             try:
                 profile_id = self._dns_security_api.create_profile(parcel.parcel_name, parcel.parcel_description).id
