@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "catalystwan"
-version = "0.33.10"
+version = "0.33.11"
 description = "Cisco Catalyst WAN SDK for Python"
 authors = ["kagorski <kagorski@cisco.com>"]
 readme = "README.md"
@@ -19,7 +19,7 @@ flake8-quotes = "^3.3.1"
 clint = "^0.5.1"
 requests-toolbelt = "^1.0.0"
 packaging = "^23.0"
-pydantic = "^2.5"
+pydantic = "^2.7"
 typing-extensions = "^4.6.1"
 
 [tool.poetry.dev-dependencies]
