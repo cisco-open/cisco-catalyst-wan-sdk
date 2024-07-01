@@ -1,0 +1,208 @@
+{
+    "templateName": "vpn_vsmart_interface_complex",
+    "templateDescription": "vpn_vsmart_interface_complex",
+    "templateType": "vpn-vsmart-interface",
+    "deviceType": [
+        "vsmart"
+    ],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "if-name": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "GigabitEthernet0/0/0"
+        },
+        "description": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "WAN interface"
+        },
+        "ip": {
+            "address": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "10.10.10.1"
+            },
+            "dhcp-client": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "false"
+            },
+            "dhcp-distance": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 1
+            }
+        },
+        "ipv6": {
+            "address": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "2001:db8::1/64"
+            },
+            "dhcp-client": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "true"
+            },
+            "dhcp-distance": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 1
+            },
+            "dhcp-rapid-commit": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "true"
+            }
+        },
+        "tunnel-interface": {
+            "group": {
+                "vipObjectType": "list",
+                "vipType": "constant",
+                "vipValue": [
+                    0,
+                    1
+                ]
+            },
+            "color": {
+                "value": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "blue"
+                }
+            },
+            "carrier": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "carrier1"
+            },
+            "nat-refresh-interval": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 30
+            },
+            "hello-interval": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 10
+            },
+            "hello-tolerance": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 30
+            },
+            "allow-service": {
+                "all": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                },
+                "dhcp": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "false"
+                },
+                "dns": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                },
+                "icmp": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                },
+                "sshd": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                },
+                "netconf": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "false"
+                },
+                "ntp": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                },
+                "stun": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "false"
+                }
+            }
+        },
+        "clear-dont-fragment": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "autonegotiate": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "pmtu": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "false"
+        },
+        "mtu": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 1500
+        },
+        "tcp-mss-adjust": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 1452
+        },
+        "mac-address": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "00:1A:2B:3C:4D:5F"
+        },
+        "speed": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "1000"
+        },
+        "duplex": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "full"
+        },
+        "shutdown": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "false"
+        },
+        "arp": {
+            "ip": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "addr": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "192.168.1.1"
+                        },
+                        "mac": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "00:1A:2B:3C:4D:5E"
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "addr"
+                ]
+            }
+        }
+    }
+}

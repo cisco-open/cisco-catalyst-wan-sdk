@@ -1,0 +1,193 @@
+{
+    "templateName": "system_vsmart_complex",
+    "templateDescription": "Apply System settings for vSmart controller",
+    "templateType": "system-vsmart",
+    "deviceType": [
+        "vsmart"
+    ],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "clock": {
+            "timezone": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "UTC"
+            }
+        },
+        "host-name": {
+            "vipValue": "",
+            "vipType": "variableName",
+            "vipObjectType": "object",
+            "vipVariableName": "system_host_name"
+        },
+        "ipv6-strict-control": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "description": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "Example description"
+        },
+        "location": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "Location"
+        },
+        "system-tunnel-mtu": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 1000
+        },
+        "gps-location": {
+            "latitude": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 37
+            },
+            "longitude": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": -122
+            }
+        },
+        "device-groups": {
+            "vipObjectType": "list",
+            "vipType": "constant",
+            "vipValue": [
+                "example1",
+                "example2"
+            ]
+        },
+        "system-ip": {
+            "vipValue": "",
+            "vipType": "variableName",
+            "vipObjectType": "object",
+            "vipVariableName": "system_system_ip"
+        },
+        "site-id": {
+            "vipValue": "",
+            "vipType": "variableName",
+            "vipObjectType": "object",
+            "vipVariableName": "system_site_id"
+        },
+        "overlay-id": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 44
+        },
+        "topology": {
+            "vipObjectType": "list",
+            "vipType": "constant",
+            "vipValue": [
+                "hub-and-spoke"
+            ]
+        },
+        "port-offset": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 5
+        },
+        "port-hop": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": true
+        },
+        "control-session-pps": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 999
+        },
+        "controller-group-id": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 44
+        },
+        "track-transport": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "track-default-gateway": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "iptables-enable": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "admin-tech-on-failure": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "idle-timeout": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 100
+        },
+        "management-region": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "tloc-color-compatibility": {
+            "compatible": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "color-1": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "mpls"
+                        },
+                        "priority-order": [
+                            "color-1",
+                            "color-2"
+                        ],
+                        "color-2": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "metro-ethernet"
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "color-1",
+                    "color-2"
+                ]
+            },
+            "incompatible": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "color-1": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "biz-internet"
+                        },
+                        "priority-order": [
+                            "color-1",
+                            "color-2"
+                        ],
+                        "color-2": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "public-internet"
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "color-1",
+                    "color-2"
+                ]
+            }
+        }
+    }
+}

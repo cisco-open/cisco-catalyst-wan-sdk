@@ -4,22 +4,18 @@ import unittest
 
 from parameterized import parameterized  # type: ignore
 
-from catalystwan.api.templates.models.cisco_aaa_model import CiscoAAAModel
-from catalystwan.api.templates.models.cisco_system import CiscoSystemModel
-from catalystwan.api.templates.models.omp_vsmart_model import OMPvSmart
-from catalystwan.api.templates.models.security_vsmart_model import SecurityvSmart
-from catalystwan.api.templates.models.system_vsmart_model import SystemVsmart
+from catalystwan.api.templates.models.supported import available_models
 from catalystwan.utils.feature_template.choose_model import choose_model
+
+# For "cisco_secure_internet_gateway" there are required values
 
 
 class TestChooseModel(unittest.TestCase):
     @parameterized.expand(
         [
-            ("cedge_aaa", CiscoAAAModel),
-            ("omp-vsmart", OMPvSmart),
-            ("security-vsmart", SecurityvSmart),
-            ("system-vsmart", SystemVsmart),
-            ("cisco_system", CiscoSystemModel),
+            (key, value)
+            for key, value in available_models.items()
+            if key not in ["cisco_secure_internet_gateway", "vpn_vsmart"]  # required values
         ]
     )
     def test_choose_model(self, model_type, model_cls):

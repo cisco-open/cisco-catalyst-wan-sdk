@@ -1,0 +1,268 @@
+{
+    "templateName": "cisco_logging_complex",
+    "templateDescription": "cisco_logging_complex",
+    "templateType": "cisco_logging",
+    "deviceType": [],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "disk": {
+            "enable": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "true"
+            },
+            "file": {
+                "size": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": 20
+                },
+                "rotate": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": 5
+                }
+            }
+        },
+        "tls-profile": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "profile": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "default_tls_profile"
+                    },
+                    "tls-version": {
+                        "version": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "TLSv1.2"
+                        }
+                    },
+                    "auth-type": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "Server"
+                    },
+                    "ciphersuite": {
+                        "ciphersuite-list": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": [
+                                "ECDHE-ECDSA-AES256-GCM-SHA384",
+                                "ECDHE-RSA-AES256-GCM-SHA384"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "profile": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "secure_tls_profile"
+                    },
+                    "tls-version": {
+                        "version": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "TLSv1.2"
+                        }
+                    },
+                    "auth-type": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "Mutual"
+                    },
+                    "ciphersuite": {
+                        "ciphersuite-list": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": [
+                                "ECDHE-ECDSA-CHACHA20-POLY1305",
+                                "ECDHE-RSA-CHACHA20-POLY1305"
+                            ]
+                        }
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "profile"
+            ]
+        },
+        "server": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "1.1.1.1"
+                    },
+                    "vpn": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 10
+                    },
+                    "source-interface": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "GigabitEthernet0/0"
+                    },
+                    "priority": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "debugging"
+                    },
+                    "tls": {
+                        "enable-tls": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "true"
+                        },
+                        "tls-properties": {
+                            "custom-profile": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": "true"
+                            },
+                            "profile": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": "default_tls_profile"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "log_server_2"
+                    },
+                    "vpn": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 20
+                    },
+                    "source-interface": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "GigabitEthernet0/1"
+                    },
+                    "priority": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "error"
+                    },
+                    "tls": {
+                        "enable-tls": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "false"
+                        },
+                        "tls-properties": {
+                            "custom-profile": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": "false"
+                            }
+                        }
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "name"
+            ]
+        },
+        "ipv6-server": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "ipv6_log_server_1"
+                    },
+                    "vpn": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 10
+                    },
+                    "source-interface": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "GigabitEthernet0/2"
+                    },
+                    "priority": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "critical"
+                    },
+                    "tls": {
+                        "enable-tls": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "true"
+                        },
+                        "tls-properties": {
+                            "custom-profile": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": "true"
+                            },
+                            "profile": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": "secure_tls_profile"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "ipv6_log_server_2"
+                    },
+                    "vpn": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 30
+                    },
+                    "source-interface": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "GigabitEthernet0/3"
+                    },
+                    "priority": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "emergency"
+                    },
+                    "tls": {
+                        "enable-tls": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "false"
+                        },
+                        "tls-properties": {
+                            "custom-profile": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": "false"
+                            }
+                        }
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "name"
+            ]
+        }
+    }
+}

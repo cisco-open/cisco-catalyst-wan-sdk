@@ -1,0 +1,96 @@
+{
+    "templateName": "basic_aaa",
+    "templateDescription": "zyx",
+    "templateType": "aaa",
+    "deviceType": [
+        "vsmart"
+    ],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "aaa": {
+            "auth-order": {
+                "vipObjectType": "list",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "vipType": "constant",
+                        "vipValue": "local",
+                        "vipObjectType": "object"
+                    },
+                    {
+                        "vipType": "constant",
+                        "vipValue": "radius",
+                        "vipObjectType": "object"
+                    },
+                    {
+                        "vipType": "constant",
+                        "vipValue": "tacacs",
+                        "vipObjectType": "object"
+                    }
+                ]
+            },
+            "auth-fallback": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "false"
+            },
+            "admin-auth-order": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "false"
+            },
+            "logs": {
+                "audit-disable": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "false"
+                },
+                "netconf-disable": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "false"
+                }
+            },
+            "accounting": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "false"
+            },
+            "ciscotacro-user": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "true"
+            },
+            "ciscotacrw-user": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "true"
+            }
+        },
+        "tacacs": {
+            "timeout": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 5
+            },
+            "authentication": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "pap"
+            }
+        },
+        "radius": {
+            "timeout": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 5
+            },
+            "retransmit": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 3
+            }
+        }
+    }
+}

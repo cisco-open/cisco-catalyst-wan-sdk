@@ -1,5 +1,5 @@
 {
-    "templateName": "Basic_Cisco_VPN_Model",
+    "templateName": "cisco_vpn_basic",
     "templateDescription": "Primitive",
     "templateType": "cisco_vpn",
     "deviceType": [

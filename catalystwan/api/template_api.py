@@ -8,6 +8,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional, Type, overload
 
 from ciscoconfparse import CiscoConfParse  # type: ignore
+from typing_extensions import deprecated
 
 from catalystwan.api.task_status_api import Task
 from catalystwan.api.templates.cli_template import CLITemplate
@@ -19,6 +20,7 @@ from catalystwan.api.templates.device_template.device_template import (
 from catalystwan.api.templates.feature_template import FeatureTemplate
 from catalystwan.api.templates.feature_template_field import FeatureTemplateField
 from catalystwan.api.templates.feature_template_payload import FeatureTemplatePayload
+from catalystwan.api.templates.models.aaa_model import AAAModel
 from catalystwan.api.templates.models.cisco_aaa_model import CiscoAAAModel
 from catalystwan.api.templates.models.cisco_banner_model import CiscoBannerModel
 from catalystwan.api.templates.models.cisco_bfd_model import CiscoBFDModel
@@ -37,12 +39,14 @@ from catalystwan.api.templates.models.cli_template import CliTemplateModel
 from catalystwan.api.templates.models.omp_vsmart_model import OMPvSmart
 from catalystwan.api.templates.models.security_vsmart_model import SecurityvSmart
 from catalystwan.api.templates.models.system_vsmart_model import SystemVsmart
+from catalystwan.api.templates.models.vpn_vsmart_interface_model import VpnVsmartInterfaceModel
+from catalystwan.api.templates.models.vpn_vsmart_model import VpnVsmartModel
 from catalystwan.dataclasses import Device, DeviceTemplateInfo, FeatureTemplateInfo, FeatureTemplatesTypes, TemplateInfo
 from catalystwan.endpoints.configuration_device_template import FeatureToCLIPayload
-from catalystwan.exceptions import AttachedError, TemplateNotFoundError
+from catalystwan.exceptions import AttachedError, CatalystwanDeprecationWarning, TemplateNotFoundError
+from catalystwan.models.common import DeviceModel
 from catalystwan.response import ManagerResponse
 from catalystwan.typed_list import DataSequence
-from catalystwan.utils.device_model import DeviceModel
 from catalystwan.utils.dict import merge
 from catalystwan.utils.pydantic_field import get_extra_field
 from catalystwan.utils.template_type import TemplateType
@@ -175,17 +179,19 @@ class TemplatesAPI:
         }
 
         invalid = False
+        msg = {}
         for var in vars:
             if var.property not in payload["deviceTemplateList"][0]["device"][0]:
                 pointer = payload["deviceTemplateList"][0]["device"][0]
                 if var.property not in kwargs["device_specific_vars"]:
                     invalid = True
+                    msg[var.property] = "should be provided in attach method as device_specific_vars kwarg."
                     logger.error(f"{var.property} should be provided in attach method as device_specific_vars kwarg.")
                 else:
                     pointer[var.property] = kwargs["device_specific_vars"][var.property]  # type: ignore
 
         if invalid:
-            raise TypeError()
+            raise TypeError(f"{msg}")
 
         endpoint = "/dataservice/template/device/config/attachfeature"
         logger.info(f"Attaching a template: {name} to the device: {device.hostname}.")
@@ -437,6 +443,9 @@ class TemplatesAPI:
         logger.info(f"Template {template.template_name} ({template_type}) was created successfully ({template_id}).")
         return template_id
 
+    @deprecated(
+        "Obsolete way to use Feature Templates - only Feature Templates", category=CatalystwanDeprecationWarning
+    )
     def _create_feature_template(self, template: FeatureTemplate) -> str:
         payload = template.generate_payload(self.session)
         response = self.session.post("/dataservice/template/feature", json=json.loads(payload))
@@ -508,6 +517,7 @@ class TemplatesAPI:
         Method will be deleted if every template's payload will be generated dynamically.
         """
         ported_templates = (
+            AAAModel,
             CiscoAAAModel,
             CiscoBFDModel,
             CiscoBannerModel,
@@ -526,6 +536,8 @@ class TemplatesAPI:
             CliTemplateModel,
             CiscoSecureInternetGatewayModel,
             CiscoOspfv3Model,
+            VpnVsmartModel,
+            VpnVsmartInterfaceModel,
         )
 
         return isinstance(template, ported_templates)
@@ -556,7 +568,7 @@ class TemplatesAPI:
             name=template.template_name,
             description=template.template_description,
             template_type=template.type,
-            device_types=[device_model.value for device_model in template.device_models],
+            device_types=[device_model for device_model in template.device_models],
             definition={},
         )  # type: ignore
 
@@ -566,6 +578,7 @@ class TemplatesAPI:
         for field in fr_template_fields:
             value = None
             priority_order = None
+            json_dumped_value = None
             # TODO How to discover Device specific variable
             if field.key in template.device_specific_variables:
                 value = template.device_specific_variables[field.key]
@@ -603,7 +616,7 @@ class TemplatesAPI:
         available_devices_for_template = [device["name"] for device in template_type.device_models]
 
         provided_device_models = [
-            dev_mod.value if type(dev_mod) is DeviceModel else dev_mod for dev_mod in template.device_models
+            dev_mod if type(dev_mod) is DeviceModel else dev_mod for dev_mod in template.device_models
         ]
 
         if not all(dev in available_devices_for_template for dev in provided_device_models):

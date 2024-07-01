@@ -1,0 +1,502 @@
+{
+    "templateName": "cisco_system_complex",
+    "templateDescription": "cisco_system_complex",
+    "templateType": "cisco_system",
+    "deviceType": [],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "clock": {
+            "timezone": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "UTC"
+            }
+        },
+        "host-name": {
+            "vipValue": "",
+            "vipType": "variableName",
+            "vipObjectType": "object",
+            "vipVariableName": "sdwan-hostname"
+        },
+        "description": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "Example desc"
+        },
+        "location": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "Data Center A"
+        },
+        "gps-location": {
+            "latitude": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 37.7749
+            },
+            "longitude": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": -122.4194
+            },
+            "geo-fencing": {
+                "enable": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                },
+                "range": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": 10
+                },
+                "sms": {
+                    "enable": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "true"
+                    },
+                    "mobile-number": {
+                        "vipObjectType": "tree",
+                        "vipType": "constant",
+                        "vipValue": [
+                            {
+                                "number": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": "+12345678901"
+                                }
+                            },
+                            {
+                                "number": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": "+10987654321"
+                                }
+                            }
+                        ],
+                        "vipPrimaryKey": [
+                            "number"
+                        ]
+                    }
+                }
+            }
+        },
+        "device-groups": {
+            "vipObjectType": "list",
+            "vipType": "constant",
+            "vipValue": [
+                "group1",
+                "group2"
+            ]
+        },
+        "controller-group-list": {
+            "vipObjectType": "list",
+            "vipType": "constant",
+            "vipValue": [
+                1,
+                3
+            ]
+        },
+        "system-ip": {
+            "vipValue": "",
+            "vipType": "variableName",
+            "vipObjectType": "object",
+            "vipVariableName": "192.0.2.1"
+        },
+        "overlay-id": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 1
+        },
+        "site-id": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 1001
+        },
+        "site-type": {
+            "vipObjectType": "list",
+            "vipType": "constant",
+            "vipValue": [
+                "branch",
+                "spoke"
+            ]
+        },
+        "port-offset": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 1000
+        },
+        "port-hop": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "control-session-pps": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 500
+        },
+        "track-transport": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "track-interface-tag": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 1
+        },
+        "console-baud-rate": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "9600"
+        },
+        "max-omp-sessions": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 50
+        },
+        "multi-tenant": {
+            "vipObjectType": "node-only",
+            "vipType": "constant",
+            "vipValue": "false"
+        },
+        "track-default-gateway": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "false"
+        },
+        "admin-tech-on-failure": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "idle-timeout": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 300
+        },
+        "tracker": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "tracker1"
+                    },
+                    "endpoint-ip": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "203.0.113.1"
+                    },
+                    "endpoint-ip-transport-port": {
+                        "endpoint-ip": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "203.0.113.1"
+                        },
+                        "protocol": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "tcp"
+                        },
+                        "port": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 443
+                        }
+                    },
+                    "elements": {
+                        "vipObjectType": "list",
+                        "vipType": "constant",
+                        "vipValue": [
+                            "element1, element2"
+                        ]
+                    },
+                    "boolean": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "and"
+                    },
+                    "threshold": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 10
+                    },
+                    "interval": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 30
+                    },
+                    "multiplier": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 3
+                    },
+                    "type": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "static-route"
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "name"
+            ]
+        },
+        "object-track": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "object-number": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 10
+                    },
+                    "interface": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "GigabitEthernet0/0/0"
+                    },
+                    "sig": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "100"
+                    },
+                    "ip": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "192.0.2.1"
+                    },
+                    "mask": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "255.255.255.0"
+                    },
+                    "vpn": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 1
+                    },
+                    "object": {
+                        "vipObjectType": "tree",
+                        "vipType": "constant",
+                        "vipValue": [
+                            {
+                                "number": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": 101
+                                }
+                            }
+                        ],
+                        "vipPrimaryKey": [
+                            "number"
+                        ]
+                    },
+                    "boolean": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "and"
+                    }
+                },
+                {
+                    "object-number": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 20
+                    },
+                    "interface": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "GigabitEthernet0/0/0"
+                    },
+                    "sig": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "100"
+                    },
+                    "ip": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "192.0.2.1"
+                    },
+                    "mask": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "255.255.255.0"
+                    },
+                    "vpn": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 1
+                    },
+                    "object": {
+                        "vipObjectType": "tree",
+                        "vipType": "constant",
+                        "vipValue": [
+                            {
+                                "number": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": 101
+                                }
+                            }
+                        ],
+                        "vipPrimaryKey": [
+                            "number"
+                        ]
+                    },
+                    "boolean": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "and"
+                    }
+                },
+                {
+                    "object-number": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 30
+                    },
+                    "interface": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "GigabitEthernet0/0/1"
+                    },
+                    "sig": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "200"
+                    },
+                    "ip": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "198.51.100.1"
+                    },
+                    "mask": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "255.255.255.0"
+                    },
+                    "vpn": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 2
+                    },
+                    "object": {
+                        "vipObjectType": "tree",
+                        "vipType": "constant",
+                        "vipValue": [
+                            {
+                                "number": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": 201
+                                }
+                            }
+                        ],
+                        "vipPrimaryKey": [
+                            "number"
+                        ]
+                    },
+                    "boolean": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "or"
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "object-number"
+            ]
+        },
+        "on-demand": {
+            "enable": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "true"
+            },
+            "idle-timeout": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 60
+            }
+        },
+        "role": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "edge-router"
+        },
+        "affinity-group": {
+            "affinity-group-number": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 1
+            },
+            "preference": {
+                "vipObjectType": "list",
+                "vipType": "constant",
+                "vipValue": [
+                    1
+                ]
+            },
+            "preference-auto": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "true"
+            },
+            "affinity-per-vrf": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "affinity-group-number": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 1
+                        },
+                        "vrf-range": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "22"
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "affinity-group-number"
+                ]
+            }
+        },
+        "transport-gateway": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "enable-mrf-migration": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "enabled"
+        },
+        "migration-bgp-community": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 65535
+        },
+        "enable-management-region": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "epfr": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "conservative"
+        }
+    }
+}

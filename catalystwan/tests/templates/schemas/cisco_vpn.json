@@ -290,7 +290,7 @@
                     "defaultOption": "constant",
                     "dataType": {
                         "type": "ip",
-                        "max": 8
+                        "max": 14
                     },
                     "dataPath": [],
                     "objectType": "list"
@@ -1162,6 +1162,32 @@
                             },
                             "dataPath": [],
                             "objectType": "object"
+                        },
+                        {
+                            "key": "region",
+                            "description": "Region",
+                            "details": "Region",
+                            "optionType": [
+                                "constant",
+                                "variable",
+                                "ignore"
+                            ],
+                            "defaultOption": "ignore",
+                            "dataType": {
+                                "type": "enum",
+                                "values": [
+                                    {
+                                        "key": "core",
+                                        "value": "Core"
+                                    },
+                                    {
+                                        "key": "access",
+                                        "value": "Access"
+                                    }
+                                ]
+                            },
+                            "dataPath": [],
+                            "objectType": "object"
                         }
                     ]
                 }
@@ -1308,6 +1334,32 @@
                             "dataType": {
                                 "type": "boolean",
                                 "default": "false"
+                            },
+                            "dataPath": [],
+                            "objectType": "object"
+                        },
+                        {
+                            "key": "region",
+                            "description": "Region",
+                            "details": "Region",
+                            "optionType": [
+                                "constant",
+                                "variable",
+                                "ignore"
+                            ],
+                            "defaultOption": "constant",
+                            "dataType": {
+                                "type": "enum",
+                                "values": [
+                                    {
+                                        "key": "core",
+                                        "value": "Core"
+                                    },
+                                    {
+                                        "key": "access",
+                                        "value": "Access"
+                                    }
+                                ]
                             },
                             "dataPath": [],
                             "objectType": "object"

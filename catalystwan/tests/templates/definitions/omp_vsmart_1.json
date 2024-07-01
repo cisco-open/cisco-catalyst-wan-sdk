@@ -1,0 +1,26 @@
+{
+    "templateName": "omp_vsmart_1",
+    "templateDescription": "default",
+    "templateType": "omp-vsmart",
+    "deviceType": [
+        "vedge-C8000V"
+    ],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "filter-route": {
+            "outbound": {
+                "affinity-group-preference": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "false"
+                },
+                "tloc-color": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "false"
+                }
+            }
+        }
+    }
+}

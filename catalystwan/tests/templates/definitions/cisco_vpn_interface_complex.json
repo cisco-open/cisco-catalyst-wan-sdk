@@ -1,0 +1,821 @@
+{
+    "templateName": "cisco_vpn_interface_complex",
+    "templateDescription": "cisco_vpn_interface_complex",
+    "templateType": "cisco_vpn_interface",
+    "deviceType": [],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "if-name": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "GigabitEthernet0/0"
+        },
+        "description": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "WAN interface"
+        },
+        "poe": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "ip": {
+            "address": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "192.0.2.1/24"
+            },
+            "secondary-address": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "address": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "192.0.2.2/24"
+                        }
+                    },
+                    {
+                        "address": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "192.0.2.3/24"
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "address"
+                ]
+            },
+            "dhcp-client": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "false"
+            }
+        },
+        "ipv6": {
+            "address": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "2001:db8::1/64"
+            },
+            "dhcp-client": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "true"
+            },
+            "secondary-address": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "address": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "2001:db8::2/64"
+                        }
+                    },
+                    {
+                        "address": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "2001:db8::3/64"
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "address"
+                ]
+            },
+            "access-list": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "direction": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "in"
+                        },
+                        "acl-name": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "ipv6_acl_1"
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "direction"
+                ]
+            }
+        },
+        "dhcp-helper": {
+            "vipObjectType": "list",
+            "vipType": "constant",
+            "vipValue": [
+                "192.0.2.254"
+            ]
+        },
+        "tracker": {
+            "vipObjectType": "list",
+            "vipType": "constant",
+            "vipValue": [
+                "Tracker1",
+                "Tracker2"
+            ]
+        },
+        "auto-bandwidth-detect": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "iperf-server": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "192.0.2.100"
+        },
+        "nat": {
+            "vipObjectType": "node-only",
+            "vipType": "constant",
+            "vipValue": "true",
+            "static": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "source-ip": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "192.0.2.1"
+                        },
+                        "translate-ip": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "203.0.113.1"
+                        },
+                        "static-nat-direction": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "inside"
+                        },
+                        "source-vpn": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 10
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "source-ip",
+                    "translate-ip"
+                ]
+            }
+        },
+        "nat64": {
+            "vipObjectType": "node-only",
+            "vipType": "constant",
+            "vipValue": "false"
+        },
+        "nat66": {
+            "vipObjectType": "node-only",
+            "vipType": "constant",
+            "vipValue": "false"
+        },
+        "tunnel-interface": {
+            "encapsulation": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "encap": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "ipsec"
+                        },
+                        "preference": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 100
+                        },
+                        "weight": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 1
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "encap"
+                ]
+            },
+            "border": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "true"
+            },
+            "group": {
+                "vipObjectType": "list",
+                "vipType": "constant",
+                "vipValue": [
+                    1,
+                    2
+                ]
+            },
+            "color": {
+                "value": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "mpls"
+                },
+                "restrict": {
+                    "vipObjectType": "node-only",
+                    "vipType": "constant",
+                    "vipValue": "false"
+                }
+            },
+            "max-control-connections": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 5
+            },
+            "control-connections": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "true"
+            },
+            "vbond-as-stun-server": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "true"
+            },
+            "exclude-controller-group-list": {
+                "vipObjectType": "list",
+                "vipType": "constant",
+                "vipValue": [
+                    3,
+                    4
+                ]
+            },
+            "vmanage-connection-preference": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 100
+            },
+            "port-hop": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "true"
+            },
+            "tloc-extension-gre-to": {
+                "dst-ip": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "198.51.100.14"
+                }
+            },
+            "carrier": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "carrier1"
+            },
+            "nat-refresh-interval": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 30
+            },
+            "hello-interval": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 10
+            },
+            "hello-tolerance": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 30
+            },
+            "bind": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "GigabitEthernet0/0"
+            },
+            "last-resort-circuit": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "false"
+            },
+            "low-bandwidth-link": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "false"
+            },
+            "tunnel-tcp-mss-adjust": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 1360
+            },
+            "clear-dont-fragment": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "true"
+            },
+            "propagate-sgt": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "false"
+            },
+            "network-broadcast": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "true"
+            },
+            "allow-service": {
+                "all": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "false"
+                },
+                "bgp": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                },
+                "dhcp": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "false"
+                },
+                "dns": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                },
+                "icmp": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                },
+                "sshd": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                },
+                "netconf": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "false"
+                },
+                "ntp": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                },
+                "ospf": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "false"
+                },
+                "stun": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "false"
+                },
+                "snmp": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                },
+                "https": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                }
+            }
+        },
+        "per-tunnel-qos": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "per-tunnel-qos-aggregator": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "media-type": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "rj45"
+        },
+        "intrf-mtu": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 1500
+        },
+        "mtu": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 1400
+        },
+        "tcp-mss-adjust": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 1360
+        },
+        "tloc-extension": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "100"
+        },
+        "load-interval": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 300
+        },
+        "tloc-extension-gre-from": {
+            "src-ip": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "198.51.100.1"
+            },
+            "xconnect": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "10"
+            }
+        },
+        "mac-address": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "00:0C:29:4B:55:3A"
+        },
+        "speed": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "1000"
+        },
+        "duplex": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "full"
+        },
+        "shutdown": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "false"
+        },
+        "arp-timeout": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 1200
+        },
+        "autonegotiate": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "ip-directed-broadcast": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "false"
+        },
+        "icmp-redirect-disable": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "qos-adaptive": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true",
+            "period": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 60
+            },
+            "downstream": {
+                "bandwidth-down": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": 10000
+                },
+                "range": {
+                    "dmin": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 5000
+                    },
+                    "dmax": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 15000
+                    }
+                }
+            },
+            "upstream": {
+                "bandwidth-up": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": 5000
+                },
+                "range": {
+                    "umin": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 2500
+                    },
+                    "umax": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 7500
+                    }
+                }
+            }
+        },
+        "shaping-rate": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 5000
+        },
+        "qos-map": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "default_qos_map"
+        },
+        "qos-map-vpn": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "vpn_qos_map"
+        },
+        "service-provider": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "ISP1"
+        },
+        "bandwidth-upstream": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 5000
+        },
+        "bandwidth-downstream": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 10000
+        },
+        "block-non-source-ip": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "rewrite-rule": {
+            "rule-name": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "rewrite_rule_1"
+            }
+        },
+        "access-list": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "direction": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "in"
+                    },
+                    "acl-name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "ACL-INBOUND"
+                    }
+                },
+                {
+                    "direction": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "out"
+                    },
+                    "acl-name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "ACL-OUTBOUND"
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "direction"
+            ]
+        },
+        "arp": {
+            "ip": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "addr": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "192.0.2.1"
+                        },
+                        "mac": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "00:0C:29:4B:55:3A"
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "addr"
+                ]
+            }
+        },
+        "vrrp": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "grp-id": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 1
+                    },
+                    "priority": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 110
+                    },
+                    "timer": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 100
+                    },
+                    "track-omp": {
+                        "vipObjectType": "node-only",
+                        "vipType": "constant",
+                        "vipValue": "true"
+                    },
+                    "track-prefix-list": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "TRACKING_LIST"
+                    },
+                    "ipv4": {
+                        "address": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "192.0.2.254"
+                        }
+                    },
+                    "ipv4-secondary": {
+                        "vipObjectType": "tree",
+                        "vipType": "constant",
+                        "vipValue": [
+                            {
+                                "address": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": "192.0.2.253"
+                                }
+                            }
+                        ],
+                        "vipPrimaryKey": [
+                            "address"
+                        ]
+                    },
+                    "tloc-change-pref": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "true"
+                    },
+                    "value": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 20
+                    },
+                    "tracking-object": {
+                        "vipObjectType": "tree",
+                        "vipType": "constant",
+                        "vipValue": [
+                            {
+                                "name": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": 10
+                                },
+                                "track-action": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": "Decrement"
+                                },
+                                "decrement": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": 20
+                                }
+                            }
+                        ],
+                        "vipPrimaryKey": [
+                            "name"
+                        ]
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "grp-id"
+            ]
+        },
+        "ipv6-vrrp": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "grp-id": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 1
+                    },
+                    "priority": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 110
+                    },
+                    "timer": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 100
+                    },
+                    "track-omp": {
+                        "vipObjectType": "node-only",
+                        "vipType": "constant",
+                        "vipValue": "true"
+                    },
+                    "track-prefix-list": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "TRACKING_LIST_IPV6"
+                    },
+                    "ipv6": {
+                        "vipObjectType": "tree",
+                        "vipType": "constant",
+                        "vipValue": [
+                            {
+                                "ipv6-link-local": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": "fe80::1"
+                                },
+                                "prefix": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": "2001:db8::/64"
+                                }
+                            }
+                        ],
+                        "vipPrimaryKey": [
+                            "ipv6-link-local"
+                        ]
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "grp-id"
+            ]
+        },
+        "trustsec": {
+            "propagate": {
+                "sgt": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                }
+            },
+            "static": {
+                "sgt": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": 0
+                },
+                "trusted": {
+                    "vipObjectType": "node-only",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                }
+            },
+            "enforcement": {
+                "enable": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                },
+                "sgt": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": 10001
+                }
+            }
+        }
+    }
+}

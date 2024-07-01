@@ -1,0 +1,24 @@
+{
+    "templateName": "security_vsmart_complex",
+    "templateDescription": "Apply Security settings for vSmart controller",
+    "templateType": "security-vsmart",
+    "deviceType": [
+        "vsmart"
+    ],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "control": {
+            "protocol": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "dtls"
+            },
+            "tls-port": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 120
+            }
+        }
+    }
+}

@@ -1,0 +1,175 @@
+{
+    "templateName": "cisco_omp_complex",
+    "templateDescription": "cisco_omp_complex",
+    "templateType": "cisco_omp",
+    "deviceType": [],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "graceful-restart": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "overlay-as": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 65000
+        },
+        "send-path-limit": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 10
+        },
+        "ecmp-limit": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 8
+        },
+        "shutdown": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "false"
+        },
+        "omp-admin-distance-ipv4": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 110
+        },
+        "omp-admin-distance-ipv6": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 115
+        },
+        "timers": {
+            "advertisement-interval": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 30
+            },
+            "graceful-restart-timer": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 120
+            },
+            "eor-timer": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 300
+            },
+            "holdtime": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 180
+            }
+        },
+        "advertise": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "protocol": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "bgp"
+                    },
+                    "route": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "external"
+                    }
+                },
+                {
+                    "protocol": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "ospf"
+                    }
+                },
+                {
+                    "protocol": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "connected"
+                    }
+                },
+                {
+                    "protocol": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "static"
+                    }
+                },
+                {
+                    "protocol": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "eigrp"
+                    }
+                },
+                {
+                    "protocol": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "lisp"
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "protocol"
+            ]
+        },
+        "ipv6-advertise": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "protocol": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "bgp"
+                    }
+                },
+                {
+                    "protocol": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "ospf"
+                    }
+                },
+                {
+                    "protocol": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "connected"
+                    }
+                },
+                {
+                    "protocol": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "static"
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "protocol"
+            ]
+        },
+        "ignore-region-path-length": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "transport-gateway": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "prefer"
+        },
+        "auto-translate": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        }
+    }
+}

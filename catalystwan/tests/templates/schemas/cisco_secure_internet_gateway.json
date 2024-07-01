@@ -1,0 +1,1520 @@
+{
+    "name": "cisco_secure_internet_gateway",
+    "xmlPath": [
+        "vpn"
+    ],
+    "xmlRootTag": "vpn-instance",
+    "uniqueKey": "vpn-id",
+    "nameSpace": "http://viptela.com/vpn",
+    "fields": [
+        {
+            "key": "vpn-id",
+            "description": "VPN",
+            "details": "List of VPN instances",
+            "optionType": [
+                "constant"
+            ],
+            "defaultOption": "constant",
+            "dataType": {
+                "type": "number",
+                "min": 0,
+                "max": 65527,
+                "default": 0
+            },
+            "dataPath": [],
+            "objectType": "object"
+        },
+        {
+            "key": "childOrgId",
+            "description": "Child Organization Id",
+            "details": "Child Organization Id",
+            "optionType": [
+                "ignore",
+                "constant",
+                "variable"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "string",
+                "default": ""
+            },
+            "dataPath": [],
+            "objectType": "object"
+        },
+        {
+            "key": "interface",
+            "description": "IPSec Interface",
+            "details": "Interface name: IPsec when present",
+            "optionType": [
+                "constant",
+                "variable"
+            ],
+            "defaultOption": "constant",
+            "dataPath": [],
+            "objectType": "tree",
+            "minElements": 1,
+            "maxElements": 4,
+            "primaryKeys": [
+                "if-name"
+            ],
+            "children": [
+                {
+                    "key": "if-name",
+                    "description": "Interface Name (1..255)",
+                    "details": "Interface name: IPsec when present",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "string",
+                        "minLength": 4,
+                        "maxLength": 8,
+                        "min": 1,
+                        "max": 255
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "auto",
+                    "description": "Auto Tunnel Mode",
+                    "details": "Auto Tunnel Mode",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "shutdown",
+                    "description": "Shutdown",
+                    "details": "Administrative state",
+                    "optionType": [
+                        "constant",
+                        "notIgnore"
+                    ],
+                    "defaultOption": "notIgnore",
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false",
+                        "label": {
+                            "on": "Yes",
+                            "off": "No"
+                        }
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "description",
+                    "description": "Description",
+                    "details": "Interface description",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "unnumbered",
+                    "description": "Unnumbered Interface",
+                    "details": "Unnumbered interface",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "true"
+                    },
+                    "dataPath": [
+                        "ip"
+                    ],
+                    "objectType": "node-only"
+                },
+                {
+                    "key": "address",
+                    "description": "IPv4 address",
+                    "details": "Assign IPv4 address",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "ipv4-prefix"
+                    },
+                    "dataPath": [
+                        "ip"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "tunnel-source",
+                    "description": "Tunnel Source IP Address",
+                    "details": "Tunnel source IP Address",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "ipv4"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "tunnel-source-interface",
+                    "description": "Tunnel Source Interface",
+                    "details": "<1..32 characters> Interface name: ge0/<0-..> or ge0/<0-..>.vlanid",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "tunnel-route-via",
+                    "description": "Tunnel Route-via Interface",
+                    "details": "<1..32 characters> Interface name: ge0/<0-..> or ge0/<0-..>.vlanid",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "tunnel-destination",
+                    "description": "Tunnel Destination IP Address/FQDN(Ipsec)",
+                    "details": "Tunnel destination IP address",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "string"
+                    },
+                    "default": "dynamic",
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "application",
+                    "description": "Application",
+                    "details": "Enable Application Tunnel Type",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "sig",
+                                "value": "Secure Internet Gateway"
+                            }
+                        ],
+                        "default": "sig"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "application",
+                    "description": "Application",
+                    "details": "Enable Application Tunnel Type",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "sig",
+                                "value": "Secure Internet Gateway"
+                            }
+                        ],
+                        "default": "sig"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "tunnel-set",
+                    "description": "SIG Provider",
+                    "details": "SIG Tunnel Provider",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "secure-internet-gateway-umbrella",
+                                "value": "Umbrella"
+                            },
+                            {
+                                "key": "secure-internet-gateway-zscaler",
+                                "value": "Zscaler"
+                            },
+                            {
+                                "key": "secure-internet-gateway-other",
+                                "value": "Generic"
+                            }
+                        ],
+                        "default": "secure-internet-gateway-umbrella"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "tunnel-dc-preference",
+                    "description": "Data-Center",
+                    "details": "SIG Tunnel Data Center",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "primary-dc",
+                                "value": "Primary"
+                            },
+                            {
+                                "key": "secondary-dc",
+                                "value": "Secondary"
+                            }
+                        ],
+                        "default": "primary-dc"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "tcp-mss-adjust",
+                    "description": "TCP MSS",
+                    "details": "TCP MSS on SYN packets, in bytes",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 500,
+                        "max": 1460
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "mtu",
+                    "description": "IP MTU",
+                    "details": "Interface MTU <576..2000>, in bytes",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "notIgnore"
+                    ],
+                    "defaultOption": "notIgnore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 576,
+                        "max": 2000,
+                        "default": 1400
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "dpd-interval",
+                    "description": "DPD Interval",
+                    "details": "IKE keepalive interval (seconds)",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 0,
+                        "max": 65535,
+                        "default": 10
+                    },
+                    "dataPath": [
+                        "dead-peer-detection"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "dpd-retries",
+                    "description": "DPD Retries",
+                    "details": "IKE keepalive retries",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 0,
+                        "max": 255,
+                        "default": 3
+                    },
+                    "dataPath": [
+                        "dead-peer-detection"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "ike-version",
+                    "description": "IKE Version",
+                    "details": "IKE Version <1..2>",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "number",
+                        "min": 1,
+                        "max": 2,
+                        "default": 2
+                    },
+                    "dataPath": [
+                        "ike"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "pre-shared-secret",
+                    "description": "Preshared Key",
+                    "details": "Use preshared key to authenticate IKE peer",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "restrictedPassphrase",
+                        "minLength": 1,
+                        "maxLength": 127
+                    },
+                    "dataPath": [
+                        "ike",
+                        "authentication-type",
+                        "pre-shared-key"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "ike-rekey-interval",
+                    "description": "IKE Rekey Interval (seconds)",
+                    "details": "IKE rekey interval <300..1209600> seconds",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 300,
+                        "max": 1209600,
+                        "default": 14400
+                    },
+                    "dataPath": [
+                        "ike"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "ike-ciphersuite",
+                    "description": "IKE Cipher Suite",
+                    "details": "IKE identity the IKE preshared secret belongs to",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "aes256-cbc-sha1",
+                                "value": "AES 256 CBC SHA1"
+                            },
+                            {
+                                "key": "aes256-cbc-sha2",
+                                "value": "AES 256 CBC SHA2"
+                            },
+                            {
+                                "key": "aes128-cbc-sha1",
+                                "value": "AES 128 CBC SHA1"
+                            },
+                            {
+                                "key": "aes128-cbc-sha2",
+                                "value": "AES 128 CBC SHA2"
+                            }
+                        ],
+                        "default": "aes256-cbc-sha1"
+                    },
+                    "dataPath": [
+                        "ike"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "ike-group",
+                    "description": "IKE Diffie-Hellman Group",
+                    "details": "IKE Diffie Hellman Groups",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "notIgnore"
+                    ],
+                    "defaultOption": "notIgnore",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "2",
+                                "value": "2 1024-bit modulus"
+                            },
+                            {
+                                "key": "5",
+                                "value": "5 1536-bit modulus"
+                            },
+                            {
+                                "key": "14",
+                                "value": "14 2048-bit modulus"
+                            },
+                            {
+                                "key": "15",
+                                "value": "15 3072-bit modulus"
+                            },
+                            {
+                                "key": "16",
+                                "value": "16 4096-bit modulus"
+                            },
+                            {
+                                "key": "19",
+                                "value": "19 256-bit random ECP"
+                            },
+                            {
+                                "key": "20",
+                                "value": "20 384-bit random ECP"
+                            },
+                            {
+                                "key": "21",
+                                "value": "21 521-bit random ECP"
+                            }
+                        ],
+                        "default": "14"
+                    },
+                    "dataPath": [
+                        "ike"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "pre-shared-key-dynamic",
+                    "description": "Preshared Key",
+                    "details": "Use preshared key to authenticate IKE peer",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "true"
+                    },
+                    "dataPath": [
+                        "ike",
+                        "authentication-type"
+                    ],
+                    "objectType": "node-only"
+                },
+                {
+                    "key": "ike-local-id",
+                    "description": "IKE ID for local End point",
+                    "details": "IKE ID for the local endpoint. Input IPv4 address, domain name, or email address",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "ike",
+                        "minLength": 1,
+                        "maxLength": 63
+                    },
+                    "dataPath": [
+                        "ike",
+                        "authentication-type",
+                        "pre-shared-key"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "ike-remote-id",
+                    "description": "IKE ID for Remote End point",
+                    "details": "IKE ID for the remote endpoint. Input IPv4 address, domain name, or email address",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "ike",
+                        "minLength": 1,
+                        "maxLength": 63
+                    },
+                    "dataPath": [
+                        "ike",
+                        "authentication-type",
+                        "pre-shared-key"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "ipsec-rekey-interval",
+                    "description": "IPsec Rekey Interval (seconds)",
+                    "details": "IPsec rekey interval <300..1209600> seconds",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 300,
+                        "max": 1209600,
+                        "default": 3600
+                    },
+                    "dataPath": [
+                        "ipsec"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "ipsec-replay-window",
+                    "description": "IPsec Replay Window",
+                    "details": "Replay window size 32..8192 (must be a power of 2)",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 64,
+                        "max": 4096,
+                        "default": 512
+                    },
+                    "dataPath": [
+                        "ipsec"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "ipsec-ciphersuite",
+                    "description": "IPsec Cipher Suite",
+                    "details": "IPsec(ESP) encryption and integrity protocol",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "notIgnore"
+                    ],
+                    "defaultOption": "notIgnore",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "aes256-cbc-sha1",
+                                "value": "AES 256 CBC SHA1"
+                            },
+                            {
+                                "key": "aes256-cbc-sha384",
+                                "value": "AES 256 CBC SHA 384"
+                            },
+                            {
+                                "key": "aes256-cbc-sha256",
+                                "value": "AES 256 CBC SHA 256"
+                            },
+                            {
+                                "key": "aes256-cbc-sha512",
+                                "value": "AES 256 CBC SHA 512"
+                            },
+                            {
+                                "key": "aes256-gcm",
+                                "value": "AES 256 GCM"
+                            },
+                            {
+                                "key": "null-sha1",
+                                "value": "Null SHA1"
+                            },
+                            {
+                                "key": "null-sha384",
+                                "value": "Nul SHA 384"
+                            },
+                            {
+                                "key": "null-sha256",
+                                "value": "Nul SHA 256"
+                            },
+                            {
+                                "key": "null-sha512",
+                                "value": "Nul SHA 512"
+                            }
+                        ],
+                        "default": "aes256-gcm"
+                    },
+                    "dataPath": [
+                        "ipsec"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "perfect-forward-secrecy",
+                    "description": "Perfect Forward Secrecy",
+                    "details": "IPsec perfect forward secrecy settings",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "notIgnore"
+                    ],
+                    "defaultOption": "notIgnore",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "group-2",
+                                "value": "Group-2 1024-bit modulus"
+                            },
+                            {
+                                "key": "group-5",
+                                "value": "Group-5 1536-bit modulus"
+                            },
+                            {
+                                "key": "group-14",
+                                "value": "Group-14 2048-bit modulus"
+                            },
+                            {
+                                "key": "group-15",
+                                "value": "Group-15 3072-bit modulus"
+                            },
+                            {
+                                "key": "group-16",
+                                "value": "Group-16 4096-bit modulus"
+                            },
+                            {
+                                "key": "group-19",
+                                "value": "Group-19 256-bit random ECP"
+                            },
+                            {
+                                "key": "group-20",
+                                "value": "Group-20 384-bit random ECP"
+                            },
+                            {
+                                "key": "group-21",
+                                "value": "Group-21 521-bit random ECP"
+                            },
+                            {
+                                "key": "none",
+                                "value": "None"
+                            }
+                        ],
+                        "default": "none"
+                    },
+                    "dataPath": [
+                        "ipsec"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "tracker",
+                    "description": "Tracker",
+                    "details": "Enable tracker for this interface",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "",
+                                "value": ""
+                            }
+                        ]
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "track-enable",
+                    "description": "Track this interface for SIG",
+                    "details": "Enable/disable SIG tracking",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "true"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "tunnel-public-ip",
+                    "description": "Source Public IP",
+                    "details": "Public IP required to setup GRE tunnel to Zscaler",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "ipv4",
+                        "default": "Auto"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                }
+            ]
+        },
+        {
+            "key": "service",
+            "description": "Service",
+            "details": "Configure services",
+            "optionType": [
+                "constant"
+            ],
+            "defaultOption": "constant",
+            "dataPath": [],
+            "objectType": "tree",
+            "primaryKeys": [
+                "svc-type"
+            ],
+            "children": [
+                {
+                    "key": "svc-type",
+                    "description": "Service Type",
+                    "details": "Service Type",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "sig",
+                                "value": "SIG"
+                            }
+                        ],
+                        "default": "sig"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "interface-pair",
+                    "description": "Interface Pair",
+                    "details": "Interface Pair for active and backup",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataPath": [
+                        "ha-pairs"
+                    ],
+                    "objectType": "tree",
+                    "minElements": 1,
+                    "maxElements": 4,
+                    "primaryKeys": [
+                        "active-interface",
+                        "backup-interface"
+                    ],
+                    "children": [
+                        {
+                            "key": "active-interface",
+                            "description": "Active Tunnel Interface",
+                            "details": "Active Tunnel Interface for SIG",
+                            "optionType": [
+                                "constant"
+                            ],
+                            "defaultOption": "constant",
+                            "dataType": {
+                                "type": "enum",
+                                "values": [
+                                    {
+                                        "key": "",
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            "dataPath": [],
+                            "objectType": "object"
+                        },
+                        {
+                            "key": "active-interface-weight",
+                            "description": "Weight",
+                            "details": "Active Tunnel Interface Weight",
+                            "optionType": [
+                                "constant"
+                            ],
+                            "defaultOption": "constant",
+                            "dataType": {
+                                "type": "number",
+                                "min": 1,
+                                "max": 255,
+                                "default": 1
+                            },
+                            "dataPath": [],
+                            "objectType": "object"
+                        },
+                        {
+                            "key": "backup-interface",
+                            "description": "Backup Tunnel Interface",
+                            "details": "Backup Tunnel Interface for SIG",
+                            "optionType": [
+                                "constant"
+                            ],
+                            "defaultOption": "constant",
+                            "dataType": {
+                                "type": "enum",
+                                "values": [
+                                    {
+                                        "key": "",
+                                        "value": ""
+                                    }
+                                ]
+                            },
+                            "dataPath": [],
+                            "objectType": "object"
+                        },
+                        {
+                            "key": "backup-interface-weight",
+                            "description": "Weight",
+                            "details": "Backup Tunnel Interface Weight",
+                            "optionType": [
+                                "constant"
+                            ],
+                            "defaultOption": "constant",
+                            "dataType": {
+                                "type": "number",
+                                "min": 1,
+                                "max": 255,
+                                "default": 1
+                            },
+                            "dataPath": [],
+                            "objectType": "object"
+                        }
+                    ]
+                },
+                {
+                    "key": "auth-required",
+                    "description": "Authentication Required",
+                    "details": "Enforce Authentication",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataPath": [
+                        "zscaler-location-settings"
+                    ],
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "objectType": "object"
+                },
+                {
+                    "key": "xff-forward-enabled",
+                    "description": "XFF Forwarding",
+                    "details": "XFF forwarding enabled",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataPath": [
+                        "zscaler-location-settings"
+                    ],
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "objectType": "object"
+                },
+                {
+                    "key": "ofw-enabled",
+                    "description": "Enable Firewall",
+                    "details": "Firewall enabled",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataPath": [
+                        "zscaler-location-settings"
+                    ],
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "objectType": "object"
+                },
+                {
+                    "key": "ips-control",
+                    "description": "Enable IPS Control",
+                    "details": "Enable IPS Control",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataPath": [
+                        "zscaler-location-settings"
+                    ],
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "objectType": "object"
+                },
+                {
+                    "key": "caution-enabled",
+                    "description": "Enable Caution",
+                    "details": "Enable Caution",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataPath": [
+                        "zscaler-location-settings"
+                    ],
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "objectType": "object"
+                },
+                {
+                    "key": "primary-data-center",
+                    "description": "Primary Data-Center",
+                    "details": "Custom Primary Datacenter",
+                    "optionType": [
+                        "constant",
+                        "ignore",
+                        "variable"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string",
+                        "default": "Auto"
+                    },
+                    "dataPath": [
+                        "zscaler-location-settings",
+                        "datacenters"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "secondary-data-center",
+                    "description": "Secondary Data-Center",
+                    "details": "Custom Secondary Datacenter",
+                    "optionType": [
+                        "constant",
+                        "ignore",
+                        "variable"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string",
+                        "default": "Auto"
+                    },
+                    "dataPath": [
+                        "zscaler-location-settings",
+                        "datacenters"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "ip",
+                    "description": "Enable Surrogate IP",
+                    "details": "Enable Surrogate IP",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "dataPath": [
+                        "zscaler-location-settings",
+                        "surrogate"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "idle-time",
+                    "description": "Idle Time to Disassociation",
+                    "details": "Idle time to disassociation",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 0,
+                        "max:": 4294967296,
+                        "default": 0
+                    },
+                    "dataPath": [
+                        "zscaler-location-settings",
+                        "surrogate"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "display-time-unit",
+                    "description": "Display Time Unit",
+                    "details": "Display time unit",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "MINUTE",
+                                "value": "MINUTE"
+                            },
+                            {
+                                "key": "HOUR",
+                                "value": "HOUR"
+                            },
+                            {
+                                "key": "DAY",
+                                "value": "DAY"
+                            }
+                        ],
+                        "default": "MINUTE"
+                    },
+                    "dataPath": [
+                        "zscaler-location-settings",
+                        "surrogate"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "ip-enforced-for-known-browsers",
+                    "description": "Enforce Surrogate IP for known browsers",
+                    "details": "Enforce Surrogate IP for known browsers",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "dataPath": [
+                        "zscaler-location-settings",
+                        "surrogate"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "refresh-time",
+                    "description": "Refresh Time",
+                    "details": "Refresh time for re-validation of surrogacy in minutes",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 0,
+                        "max:": 4294967296,
+                        "default": 0
+                    },
+                    "dataPath": [
+                        "zscaler-location-settings",
+                        "surrogate"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "refresh-time-unit",
+                    "description": "Refresh Time Unit",
+                    "details": "Refresh Time unit",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "MINUTE",
+                                "value": "MINUTE"
+                            },
+                            {
+                                "key": "HOUR",
+                                "value": "HOUR"
+                            },
+                            {
+                                "key": "DAY",
+                                "value": "DAY"
+                            }
+                        ],
+                        "default": "MINUTE"
+                    },
+                    "dataPath": [
+                        "zscaler-location-settings",
+                        "surrogate"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "enabled",
+                    "description": "Enable AUP",
+                    "details": "Enable Acceptable User Policy",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "dataPath": [
+                        "zscaler-location-settings",
+                        "aup"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "block-internet-until-accepted",
+                    "description": "First Time AUP Block Internet Access",
+                    "details": "For first-time Acceptable User Policy behavior, block Internet access",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "dataPath": [
+                        "zscaler-location-settings",
+                        "aup"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "force-ssl-inspection",
+                    "description": "Force SSL Inspection",
+                    "details": "For first-time Acceptable User Policy behavior, force SSL inspection",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "boolean",
+                        "default": "false"
+                    },
+                    "dataPath": [
+                        "zscaler-location-settings",
+                        "aup"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "timeout",
+                    "description": "AUP Frequency",
+                    "details": "Custom Acceptable User Policy frequency in days",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "default": 0
+                    },
+                    "dataPath": [
+                        "zscaler-location-settings",
+                        "aup"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "location-name",
+                    "description": "Zscaler Location Name",
+                    "details": "Zscaler location name (optional)",
+                    "optionType": [
+                        "ignore",
+                        "variable"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string",
+                        "default": "Auto"
+                    },
+                    "dataPath": [
+                        "zscaler-location-settings"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "data-center-primary",
+                    "description": "Umbrella Primary Data-Center",
+                    "details": "Umbrella Primary Datacenter",
+                    "optionType": [
+                        "constant",
+                        "ignore",
+                        "variable"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string",
+                        "default": "Auto"
+                    },
+                    "dataPath": [
+                        "umbrella-data-center"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "data-center-secondary",
+                    "description": "Umbrella Secondary Data-Center",
+                    "details": "Umbrella Secondary Datacenter",
+                    "optionType": [
+                        "constant",
+                        "ignore",
+                        "variable"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string",
+                        "default": "Auto"
+                    },
+                    "dataPath": [
+                        "umbrella-data-center"
+                    ],
+                    "objectType": "object"
+                }
+            ]
+        },
+        {
+            "key": "tracker-src-ip",
+            "description": "Source IP Address",
+            "details": "Source IP address for Tracker",
+            "optionType": [
+                "constant",
+                "variable"
+            ],
+            "defaultOption": "constant",
+            "dataType": {
+                "type": "ipv4-prefix"
+            },
+            "dataPath": [],
+            "objectType": "object"
+        },
+        {
+            "key": "tracker",
+            "description": "Tracker",
+            "details": "Tracker configuration",
+            "optionType": [
+                "constant",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataPath": [],
+            "objectType": "tree",
+            "primaryKeys": [
+                "tracker-type",
+                "name"
+            ],
+            "children": [
+                {
+                    "key": "name",
+                    "description": "Name",
+                    "details": "Tracker name",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "endpoint-api-url",
+                    "description": "API url of endpoint",
+                    "details": "API url of endpoint",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "string",
+                        "minLength": 0,
+                        "maxLength": 512
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "threshold",
+                    "description": "Threshold",
+                    "details": "Probe Timeout threshold <100..1000> milliseconds",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 100,
+                        "max": 1000,
+                        "default": 300
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "interval",
+                    "description": "Interval",
+                    "details": "Probe interval <10..600> seconds",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 20,
+                        "max": 600,
+                        "default": 60
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "multiplier",
+                    "description": "Multiplier",
+                    "details": "Probe failure multiplier <1..10> failed attempts",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 1,
+                        "max": 10,
+                        "default": 3
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "tracker-type",
+                    "description": "Tracker Type",
+                    "details": "",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "SIG",
+                                "value": "SIG"
+                            }
+                        ],
+                        "default": " SIG"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                }
+            ]
+        }
+    ]
+}

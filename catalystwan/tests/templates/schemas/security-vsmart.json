@@ -1,0 +1,58 @@
+{
+    "name": "Security",
+    "xmlPath": [],
+    "xmlRootTag": "security",
+    "nameSpace": "http://viptela.com/security",
+    "fields": [
+        {
+            "key": "protocol",
+            "description": "Protocol",
+            "details": "Set protocol for control-plane connections",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "enum",
+                "values": [
+                    {
+                        "key": "dtls",
+                        "value": "DTLS"
+                    },
+                    {
+                        "key": "tls",
+                        "value": "TLS"
+                    }
+                ],
+                "default": "dtls"
+            },
+            "dataPath": [
+                "control"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "tls-port",
+            "description": "Control TLS Port",
+            "details": "Set TLS port number",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "number",
+                "min": 1025,
+                "max": 65535,
+                "default": 23456
+            },
+            "dataPath": [
+                "control"
+            ],
+            "objectType": "object"
+        }
+    ]
+}

@@ -1,0 +1,17 @@
+{
+    "templateName": "vpn_vsmart_basic",
+    "templateDescription": "Primitive",
+    "templateType": "vpn-vsmart",
+    "deviceType": [
+        "vsmart"
+    ],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "vpn-id": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "0"
+        }
+    }
+}
