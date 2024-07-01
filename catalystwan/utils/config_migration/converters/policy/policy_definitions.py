@@ -68,7 +68,6 @@ from catalystwan.models.policy.definition.ssl_decryption import SslDecryptionPol
 from catalystwan.models.policy.definition.ssl_decryption_utd_profile import SslDecryptionUtdProfilePolicy
 from catalystwan.models.policy.definition.url_filtering import UrlFilteringPolicy
 from catalystwan.models.policy.definition.zone_based_firewall import ZoneBasedFWPolicy
-from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.utils import convert_varname
 
 from .zone_based_firewall import convert_zone_based_fw
@@ -146,7 +145,7 @@ def conditional_split(s: str, seps: List[str]) -> List[str]:
     for sep in seps:
         if sep in s:
             return s.split(sep)
-    raise CatalystwanConverterCantConvertException(f"None of the separators {seps} in {s}")
+    return [s]
 
 
 def advanced_malware_protection(
@@ -429,8 +428,8 @@ def device_access_ipv6(
                 if in_entry.ref:
                     seq.match_destination_data_prefix_list(in_entry.ref[0])
             elif in_entry.field == "destinationIpv6":
-                d_network_ipv6 = conditional_split(in_entry.value, [",", " "])
-                seq.match_destination_data_prefixes([IPv6Interface(v) for v in d_network_ipv6])
+                networks = conditional_split(in_entry.value, [",", " "])
+                seq.match_destination_data_prefixes([IPv6Interface(v) for v in networks])
             elif in_entry.field == "destinationPort":
                 destination_port = cast(DeviceAccessProtocolPort, int(in_entry.value))
                 seq.match_destination_port(destination_port)
@@ -438,8 +437,8 @@ def device_access_ipv6(
                 if in_entry.ref:
                     seq.match_source_data_prefix_list(in_entry.ref[0])
             elif in_entry.field == "sourceIpv6":
-                s_network_ipv6 = conditional_split(in_entry.value, [",", " "])
-                seq.match_source_data_prefixes([IPv6Interface(v) for v in s_network_ipv6])
+                networks = conditional_split(in_entry.value, [",", " "])
+                seq.match_source_data_prefixes([IPv6Interface(v) for v in networks])
             elif in_entry.field == "sourcePort":
                 seq.match_source_ports(as_num_list(as_num_ranges_list(in_entry.value)))
     return ConvertResult[DeviceAccessIPv6Parcel](output=out)
@@ -465,8 +464,8 @@ def device_access_ipv4(
                     seq.match_destination_data_prefix_list(in_entry.ref[0])
             elif in_entry.field == "destinationIp":
                 if in_entry.value is not None:
-                    d_network_ipv6 = conditional_split(in_entry.value, [",", " "])
-                    seq.match_destination_data_prefixes([IPv4Interface(v) for v in d_network_ipv6])
+                    networks = conditional_split(in_entry.value, [",", " "])
+                    seq.match_destination_data_prefixes([IPv4Interface(v) for v in networks])
                 elif in_entry.vip_variable_name is not None:
                     seq.match_destination_data_prefix_variable(convert_varname(in_entry.vip_variable_name))
             elif in_entry.field == "sourceDataPrefixList":
@@ -474,8 +473,8 @@ def device_access_ipv4(
                     seq.match_source_data_prefix_list(in_entry.ref[0])
             elif in_entry.field == "sourceIp":
                 if in_entry.value is not None:
-                    s_network_ipv6 = conditional_split(in_entry.value, [",", " "])
-                    seq.match_source_data_prefixes([IPv4Interface(v) for v in s_network_ipv6])
+                    networks = conditional_split(in_entry.value, [",", " "])
+                    seq.match_source_data_prefixes([IPv4Interface(v) for v in networks])
                 elif in_entry.vip_variable_name is not None:
                     seq.match_source_data_prefix_variable(convert_varname(in_entry.vip_variable_name))
             elif in_entry.field == "sourcePort":
