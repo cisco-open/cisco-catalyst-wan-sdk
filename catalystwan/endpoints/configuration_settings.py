@@ -539,7 +539,7 @@ class ConfigurationSettings(APIEndpoints):
         ...
 
     @view({SingleTenantView, ProviderView})
-    @put("/settings/configuration/certificate", "data")
+    @post("/settings/configuration/certificate", "data")
     def edit_certificates(self, payload: Certificate) -> DataSequence[Certificate]:
         ...
 
