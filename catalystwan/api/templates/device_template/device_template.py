@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, List
+from typing import TYPE_CHECKING, Final, List, Optional
 
 from jinja2 import DebugUndefined, Environment, FileSystemLoader, meta  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -46,7 +46,7 @@ class DeviceTemplate(BaseModel):
 
     template_name: str = Field(alias="templateName")
     template_description: str = Field(alias="templateDescription")
-    general_templates: List[GeneralTemplate] = Field(alias="generalTemplates")
+    general_templates: Optional[List[GeneralTemplate]] = Field(default=None, alias="generalTemplates")
     device_role: str = Field(default=None, alias="deviceRole")
     device_type: DeviceModel = Field(alias="deviceType")
     security_policy_id: str = Field(default="", alias="securityPolicyId")
