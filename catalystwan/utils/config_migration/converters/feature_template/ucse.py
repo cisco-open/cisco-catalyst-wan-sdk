@@ -4,8 +4,10 @@ from catalystwan.api.configuration_groups.parcel import Global
 from catalystwan.models.configuration.feature_profile.sdwan.other import UcseParcel
 from catalystwan.models.configuration.feature_profile.sdwan.other.ucse import LomType
 
+from .base import FTConverter
 
-class UcseTemplateConverter:
+
+class UcseConverter(FTConverter):
     """
     A class for converting template values into a UcseParcel object.
     """

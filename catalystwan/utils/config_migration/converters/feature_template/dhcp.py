@@ -14,10 +14,12 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.dhcp_server 
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
 
+from .base import FTConverter
+
 logger = logging.getLogger(__name__)
 
 
-class DhcpTemplateConverter:
+class DhcpConverter(FTConverter):
     supported_template_types = ("dhcp", "cisco_dhcp_server", "dhcp-server")
 
     variable_address_pool = "{{dhcp_1_addressPool_networkAddress}}"

@@ -19,8 +19,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.appqoe impor
     VirtualApplicationType,
 )
 
+from .base import FTConverter
 
-class AppqoeTemplateConverter:
+
+class AppqoeConverter(FTConverter):
     supported_template_types = ("appqoe",)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> AppqoeParcel:

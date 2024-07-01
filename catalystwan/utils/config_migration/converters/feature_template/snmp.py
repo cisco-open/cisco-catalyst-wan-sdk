@@ -1,13 +1,16 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
 from copy import deepcopy
 
 from catalystwan.api.configuration_groups.parcel import Variable, as_global, as_variable
 from catalystwan.models.configuration.feature_profile.sdwan.system.snmp import Authorization, SNMPParcel
 
+from .base import FTConverter
+
 logger = logging.getLogger(__name__)
 
 
-class SNMPTemplateConverter:
+class SNMPConverter(FTConverter):
     """
     A class for converting template values into a SecurityParcel object.
 
@@ -21,15 +24,15 @@ class SNMPTemplateConverter:
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> SNMPParcel:
         """
-        Creates a SecurityParcel object based on the provided template values.
+        Creates a SNMPParcel object based on the provided template values.
 
         Args:
-            name (str): The name of the SecurityParcel.
-            description (str): The description of the SecurityParcel.
+            name (str): The name of the SNMPParcel.
+            description (str): The description of the SNMPParcel.
             template_values (dict): A dictionary containing the template values.
 
         Returns:
-            SecurityParcel: A SecurityParcel object with the provided template values.
+            SNMPParcel: A SNMPParcel object with the provided template values.
         """
         values = deepcopy(template_values)
         self.configure_community(values)
@@ -52,4 +55,5 @@ class SNMPTemplateConverter:
                     logger.info(
                         f"OID ID is not set, using device specific variable {self.default_view_oid_id.format(i + 1)}"
                     )
+
                 oid["id"] = id_

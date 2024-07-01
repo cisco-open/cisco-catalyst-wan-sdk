@@ -4,8 +4,10 @@ from typing import Dict, List
 from catalystwan.api.configuration_groups.parcel import Global, as_default, as_global
 from catalystwan.models.configuration.feature_profile.sdwan.system import OMPParcel
 
+from .base import FTConverter
 
-class OMPTemplateConverter:
+
+class OMPConverter(FTConverter):
     supported_template_types = ("cisco_omp", "omp-vedge", "omp-vsmart")
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> OMPParcel:

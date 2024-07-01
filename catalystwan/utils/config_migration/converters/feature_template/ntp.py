@@ -10,8 +10,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.system.ntp import (
 )
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
 
+from .base import FTConverter
 
-class NtpTemplateConverter:
+
+class NtpConverter(FTConverter):
     supported_template_types = ("cisco_ntp", "ntp")
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> NtpParcel:

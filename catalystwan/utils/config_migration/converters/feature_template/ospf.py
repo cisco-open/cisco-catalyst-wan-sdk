@@ -14,8 +14,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.routing.ospf import 
 )
 from catalystwan.utils.config_migration.steps.constants import LAN_OSPF, WAN_OSPF
 
+from .base import FTConverter
 
-class OspfTemplateConverter:
+
+class OspfConverter(FTConverter):
     supported_template_types = (LAN_OSPF, WAN_OSPF)
 
     delete_keys = ("max_metric", "timers", "distance", "auto_cost", "default_information", "compatible")

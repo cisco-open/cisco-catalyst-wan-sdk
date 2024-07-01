@@ -9,8 +9,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_c
 )
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 
+from .base import FTConverter
 
-class CellularControllerTemplateConverter:
+
+class CellularControllerConverter(FTConverter):
     supported_template_types = ("cellular-cedge-controller",)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> CellularControllerParcel:

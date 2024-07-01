@@ -13,8 +13,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.system.basic import 
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
 from catalystwan.utils.timezone import Timezone
 
+from .base import FTConverter
 
-class SystemToBasicTemplateConverter:
+
+class SystemToBasicConverter(FTConverter):
     supported_template_types = ("cisco_system", "system-vsmart", "system-vedge")
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> BasicParcel:

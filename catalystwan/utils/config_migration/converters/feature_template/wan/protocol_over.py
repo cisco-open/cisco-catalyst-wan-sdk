@@ -34,6 +34,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
     VdslMode,
 )
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
+from catalystwan.utils.config_migration.converters.feature_template.base import FTConverter
 
 
 @dataclass
@@ -43,7 +44,7 @@ class EncapsulationOption:
     weight: Optional[Global[int]] = None
 
 
-class InterfaceBaseTemplateConverter:
+class InterfaceBaseConverter(FTConverter):
     def parse_tunnel_advanced_option(self, data: dict) -> Optional[TunnelAdvancedOption]:
         tunnel = data.get("tunnel_interface", {})
         if not tunnel:
@@ -243,7 +244,7 @@ class InterfaceBaseTemplateConverter:
         return None
 
 
-class InterfaceEthernetPppoeTemplateConverter(InterfaceBaseTemplateConverter):
+class InterfaceEthernetPppoeConverter(InterfaceBaseConverter):
     supported_template_types = ("vpn-interface-ethpppoe",)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceEthPPPoEParcel:
@@ -276,7 +277,7 @@ class InterfaceEthernetPppoeTemplateConverter(InterfaceBaseTemplateConverter):
         )
 
 
-class InterfaceDslPppoeTemplateConverter(InterfaceBaseTemplateConverter):
+class InterfaceDslPppoeConverter(InterfaceBaseConverter):
     supported_template_types = ("vpn-interface-pppoe",)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceDslPPPoEParcel:
@@ -311,7 +312,7 @@ class InterfaceDslPppoeTemplateConverter(InterfaceBaseTemplateConverter):
         )
 
 
-class InterfaceDslPppoaTemplateConverter(InterfaceBaseTemplateConverter):
+class InterfaceDslPppoaConverter(InterfaceBaseConverter):
     supported_template_types = ("vpn-interface-pppoa",)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceDslPPPoAParcel:
@@ -391,7 +392,7 @@ class InterfaceDslPppoaTemplateConverter(InterfaceBaseTemplateConverter):
         )
 
 
-class InterfaceDslIPoETemplateConverter(InterfaceBaseTemplateConverter):
+class InterfaceDslIPoEConverter(InterfaceBaseConverter):
     supported_template_types = ("vpn-interface-ipoe",)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceDslIPoEParcel:

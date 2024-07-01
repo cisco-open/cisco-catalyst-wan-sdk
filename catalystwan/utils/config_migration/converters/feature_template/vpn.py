@@ -2,7 +2,7 @@
 import logging
 from copy import deepcopy
 from ipaddress import IPv4Interface, IPv6Interface
-from typing import Dict, List, Literal, Optional, Tuple, Type, Union
+from typing import Callable, Dict, List, Literal, Optional, Tuple, Type, Union
 
 from pydantic import BaseModel
 
@@ -69,6 +69,8 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import
 from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import TransportVpnParcel
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
 
+from .base import FTConverter
+
 logger = logging.getLogger(__name__)
 
 
@@ -88,7 +90,9 @@ class OmpMappingItem(BaseModel):
     ux2_field: Literal["omp_advertise_ipv4", "omp_advertise_ipv6"]
 
 
-class BaseTransportAndManagementTemplateConverter:
+class BaseTransportAndManagementConverter(FTConverter):
+    supported_template_types = ("cisco_vpn", "vpn-vedge", "vpn-vsmart")
+
     def parse_host_mapping(self, values: dict) -> Optional[List[HostMapping]]:
         hosts = values.get("host", [])
         if not hosts:
@@ -197,7 +201,7 @@ class BaseTransportAndManagementTemplateConverter:
         return static_routes
 
 
-class ManagementVpnTemplateConverter(BaseTransportAndManagementTemplateConverter):
+class ManagementVpnConverter(BaseTransportAndManagementConverter):
     def create_parcel(self, name: str, description: str, template_values: dict) -> ManagementVpnParcel:
         """
         Creates a ManagementVpnParcel parcel.
@@ -229,7 +233,7 @@ class ManagementVpnTemplateConverter(BaseTransportAndManagementTemplateConverter
         return ManagementVpnParcel(parcel_name=name, parcel_description=description, **payload)
 
 
-class TransportVpnTemplateConverter(BaseTransportAndManagementTemplateConverter):
+class TransportVpnConverter(BaseTransportAndManagementConverter):
     def create_parcel(self, name: str, description: str, template_values: dict) -> TransportVpnParcel:
         """
         Creates a TransportVpnParcel parcel.
@@ -274,10 +278,12 @@ class TransportVpnTemplateConverter(BaseTransportAndManagementTemplateConverter)
         ]
 
 
-class ServiceVpnTemplateConverter:
+class ServiceVpnConverter(FTConverter):
     """
     A class for converting template values into a LanVpnParcel object.
     """
+
+    supported_template_types = ("cisco_vpn", "vpn-vedge", "vpn-vsmart")
 
     route_leaks_mapping = {
         "route_import": RouteLeakMappingItem(ux2_model=RouteLeakFromGlobal, ux2_field="route_leak_from_global"),
@@ -718,7 +724,7 @@ class ServiceVpnTemplateConverter:
         values[pydantic_field] = items
 
 
-class VpnTemplateConverter:
+class VpnConverter(FTConverter):
     supported_template_types = ("cisco_vpn", "vpn-vedge", "vpn-vsmart")
 
     def create_parcel(
@@ -736,12 +742,18 @@ class VpnTemplateConverter:
             VPN: The created VPN object.
         """
 
-        if 0 == self.get_vpn_id(template_values):
-            return TransportVpnTemplateConverter().create_parcel(name, description, template_values)
-        elif 512 == self.get_vpn_id(template_values):
-            return ManagementVpnTemplateConverter().create_parcel(name, description, template_values)
-        else:
-            return ServiceVpnTemplateConverter().create_parcel(name, description, template_values)
+        vpn_converters: Dict[
+            int, Callable[..., Union[TransportVpnConverter, ManagementVpnConverter, ServiceVpnConverter]]
+        ] = {
+            0: TransportVpnConverter,
+            512: ManagementVpnConverter,
+        }
+        vpn_id = self.get_vpn_id(template_values)
+        converter = vpn_converters.get(vpn_id, ServiceVpnConverter)()
+        parcel = converter.create_parcel(name, description, template_values)
+        self._convert_result.info = converter._convert_result.info
+        self._convert_result.status = converter._convert_result.status
+        return parcel
 
     def get_vpn_id(self, values: dict) -> int:
         return int(values["vpn_id"].value)

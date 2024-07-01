@@ -29,6 +29,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
     TlocExtensionGreFrom,
     Tunnel,
 )
+from catalystwan.utils.config_migration.converters.feature_template.base import FTConverter
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
 from catalystwan.utils.config_migration.converters.utils import parse_interface_name
 from catalystwan.utils.config_migration.steps.constants import WAN_VPN_ETHERNET
@@ -36,14 +37,14 @@ from catalystwan.utils.config_migration.steps.constants import WAN_VPN_ETHERNET
 logger = logging.getLogger(__name__)
 
 
-class WanInterfaceEthernetTemplateConverter:
+class WanInterfaceEthernetConverter(FTConverter):
     supported_template_types = (WAN_VPN_ETHERNET,)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceEthernetParcel:
         data = deepcopy(template_values)
 
         encapsulation = self.parse_encapsulations(data.get("tunnel_interface", {}).get("encapsulation", []))
-        interface_name = parse_interface_name(data)
+        interface_name = parse_interface_name(self, data)
         interface_description = data.get(
             "description", as_global(description)
         )  # Edge case where model doesn't have description but its required

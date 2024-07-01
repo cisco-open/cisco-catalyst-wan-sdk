@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from copy import deepcopy
 from ipaddress import IPv6Address
 from typing import Optional, Union
@@ -10,11 +11,12 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
     PerfectForwardSecrecy,
 )
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
+from catalystwan.utils.config_migration.converters.feature_template.base import FTConverter
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
 from catalystwan.utils.config_migration.steps.constants import WAN_VPN_IPSEC
 
 
-class WanInterfaceIpsecTemplateConverter:
+class WanInterfaceIpsecConverter(FTConverter):
     supported_template_types = (WAN_VPN_IPSEC,)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceIpsecParcel:
@@ -141,4 +143,7 @@ class WanInterfaceIpsecTemplateConverter:
 
     def parse_tracker(self, data: dict) -> Default[None]:
         # TODO: Implement tracker
+        self._convert_result.update_status(
+            "partial", "Tracker is set as default value. It should be implemented in the future."
+        )
         return Default[None](value=None)

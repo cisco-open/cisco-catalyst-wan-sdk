@@ -9,9 +9,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
     T1E1SerialParcel,
     Tunnel,
 )
+from catalystwan.utils.config_migration.converters.feature_template.base import FTConverter
 
 
-class T1E1SerialTemplateConverter:
+class T1E1SerialConverter(FTConverter):
     supported_template_types = ("vpn-interface-t1-e1",)
     delete_keys = (
         "description",

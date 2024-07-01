@@ -9,6 +9,7 @@ from catalystwan.models.configuration.feature_profile.common import (
     MultilinkNimList,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.multilink import InterfaceMultilinkParcel
+from catalystwan.utils.config_migration.converters.feature_template.base import FTConverter
 from catalystwan.utils.config_migration.converters.feature_template.model_definition_normalizer import (
     flatten_datapaths,
     normalize_to_model_definition,
@@ -16,7 +17,7 @@ from catalystwan.utils.config_migration.converters.feature_template.model_defini
 from catalystwan.utils.config_migration.steps.constants import LAN_VPN_MULTILINK
 
 
-class LanMultilinkTemplateConverter:
+class LanMultilinkConverter(FTConverter):
     supported_template_types = (LAN_VPN_MULTILINK,)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceMultilinkParcel:

@@ -1,4 +1,5 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
+import logging
 from ipaddress import AddressValueError, IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
 from typing import List, Optional, Union, get_args
 
@@ -103,6 +104,8 @@ CastedTypes = Union[
     Variable,
 ]
 
+logger = logging.getLogger(__name__)
+
 
 def to_snake_case(s: str) -> str:
     """Converts a string from kebab-case to snake_case."""
@@ -111,7 +114,10 @@ def to_snake_case(s: str) -> str:
 
 def cast_value_to_global(value: Union[DeviceVariable, str, int, List[str], List[int]]) -> CastedTypes:
     if isinstance(value, DeviceVariable):
-        return as_variable(value=convert_varname(value.name))
+        converted_name = convert_varname(value.name)
+        if converted_name != value.name:
+            logger.info(f"Converted variable name: {value.name} -> {converted_name}")
+        return as_variable(value=converted_name)
     if isinstance(value, list):
         value_type = Global[List[int]] if isinstance(value[0], int) else Global[List[str]]
         return value_type(value=value)  # type: ignore

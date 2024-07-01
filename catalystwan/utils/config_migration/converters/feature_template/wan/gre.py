@@ -13,10 +13,11 @@ from catalystwan.models.configuration.feature_profile.common import (
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.gre import Basic, InterfaceGreParcel
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
+from catalystwan.utils.config_migration.converters.feature_template.base import FTConverter
 from catalystwan.utils.config_migration.steps.constants import WAN_VPN_GRE
 
 
-class WanInterfaceGreTemplateConverter:
+class WanInterfaceGreConverter(FTConverter):
     supported_template_types = (WAN_VPN_GRE,)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceGreParcel:

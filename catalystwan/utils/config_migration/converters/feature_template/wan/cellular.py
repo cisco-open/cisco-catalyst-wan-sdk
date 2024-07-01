@@ -12,10 +12,11 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
     NatAttributesIpv4,
     Tunnel,
 )
+from catalystwan.utils.config_migration.converters.feature_template.base import FTConverter
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
 
 
-class InterfaceCellularTemplateConverter:
+class InterfaceCellularConverter(FTConverter):
     supported_template_types = ("vpn-vedge-interface-cellular", "vpn-cedge-interface-cellular")
 
     def create_parcel(self, name: str, description: str, template_values: Dict) -> InterfaceCellularParcel:

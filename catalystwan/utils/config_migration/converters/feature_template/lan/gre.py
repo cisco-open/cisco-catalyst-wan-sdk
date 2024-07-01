@@ -18,10 +18,11 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre impo
     TunnelSourceIPv6,
 )
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
+from catalystwan.utils.config_migration.converters.feature_template.base import FTConverter
 from catalystwan.utils.config_migration.steps.constants import LAN_VPN_GRE
 
 
-class LanInterfaceGreTemplateConverter:
+class LanInterfaceGreConverter(FTConverter):
     supported_template_types = (LAN_VPN_GRE,)
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceGreParcel:

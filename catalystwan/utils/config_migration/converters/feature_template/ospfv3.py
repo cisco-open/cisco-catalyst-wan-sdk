@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 from copy import deepcopy
 from typing import List, Optional, Type, Union, get_args
@@ -30,26 +31,11 @@ from catalystwan.models.configuration.feature_profile.sdwan.routing.ospfv3 impor
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 from catalystwan.utils.config_migration.steps.constants import LAN_OSPFV3, WAN_OSPFV3
 
-
-class Ospfv3TemplateConverter:
-    """
-    Warning: This class returns a tuple of RoutingOspfv3IPv4Parcel and RoutingOspfv3IPv6Parcel objects,
-    because the Feature Template has two definitions inside one for IPv4 and one for IPv6.
-    """
-
-    supported_template_types = (WAN_OSPFV3, LAN_OSPFV3)
-
-    def create_parcel(
-        self, name: str, description: str, template_values: dict
-    ) -> List[Union[RoutingOspfv3IPv4Parcel, RoutingOspfv3IPv6Parcel]]:
-        if template_values.get("ospfv3") is None:
-            raise CatalystwanConverterCantConvertException("Feature Template does not contain OSPFv3 configuration")
-        ospfv3ipv4 = Ospfv3Ipv4TemplateSubconverter().create_parcel(name, description, template_values)
-        ospfv3ipv6 = Ospfv3Ipv6TemplateSubconverter().create_parcel(name, description, template_values)
-        return [ospfv3ipv4, ospfv3ipv6]
+from .base import FTConverter
 
 
-class BaseOspfv3TemplateSubconverter:
+class BaseOspfv3Converter(FTConverter):
+    supported_template_types = (LAN_OSPFV3, WAN_OSPFV3)
     name_suffix: str
     key_address_family: str
     key_distance: str
@@ -208,7 +194,7 @@ class BaseOspfv3TemplateSubconverter:
             values.pop(key, None)
 
 
-class Ospfv3Ipv4TemplateSubconverter(BaseOspfv3TemplateSubconverter):
+class Ospfv3Ipv4Converter(BaseOspfv3Converter):
     name_suffix = "_IPV4"
     key_address_family = "ipv4"
     key_distance = "distance_ipv4"
@@ -248,7 +234,7 @@ class Ospfv3Ipv4TemplateSubconverter(BaseOspfv3TemplateSubconverter):
         values["redistribute"] = redistribute_list
 
 
-class Ospfv3Ipv6TemplateSubconverter(BaseOspfv3TemplateSubconverter):
+class Ospfv3Ipv6Converter(BaseOspfv3Converter):
     name_suffix = "_IPV6"
     key_address_family = "ipv6"
     key_distance = "distance_ipv6"
