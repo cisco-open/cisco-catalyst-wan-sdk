@@ -18,7 +18,7 @@ from catalystwan.api.templates.device_template.device_template import DeviceTemp
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
 from catalystwan.endpoints.configuration_settings import CloudCredentials
 from catalystwan.exceptions import ManagerHTTPError
-from catalystwan.models.common import VpnId
+from catalystwan.models.common import IntStr, VpnId
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
@@ -525,6 +525,13 @@ class SecurityPolicyResidues:
 
 
 @dataclass
+class QoSMapResidues:
+    buffer_percent: IntStr
+    burst: Optional[IntStr] = None
+    temp_key_values: Optional[str] = None
+
+
+@dataclass
 class PolicyConvertContext:
     # conversion input
     region_map: Dict[str, int] = field(default_factory=dict)
@@ -542,6 +549,7 @@ class PolicyConvertContext:
     url_filtering_target_vpns: Dict[UUID, List[VpnId]] = field(default_factory=dict)
     zone_based_firewall_residues: Dict[UUID, List[ZoneBasedFWPolicyEntry]] = field(default_factory=dict)
     security_policy_residues: Dict[UUID, SecurityPolicyResidues] = field(default_factory=dict)
+    qos_map_residues: Dict[UUID, List[QoSMapResidues]] = field(default_factory=dict)
 
     def get_vpn_id_to_vpn_name_map(self) -> Dict[Union[str, int], List[str]]:
         vpn_map: Dict[Union[str, int], List[str]] = {}

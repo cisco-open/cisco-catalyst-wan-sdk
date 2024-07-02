@@ -11,6 +11,7 @@ from catalystwan.models.configuration.config_migration import (
     UX2ConfigPushResult,
 )
 from catalystwan.models.configuration.feature_profile.parcel import AnyDnsSecurityParcel, list_types
+from catalystwan.models.configuration.feature_profile.sdwan.application_priority.qos_policy import QosPolicyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import NgfirewallParcel, PolicyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security.policy import NgFirewallContainer
 from catalystwan.session import ManagerSession
@@ -32,6 +33,7 @@ class SecurityPolicyPusher:
         self._ux2_config = ux2_config
         self._dns_security_api = session.api.sdwan_feature_profiles.dns_security
         self._embedded_security_api = session.api.sdwan_feature_profiles.embedded_security
+        self._app_profile_api = session.api.sdwan_feature_profiles.application_priority
         self._push_result: UX2ConfigPushResult = push_result
         self._progress: Callable[[str, int, int], None] = progress
         self.push_context = push_context
@@ -39,6 +41,19 @@ class SecurityPolicyPusher:
     def push(self) -> None:
         self.push_dns_security_policies()
         self.push_embedded_security_policies()
+        self.push_app_priority_and_sla_policies()
+
+    def _push_app_priority_and_sla_profile(self, name: str, description: str) -> FeatureProfileBuildReport:
+        try:
+            profile_id = self._app_profile_api.create_profile(name, description).id
+            self._push_result.rollback.add_feature_profile(profile_id, "application-priority")
+            feature_profile_report = FeatureProfileBuildReport(profile_name=name, profile_uuid=profile_id)
+        except ManagerHTTPError as e:
+            logger.error(f"Error occured during App priority and SLAprofile creation: {e.info}")
+            feature_profile_report = FeatureProfileBuildReport(profile_name=name, profile_uuid=UUID(int=0))
+
+        self._push_result.report.security_policies.append(feature_profile_report)
+        return feature_profile_report
 
     def _push_embedded_security_profile(self, name: str, description: str) -> FeatureProfileBuildReport:
         try:
@@ -79,6 +94,35 @@ class SecurityPolicyPusher:
         except ManagerHTTPError as e:
             logger.error(f"Error occured during creating PolicyParcel in embedded security profile: {e.info}")
             report.add_failed_parcel(parcel_name=parcel.parcel_name, parcel_type=parcel.type_, error_info=e.info)
+
+    def push_app_priority_and_sla_policies(self) -> None:
+        qos_map_policies = [
+            transformed_parcel
+            for transformed_parcel in self._ux2_config.profile_parcels
+            if type(transformed_parcel.parcel) in list_types(QosPolicyParcel)
+        ]
+
+        for i, qos_policy in enumerate(qos_map_policies):
+            parcel = cast(QosPolicyParcel, qos_policy.parcel)
+            parcel = update_parcel_references(parcel, self.push_context.id_lookup)
+
+            msg = f"Creating app priorit and sla policies: {parcel.parcel_name}"
+            self._progress(msg, i + 1, len(qos_map_policies))
+
+            profile_report = self._push_app_priority_and_sla_profile(parcel.parcel_name, parcel.parcel_description)
+
+            if (profile_id := profile_report.profile_uuid) == UUID(int=0):
+                continue
+
+            try:
+                qos_id = self._app_profile_api.create_parcel(profile_id, parcel).id
+                profile_report.add_created_parcel(parcel.parcel_name, qos_id)
+                self.push_context.id_lookup[qos_policy.header.origin] = qos_id
+            except ManagerHTTPError as e:
+                logger.error(f"Error occured during creating QoSParcel in app priority and sla profile: {e.info}")
+                profile_report.add_failed_parcel(
+                    parcel_name=parcel.parcel_name, parcel_type=parcel.type_, error_info=e.info
+                )
 
     def push_embedded_security_policies(self) -> None:
         security_policies = [
