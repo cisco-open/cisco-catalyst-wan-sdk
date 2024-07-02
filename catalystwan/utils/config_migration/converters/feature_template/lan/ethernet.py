@@ -26,11 +26,12 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet
     Trustsec,
     VrrpIPv4,
 )
+from catalystwan.utils.config_migration.converters.feature_template.base import FTConverter
 from catalystwan.utils.config_migration.converters.utils import parse_interface_name
 from catalystwan.utils.config_migration.steps.constants import LAN_VPN_ETHERNET
 
 
-class LanInterfaceEthernetTemplateConverter:
+class LanInterfaceEthernetConverter(FTConverter):
     supported_template_types = (LAN_VPN_ETHERNET,)
 
     delete_keys = (
@@ -113,7 +114,7 @@ class LanInterfaceEthernetTemplateConverter:
         return {"parcel_name": name, "parcel_description": description, **values}
 
     def configure_interface_name(self, values: dict) -> None:
-        values["interface_name"] = parse_interface_name(values)
+        values["interface_name"] = parse_interface_name(self, values)
 
     def configure_ethernet_description(self, values: dict) -> None:
         values["ethernet_description"] = values.get("description")

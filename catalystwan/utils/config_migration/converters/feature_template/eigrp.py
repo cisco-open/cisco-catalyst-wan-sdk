@@ -14,8 +14,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import
     TableMap,
 )
 
+from .base import FTConverter
 
-class EigrpTemplateConverter:
+
+class EigrpConverter(FTConverter):
     supported_template_types = ("eigrp",)
 
     delete_keys = ("as_num",)

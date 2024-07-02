@@ -16,8 +16,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.wireless_lan
 )
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
 
+from .base import FTConverter
 
-class WirelessLanTemplateConverter:
+
+class WirelessLanConverter(FTConverter):
     supported_template_types = ("cisco_wireless_lan",)
 
     delete_keys = ("radio", "mgmt")

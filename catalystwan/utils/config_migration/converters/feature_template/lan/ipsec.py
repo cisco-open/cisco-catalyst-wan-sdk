@@ -7,10 +7,11 @@ from catalystwan.models.common import IkeGroup
 from catalystwan.models.configuration.feature_profile.common import AddressWithMask, TunnelApplication
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import InterfaceIpsecParcel
 from catalystwan.utils.config_migration.converters.exceptions import CatalystwanConverterCantConvertException
+from catalystwan.utils.config_migration.converters.feature_template.base import FTConverter
 from catalystwan.utils.config_migration.steps.constants import LAN_VPN_IPSEC
 
 
-class LanInterfaceIpsecTemplateConverter:
+class LanInterfaceIpsecConverter(FTConverter):
     supported_template_types = (LAN_VPN_IPSEC,)
 
     # Default Values
