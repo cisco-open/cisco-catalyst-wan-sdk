@@ -137,6 +137,17 @@ class UX1Templates(BaseModel):
         validation_alias="deviceTemplates",
     )
 
+    def create_device_template_by_policy_id_lookup(self) -> Dict[Literal["policy", "security"], Dict[UUID, UUID]]:
+        lookup: Dict[Literal["policy", "security"], Dict[UUID, UUID]] = {"policy": {}, "security": {}}
+        for dt in self.device_templates:
+            policy_id = dt.get_policy_uuid()
+            security_policy_id = dt.get_security_policy_uuid()
+            if policy_id is not None:
+                lookup["policy"][policy_id] = UUID(dt.template_id)
+            if security_policy_id is not None:
+                lookup["security"][security_policy_id] = UUID(dt.template_id)
+        return lookup
+
 
 class UX1Config(BaseModel):
     # All UX1 Configuration items - Mega Model
@@ -150,6 +161,7 @@ class UX1Config(BaseModel):
 
 
 class TransformHeader(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     type: str = Field(
         description="Needed to push item to specific endpoint."
         "Type discriminator is not present in many UX2 item payloads"
@@ -157,6 +169,9 @@ class TransformHeader(BaseModel):
     origin: UUID = Field(description="Original UUID of converted item")
     origname: Optional[str] = None
     subelements: Set[UUID] = Field(default_factory=set)
+    localized_policy_subelements: Optional[Set[UUID]] = Field(
+        default=None, serialization_alias="localizedPolicySubelements", validation_alias="localizedPolicySubelements"
+    )
     status: ConvertOutputStatus = Field(default="complete")
     info: List[str] = Field(default_factory=list)
 
@@ -251,8 +266,28 @@ class UX2Config(BaseModel):
             profile_parcel["parcel"]["type_"] = profile_parcel["header"]["type"]
         return values
 
-    def transformed_parcels_with_origin(self, origin: Set[UUID]) -> List[TransformedParcel]:
+    def list_transformed_parcels_with_origin(self, origin: Set[UUID]) -> List[TransformedParcel]:
         return [p for p in self.profile_parcels if p.header.origin in origin]
+
+    def add_subelement_in_config_group(
+        self, profile_type: ProfileType, device_template_id: UUID, subelement: UUID
+    ) -> bool:
+        profile_ids: Set[UUID] = set()
+        for config_group in self.config_groups:
+            if config_group.header.origin == device_template_id:
+                profile_ids = config_group.header.subelements
+                break
+        if not profile_ids:
+            return False
+        for feature_profile in self.feature_profiles:
+            if feature_profile.header.type == profile_type and feature_profile.header.origin in profile_ids:
+                head = feature_profile.header
+                if head.localized_policy_subelements is None:
+                    head.localized_policy_subelements = {subelement}
+                else:
+                    head.localized_policy_subelements.add(subelement)
+                return True
+        return False
 
 
 class ConfigTransformResult(BaseModel):
