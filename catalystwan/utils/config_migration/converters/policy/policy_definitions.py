@@ -143,7 +143,7 @@ def as_num_list(ports_list: List[Union[int, Tuple[int, int]]]) -> List[int]:
 
 def conditional_split(s: str, seps: List[str]) -> List[str]:
     """
-    split s by first sep in sepsrun
+    split s by first sep in seps
     """
     for sep in seps:
         if sep in s:
@@ -494,6 +494,9 @@ def qos_map(in_: QoSMapPolicy, uuid: UUID, context: PolicyConvertContext) -> Con
         context.qos_map_residues[uuid] = []
         out = QosPolicyParcel.create(**_get_parcel_name_desc(in_))
         result.output = out
+
+        # add target
+        out.set_variable_target("{{Interface_1}}")  # for tests
 
         for scheduler in in_.definition.qos_schedulers:
             out.add_scheduler(

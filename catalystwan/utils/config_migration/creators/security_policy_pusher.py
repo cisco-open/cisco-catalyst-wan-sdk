@@ -3,6 +3,7 @@ from typing import Callable, cast
 from uuid import UUID
 
 from catalystwan.api.builders.feature_profiles.report import FeatureProfileBuildReport
+from catalystwan.api.configuration_groups.parcel import Global
 from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.config_migration import (
     PushContext,
@@ -11,7 +12,11 @@ from catalystwan.models.configuration.config_migration import (
     UX2ConfigPushResult,
 )
 from catalystwan.models.configuration.feature_profile.parcel import AnyDnsSecurityParcel, list_types
-from catalystwan.models.configuration.feature_profile.sdwan.application_priority.qos_policy import QosPolicyParcel
+from catalystwan.models.configuration.feature_profile.sdwan.application_priority import (
+    Cflowd,
+    PolicySettingsParcel,
+    QosPolicyParcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import NgfirewallParcel, PolicyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security.policy import NgFirewallContainer
 from catalystwan.session import ManagerSession
@@ -123,6 +128,32 @@ class SecurityPolicyPusher:
                 profile_report.add_failed_parcel(
                     parcel_name=parcel.parcel_name, parcel_type=parcel.type_, error_info=e.info
                 )
+                continue
+
+            # ------- temporary - need to find source of that settings  -------
+            policy_settings_parcel = PolicySettingsParcel(
+                parcel_description="desc",
+                parcel_name=parcel.parcel_name + "set",
+                app_visibility=Global[bool](value=False),
+                flow_visibility=Global[bool](value=False),
+                app_visibility_ipv6=Global[bool](value=False),
+                flow_visibility_ipv6=Global[bool](value=False),
+                cflowd=Cflowd(value=True),
+            )
+
+            try:
+                qos_id = self._app_profile_api.create_parcel(profile_id, policy_settings_parcel).id
+                profile_report.add_created_parcel(policy_settings_parcel.parcel_name, qos_id)
+                # self.push_context.id_lookup[qos_policy.header.origin] = qos_id # update when source is found
+            except ManagerHTTPError as e:
+                logger.error(f"Error occured during creating QoSParcel in app priority and sla profile: {e.info}")
+                profile_report.add_failed_parcel(
+                    parcel_name=policy_settings_parcel.parcel_name,
+                    parcel_type=policy_settings_parcel.type_,
+                    error_info=e.info,
+                )
+                continue
+            # ------- temporary -------
 
     def push_embedded_security_policies(self) -> None:
         security_policies = [

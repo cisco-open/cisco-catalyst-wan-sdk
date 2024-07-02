@@ -87,3 +87,6 @@ class QosPolicyParcel(_ParcelBase):
                 scheduling=scheduling,
             )
         )
+
+    def set_variable_target(self, variable: str) -> None:
+        self.target = QosPolicyTarget(interfaces=Variable(value=variable))
