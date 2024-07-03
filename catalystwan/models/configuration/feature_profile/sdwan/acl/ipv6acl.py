@@ -127,7 +127,7 @@ class MatchEntry(BaseModel):
     packet_length: Optional[Global[Union[str, int]]] = Field(
         default=None, validation_alias="packetLength", serialization_alias="packetLength"
     )
-    source_data_prefix: Union[SourceDataPrefix, SourceDataPrefixList] = Field(
+    source_data_prefix: Union[SourceDataPrefix, SourceDataPrefixList, None] = Field(
         default=None, validation_alias="sourceDataPrefix", serialization_alias="sourceDataPrefix"
     )
     source_ports: Optional[List[SourcePorts]] = Field(

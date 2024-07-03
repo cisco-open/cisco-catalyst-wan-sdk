@@ -431,15 +431,19 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
                 for item in localized_policy.policy_definition.assembly:
                     if item.type == "deviceaccesspolicy" or item.type == "deviceaccesspolicyv6":
                         ux2.add_subelement_in_config_group(
-                            profile_type="system", device_template_id=dt_id, subelement=item.definition_id
+                            profile_types=["system"], device_template_id=dt_id, subelement=item.definition_id
                         )
                     elif item.type == "acl" or item.type == "aclv6":
                         ux2.add_subelement_in_config_group(
-                            profile_type="transport", device_template_id=dt_id, subelement=item.definition_id
+                            profile_types=["transport", "service"],
+                            device_template_id=dt_id,
+                            subelement=item.definition_id,
                         )
                     elif item.type == "vedgeRoute":
                         ux2.add_subelement_in_config_group(
-                            profile_type="service", device_template_id=dt_id, subelement=item.definition_id
+                            profile_types=["transport", "service"],
+                            device_template_id=dt_id,
+                            subelement=item.definition_id,
                         )
 
     # Security policies

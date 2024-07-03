@@ -42,7 +42,7 @@ class TestExtendedCommunityParcel(TestFeatureProfileModels):
         ext.add_site_of_origin_community("1.2.3.4", 1000)
         ext.add_site_of_origin_community("10.20.30.40", 3000)
 
-        self.created_id = self.policy_api.create(self.profile_uuid, ext).id
+        self.created_id = self.policy_api.create_parcel(self.profile_uuid, ext).id
         parcel = self.policy_api.get(self.profile_uuid, ExtendedCommunityParcel, parcel_id=self.created_id)
 
         assert parcel.payload.parcel_name == "ExampleTestName"

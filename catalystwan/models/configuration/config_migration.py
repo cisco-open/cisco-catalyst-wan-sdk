@@ -270,24 +270,25 @@ class UX2Config(BaseModel):
         return [p for p in self.profile_parcels if p.header.origin in origin]
 
     def add_subelement_in_config_group(
-        self, profile_type: ProfileType, device_template_id: UUID, subelement: UUID
+        self, profile_types: List[ProfileType], device_template_id: UUID, subelement: UUID
     ) -> bool:
         profile_ids: Set[UUID] = set()
+        added = False
         for config_group in self.config_groups:
             if config_group.header.origin == device_template_id:
                 profile_ids = config_group.header.subelements
                 break
         if not profile_ids:
-            return False
+            return added
         for feature_profile in self.feature_profiles:
-            if feature_profile.header.type == profile_type and feature_profile.header.origin in profile_ids:
+            if feature_profile.header.type in profile_types and feature_profile.header.origin in profile_ids:
                 head = feature_profile.header
                 if head.localized_policy_subelements is None:
                     head.localized_policy_subelements = {subelement}
                 else:
                     head.localized_policy_subelements.add(subelement)
-                return True
-        return False
+                added = True
+        return added
 
 
 class ConfigTransformResult(BaseModel):

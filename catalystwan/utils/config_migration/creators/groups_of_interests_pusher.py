@@ -98,7 +98,7 @@ class GroupsOfInterestPusher:
 
             try:
                 parcel = update_parcel_references(parcel, self.push_context.id_lookup)
-                parcel_id = self._policy_object_api.create(profile_id=profile_id, payload=parcel).id
+                parcel_id = self._policy_object_api.create_parcel(profile_id=profile_id, payload=parcel).id
                 profile_rollback.add_parcel(parcel.type_, parcel_id)
                 self._push_result.report.groups_of_interest.add_created(parcel.parcel_name, parcel_id)
                 self.push_context.id_lookup[transformed_parcel.header.origin] = parcel_id

@@ -6,6 +6,7 @@ from pydantic import Field
 from typing_extensions import Annotated
 
 from catalystwan.models.configuration.feature_profile.sdwan.acl import AnyAclParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
 
 from .cellular_controller import CellularControllerParcel
 from .cellular_profile import CellularProfileParcel
@@ -65,6 +66,7 @@ AnyTransportParcel = Annotated[
         AnyTransportVpnParcel,
         AnyTransportVpnSubParcel,
         AnyManagementVpnSubParcel,
+        RoutePolicyParcel,
     ],
     Field(discriminator="type_"),
 ]

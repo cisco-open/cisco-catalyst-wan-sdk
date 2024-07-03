@@ -53,7 +53,7 @@ class UX2ConfigPusher:
             push_result=self._push_result,
             push_context=self._push_context,
         )
-        self._localized_policy_feature_updater = LocalizedPolicyPusher(
+        self._localized_policy_feature_pusher = LocalizedPolicyPusher(
             ux2_config=ux2_config,
             session=session,
             progress=progress,
@@ -81,7 +81,7 @@ class UX2ConfigPusher:
         self._create_cloud_credentials()
         self._create_config_groups()
         self._groups_of_interests_pusher.push()
-        self._localized_policy_feature_updater.push()
+        self._localized_policy_feature_pusher.push()
         self._security_policy_pusher.push()
         self._create_topology_groups(
             self._push_context.default_policy_object_profile_id

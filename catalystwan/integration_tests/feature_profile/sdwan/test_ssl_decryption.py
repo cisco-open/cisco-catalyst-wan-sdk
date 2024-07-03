@@ -57,7 +57,7 @@ class TestSslDecryptionParcel(TestFeatureProfileModels):
             min_tls_ver="TLSv1.1",
         )
 
-        self.created_id = self.policy_api.create(self.profile_uuid, ssl_decryption_parcel).id
+        self.created_id = self.policy_api.create_parcel(self.profile_uuid, ssl_decryption_parcel).id
         read_parcel = self.policy_api.get(self.profile_uuid, SslDecryptionParcel, parcel_id=self.created_id)
 
         assert read_parcel.payload.parcel_name == "test_ssl_profile"

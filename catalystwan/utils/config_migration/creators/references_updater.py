@@ -3,7 +3,6 @@ from typing import Dict, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
-from pydantic_core import from_json
 
 logger = logging.getLogger(__name__)
 
@@ -11,8 +10,7 @@ T = TypeVar("T", bound=BaseModel)
 
 
 def update_parcel_references(parcel: T, uuid_map: Dict[UUID, UUID]) -> T:
-    t = type(parcel)
-    origin_dump = target_dump = parcel.model_dump_json(by_alias=True)
+    target_dump = parcel.model_dump_json(by_alias=True)
     pattern = '"{}"'
 
     for origin_uuid, target_uuid in uuid_map.items():
@@ -20,11 +18,8 @@ def update_parcel_references(parcel: T, uuid_map: Dict[UUID, UUID]) -> T:
         target_uuid_str = pattern.format(str(target_uuid))
         target_dump = target_dump.replace(origin_uuid_str, target_uuid_str)
 
-    if origin_dump == target_dump:
-        return parcel
-
     try:
-        return t.model_validate(from_json(target_dump))
+        return parcel.model_validate_json(target_dump)
     except ValidationError as e:
         logging.error(f"Cannot validate model after references update: {e}")
         raise e

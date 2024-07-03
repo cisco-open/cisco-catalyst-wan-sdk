@@ -255,7 +255,7 @@ def configure_groups_of_interest(profile_id: UUID, api: PolicyObjectFeatureProfi
         print(item.model_dump_json(by_alias=True, indent=4))
 
     for item in items:
-        items_ids.append((api.create(profile_id, item), item.__class__))
+        items_ids.append((api.create_parcel(profile_id, item), item.__class__))
 
     id_, _ = items_ids[-1]
 
@@ -263,7 +263,7 @@ def configure_groups_of_interest(profile_id: UUID, api: PolicyObjectFeatureProfi
     sla.add_entry(app_probe_class_id=id_.id, jitter=20, latency=50, loss=100)
     sla.add_fallback(criteria="jitter-latency-loss", latency_variance=10, jitter_variance=10, loss_variance=10)
 
-    items_ids.append((api.create(profile_id, sla), sla.__class__))
+    items_ids.append((api.create_parcel(profile_id, sla), sla.__class__))
 
     input("Press enter to delete...")
 

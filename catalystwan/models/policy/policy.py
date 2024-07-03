@@ -77,10 +77,6 @@ class PolicyCreationPayload(BaseModel):
         default="default description", serialization_alias="policyDescription", validation_alias="policyDescription"
     )
     policy_type: str = Field(serialization_alias="policyType", validation_alias="policyType")
-    policy_definition: Union[PolicyDefinition, str] = Field(
-        serialization_alias="policyDefinition",
-        validation_alias="policyDefinition",
-    )
     is_policy_activated: bool = Field(
         default=False, serialization_alias="isPolicyActivated", validation_alias="isPolicyActivated"
     )

@@ -105,10 +105,25 @@ class ConfigMigrationRunner:
             self.progress("deleting other profiles...", 6, 12)
             fp_api.other.delete_all_profiles()
 
-            self.progress("deleting default policy object profile parcels...", 7, 12)
+            self.progress("deleting service profiles...", 7, 12)
+            fp_api.service.delete_all_profiles()
+
+            self.progress("deleting sig security profiles...", 8, 12)
+            fp_api.sig_security.delete_all_profiles()
+
+            self.progress("deleting system profiles...", 9, 12)
+            fp_api.system.delete_all_profiles()
+
+            self.progress("deleting transport profiles...", 10, 12)
+            fp_api.transport.delete_all_profiles()
+
+            self.progress("deleting topology profiles...", 11, 12)
+            fp_api.topology.delete_all_profiles()
+
+            self.progress("deleting default policy object profile parcels...", 12, 12)
             po_profiles = fp_api.policy_object.get_profiles()
             if len(po_profiles) > 1:
-                print("WARNING MORE THAN ONE DEFAULT POLICY OBJECT PROFILE DETECTED")
+                print("WARNING! MORE THAN ONE DEFAULT POLICY OBJECT PROFILE DETECTED")
 
             for po_profile in po_profiles:
                 sorted_parcel_types = sorted(
@@ -123,21 +138,6 @@ class ConfigMigrationRunner:
                         if parcel.created_by != "system":
                             parcel_uuid = UUID(str(parcel.parcel_id))
                             fp_api.policy_object.delete(po_profile.profile_id, type(parcel.payload), parcel_uuid)
-
-            self.progress("deleting service profiles...", 8, 12)
-            fp_api.service.delete_all_profiles()
-
-            self.progress("deleting sig security profiles...", 9, 12)
-            fp_api.sig_security.delete_all_profiles()
-
-            self.progress("deleting system profiles...", 10, 12)
-            fp_api.system.delete_all_profiles()
-
-            self.progress("deleting transport profiles...", 11, 12)
-            fp_api.transport.delete_all_profiles()
-
-            self.progress("deleting topology profiles...", 12, 12)
-            fp_api.topology.delete_all_profiles()
 
     def run(self):
         with self.session.login() as session:
