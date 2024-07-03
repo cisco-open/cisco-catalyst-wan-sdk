@@ -255,8 +255,8 @@ class RoutePolicySequence(BaseModel):
     )
     base_action: Union[Global[AcceptRejectActionType], Default[AcceptRejectActionType]] = Field(
         default=as_default("reject", AcceptRejectActionType),
-        serialization_alias="routePolicyActionType",
-        validation_alias="routePolicyActionType",
+        serialization_alias="baseAction",
+        validation_alias="baseAction",
         description="Base Action",
     )
     protocol: Union[Global[Protocol], Default[Protocol]] = Field(
@@ -411,7 +411,7 @@ class RoutePolicyParcel(_ParcelBase):
     )
     default_action: Union[Global[AcceptRejectActionType], Default[AcceptRejectActionType]] = Field(
         default=as_default("reject", AcceptRejectActionType),
-        validation_alias=AliasPath("data", "routePolicyActionType"),
+        validation_alias=AliasPath("data", "defaultAction"),
         description="Default Action",
     )
     sequences: List[RoutePolicySequence] = Field(

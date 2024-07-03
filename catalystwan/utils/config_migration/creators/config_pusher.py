@@ -22,6 +22,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke im
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
 from catalystwan.session import ManagerSession
 from catalystwan.utils.config_migration.creators.groups_of_interests_pusher import GroupsOfInterestPusher
+from catalystwan.utils.config_migration.creators.localized_policy_pusher import LocalizedPolicyPusher
 from catalystwan.utils.config_migration.creators.security_policy_pusher import SecurityPolicyPusher
 from catalystwan.utils.config_migration.factories.parcel_pusher import ParcelPusherFactory
 
@@ -52,6 +53,13 @@ class UX2ConfigPusher:
             push_result=self._push_result,
             push_context=self._push_context,
         )
+        self._localized_policy_feature_pusher = LocalizedPolicyPusher(
+            ux2_config=ux2_config,
+            session=session,
+            progress=progress,
+            push_result=self._push_result,
+            push_context=self._push_context,
+        )
         self._security_policy_pusher = SecurityPolicyPusher(
             ux2_config=ux2_config,
             session=session,
@@ -73,6 +81,7 @@ class UX2ConfigPusher:
         self._create_cloud_credentials()
         self._create_config_groups()
         self._groups_of_interests_pusher.push()
+        self._localized_policy_feature_pusher.push()
         self._security_policy_pusher.push()
         self._create_topology_groups(
             self._push_context.default_policy_object_profile_id
@@ -144,6 +153,7 @@ class UX2ConfigPusher:
                 profile = pusher.push(transformed_feature_profile.feature_profile, parcels, self._config_map.parcel_map)
                 feature_profiles.append(profile)
                 self._push_result.rollback.add_feature_profile(profile.profile_uuid, profile_type)
+                self._push_context.id_lookup[feature_profile_id] = profile.profile_uuid
             except ManagerHTTPError as e:
                 logger.error(f"Error occured during [{fp_name}] feature profile creation: {e}")
             except Exception:
@@ -205,7 +215,7 @@ class UX2ConfigPusher:
                 logger.error(f"Error occured during topology group creation: {e}")
                 continue
 
-            for transformed_parcel in self._ux2_config.transformed_parcels_with_origin(origins):
+            for transformed_parcel in self._ux2_config.list_transformed_parcels_with_origin(origins):
                 parcel = transformed_parcel.parcel
                 if isinstance(parcel, (CustomControlParcel, HubSpokeParcel, MeshParcel)):
                     try:

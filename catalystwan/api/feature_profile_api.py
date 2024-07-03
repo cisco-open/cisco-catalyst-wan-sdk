@@ -46,6 +46,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object.securi
 from catalystwan.models.configuration.feature_profile.sdwan.routing import AnyRoutingParcel, RoutingBgpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import MulticastParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.sig_security.sig_security import SIGParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology import AnyTopologyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
@@ -306,6 +307,12 @@ class TransportFeatureProfileAPI:
     def get_parcel(self, profile_id: UUID, parcel_type: Type[Ipv6AclParcel], parcel_id: UUID) -> Parcel[Ipv6AclParcel]:
         ...
 
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[RoutePolicyParcel], parcel_id: UUID
+    ) -> Parcel[RoutePolicyParcel]:
+        ...
+
     def get_parcel(
         self, profile_id: UUID, parcel_type: Type[Union[AnyTransportParcel, AnyRoutingParcel]], parcel_id: UUID
     ) -> Parcel:
@@ -431,21 +438,21 @@ class ServiceFeatureProfileAPI:
             self.delete_profile(profile.profile_id)
 
     def create_parcel(
-        self, profile_uuid: UUID, payload: AnyServiceParcel, vpn_uuid: Optional[UUID] = None
+        self, profile_id: UUID, payload: AnyServiceParcel, vpn_uuid: Optional[UUID] = None
     ) -> ParcelCreationResponse:
         """
         Create Service Parcel for selected profile_id based on payload type
         """
         if vpn_uuid is not None:
             if isinstance(payload, MulticastParcel):
-                response = self.endpoint.create_service_parcel(profile_uuid, payload._get_parcel_type(), payload)
+                response = self.endpoint.create_service_parcel(profile_id, payload._get_parcel_type(), payload)
                 return self.endpoint.associate_parcel_with_vpn(
-                    profile_uuid, vpn_uuid, payload._get_parcel_type(), ParcelAssociationPayload(parcel_id=response.id)
+                    profile_id, vpn_uuid, payload._get_parcel_type(), ParcelAssociationPayload(parcel_id=response.id)
                 )
             else:
                 parcel_type = payload._get_parcel_type().replace("lan/vpn/", "")
-                return self.endpoint.create_lan_vpn_sub_parcel(profile_uuid, vpn_uuid, parcel_type, payload)
-        return self.endpoint.create_service_parcel(profile_uuid, payload._get_parcel_type(), payload)
+                return self.endpoint.create_lan_vpn_sub_parcel(profile_id, vpn_uuid, parcel_type, payload)
+        return self.endpoint.create_service_parcel(profile_id, payload._get_parcel_type(), payload)
 
     def delete_parcel(self, profile_uuid: UUID, parcel_type: Type[AnyServiceParcel], parcel_uuid: UUID) -> None:
         """
@@ -1194,7 +1201,7 @@ class PolicyObjectFeatureProfileAPI:
             profile_id=profile_id, policy_object_list_type=policy_object_list_type, list_object_id=parcel_id
         )
 
-    def create(self, profile_id: UUID, payload: AnyPolicyObjectParcel) -> ParcelCreationResponse:
+    def create_parcel(self, profile_id: UUID, payload: AnyPolicyObjectParcel) -> ParcelCreationResponse:
         """
         Create Policy Object for selected profile_id based on payload type
         """

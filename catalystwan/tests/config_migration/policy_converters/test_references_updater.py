@@ -57,4 +57,4 @@ class TestReferencesUpdater(unittest.TestCase):
 
         updated_parcel = update_parcel_references(aip_parcel, pushed_objects)
 
-        assert updated_parcel is aip_parcel
+        assert updated_parcel.model_dump_json() == aip_parcel.model_dump_json()

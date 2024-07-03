@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, List
+from typing import TYPE_CHECKING, ClassVar, List, Optional
+from uuid import UUID
 
 from jinja2 import DebugUndefined, Environment, FileSystemLoader, meta  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -13,6 +14,13 @@ if TYPE_CHECKING:
     from catalystwan.session import ManagerSession
 
 logger = logging.getLogger(__name__)
+
+
+def str_to_uuid(s: str) -> Optional[UUID]:
+    try:
+        return UUID(s)
+    except ValueError:
+        return None
 
 
 class GeneralTemplate(BaseModel):
@@ -53,6 +61,12 @@ class DeviceTemplate(BaseModel):
         default="", serialization_alias="securityPolicyId", validation_alias="securityPolicyId"
     )
     policy_id: str = Field(default="", serialization_alias="policyId", validation_alias="policyId")
+
+    def get_security_policy_uuid(self) -> Optional[UUID]:
+        return str_to_uuid(self.security_policy_id)
+
+    def get_policy_uuid(self) -> Optional[UUID]:
+        return str_to_uuid(self.policy_id)
 
     def generate_payload(self) -> str:
         env = Environment(

@@ -329,7 +329,7 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
                             subtemplates_mapping[UUID(subtemplate_level_1.templateId)].add(
                                 UUID(subtemplate_level_2.templateId)
                             )
-
+        policy_id = dt.get_policy_uuid()
         transformed_cg = TransformedConfigGroup(
             header=TransformHeader(
                 type="config_group",
@@ -337,6 +337,7 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
                 subelements=set(
                     [fp_system_uuid, fp_other_uuid, fp_service_uuid, fp_transport_and_management_uuid, fp_cli_uuid]
                 ),
+                localized_policy_subelements=set([policy_id]) if policy_id else None,
             ),
             config_group=ConfigGroupCreationPayload(
                 name=dt.template_name,
@@ -420,6 +421,30 @@ def transform(ux1: UX1Config, add_suffix: bool = True) -> ConfigTransformResult:
                 info=pd_result.info,
             )
             ux2.profile_parcels.append(TransformedParcel(header=header, parcel=pd_parcel))
+
+    # Localized Policies
+    _lookup = ux1.templates.create_device_template_by_policy_id_lookup()
+    dt_by_policy_id = _lookup["policy"]
+    for localized_policy in ux1.policies.localized_policies:
+        if not isinstance(localized_policy.policy_definition, str):
+            if dt_id := dt_by_policy_id.get(localized_policy.policy_id):
+                for item in localized_policy.policy_definition.assembly:
+                    if item.type == "deviceaccesspolicy" or item.type == "deviceaccesspolicyv6":
+                        ux2.add_subelement_in_config_group(
+                            profile_types=["system"], device_template_id=dt_id, subelement=item.definition_id
+                        )
+                    elif item.type == "acl" or item.type == "aclv6":
+                        ux2.add_subelement_in_config_group(
+                            profile_types=["transport", "service"],
+                            device_template_id=dt_id,
+                            subelement=item.definition_id,
+                        )
+                    elif item.type == "vedgeRoute":
+                        ux2.add_subelement_in_config_group(
+                            profile_types=["transport", "service"],
+                            device_template_id=dt_id,
+                            subelement=item.definition_id,
+                        )
 
     # Security policies
     for security_policy in ux1.policies.security_policies:

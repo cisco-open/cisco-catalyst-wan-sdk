@@ -64,8 +64,8 @@ class Sequence(BaseModel):
 
     base_action: Union[Global[AcceptDropActionType], Default[Literal[AcceptDropActionType]]] = Field(
         default=Default[Literal[AcceptDropActionType]](value="accept"),
-        validation_alias="BasicPolicyActionType",
-        serialization_alias="BasicPolicyActionType",
+        validation_alias="baseAction",
+        serialization_alias="baseAction",
     )
     match_entries: MatchEntries = Field(
         validation_alias="matchEntries", serialization_alias="matchEntries", description="Define match conditions"
