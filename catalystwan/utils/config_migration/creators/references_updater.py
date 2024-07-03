@@ -10,6 +10,11 @@ T = TypeVar("T", bound=BaseModel)
 
 
 def update_parcel_references(parcel: T, uuid_map: Dict[UUID, UUID]) -> T:
+    """
+    Replaces UUID strings found in json dump based on provided map
+    always returns a copy of original even when there was no substitution
+    always perform output validation
+    """
     target_dump = parcel.model_dump_json(by_alias=True)
     pattern = '"{}"'
 
