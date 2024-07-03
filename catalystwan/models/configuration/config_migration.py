@@ -306,18 +306,12 @@ class ConfigTransformResult(BaseModel):
         validation_alias="unsupportedConversionItems",
     )
 
-    def add_suffix_to_names(self) -> None:
-        suffix = f"_{str(self.uuid)[:5]}"
-        parcel_name_lookup: Dict[str, List[AnyPolicyObjectParcel]] = {}
-        for config_group in self.ux2_config.config_groups:
-            config_group.header.origname = config_group.config_group.name
-            config_group.config_group.name += suffix
-        for topology_group in self.ux2_config.topology_groups:
-            topology_group.header.origname = topology_group.topology_group.name
-            topology_group.topology_group.name += suffix
-        for feature_profile in self.ux2_config.feature_profiles:
-            feature_profile.header.origname = feature_profile.feature_profile.name
-            feature_profile.feature_profile.name += suffix
+    @property
+    def suffix(self):
+        return f"_{str(self.uuid)[:5]}"
+
+    def create_policy_object_parcel_name_lookup(self) -> Dict[str, List[AnyPolicyObjectParcel]]:
+        lookup: Dict[str, List[AnyPolicyObjectParcel]] = {}
         # parcel rename only for policy groups-of-interest which share global profile
         for profile_parcel in self.ux2_config.profile_parcels:
             profile_parcel.header.origname = profile_parcel.parcel.parcel_name
@@ -325,25 +319,50 @@ class ConfigTransformResult(BaseModel):
                 # build lookup by parcel name to find duplicates
                 parcel = cast(AnyPolicyObjectParcel, profile_parcel.parcel)
                 name = profile_parcel.header.origname
-                if not parcel_name_lookup.get(name):
-                    parcel_name_lookup[name] = [parcel]
+                if not lookup.get(name):
+                    lookup[name] = [parcel]
                 else:
-                    parcel_name_lookup[name].append(parcel)
+                    lookup[name].append(parcel)
+        return lookup
 
-        for name, parcels in parcel_name_lookup.items():
-            # policy object parcel names are restricted to 32 characters and needs to be unique
+    def add_suffix_to_names(self) -> None:
+        for config_group in self.ux2_config.config_groups:
+            config_group.header.origname = config_group.config_group.name
+            config_group.config_group.name += self.suffix
+        for topology_group in self.ux2_config.topology_groups:
+            topology_group.header.origname = topology_group.topology_group.name
+            topology_group.topology_group.name += self.suffix
+        for feature_profile in self.ux2_config.feature_profiles:
+            feature_profile.header.origname = feature_profile.feature_profile.name
+            feature_profile.feature_profile.name += self.suffix
+
+    def resolve_conflicts_on_policy_object_parcel_names(self, use_suffix: bool = False) -> None:
+        # policy object parcel names are restricted to 32 characters and needs to be unique
+        # TODO: cleanup, also this works only for suffix len = 6 (eg. "_1afc9")
+        assert len(self.suffix) == 6
+        for name, parcels in self.create_policy_object_parcel_name_lookup().items():
             maxlen = 32
-            for i, parcel in enumerate(parcels):
-                if i > 0:
-                    # replace last 3-digit of suffix (can handle 4096 duplicates)
-                    suffix_num = int(suffix[1:], 16) + i
-                    parcel.parcel_name = name[:-3] + hex(suffix_num)[-3:]
-                    continue
-                # add suffix
-                if len(name) >= (maxlen - 6):
-                    name = name[maxlen - 7 :]
-                name = name + suffix
-                parcel.parcel_name = name
+            if use_suffix:
+                # dedicated conflict resolving when suffix is used (we increment suffix digit)
+                for i, parcel in enumerate(parcels):
+                    if i > 0:
+                        # replace last 3-digit of suffix (can handle 4096 duplicates)
+                        suffix_num = int(self.suffix[1:], 16) + i
+                        parcel.parcel_name = name[:-3] + hex(suffix_num)[-3:]
+                        continue
+                    # add suffix
+                    if len(name) >= (maxlen - 6):
+                        name = name[maxlen - 7 :]
+                    name = name + self.suffix
+                    parcel.parcel_name = name
+            else:
+                for i, parcel in enumerate(parcels):
+                    if i > 0:
+                        suffix_str = f"_{hex(i)[-1]}"
+                        if len(name) > (maxlen - 2):
+                            parcel.parcel_name = name[:-2] + suffix_str
+                        else:
+                            parcel.parcel_name = name + suffix_str
 
     def add_failed_conversion_parcel(
         self,
