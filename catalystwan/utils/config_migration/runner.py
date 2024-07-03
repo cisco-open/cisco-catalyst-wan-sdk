@@ -149,7 +149,7 @@ class ConfigMigrationRunner:
                     f.write(ux1.model_dump_json(exclude_none=True, by_alias=True, indent=4, warnings=False))
 
             # transform to ux2 and dump to json file
-            _transform_result = transform(UX1Config.model_validate_json(open(self.ux1_dump).read()), self.progress)
+            _transform_result = transform(UX1Config.model_validate_json(open(self.ux1_dump).read()), True)
             with open(self.ux2_dump, "w") as f:
                 f.write(_transform_result.model_dump_json(exclude_none=True, by_alias=True, indent=4, warnings=False))
 
