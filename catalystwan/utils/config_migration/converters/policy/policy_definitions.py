@@ -211,6 +211,8 @@ def dns_security(in_: DnsSecurityPolicy, uuid: UUID, context: PolicyConvertConte
 
 def hubspoke(in_: HubAndSpokePolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[HubSpokeParcel]:
     target_vpns = context.lan_vpns_by_list_id[in_.definition.vpn_list]
+    if not target_vpns:
+        return ConvertResult[HubSpokeParcel](status="failed", info=["No VPNs found matching VPN list assignment"])
     out = HubSpokeParcel(**_get_parcel_name_desc(in_))
     out.target.vpn.value.extend(target_vpns)
     for isubdef in in_.definition.sub_definitions:
@@ -568,10 +570,14 @@ def route(in_: RoutePolicy, uuid: UUID, context: PolicyConvertContext) -> Conver
 
 def mesh(in_: MeshPolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[MeshParcel]:
     target_vpns = context.lan_vpns_by_list_id[in_.definition.vpn_list]
+    if not target_vpns:
+        return ConvertResult[MeshParcel](status="failed", info=["No VPNs found matching VPN list assignment"])
     mesh_sites: List[str] = []
     for region in in_.definition.regions:
         for site_list in region.site_lists:
             mesh_sites.extend(context.sites_by_list_id[site_list])
+    if not mesh_sites:
+        return ConvertResult[MeshParcel](status="failed", info=["No Sites found matching Site list assignment"])
     out = MeshParcel(**_get_parcel_name_desc(in_))
     out.target.vpn.value = target_vpns
     out.sites.value = mesh_sites
