@@ -35,7 +35,7 @@ class TargetVpns(BaseModel):
             local_domain_bypass_enabled=as_global(local_domain_bypass_enabled),
             uid=as_global(str(uid)),
             umbrella_default=as_global(umbrella_default),
-            vpns=as_global([vpn for vpn in vpns]),
+            vpns=Global[List[str]](value=vpns),
         )
 
 

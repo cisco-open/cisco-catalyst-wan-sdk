@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from json import dumps
 from pathlib import Path
@@ -27,6 +28,7 @@ class ConfigMigrationRunner:
     collect: bool = True
     push: bool = True
     rollback: bool = False
+    dt_filter: str = ".*"
     artifact_dir = Path(DEFAULT_ARTIFACT_DIR)
     progress: Callable[[str, int, int], None] = log_progress
 
@@ -38,30 +40,31 @@ class ConfigMigrationRunner:
         self.ux1_schema_dump: Path = self.artifact_dir / Path("ux1-schema.json")
         self.transform_schema_dump: Path = self.artifact_dir / Path("transform-result-schema.json")
         self.push_schema_dump: Path = self.artifact_dir / Path("push-result-schema.json")
+        self.dt_pattern: re.Pattern = re.compile(self.dt_filter)
 
     @staticmethod
-    def collect_only(session: ManagerSession) -> "ConfigMigrationRunner":
-        return ConfigMigrationRunner(session=session, collect=True, push=False, rollback=False)
+    def collect_only(session: ManagerSession, filter: str = ".*") -> "ConfigMigrationRunner":
+        return ConfigMigrationRunner(session=session, collect=True, push=False, rollback=False, dt_filter=filter)
 
     @staticmethod
-    def collect_and_push(session: ManagerSession) -> "ConfigMigrationRunner":
-        return ConfigMigrationRunner(session=session, collect=True, push=True, rollback=False)
+    def collect_and_push(session: ManagerSession, filter: str = ".*") -> "ConfigMigrationRunner":
+        return ConfigMigrationRunner(session=session, collect=True, push=True, rollback=False, dt_filter=filter)
 
     @staticmethod
-    def rollback_only(session: ManagerSession) -> "ConfigMigrationRunner":
-        return ConfigMigrationRunner(session=session, collect=False, push=False, rollback=True)
+    def rollback_only(session: ManagerSession, filter: str = ".*") -> "ConfigMigrationRunner":
+        return ConfigMigrationRunner(session=session, collect=False, push=False, rollback=True, dt_filter=filter)
 
     @staticmethod
-    def transform_only(session: ManagerSession) -> "ConfigMigrationRunner":
-        return ConfigMigrationRunner(session=session, collect=False, push=False, rollback=False)
+    def transform_only(session: ManagerSession, filter: str = ".*") -> "ConfigMigrationRunner":
+        return ConfigMigrationRunner(session=session, collect=False, push=False, rollback=False, dt_filter=filter)
 
     @staticmethod
-    def push_only(session: ManagerSession) -> "ConfigMigrationRunner":
-        return ConfigMigrationRunner(session=session, collect=False, push=True, rollback=False)
+    def push_only(session: ManagerSession, filter: str = ".*") -> "ConfigMigrationRunner":
+        return ConfigMigrationRunner(session=session, collect=False, push=True, rollback=False, dt_filter=filter)
 
     @staticmethod
-    def push_and_rollback(session: ManagerSession) -> "ConfigMigrationRunner":
-        return ConfigMigrationRunner(session=session, collect=False, push=True, rollback=True)
+    def push_and_rollback(session: ManagerSession, filter: str = ".*") -> "ConfigMigrationRunner":
+        return ConfigMigrationRunner(session=session, collect=False, push=True, rollback=True, dt_filter=filter)
 
     def dump_schemas(self):
         with open(self.ux1_schema_dump, "w") as f:
@@ -149,7 +152,12 @@ class ConfigMigrationRunner:
                     f.write(ux1.model_dump_json(exclude_none=True, by_alias=True, indent=4, warnings=False))
 
             # transform to ux2 and dump to json file
-            _transform_result = transform(UX1Config.model_validate_json(open(self.ux1_dump).read()), True)
+            _ux1 = UX1Config.model_validate_json(open(self.ux1_dump).read())
+            _filtered_dts = [
+                dt for dt in _ux1.templates.device_templates if re.search(self.dt_pattern, dt.template_name) is not None
+            ]
+            _ux1.templates.device_templates = _filtered_dts
+            _transform_result = transform(_ux1, True)
             with open(self.ux2_dump, "w") as f:
                 f.write(_transform_result.model_dump_json(exclude_none=True, by_alias=True, indent=4, warnings=False))
 
