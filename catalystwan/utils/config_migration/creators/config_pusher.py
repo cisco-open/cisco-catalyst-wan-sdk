@@ -221,6 +221,7 @@ class UX2ConfigPusher:
                     try:
                         parcel_id = profile_api.create_parcel(profile_id, parcel).id
                         profile_report.add_created_parcel(parcel_name=parcel.parcel_name, parcel_uuid=parcel_id)
+                        self._push_context.id_lookup[transformed_parcel.header.origin] = parcel_id
                     except ManagerHTTPError as e:
                         logger.error(f"Error occured during topology profile parcel creation: {e}")
                         profile_report.add_failed_parcel(
@@ -229,6 +230,5 @@ class UX2ConfigPusher:
                             error_info=e.info,
                             request=e.request,
                         )
-                        self._push_context.id_lookup[transformed_parcel.header.origin] = parcel_id
                 else:
                     logger.warning(f"Unexpected parcel type {type(parcel)}")
