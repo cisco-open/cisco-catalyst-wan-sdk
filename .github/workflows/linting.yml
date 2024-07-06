@@ -1,8 +1,9 @@
 name: Static code analyzer
-permissions: read-all
 
 on:
   pull_request:
+
+permissions: read-all
 
 jobs:
   analyze_code:
