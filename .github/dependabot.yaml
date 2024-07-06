@@ -8,9 +8,10 @@ updates:
 
   - package-ecosystem: "pip"
     directory: "/"
+    target-branch: "python-dependencies"
     open-pull-requests-limit: 1
     schedule:
-      interval: "monthly"
+      interval: "weekly"
     groups:
       python-dev:
         applies-to: version-updates
