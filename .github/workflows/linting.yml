@@ -1,4 +1,5 @@
 name: Static code analyzer
+permissions: read-all
 
 on:
   pull_request:
