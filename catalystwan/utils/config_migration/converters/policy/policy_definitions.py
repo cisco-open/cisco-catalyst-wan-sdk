@@ -496,7 +496,7 @@ def qos_map(in_: QoSMapPolicy, uuid: UUID, context: PolicyConvertContext) -> Con
         result.output = out
 
         # add target
-        out.set_variable_target("{{Interface_1}}")  # for tests
+        # out.set_variable_target("Interface_1")  # for tests
 
         for scheduler in in_.definition.qos_schedulers:
             out.add_scheduler(
@@ -767,8 +767,8 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     SslDecryptionUtdProfilePolicy: ssl_profile,
     UrlFilteringPolicy: url_filtering,
     DnsSecurityPolicy: dns_security,
-    # DeviceAccessIPv6Policy: device_access_ipv6,
-    # DeviceAccessPolicy: device_access_ipv4,
+    DeviceAccessIPv6Policy: device_access_ipv6,
+    DeviceAccessPolicy: device_access_ipv4,
     RoutePolicy: route,
     ZoneBasedFWPolicy: convert_zone_based_fw,
     QoSMapPolicy: qos_map,

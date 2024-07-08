@@ -6,7 +6,7 @@ from catalystwan.models.policy.definition.qos_map import QoSMapPolicy
 from catalystwan.utils.config_migration.converters.policy.policy_definitions import convert
 
 
-class TestAdvancedMalwareProtectionConverter(unittest.TestCase):
+class TestQosMapConverter(unittest.TestCase):
     def setUp(self) -> None:
         self.context = PolicyConvertContext()
         self.uuid = uuid4()
