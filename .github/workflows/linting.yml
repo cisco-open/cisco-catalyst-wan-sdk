@@ -3,6 +3,8 @@ name: Static code analyzer
 on:
   pull_request:
 
+permissions: read-all
+
 jobs:
   analyze_code:
     runs-on: ubuntu-latest
