@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 from typing import List, Optional, TypeVar
 from uuid import UUID, uuid4
@@ -8,10 +9,13 @@ from catalystwan.models.configuration.config_migration import (
     DeviceTemplateWithInfo,
     TransformedParcel,
     UX1Config,
+    UX1Policies,
     UX1Templates,
 )
 from catalystwan.models.templates import FeatureTemplateInformation
 from catalystwan.tests.config_migration.test_data import (
+    create_localized_policy_info,
+    create_qos_map_policy,
     dhcp_server,
     interface_ethernet,
     interface_gre,
@@ -514,3 +518,51 @@ def test_when_transform_expect_removed_copies():
     assert removed_vpn_service is None
     assert removed_vpn_standalone is None
     assert removed_ethernet is None
+
+
+def test_when_localized_policy_with_qos_expect_application_priority_feature_profile_with_qos_parcels():
+    """Localized Policy can have QoS Maps as a subelements. This test checks if the transformed
+    Localized Policy with QoS Map subelements produces the correct QoS parcels and if they are
+    correctly assigned to the appropriate feature profile after the transformation from UX1 to UX2."""
+
+    # Arrange
+    localized_policy = create_localized_policy_info("LocalizedPolicy1")
+    qos_map_1 = create_qos_map_policy("QoSMap1")
+    qos_map_2 = create_qos_map_policy("QoSMap2")
+    localized_policy.add_qos_map(qos_map_1.definition_id)
+    localized_policy.add_qos_map(qos_map_2.definition_id)
+    ux1_config = UX1Config(
+        policies=UX1Policies(
+            localized_policies=[localized_policy],
+            policy_definitions=[qos_map_1, qos_map_2],
+        )
+    )
+    # Act
+    ux2_config = transform(ux1_config).ux2_config
+    # Find application priority feature profile
+    application_priority_profile = next(
+        (
+            p
+            for p in ux2_config.feature_profiles
+            if p.feature_profile.name == f"FROM_{localized_policy.policy_name}"
+            and p.header.type == "application-priority"
+        ),
+        None,
+    )
+    qos_map_1_parcel = next((p for p in ux2_config.profile_parcels if p.parcel.parcel_name == qos_map_1.name), None)
+    qos_map_2_parcel = next((p for p in ux2_config.profile_parcels if p.parcel.parcel_name == qos_map_2.name), None)
+    settings = next((p for p in ux2_config.profile_parcels if p.parcel.parcel_name.endswith("_Settings")), None)
+    # Assert
+    assert application_priority_profile is not None
+    # Feature profile shoulde have 3 subelements: QoS Map 1, QoS Map 2 and
+    # Settings with uuid derived from Localized Policy
+    assert application_priority_profile.header.localized_policy_subelements == {
+        qos_map_1.definition_id,
+        qos_map_2.definition_id,
+        localized_policy.policy_id,
+    }
+    # QoS Map 1 and QoS Map 2 should be in the list of parcels
+    assert qos_map_1_parcel is not None
+    assert qos_map_2_parcel is not None
+    # Settings should be in the list of parcels
+    assert settings is not None

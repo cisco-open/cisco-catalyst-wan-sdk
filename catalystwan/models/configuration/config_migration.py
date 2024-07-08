@@ -150,6 +150,12 @@ class TransformHeader(BaseModel):
     status: ConvertOutputStatus = Field(default="complete")
     info: List[str] = Field(default_factory=list)
 
+    def add_localized_policy_subelement(self, subelement: UUID) -> None:
+        if self.localized_policy_subelements is None:
+            self.localized_policy_subelements = {subelement}
+        else:
+            self.localized_policy_subelements.add(subelement)
+
 
 class TransformedTopologyGroup(BaseModel):
     model_config = ConfigDict(populate_by_name=True, alias_generator=camel)

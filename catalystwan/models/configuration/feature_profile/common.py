@@ -29,19 +29,20 @@ from catalystwan.models.common import (
 from catalystwan.models.configuration.common import Solution
 
 ProfileType = Literal[
-    "transport",
-    "system",
-    "cli",
-    "service",
     "application-priority",
-    "policy-object",  # automatically created default policy object feature profile
-    "embedded-security",
-    "other",
-    "uc-voice",
-    "global",  # automatically created global cellulargateway feature profile
-    "sig-security",
-    "topology",
+    "cli",
     "dns-security",
+    "embedded-security",
+    "global",  # automatically created global cellulargateway feature profile
+    "networks",
+    "other",
+    "policy-object",  # automatically created default policy object feature profile
+    "service",
+    "sig-security",
+    "system",
+    "topology",
+    "transport",
+    "uc-voice",
 ]
 
 SchemaType = Literal[

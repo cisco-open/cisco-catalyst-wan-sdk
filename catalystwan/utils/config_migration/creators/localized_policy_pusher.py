@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
 from typing import Callable, Dict, List, Literal, Tuple, Union, cast
 from uuid import UUID
@@ -10,6 +11,7 @@ from catalystwan.endpoints.configuration_group import ConfigGroup
 from catalystwan.exceptions import ManagerErrorInfo, ManagerHTTPError
 from catalystwan.models.configuration.config_migration import (
     PushContext,
+    TransformedFeatureProfile,
     TransformedParcel,
     UX2Config,
     UX2ConfigPushResult,
@@ -17,11 +19,20 @@ from catalystwan.models.configuration.config_migration import (
 from catalystwan.models.configuration.feature_profile.parcel import list_types
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
+from catalystwan.models.configuration.feature_profile.sdwan.application_priority.policy_settings import (
+    PolicySettingsParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.application_priority.qos_policy import QosPolicyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import DeviceAccessIPv4Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import DeviceAccessIPv6Parcel
 from catalystwan.session import ManagerSession
 from catalystwan.utils.config_migration.creators.references_updater import update_parcel_references
+
+_AnyApplicationPriorityPolicyParcel = Annotated[
+    Union[QosPolicyParcel, PolicySettingsParcel],
+    Field(discriminator="type_"),
+]
 
 _AnyTransportPolicyFeatureParcel = Annotated[
     Union[Ipv4AclParcel, Ipv6AclParcel, RoutePolicyParcel],
@@ -36,7 +47,12 @@ _AnySystemPolicyFeatureParcel = Annotated[
     Field(discriminator="type_"),
 ]
 _AnyLocalizedPolicyParcel = Annotated[
-    Union[_AnyTransportPolicyFeatureParcel, _AnyServicePolicyFeatureParcel, _AnySystemPolicyFeatureParcel],
+    Union[
+        _AnyTransportPolicyFeatureParcel,
+        _AnyServicePolicyFeatureParcel,
+        _AnySystemPolicyFeatureParcel,
+        _AnyApplicationPriorityPolicyParcel,
+    ],
     Field(discriminator="type_"),
 ]
 _LocalizedPolicyProfileTypes = Literal["transport", "service", "system"]
@@ -66,6 +82,7 @@ class LocalizedPolicyPusher:
         self._ux2_config = ux2_config
         self._session = session
         self._cg_api = session.api.config_group
+        self._app_prio_api = session.api.sdwan_feature_profiles.application_priority
         self._push_result: UX2ConfigPushResult = push_result
         self._push_context = push_context
         self._progress: Callable[[str, int, int], None] = progress
@@ -146,6 +163,13 @@ class LocalizedPolicyPusher:
         parcel.parcel_name += "_system"
         return api.create_parcel(profile_id=profile_id, payload=parcel).id
 
+    def _get_all_application_priority_profiles_with_subelements(self) -> List[TransformedFeatureProfile]:
+        return [
+            p
+            for p in self._ux2_config.feature_profiles
+            if p.header.type == "application-priority" and p.header.localized_policy_subelements is not None
+        ]
+
     def associate_config_groups_with_default_policy_object_profile(self):
         for cg_id, cg in self._get_config_group_contents(self._find_config_groups_to_update()).items():
             profile_ids = [p.id for p in cg.profiles]
@@ -166,6 +190,7 @@ class LocalizedPolicyPusher:
         self._progress("Associating Config Groups with Default Policy Object Profile", 0, 1)
         self.associate_config_groups_with_default_policy_object_profile()
         self._progress("Associating Config Groups with Default Policy Object Profile", 1, 1)
+        # ----- ACLs, Route Policy, Device Access -----
         profile_infos = self._find_profiles_to_update()
         profile_ids = [t[1] for t in profile_infos]
         profile_reports = self._create_profile_report_by_id_lookup(profile_ids)
@@ -193,4 +218,31 @@ class LocalizedPolicyPusher:
                 if error_info is not None:
                     report.add_failed_parcel(
                         parcel_name=error_parcel.parcel_name, parcel_type=error_parcel.type_, error_info=error_info
+                    )
+        # ----- QoSMap, Settings -----
+        app_prio_profiles = self._get_all_application_priority_profiles_with_subelements()
+        for i, app_prio_profile in enumerate(app_prio_profiles):
+            self._progress("Creating Application Priority profile with policy parcels", i + 1, len(app_prio_profiles))
+            try:
+                profile_id = self._app_prio_api.create_profile(
+                    app_prio_profile.feature_profile.name, app_prio_profile.feature_profile.description
+                ).id
+            except ManagerHTTPError as e:
+                logger.error(f"Error occured during Application Priority profile creation: {e.info}")
+                continue
+            report = FeatureProfileBuildReport(
+                profile_name=app_prio_profile.feature_profile.name, profile_uuid=profile_id
+            )
+            self._push_result.report.add_feature_profiles_not_assosiated_with_config_group(report)
+            self._push_result.rollback.add_feature_profile(profile_id, "application-priority")
+            transformed_parcels = self._get_parcels_to_push(list(app_prio_profile.header.localized_policy_subelements))
+            for tp in transformed_parcels:
+                parcel = tp.parcel
+                try:
+                    parcel_id = self._app_prio_api.create_parcel(profile_id=profile_id, payload=parcel).id
+                    report.add_created_parcel(parcel_name=parcel.parcel_name, parcel_uuid=parcel_id)
+                except ManagerHTTPError as e:
+                    logger.error(f"Error occured during Application Priority parcel creation: {e.info}")
+                    report.add_failed_parcel(
+                        parcel_name=parcel.parcel_name, parcel_type=parcel._get_parcel_type(), error_info=e.info
                     )
