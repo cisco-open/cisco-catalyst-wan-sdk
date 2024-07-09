@@ -1,5 +1,4 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from typing import List
 
 from .feature_templates.dhcp import dhcp_server
