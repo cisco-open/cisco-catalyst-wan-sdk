@@ -114,7 +114,6 @@ class WanInterfaceEthernetConverter(FTConverter):
 
     def parse_interface_ip_address(self, data: Dict) -> Union[InterfaceDynamicIPv4Address, InterfaceStaticIPv4Address]:
         ip_address = data.get("ip", {})
-
         if "address" in ip_address and ip_address["address"].value != "":
             return InterfaceStaticIPv4Address(
                 static=StaticIPv4AddressConfig(
@@ -122,12 +121,19 @@ class WanInterfaceEthernetConverter(FTConverter):
                     secondary_ip_address=self.get_secondary_static_ipv4_address(ip_address),
                 )
             )
-
         elif "dhcp_client" in ip_address:
             return InterfaceDynamicIPv4Address(
                 dynamic=DynamicDhcpDistance(dynamic_dhcp_distance=ip_address.get("dhcp_distance", as_default(1)))
             )
-
+        address = data.get("address")
+        if isinstance(address, Variable):
+            return InterfaceStaticIPv4Address(
+                static=StaticIPv4AddressConfig(
+                    primary_ip_address=StaticIPv4Address(
+                        ip_address=address,
+                    )
+                ),
+            )
         return InterfaceDynamicIPv4Address(dynamic=DynamicDhcpDistance())
 
     def get_static_ipv4_address(self, address_configuration: dict) -> StaticIPv4Address:
