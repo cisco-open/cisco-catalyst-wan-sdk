@@ -65,7 +65,13 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre impo
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import InterfaceIpsecParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.multilink import InterfaceMultilinkParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.svi import InterfaceSviParcel
-from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import (
+    LanVpnParcel,
+    RoutePrefix,
+    ServiceRoute,
+    StaticGreRouteIPv4,
+    StaticIpsecRouteIPv4,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import (
     AutoRpAttributes,
     BsrCandidateAttributes,
@@ -140,6 +146,27 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
             parcel_name="TestVpnParcel",
             parcel_description="Test Vpn Parcel",
             vpn_id=Global[int](value=2),
+            ipsec_route=[
+                StaticIpsecRouteIPv4(
+                    prefix=RoutePrefix(ip_address=as_global("1.2.3.4"), subnet_mask=as_global("0.0.0.0")),
+                )
+            ],
+            gre_route=[
+                StaticGreRouteIPv4(
+                    prefix=RoutePrefix(
+                        ip_address=as_global("8.6.5.4"),
+                        subnet_mask=as_global("255.255.255.0"),
+                    )
+                )
+            ],
+            service_route=[
+                ServiceRoute(
+                    prefix=RoutePrefix(
+                        ip_address=as_global("8.6.5.2"),
+                        subnet_mask=as_global("255.255.255.0"),
+                    )
+                )
+            ],
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, vpn_parcel).id
