@@ -66,7 +66,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec im
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.multilink import InterfaceMultilinkParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.svi import InterfaceSviParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import (
+    IPv4Prefix,
     LanVpnParcel,
+    OmpAdvertiseIPv4,
+    ProtocolIPv4,
     RoutePrefix,
     ServiceRoute,
     StaticGreRouteIPv4,
@@ -165,6 +168,19 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
                         ip_address=as_global("8.6.5.2"),
                         subnet_mask=as_global("255.255.255.0"),
                     )
+                )
+            ],
+            omp_advertise_ipv4=[
+                OmpAdvertiseIPv4(
+                    omp_protocol=Global[ProtocolIPv4](value="aggregate"),
+                    prefix_list=[
+                        IPv4Prefix(
+                            prefix=AddressWithMask(
+                                address=as_global("10.3.2.1"),
+                                mask=as_global("255.255.255.0"),
+                            )
+                        )
+                    ],
                 )
             ],
         )

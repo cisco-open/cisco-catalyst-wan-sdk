@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, OptionType, Variable, as_default, as_global
 from catalystwan.models.common import SubnetMask
-from catalystwan.models.configuration.feature_profile.common import DNSIPv4, DNSIPv6, HostMapping
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask, DNSIPv4, DNSIPv6, HostMapping
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import (
     DHCP,
     Direction,
@@ -74,6 +74,7 @@ from .base import FTConverter
 logger = logging.getLogger(__name__)
 
 RouteUX2Field = Literal["gre_route", "service_route", "ipsec_route"]
+OmpUX2Field = Literal["omp_advertise_ipv4", "omp_advertise_ipv6"]
 
 
 class RouteLeakMappingItem(BaseModel):
@@ -89,7 +90,7 @@ class RouteMappingItem(BaseModel):
 class OmpMappingItem(BaseModel):
     ux2_model_omp: Type[Union[OmpAdvertiseIPv4, OmpAdvertiseIPv6]]
     ux2_model_prefix: Type[Union[IPv4Prefix, IPv6Prefix]]
-    ux2_field: Literal["omp_advertise_ipv4", "omp_advertise_ipv6"]
+    ux2_field: OmpUX2Field
 
 
 class BaseTransportAndManagementConverter(FTConverter):
@@ -656,19 +657,14 @@ class ServiceVpnConverter(FTConverter):
                 self._parse_omp(values, omp_advertises, pydantic_model_omp, pydantic_model_prefix, pydantic_field)
 
     def _parse_omp(
-        self, values: dict, omp_advertises: list, pydantic_model_omp, pydantic_model_prefix, pydantic_field
+        self, values: dict, omp_advertises: list, pydantic_model_omp, pydantic_model_prefix, pydantic_field: OmpUX2Field
     ) -> None:
         omp_advertise_items = []
         for entry in omp_advertises:
             prefix_list_items = []
+            print(entry)
             for prefix_entry in entry.get("prefix_list", []):
-                prefix_list_items.append(
-                    pydantic_model_prefix(
-                        prefix=prefix_entry["prefix_entry"],
-                        aggregate_only=prefix_entry["aggregate_only"],
-                        region=as_global(prefix_entry["region"].value, Region),
-                    )
-                )
+                prefix_list_items.append(self._parse_prefix_entry(prefix_entry, pydantic_field))
             if pydantic_model_omp == OmpAdvertiseIPv4:
                 pydantic_model_protocol = ProtocolIPv4
             else:
@@ -680,6 +676,24 @@ class ServiceVpnConverter(FTConverter):
                 )
             )
         values[pydantic_field] = omp_advertise_items
+
+    def _parse_prefix_entry(self, prefix_entry: dict, pydantic_field: OmpUX2Field) -> Union[IPv4Prefix, IPv6Prefix]:
+        region = prefix_entry.get("region")
+        if region:
+            region = as_global(region.value, Region)
+        aggregate_only = prefix_entry.get("aggregate_only", as_default(False))
+        prefix = prefix_entry["prefix_entry"]
+        if pydantic_field == "omp_advertise_ipv4":
+            if prefix.option_type == OptionType.VARIABLE:
+                route_prefix = AddressWithMask(address=prefix, mask=as_global("0.0.0.0"))
+            else:
+                ipv4_interface = IPv4Interface(prefix.value)
+                route_prefix = AddressWithMask(
+                    address=as_global(ipv4_interface.network.network_address),
+                    mask=as_global(str(ipv4_interface.netmask)),
+                )
+            return IPv4Prefix(prefix=route_prefix, aggregate_only=aggregate_only, region=region)
+        return IPv6Prefix(prefix=prefix, aggregate_only=aggregate_only, region=region)
 
     def parse_routes(self, values: dict) -> None:
         for route in self.routes_mapping.keys():

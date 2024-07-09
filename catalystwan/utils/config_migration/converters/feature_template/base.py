@@ -31,5 +31,5 @@ class FTConverter(ABC):
             parcel = self.create_parcel(name, description, template_values)
             self._convert_result.output = parcel
         except (CatalystwanConverterCantConvertException, AttributeError, LookupError, TypeError, ValueError) as e:
-            self._convert_result.update_status("failed", str(e))
+            self._convert_result.update_status("failed", str(e.__class__.__name__ + ": " + str(e)))
         return self._convert_result

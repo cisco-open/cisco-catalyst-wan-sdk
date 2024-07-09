@@ -132,7 +132,9 @@ class OmpAdvertiseIPv4(BaseModel):
     route_policy: Optional[Union[Default[None], Global[UUID]]] = Field(
         serialization_alias="routePolicy", validation_alias="routePolicy", default=None
     )
-    prefix_list: Optional[List[IPv4Prefix]] = None
+    prefix_list: Optional[List[IPv4Prefix]] = Field(
+        default=None, serialization_alias="prefixList", validation_alias="prefixList"
+    )
 
 
 class OmpAdvertiseIPv6(BaseModel):
