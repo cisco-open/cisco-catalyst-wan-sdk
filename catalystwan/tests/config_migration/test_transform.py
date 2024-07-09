@@ -556,7 +556,7 @@ def test_when_localized_policy_with_qos_expect_application_priority_feature_prof
     assert application_priority_profile is not None
     # Feature profile shoulde have 3 subelements: QoS Map 1, QoS Map 2 and
     # Settings with uuid derived from Localized Policy
-    assert application_priority_profile.header.localized_policy_subelements == {
+    assert application_priority_profile.header.subelements == {
         qos_map_1.definition_id,
         qos_map_2.definition_id,
         localized_policy.policy_id,

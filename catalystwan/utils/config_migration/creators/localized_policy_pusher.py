@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import Field, ValidationError
 from typing_extensions import Annotated
 
+from catalystwan.api.builders.feature_profiles.builder_factory import FeatureProfileBuilderFactory
 from catalystwan.api.builders.feature_profiles.report import FeatureProfileBuildReport
 from catalystwan.endpoints.configuration_group import ConfigGroup
 from catalystwan.exceptions import ManagerErrorInfo, ManagerHTTPError
@@ -23,6 +24,9 @@ from catalystwan.models.configuration.feature_profile.sdwan.application_priority
     PolicySettingsParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority.qos_policy import QosPolicyParcel
+from catalystwan.models.configuration.feature_profile.sdwan.application_priority.traffic_policy import (
+    TrafficPolicyParcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import DeviceAccessIPv4Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import DeviceAccessIPv6Parcel
@@ -30,7 +34,7 @@ from catalystwan.session import ManagerSession
 from catalystwan.utils.config_migration.creators.references_updater import update_parcel_references
 
 _AnyApplicationPriorityPolicyParcel = Annotated[
-    Union[QosPolicyParcel, PolicySettingsParcel],
+    Union[QosPolicyParcel, PolicySettingsParcel, TrafficPolicyParcel],
     Field(discriminator="type_"),
 ]
 
@@ -167,7 +171,7 @@ class LocalizedPolicyPusher:
         return [
             p
             for p in self._ux2_config.feature_profiles
-            if p.header.type == "application-priority" and p.header.localized_policy_subelements is not None
+            if p.header.type == "application-priority" and len(p.header.subelements)
         ]
 
     def associate_config_groups_with_default_policy_object_profile(self):
@@ -219,30 +223,23 @@ class LocalizedPolicyPusher:
                     report.add_failed_parcel(
                         parcel_name=error_parcel.parcel_name, parcel_type=error_parcel.type_, error_info=error_info
                     )
-        # ----- QoSMap, Settings -----
+        # ----- QoSMap, Settings, Traffic Policy -----
+        profile_factory = FeatureProfileBuilderFactory(self._session)
         app_prio_profiles = self._get_all_application_priority_profiles_with_subelements()
+        app_prio_reports: List[FeatureProfileBuildReport] = list()
         for i, app_prio_profile in enumerate(app_prio_profiles):
             self._progress("Creating Application Priority profile with policy parcels", i + 1, len(app_prio_profiles))
-            try:
-                profile_id = self._app_prio_api.create_profile(
-                    app_prio_profile.feature_profile.name, app_prio_profile.feature_profile.description
-                ).id
-            except ManagerHTTPError as e:
-                logger.error(f"Error occured during Application Priority profile creation: {e.info}")
-                continue
-            report = FeatureProfileBuildReport(
-                profile_name=app_prio_profile.feature_profile.name, profile_uuid=profile_id
-            )
-            self._push_result.report.add_feature_profiles_not_assosiated_with_config_group(report)
-            self._push_result.rollback.add_feature_profile(profile_id, "application-priority")
-            transformed_parcels = self._get_parcels_to_push(list(app_prio_profile.header.localized_policy_subelements))
+            app_prio_builder = profile_factory.create_builder(app_prio_profile.header.type)
+            app_prio_builder.add_profile_name_and_description(app_prio_profile.feature_profile)
+            transformed_parcels = self._get_parcels_to_push(list(app_prio_profile.header.subelements))
             for tp in transformed_parcels:
                 parcel = tp.parcel
-                try:
-                    parcel_id = self._app_prio_api.create_parcel(profile_id=profile_id, payload=parcel).id
-                    report.add_created_parcel(parcel_name=parcel.parcel_name, parcel_uuid=parcel_id)
-                except ManagerHTTPError as e:
-                    logger.error(f"Error occured during Application Priority parcel creation: {e.info}")
-                    report.add_failed_parcel(
-                        parcel_name=parcel.parcel_name, parcel_type=parcel._get_parcel_type(), error_info=e.info
-                    )
+                if parcel._get_parcel_type() == "qos-policy":
+                    parcel = update_parcel_references(parcel, self._push_context.id_lookup)  # FowardingClassRef
+                app_prio_builder.add_parcel(parcel)
+            try:
+                report = app_prio_builder.build()
+                app_prio_reports.append(report)
+            except ManagerHTTPError as e:
+                logger.error(f"Error occured during Application Priority profile creation: {e.info}")
+        self._push_result.report.add_standalone_feature_profiles(app_prio_reports)

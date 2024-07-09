@@ -434,7 +434,6 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
                 type="application-priority",
                 origin=localized_policy.policy_id,
                 origname=localized_policy.policy_name,
-                localized_policy_subelements=set(),
             ),
             feature_profile=FeatureProfileCreationPayload(
                 name=f"FROM_{localized_policy.policy_name}",
@@ -468,12 +467,12 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
             )
             tp_settings = TransformedParcel(header=header, parcel=settings_parcel)
             ux2.profile_parcels.append(tp_settings)
-            application_prio.header.add_localized_policy_subelement(tp_settings.header.origin)
+            application_prio.header.subelements.add(tp_settings.header.origin)
 
         for item in localized_policy.policy_definition.assembly:
             # ----- Device Template Independent Items -----
             if item.type == "qosMap":
-                application_prio.header.add_localized_policy_subelement(item.definition_id)
+                application_prio.header.subelements.add(item.definition_id)
                 continue
             # ----- Device Template Dependent Items -----
             dt_id = dt_by_policy_id.get(localized_policy.policy_id)

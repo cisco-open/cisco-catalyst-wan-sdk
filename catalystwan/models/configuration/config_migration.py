@@ -429,10 +429,8 @@ class UX2ConfigPushReport(BaseModel):
     def add_report(self, name: str, uuid: UUID, feature_profiles: List[FeatureProfileBuildReport]) -> None:
         self.config_groups.append(ConfigGroupReport(name=name, uuid=uuid, feature_profiles=feature_profiles))
 
-    def add_feature_profiles_not_assosiated_with_config_group(
-        self, feature_profiles: List[FeatureProfileBuildReport]
-    ) -> None:
-        """This happends when config group failes to create but we have to store created feature profiles in report"""
+    def add_standalone_feature_profiles(self, feature_profiles: List[FeatureProfileBuildReport]) -> None:
+        """This happends when parent config group failes to create or profile don't have config group"""
         self.standalone_feature_profiles.extend(feature_profiles)
 
     def set_failed_push_parcels_flat_list(self):
