@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, List, Optional
+from typing import TYPE_CHECKING, Final, List, Literal, Optional
 
 from jinja2 import DebugUndefined, Environment, FileSystemLoader, meta  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -17,14 +17,27 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+TemplateType = Literal["file", "template"]  # file == cli, template == feature
+
+
+class DeviceSpecificValue(BaseModel):
+    property: str
+
+
 class GeneralTemplate(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    name: str = ""
-    subTemplates: List[GeneralTemplate] = []
+    name: str = Field(default="")
 
-    templateId: str = ""
-    templateType: str = ""
+    sub_templates: List[GeneralTemplate] = Field(
+        default=[], serialization_alias="subTemplates", validation_alias="subTemplates"
+    )
+    template_id: str = Field(default="", serialization_alias="templateId", validation_alias="templateId")
+    template_type: str = Field(default="", serialization_alias="templateType", validation_alias="templateType")
+
+
+class DeviceTemplatepayload(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class DeviceTemplate(BaseModel):
@@ -44,13 +57,36 @@ class DeviceTemplate(BaseModel):
     >>> session.api.templates.create(device_template)
     """
 
-    template_name: str = Field(alias="templateName")
-    template_description: str = Field(alias="templateDescription")
-    general_templates: Optional[List[GeneralTemplate]] = Field(default=None, alias="generalTemplates")
-    device_role: str = Field(default=None, alias="deviceRole")
-    device_type: DeviceModel = Field(alias="deviceType")
-    security_policy_id: str = Field(default="", alias="securityPolicyId")
-    policy_id: str = Field(default="", alias="policyId")
+    model_config = ConfigDict(populate_by_name=True)
+
+    template_name: str = Field(serialization_alias="templateName", validation_alias="templateName")
+    template_description: str = Field(serialization_alias="templateDescription", validation_alias="templateDescription")
+    general_templates: List[GeneralTemplate] = Field(
+        default=None, serialization_alias="generalTemplates", validation_alias="generalTemplates"
+    )
+    device_role: str = Field(default=None, serialization_alias="deviceRole", validation_alias="deviceRole")
+    device_type: DeviceModel = Field(serialization_alias="deviceType", validation_alias="deviceType")
+    security_policy_id: str = Field(
+        default="", serialization_alias="securityPolicyId", validation_alias="securityPolicyId"
+    )
+    policy_id: str = Field(default="", serialization_alias="policyId", validation_alias="policyId")
+    feature_template_uid_range: Optional[List] = Field(
+        default=[], serialization_alias="featureTemplateUidRange", validation_alias="featureTemplateUidRange"
+    )
+    config_type: TemplateType = Field(
+        default="template", serialization_alias="configType", validation_alias="configType"
+    )
+    connection_preference_required: Optional[bool] = Field(
+        default=True,
+        serialization_alias="connectionPreferenceRequired",
+        validation_alias="connectionPreferenceRequired",
+    )
+    connection_preference: Optional[bool] = Field(
+        default=True, serialization_alias="connectionPreference", validation_alias="connectionPreference"
+    )
+    factory_default: Optional[bool] = Field(
+        default=False, serialization_alias="factoryDefault", validation_alias="factoryDefault"
+    )
 
     def generate_payload(self) -> str:
         env = Environment(
@@ -88,7 +124,3 @@ class DeviceTemplate(BaseModel):
         return DeviceTemplate(**resp)
 
     model_config = ConfigDict(populate_by_name=True, use_enum_values=True)
-
-
-class DeviceSpecificValue(BaseModel):
-    property: str

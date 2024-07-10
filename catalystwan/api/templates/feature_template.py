@@ -118,7 +118,7 @@ class FeatureTemplate(FeatureTemplateValidator, ABC):
         template_info = (
             session.api.templates._get_feature_templates(summary=False).filter(name=name).single_or_default()
         )
-        template_definition_as_dict = json.loads(cast(str, template_info.template_definiton))
+        template_definition_as_dict = json.loads(cast(str, template_info.template_definition))
 
         feature_template_model = choose_model(type_value=template_info.template_type)
 

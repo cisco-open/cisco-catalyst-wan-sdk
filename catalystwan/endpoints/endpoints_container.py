@@ -80,8 +80,10 @@ from catalystwan.endpoints.configuration_feature_profile import (
     ConfigurationFeatureProfile,
     SDRoutingConfigurationFeatureProfile,
 )
+from catalystwan.endpoints.configuration_general_template import ConfigurationGeneralTemplate
 from catalystwan.endpoints.configuration_group import ConfigurationGroup
 from catalystwan.endpoints.configuration_settings import ConfigurationSettings
+from catalystwan.endpoints.configuration_template_master import ConfigurationTemplateMaster
 from catalystwan.endpoints.misc import MiscellaneousEndpoints
 from catalystwan.endpoints.monitoring.device_details import MonitoringDeviceDetails
 from catalystwan.endpoints.monitoring.security_policy import MonitoringSecurityPolicy
@@ -197,6 +199,8 @@ class APIEndpointContainter:
         self.configuration_device_actions = ConfigurationDeviceActions(session)
         self.configuration_device_software_update = ConfigurationDeviceSoftwareUpdate(session)
         self.configuration_device_template = ConfigurationDeviceTemplate(session)
+        self.configuration_general_template = ConfigurationGeneralTemplate(session)
+        self.configuration_template_master = ConfigurationTemplateMaster(session)
         self.configuration_settings = ConfigurationSettings(session)
         self.configuration_software_actions = ConfigurationSoftwareActions(session)
         self.configuration_disaster_recovery = ConfigurationDisasterRecovery(session)

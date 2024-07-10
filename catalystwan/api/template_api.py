@@ -41,8 +41,10 @@ from catalystwan.api.templates.models.security_vsmart_model import SecurityvSmar
 from catalystwan.api.templates.models.system_vsmart_model import SystemVsmart
 from catalystwan.api.templates.models.vpn_vsmart_interface_model import VpnVsmartInterfaceModel
 from catalystwan.api.templates.models.vpn_vsmart_model import VpnVsmartModel
-from catalystwan.dataclasses import Device, DeviceTemplateInfo, FeatureTemplateInfo, FeatureTemplatesTypes, TemplateInfo
+from catalystwan.dataclasses import Device, FeatureTemplatesTypes, TemplateInfo
 from catalystwan.endpoints.configuration_device_template import FeatureToCLIPayload
+from catalystwan.endpoints.configuration_general_template import FeatureTemplateInfo
+from catalystwan.endpoints.configuration_template_master import DeviceTemplateInfo
 from catalystwan.exceptions import AttachedError, CatalystwanDeprecationWarning, TemplateNotFoundError
 from catalystwan.models.common import DeviceModel
 from catalystwan.response import ManagerResponse
@@ -104,26 +106,15 @@ class TemplatesAPI:
     def _get_feature_templates(
         self,
         summary: bool = True,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
     ) -> DataSequence[FeatureTemplateInfo]:
         """In a multitenant vManage system, this API is only available in the Provider view."""
-        endpoint = "/dataservice/template/feature"
-        params = {"summary": summary}
-
-        fr_templates = self.session.get(url=endpoint, params=params)
-
-        return fr_templates.dataseq(FeatureTemplateInfo)
+        return self.session.endpoints.configuration_general_template.get_feature_template_list(params={"summary": True})
 
     def _get_device_templates(
         self, feature: DeviceTemplateFeature = DeviceTemplateFeature.ALL
     ) -> DataSequence[DeviceTemplateInfo]:
         """In a multitenant vManage system, this API is only available in the Provider view."""
-        endpoint = "/dataservice/template/device"
-        params = {"feature": feature.value}
-
-        templates = self.session.get(url=endpoint, params=params)
-        return templates.dataseq(DeviceTemplateInfo)
+        return self.session.endpoints.configuration_template_master.get_device_template_list(params=feature.value)
 
     def attach(self, name: str, device: Device, timeout_seconds: int = 300, **kwargs):
         template_type = self.get(DeviceTemplate).filter(name=name).single_or_default().config_type
@@ -444,7 +435,7 @@ class TemplatesAPI:
         return template_id
 
     @deprecated(
-        "Obsolete way to use Feature Templates - only Feature Templates", category=CatalystwanDeprecationWarning
+        "Obsolete way to use Feature Templates - only create_by_generator", category=CatalystwanDeprecationWarning
     )
     def _create_feature_template(self, template: FeatureTemplate) -> str:
         payload = template.generate_payload(self.session)
@@ -475,17 +466,17 @@ class TemplatesAPI:
             general_template: GeneralTemplate,
             fr_templates: DataSequence[FeatureTemplateInfo],
         ) -> GeneralTemplate:
-            if general_template.subTemplates:
-                general_template.subTemplates = [
-                    parse_general_template(_t, fr_templates) for _t in general_template.subTemplates
+            if general_template.sub_templates:
+                general_template.sub_templates = [
+                    parse_general_template(_t, fr_templates) for _t in general_template.sub_templates
                 ]
             if general_template.name:
                 info = get_general_template_info(general_template.name, fr_templates)
                 return GeneralTemplate(
                     name=general_template.name,
-                    subTemplates=general_template.subTemplates,
-                    templateId=info.id,
-                    templateType=info.template_type,
+                    sub_templates=general_template.sub_templates,
+                    template_id=info.id,
+                    template_type=info.template_type,
                 )
             else:
                 return general_template
@@ -505,9 +496,14 @@ class TemplatesAPI:
             payload = json.loads(device_template.generate_payload())
             response = self.session.put(f"/dataservice/template/device/{template_id}", json=payload)
         else:
-            endpoint = "/dataservice/template/device/feature/"
+            # endpoint = "/dataservice/template/device/feature/"
             payload = json.loads(device_template.generate_payload())
-            response = self.session.post(endpoint, json=payload)
+            # response = self.session.post(endpoint, json=payload)
+            response = (
+                self.session.endpoints.configuration_template_master.create_device_template_from_feature_templates(
+                    payload=payload
+                )
+            )
 
         return response.text
 

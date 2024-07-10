@@ -69,7 +69,7 @@ class LocalizedPolicyAssemblyItem(AssemblyItemBase):
 
 class LocalizedPolicyDefinition(PolicyDefinition):
     assembly: List[LocalizedPolicyAssemblyItem]
-    settings: LocalizedPolicySettings
+    settings: Optional[LocalizedPolicySettings] = Field(default=None)
 
 
 class LocalizedPolicy(PolicyCreationPayload):

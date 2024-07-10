@@ -21,7 +21,7 @@ class TestFindTemplateValues(unittest.TestCase):
 
     def test_find_template_value(self):
         for template in self.templates:
-            definition = json.loads(template.template_definiton)
+            definition = json.loads(template.template_definition)
             with self.subTest(template_name=template.name):
                 parsed_values = find_template_values(definition)
                 self.assertFalse(

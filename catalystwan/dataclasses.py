@@ -269,7 +269,7 @@ class FeatureTemplateInfo(TemplateInfo):
     template_type: str = field(metadata={FIELD_NAME: "templateType"})
     device_type: List[str] = field(metadata={FIELD_NAME: "deviceType"})
     version: str = field(metadata={FIELD_NAME: "templateMinVersion"})
-    template_definiton: Optional[str] = field(default=None, metadata={FIELD_NAME: "templateDefinition"})
+    template_definition: Optional[str] = field(default=None, metadata={FIELD_NAME: "templateDefinition"})
 
 
 @define(kw_only=True)

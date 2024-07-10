@@ -42,7 +42,7 @@ class TestFeatureTemplate(TestCase):
                     "template_type": template.type,
                     "device_type": ["vedge-C8000V"],
                     "version": "15.0.0",
-                    "template_definiton": f"{json.dumps(definition)}",
+                    "template_definition": f"{json.dumps(definition)}",
                 }
             )
 
