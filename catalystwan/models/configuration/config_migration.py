@@ -399,7 +399,7 @@ class UX2ConfigPushReport(BaseModel):
     topology_groups: List[TopologyGroupReport] = Field(default_factory=list)
     standalone_feature_profiles: List[FeatureProfileBuildReport] = Field(default_factory=list)
     groups_of_interest: GroupsOfInterestBuildReport = Field(default_factory=GroupsOfInterestBuildReport)
-    security_policies: List[FeatureProfileBuildReport] = []
+    security_policies: List[FeatureProfileBuildReport] = Field(default_factory=list)
     failed_push_parcels: List[FailedParcel] = Field(default_factory=list)
 
     @property
