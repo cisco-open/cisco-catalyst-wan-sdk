@@ -1,11 +1,12 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Dict, Generic, List, Literal, Optional, Sequence, Set, Tuple, TypeVar, Union, cast
+from typing import Any, Dict, Generic, List, Literal, Optional, Sequence, Set, Tuple, TypeVar, Union, cast
 from uuid import UUID, uuid4
 
 from packaging.version import Version
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import AliasGenerator, BaseModel, ConfigDict, Field, model_validator
+from pydantic.alias_generators import to_camel
 
 from catalystwan import PACKAGE_VERSION
 from catalystwan.api.builders.feature_profiles.report import (
@@ -46,8 +47,14 @@ ConvertOutputStatus = Literal["complete", "partial"]
 ConvertAbortStatus = Literal["failed", "unsupported"]
 ConvertStatus = Literal[ConvertOutputStatus, ConvertAbortStatus]
 
+camel = AliasGenerator(
+    serialization_alias=to_camel,
+    validation_alias=to_camel,
+)
+
 
 class VersionInfo(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
     platform: str = "unknown"
     sdk: str = PACKAGE_VERSION
 
@@ -60,10 +67,10 @@ class VersionInfo(BaseModel):
 
 
 class DeviceTemplateWithInfo(DeviceTemplate):
-    model_config = ConfigDict(populate_by_name=True)
-    template_id: str = Field(serialization_alias="templateId", validation_alias="templateId")
-    factory_default: bool = Field(serialization_alias="factoryDefault", validation_alias="factoryDefault")
-    devices_attached: int = Field(serialization_alias="devicesAttached", validation_alias="devicesAttached")
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
+    template_id: str
+    factory_default: bool
+    devices_attached: int
 
     @staticmethod
     def from_merged(template: DeviceTemplate, info: TemplateInformation) -> "DeviceTemplateWithInfo":
@@ -98,44 +105,18 @@ class DeviceTemplateWithInfo(DeviceTemplate):
 
 
 class UX1Policies(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    centralized_policies: List[CentralizedPolicyInfo] = Field(
-        default=[],
-        serialization_alias="centralizedPolicies",
-        validation_alias="centralizedPolicies",
-    )
-    localized_policies: List[LocalizedPolicyInfo] = Field(
-        default=[],
-        serialization_alias="localizedPolicies",
-        validation_alias="localizedPolicies",
-    )
-    security_policies: List[AnySecurityPolicyInfo] = Field(
-        default=[],
-        serialization_alias="securityPolicies",
-        validation_alias="securityPolicies",
-    )
-    policy_definitions: List[AnyPolicyDefinitionInfo] = Field(
-        default=[],
-        serialization_alias="policyDefinitions",
-        validation_alias="policyDefinitions",
-    )
-    policy_lists: List[AnyPolicyListInfo] = Field(
-        default=[], serialization_alias="policyLists", validation_alias="policyLists"
-    )
+    model_config = ConfigDict(populate_by_name=True, extra="forbid", alias_generator=camel)
+    centralized_policies: List[CentralizedPolicyInfo] = Field(default_factory=list)
+    localized_policies: List[LocalizedPolicyInfo] = Field(default_factory=list)
+    security_policies: List[AnySecurityPolicyInfo] = Field(default_factory=list)
+    policy_definitions: List[AnyPolicyDefinitionInfo] = Field(default_factory=list)
+    policy_lists: List[AnyPolicyListInfo] = Field(default_factory=list)
 
 
 class UX1Templates(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-    feature_templates: List[FeatureTemplateInformation] = Field(
-        default=[],
-        serialization_alias="featureTemplates",
-        validation_alias="featureTemplates",
-    )
-    device_templates: List[DeviceTemplateWithInfo] = Field(
-        default=[],
-        serialization_alias="deviceTemplates",
-        validation_alias="deviceTemplates",
-    )
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
+    feature_templates: List[FeatureTemplateInformation] = Field(default_factory=list)
+    device_templates: List[DeviceTemplateWithInfo] = Field(default_factory=list)
 
     def create_device_template_by_policy_id_lookup(self) -> Dict[Literal["policy", "security"], Dict[UUID, UUID]]:
         lookup: Dict[Literal["policy", "security"], Dict[UUID, UUID]] = {"policy": {}, "security": {}}
@@ -151,17 +132,15 @@ class UX1Templates(BaseModel):
 
 class UX1Config(BaseModel):
     # All UX1 Configuration items - Mega Model
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
     version: VersionInfo = VersionInfo()
     policies: UX1Policies = UX1Policies()
     templates: UX1Templates = UX1Templates()
-    network_hierarchy: List[NodeInfo] = Field(
-        default_factory=list, validation_alias="networkHierarchy", serialization_alias="networkHierarchy"
-    )
+    network_hierarchy: List[NodeInfo] = Field(default_factory=list)
 
 
 class TransformHeader(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
     type: str = Field(
         description="Needed to push item to specific endpoint."
         "Type discriminator is not present in many UX2 item payloads"
@@ -169,39 +148,38 @@ class TransformHeader(BaseModel):
     origin: UUID = Field(description="Original UUID of converted item")
     origname: Optional[str] = None
     subelements: Set[UUID] = Field(default_factory=set)
-    localized_policy_subelements: Optional[Set[UUID]] = Field(
-        default=None, serialization_alias="localizedPolicySubelements", validation_alias="localizedPolicySubelements"
-    )
+    localized_policy_subelements: Optional[Set[UUID]] = Field(default=None)
     status: ConvertOutputStatus = Field(default="complete")
     info: List[str] = Field(default_factory=list)
 
 
 class TransformedTopologyGroup(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
     header: TransformHeader
     topology_group: TopologyGroup
 
 
 class TransformedConfigGroup(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
     header: TransformHeader
     config_group: ConfigGroupCreationPayload
 
 
 class TransformedFeatureProfile(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
     header: TransformHeader
     feature_profile: FeatureProfileCreationPayload
 
 
 class TransformedParcel(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
     header: TransformHeader
     parcel: AnyParcel
 
 
 class FailedConversionItem(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-    feature_template: Optional[FeatureTemplateInformation] = Field(
-        default=None, serialization_alias="featureTemplate", validation_alias="featureTemplate"
-    )
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
+    feature_template: Optional[FeatureTemplateInformation] = Field(default=None)
     policy: Optional[
         Union[
             CentralizedPolicyInfo,
@@ -211,11 +189,11 @@ class FailedConversionItem(BaseModel):
             AnyPolicyListInfo,
         ]
     ] = Field(default=None)
-    exception_message: str = Field(serialization_alias="exceptionMessage", validation_alias="exceptionMessage")
+    exception_message: str
 
 
 class UnsupportedConversionItem(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
     name: str
     uuid: UUID
     type: Optional[str] = None
@@ -223,34 +201,14 @@ class UnsupportedConversionItem(BaseModel):
 
 class UX2Config(BaseModel):
     # All UX2 Configuration items - Mega Model
-    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+    model_config = ConfigDict(populate_by_name=True, extra="forbid", alias_generator=camel)
     version: VersionInfo = VersionInfo()
-    topology_groups: List[TransformedTopologyGroup] = Field(
-        default=[],
-        serialization_alias="topologyGroups",
-        validation_alias="topologyGroups",
-    )
-    config_groups: List[TransformedConfigGroup] = Field(
-        default=[],
-        serialization_alias="configurationGroups",
-        validation_alias="configurationGroups",
-    )
-    policy_groups: List[TransformedConfigGroup] = Field(
-        default=[], serialization_alias="policyGroups", validation_alias="policyGroups"
-    )
-    feature_profiles: List[TransformedFeatureProfile] = Field(
-        default=[],
-        serialization_alias="featureProfiles",
-        validation_alias="featureProfiles",
-    )
-    profile_parcels: List[TransformedParcel] = Field(
-        default=[],
-        serialization_alias="profileParcels",
-        validation_alias="profileParcels",
-    )
-    cloud_credentials: Optional[CloudCredentials] = Field(
-        default=None, serialization_alias="cloudCredentials", validation_alias="cloudCredentials"
-    )
+    topology_groups: List[TransformedTopologyGroup] = Field(default_factory=list)
+    config_groups: List[TransformedConfigGroup] = Field(default_factory=list)
+    policy_groups: List[TransformedConfigGroup] = Field(default_factory=list)
+    feature_profiles: List[TransformedFeatureProfile] = Field(default_factory=list)
+    profile_parcels: List[TransformedParcel] = Field(default_factory=list)
+    cloud_credentials: Optional[CloudCredentials] = Field(default=None)
 
     @model_validator(mode="before")
     @classmethod
@@ -292,19 +250,11 @@ class UX2Config(BaseModel):
 
 
 class ConfigTransformResult(BaseModel):
-    # https://docs.pydantic.dev/2.0/usage/models/#fields-with-dynamic-default-values
+    model_config = ConfigDict(populate_by_name=True, extra="forbid", alias_generator=camel)
     uuid: UUID = Field(default_factory=uuid4)
-    ux2_config: UX2Config = Field(
-        default_factory=lambda: UX2Config(), serialization_alias="ux2Config", validation_alias="ux2Config"
-    )
-    failed_items: List[FailedConversionItem] = Field(
-        default_factory=list, serialization_alias="failedConversionItems", validation_alias="failedConversionItems"
-    )
-    unsupported_items: List[UnsupportedConversionItem] = Field(
-        default_factory=list,
-        serialization_alias="unsupportedConversionItems",
-        validation_alias="unsupportedConversionItems",
-    )
+    ux2_config: UX2Config = Field(default_factory=UX2Config)
+    failed_items: List[FailedConversionItem] = Field(default_factory=list)
+    unsupported_items: List[UnsupportedConversionItem] = Field(default_factory=list)
 
     @property
     def suffix(self):
@@ -395,60 +345,39 @@ class ConfigTransformResult(BaseModel):
         self.unsupported_items.append(item)
 
 
-class _GroupReportBase(BaseModel):
-    type_: ClassVar[str] = ""
-    from_: ClassVar[str] = ""
-    name: str = Field(
-        serialization_alias=f"{type_}Name",
-        validation_alias=f"{type_}Name",
-        description=f"Name of the {type_} created from {from_}",
-    )
-    uuid: UUID = Field(
-        serialization_alias=f"{type_}Uuid",
-        validation_alias=f"{type_}Uuid",
-        description=f"UUID of the {type_} created from {from_}",
-    )
-    feature_profiles: List[FeatureProfileBuildReport] = Field(
-        default=[],
-        serialization_alias="FeatureProfiles",
-        validation_alias="FeatureProfiles",
-        description=f"List of FeatureProfiles created from {from_} and attached to the {type_}",
-    )
+class GroupReportBase(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid", alias_generator=camel)
+    name: str
+    uuid: UUID
+    feature_profiles: List[FeatureProfileBuildReport] = Field(default_factory=list)
 
 
-class ConfigGroupReport(_GroupReportBase):
-    model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    type_ = "ConfigGroup"
-    from_ = "DeviceTemplate"
+class ConfigGroupReport(GroupReportBase):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid", alias_generator=camel)
 
 
-class TopologyGroupReport(_GroupReportBase):
-    model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    type_ = "TopologyGroup"
-    from_ = "Policy"
+class TopologyGroupReport(GroupReportBase):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid", alias_generator=camel)
 
 
-class PolicyGroupReport(_GroupReportBase):
-    model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    type_ = "PolicyGroup"
-    from_ = "Policy"
+class PolicyGroupReport(GroupReportBase):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid", alias_generator=camel)
 
 
 class DefaultPolicyObjectProfileReport(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid", alias_generator=camel)
     present_before_migration: Optional[bool] = None
     created_by: Optional[str] = None
     creation_failed: Optional[bool] = None
 
 
 class GroupsOfInterestBuildReport(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-    default_policy_object_profile: DefaultPolicyObjectProfileReport = DefaultPolicyObjectProfileReport()
-    created_parcels: List[Tuple[str, UUID]] = Field(
-        default_factory=list, serialization_alias="createdParcels", validation_alias="createdParcels"
+    model_config = ConfigDict(populate_by_name=True, extra="forbid", alias_generator=camel)
+    default_policy_object_profile: DefaultPolicyObjectProfileReport = Field(
+        default_factory=DefaultPolicyObjectProfileReport
     )
-    failed_parcels: List[FailedParcel] = Field(
-        default_factory=list, serialization_alias="failedParcels", validation_alias="failedParcels"
-    )
+    created_parcels: List[Tuple[str, UUID]] = Field(default_factory=list)
+    failed_parcels: List[FailedParcel] = Field(default_factory=list)
 
     def add_created(self, name: str, id: UUID):
         self.created_parcels.append((name, id))
@@ -464,34 +393,18 @@ class GroupsOfInterestBuildReport(BaseModel):
 
 
 class UX2ConfigPushReport(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    config_groups: List[ConfigGroupReport] = Field(
-        default_factory=list, serialization_alias="ConfigGroups", validation_alias="ConfigGroups"
-    )
-    policy_groups: List[PolicyGroupReport] = Field(
-        default_factory=list, serialization_alias="PolicyGroups", validation_alias="PolicyGroups"
-    )
-    topology_groups: List[TopologyGroupReport] = Field(
-        default_factory=list, serialization_alias="TopologyGroups", validation_alias="TopologyGroups"
-    )
-    standalone_feature_profiles: List[FeatureProfileBuildReport] = Field(
-        default_factory=list,
-        serialization_alias="StandaloneFeatureProfiles",
-        validation_alias="StandaloneFeatureProfiles",
-    )
-    groups_of_interest: GroupsOfInterestBuildReport = Field(
-        default=GroupsOfInterestBuildReport(), serialization_alias="groupsOfIterest", validation_alias="groupsOfIterest"
-    )
-
+    model_config = ConfigDict(populate_by_name=True, extra="forbid", alias_generator=camel)
+    config_groups: List[ConfigGroupReport] = Field(default_factory=list)
+    policy_groups: List[PolicyGroupReport] = Field(default_factory=list)
+    topology_groups: List[TopologyGroupReport] = Field(default_factory=list)
+    standalone_feature_profiles: List[FeatureProfileBuildReport] = Field(default_factory=list)
+    groups_of_interest: GroupsOfInterestBuildReport = Field(default_factory=GroupsOfInterestBuildReport)
     security_policies: List[FeatureProfileBuildReport] = []
-
-    failed_push_parcels: List[FailedParcel] = Field(
-        default_factory=list, serialization_alias="FailedPushParcels", validation_alias="FailedPushParcels"
-    )
+    failed_push_parcels: List[FailedParcel] = Field(default_factory=list)
 
     @property
-    def groups(self) -> Sequence[_GroupReportBase]:
-        groups: List[_GroupReportBase] = list()
+    def groups(self) -> Sequence[GroupReportBase]:
+        groups: List[GroupReportBase] = list()
         groups.extend(self.config_groups)
         groups.extend(self.policy_groups)
         groups.extend(self.topology_groups)
@@ -539,9 +452,7 @@ class UX2ConfigPushReport(BaseModel):
 
 class DefaultPolicyObjectProfile(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    profile_id: UUID = Field(
-        serialization_alias="defaultPolicyObjectProfileId", validation_alias="defaultPolicyObjectProfileId"
-    )
+    profile_id: UUID
     parcels: List[Tuple[UUID, str]] = Field(default_factory=list)
 
     def add_parcel(self, parcel_type: str, parcel_id: UUID):
@@ -549,31 +460,13 @@ class DefaultPolicyObjectProfile(BaseModel):
 
 
 class UX2RollbackInfo(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, validate_assignment=True)
-    config_group_ids: List[UUID] = Field(
-        default_factory=list,
-        serialization_alias="ConfigGroupIds",
-        validation_alias="ConfigGroupIds",
-    )
-    policy_group_ids: List[UUID] = Field(
-        default_factory=list,
-        serialization_alias="PolicyGroupIds",
-        validation_alias="PolicyGroupIds",
-    )
-    topology_group_ids: List[UUID] = Field(
-        default_factory=list,
-        serialization_alias="TopologyGroupIds",
-        validation_alias="TopologyGroupIds",
-    )
-    feature_profile_ids: List[Tuple[UUID, ProfileType]] = Field(
-        default_factory=list,
-        serialization_alias="FeatureProfileIds",
-        validation_alias="FeatureProfileIds",
-    )
+    model_config = ConfigDict(populate_by_name=True, validate_assignment=True, alias_generator=camel)
+    config_group_ids: List[UUID] = Field(default_factory=list)
+    policy_group_ids: List[UUID] = Field(default_factory=list)
+    topology_group_ids: List[UUID] = Field(default_factory=list)
+    feature_profile_ids: List[Tuple[UUID, ProfileType]] = Field(default_factory=list)
     default_policy_object_profile: Optional[DefaultPolicyObjectProfile] = Field(
         default=None,
-        serialization_alias="defaultPolicyObjectProfile",
-        validation_alias="defaultPolicyObjectProfile",
         description="Do not delete this profile! only selected parcel contents for which profile id is provided",
     )
 
@@ -596,7 +489,7 @@ class UX2RollbackInfo(BaseModel):
 
 
 class UX2ConfigPushResult(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
     rollback: UX2RollbackInfo = UX2RollbackInfo()
     report: UX2ConfigPushReport = UX2ConfigPushReport()
 
