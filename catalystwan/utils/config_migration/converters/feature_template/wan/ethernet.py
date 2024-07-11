@@ -1,7 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
-from ipaddress import IPv4Interface
 import logging
 from copy import deepcopy
+from ipaddress import IPv4Interface
 from typing import Dict, List, Optional, Union
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_default, as_global
