@@ -1,5 +1,4 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from datetime import datetime
 from ipaddress import IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
