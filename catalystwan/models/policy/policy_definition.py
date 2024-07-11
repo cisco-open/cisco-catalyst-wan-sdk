@@ -293,8 +293,8 @@ class AsPathListMatchEntry(BaseModel):
 
 
 class AsPathActionEntryValue(BaseModel):
-    prepend: SpaceSeparatedNonNegativeIntList
-    exclude: SpaceSeparatedNonNegativeIntList
+    prepend: Optional[SpaceSeparatedNonNegativeIntList] = None
+    exclude: Optional[SpaceSeparatedNonNegativeIntList] = None
 
 
 class AsPathActionEntry(BaseModel):
