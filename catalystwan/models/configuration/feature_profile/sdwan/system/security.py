@@ -102,7 +102,7 @@ class KeyItem(BaseModel):
     id: Global[int] = Field(..., description="Select the Key ID")
     name: Global[str] = Field(..., description="Select the chain name")
     send_id: Union[Global[int], Variable] = Field(
-        ..., serialization_alias="recvId", validation_alias="srecvId", description="Specify the Send ID"
+        ..., serialization_alias="sendId", validation_alias="sendId", description="Specify the Send ID"
     )
     recv_id: Union[Global[int], Variable] = Field(
         ..., serialization_alias="recvId", validation_alias="recvId", description="Specify the Receiver ID"

@@ -1,5 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
+import re
 from copy import deepcopy
 from ipaddress import IPv4Interface, IPv6Interface
 from typing import Callable, Dict, List, Literal, Optional, Tuple, Type, Union
@@ -72,6 +73,9 @@ from catalystwan.utils.config_migration.converters.feature_template.helpers impo
 from .base import FTConverter
 
 logger = logging.getLogger(__name__)
+
+GRE_INTERFACE_PATTERN = re.compile(pattern="(gre|GRE)(.:){0,1}([0-9]*)$")
+IPSEC_INTERFACE_PATTERN = re.compile(pattern="(ipsec|IPSEC)(.:){0,1}([0-9]*)$")
 
 RouteUX2Field = Literal["gre_route", "service_route", "ipsec_route"]
 OmpUX2Field = Literal["omp_advertise_ipv4", "omp_advertise_ipv6"]
@@ -662,7 +666,6 @@ class ServiceVpnConverter(FTConverter):
         omp_advertise_items = []
         for entry in omp_advertises:
             prefix_list_items = []
-            print(entry)
             for prefix_entry in entry.get("prefix_list", []):
                 prefix_list_items.append(self._parse_prefix_entry(prefix_entry, pydantic_field))
             if pydantic_model_omp == OmpAdvertiseIPv4:
@@ -721,10 +724,19 @@ class ServiceVpnConverter(FTConverter):
                     subnet_mask=as_global(str(ipv4_interface.netmask)),
                 )
             route_item = pydantic_model(prefix=route_prefix)
-            if pydantic_field in ["ipsec_route", "gre_route"]:
-                route_item.interface = route.get("interface")
+            if pydantic_field == "gre_route" and "interface" in route:
+                route_item.interface = self.parse_interface(route.get("interface"), GRE_INTERFACE_PATTERN)
+            elif pydantic_field == "ipsec_route" and "interface" in route:
+                route_item.interface = self.parse_interface(route.get("interface"), IPSEC_INTERFACE_PATTERN)
             items.append(route_item)
         values[pydantic_field] = items
+
+    def parse_interface(
+        self, interface: Optional[Union[Global[List[str]], Variable]], pattern: re.Pattern
+    ) -> Optional[Union[Global, Variable]]:
+        if not interface or isinstance(interface, Variable):
+            return interface
+        return Global[List[str]](value=[i for i in interface.value if pattern.match(i)])
 
     def parse_route_leaks(self, values: dict) -> None:
         for leak in self.route_leaks_mapping.keys():
