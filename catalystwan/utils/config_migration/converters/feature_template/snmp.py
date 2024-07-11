@@ -18,7 +18,7 @@ class SNMPConverter(FTConverter):
         supported_template_types (tuple): A tuple of supported template types.
     """
 
-    supported_template_types = ("cisco_snmp",)
+    supported_template_types = ("cisco_snmp", "snmp")
 
     default_view_oid_id = "{{{{l_snmpView_1_snmpOid_{}_id}}}}"
 

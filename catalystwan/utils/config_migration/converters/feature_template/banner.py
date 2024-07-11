@@ -4,7 +4,7 @@ from .base import FTConverter
 
 
 class BannerConverter(FTConverter):
-    supported_template_types = ("cisco_banner",)
+    supported_template_types = ("cisco_banner", "banner")
 
     def create_parcel(self, name: str, description: str, template_values: dict) -> BannerParcel:
         """
