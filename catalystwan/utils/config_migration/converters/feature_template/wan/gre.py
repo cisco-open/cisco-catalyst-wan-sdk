@@ -76,7 +76,7 @@ class WanInterfaceGreConverter(FTConverter):
             # TODO: Ask technitians if there can be default value for address
             raise CatalystwanConverterCantConvertException("Address is required")
         return AddressWithMask(
-            address=as_global(address.value.network.network_address),
+            address=as_global(address.value.ip),
             mask=as_global(str(address.value.netmask)),
         )
 

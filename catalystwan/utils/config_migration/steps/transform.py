@@ -1,5 +1,5 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
+import json
 import logging
 from typing import List, Optional, Set, Tuple, cast
 from uuid import UUID, uuid4
@@ -108,11 +108,19 @@ def merge_parcels(ux2: UX2Config) -> UX2Config:
     return ux2
 
 
+def get_vpn_id_or_none(template: FeatureTemplateInformation) -> Optional[int]:
+    """Applies only to cisco_vpn tempalte type. Get VPN Id safely from the template definition."""
+    if template.template_definiton is None:
+        return None
+    definition = json.loads(template.template_definiton)
+    return definition.get("vpn-id", {}).get("vipValue")
+
+
 def resolve_vpn_and_subtemplates_type(cisco_vpn_template: GeneralTemplate, ux1_config: UX1Config) -> Set[str]:
     """
     Resolve Cisco VPN template type and its sub-elements.
     """
-    used_feature_templates: Set[str] = set()
+
     # Find the target feature template based on the provided template ID
     target_feature_template = next(
         (t for t in ux1_config.templates.feature_templates if t.id == cisco_vpn_template.templateId), None
@@ -120,10 +128,22 @@ def resolve_vpn_and_subtemplates_type(cisco_vpn_template: GeneralTemplate, ux1_c
 
     if not target_feature_template:
         logger.error(f"Cisco VPN template {cisco_vpn_template.templateId} not found in Feature Templates list.")
+        logger.error(
+            "All items depended on this template will NOT be converted:"
+            f"{[sub.templateId for sub in cisco_vpn_template.subTemplates]}"
+        )
         return set()
 
     # Determine the VPN type based on the VPN ID
-    vpn_id = create_parcel_from_template(target_feature_template).output.vpn_id.value  # type: ignore
+    vpn_id = get_vpn_id_or_none(target_feature_template)
+    if vpn_id is None:
+        logger.error(f"VPN ID not found in Cisco VPN template {target_feature_template.name}.")
+        logger.error(
+            "All items depended on this template will NOT be converted:"
+            f"{[sub.templateId for sub in cisco_vpn_template.subTemplates]}"
+        )
+        return set()
+
     if vpn_id == 0:
         cisco_vpn_template.templateType = VPN_TRANSPORT
     elif vpn_id == 512:
@@ -141,7 +161,7 @@ def resolve_vpn_and_subtemplates_type(cisco_vpn_template: GeneralTemplate, ux1_c
     cisco_vpn_template.templateId = new_vpn_id
     cisco_vpn_template.name = new_vpn_name
 
-    used_feature_templates.add(vpn.id)
+    used_feature_templates = {vpn.id}
 
     logger.debug(
         f"Resolved Cisco VPN {target_feature_template.name} "

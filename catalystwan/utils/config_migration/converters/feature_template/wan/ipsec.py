@@ -86,7 +86,7 @@ class WanInterfaceIpsecConverter(FTConverter):
         if not address:
             raise CatalystwanConverterCantConvertException("Interface address is required")
         return AddressWithMask(
-            address=as_global(address.value.network.network_address),
+            address=as_global(address.value.ip),
             mask=as_global(str(address.value.netmask)),
         )
 

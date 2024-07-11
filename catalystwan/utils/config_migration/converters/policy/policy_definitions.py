@@ -487,6 +487,7 @@ def device_access_ipv4(
 def route(in_: RoutePolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[RoutePolicyParcel]:
     out = RoutePolicyParcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
+    result = ConvertResult[RoutePolicyParcel](output=out)
     for in_seq in in_.sequences:
         sequence_ip_type = in_seq.sequence_ip_type
         if sequence_ip_type is not None:
@@ -537,7 +538,14 @@ def route(in_: RoutePolicy, uuid: UUID, context: PolicyConvertContext) -> Conver
                 )
                 for in_param in in_action.parameter:
                     if in_param.field == "asPath":
-                        out_seq.associate_as_path_action(in_param.value.prepend)
+                        if in_param.value.prepend is not None:
+                            out_seq.associate_as_path_action(in_param.value.prepend)
+                        if in_param.value.exclude is not None:
+                            result.update_status(
+                                "partial",
+                                f"sequence[{in_seq.sequence_id}] contains action parameter "
+                                f"{in_param.field}.exclude = {in_param.value.exclude} which cannot be converted",
+                            )
                     elif in_param.field == "community":
                         if in_param.value:
                             out_seq.associate_community_action(community_additive, in_param.value)
@@ -565,7 +573,7 @@ def route(in_: RoutePolicy, uuid: UUID, context: PolicyConvertContext) -> Conver
                             out_seq.associate_ipv4_next_hop_action(in_param.value)
                         if isinstance(in_param.value, IPv6Address):
                             out_seq.associate_ipv6_next_hop_action(in_param.value)
-    return ConvertResult[RoutePolicyParcel](output=out)
+    return result
 
 
 def mesh(in_: MeshPolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[MeshParcel]:

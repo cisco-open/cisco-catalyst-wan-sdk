@@ -271,6 +271,6 @@ class BgpRoutingConverter(FTConverter):
             return AddressWithMask(address=address, mask=address)
 
         return AddressWithMask(
-            address=as_global(address.value.network.network_address),
+            address=as_global(address.value.ip),
             mask=as_global(str(address.value.netmask)),
         )

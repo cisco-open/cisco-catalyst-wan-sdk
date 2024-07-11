@@ -101,7 +101,7 @@ class EigrpConverter(FTConverter):
     def _set_summary_address(self, addr: dict) -> SummaryAddress:
         return SummaryAddress(
             prefix=AddressWithMask(
-                address=as_global(addr["prefix"].value.network.network_address),
+                address=as_global(addr["prefix"].value.ip),
                 mask=as_global(str(addr["prefix"].value.netmask)),
             )
         )

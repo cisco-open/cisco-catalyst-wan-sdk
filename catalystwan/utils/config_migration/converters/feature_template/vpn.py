@@ -1,5 +1,6 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
+import re
 from copy import deepcopy
 from ipaddress import IPv4Interface, IPv6Interface
 from typing import Callable, Dict, List, Literal, Optional, Tuple, Type, Union
@@ -73,6 +74,12 @@ from .base import FTConverter
 
 logger = logging.getLogger(__name__)
 
+GRE_INTERFACE_PATTERN = re.compile(pattern="(gre|GRE)(.:){0,1}([0-9]*)$")
+IPSEC_INTERFACE_PATTERN = re.compile(pattern="(ipsec|IPSEC)(.:){0,1}([0-9]*)$")
+
+RouteUX2Field = Literal["gre_route", "service_route", "ipsec_route"]
+OmpUX2Field = Literal["omp_advertise_ipv4", "omp_advertise_ipv6"]
+
 
 class RouteLeakMappingItem(BaseModel):
     ux2_model: Type[Union[RouteLeakFromGlobal, RouteLeakFromService, RouteLeakBetweenServices]]
@@ -81,13 +88,13 @@ class RouteLeakMappingItem(BaseModel):
 
 class RouteMappingItem(BaseModel):
     ux2_model: Type[Union[StaticGreRouteIPv4, StaticIpsecRouteIPv4, ServiceRoute]]
-    ux2_field: Literal["route_gre", "route_service", "ipsec_route"]
+    ux2_field: RouteUX2Field
 
 
 class OmpMappingItem(BaseModel):
     ux2_model_omp: Type[Union[OmpAdvertiseIPv4, OmpAdvertiseIPv6]]
     ux2_model_prefix: Type[Union[IPv4Prefix, IPv6Prefix]]
-    ux2_field: Literal["omp_advertise_ipv4", "omp_advertise_ipv6"]
+    ux2_field: OmpUX2Field
 
 
 class BaseTransportAndManagementConverter(FTConverter):
@@ -148,7 +155,7 @@ class BaseTransportAndManagementConverter(FTConverter):
             if prefix.option_type == OptionType.GLOBAL:
                 ipv4route_item = Ipv4RouteItem(
                     prefix=TransportPrefix(
-                        ip_address=as_global(prefix.value.network.network_address),
+                        ip_address=as_global(prefix.value.ip),
                         subnet_mask=as_global(str(prefix.value.netmask), SubnetMask),
                     )
                 )
@@ -294,8 +301,8 @@ class ServiceVpnConverter(FTConverter):
     }
 
     routes_mapping = {
-        "route_gre": RouteMappingItem(ux2_model=StaticGreRouteIPv4, ux2_field="route_gre"),
-        "route_service": RouteMappingItem(ux2_model=ServiceRoute, ux2_field="route_service"),
+        "gre_route": RouteMappingItem(ux2_model=StaticGreRouteIPv4, ux2_field="gre_route"),
+        "service_route": RouteMappingItem(ux2_model=ServiceRoute, ux2_field="service_route"),
         "ipsec_route": RouteMappingItem(ux2_model=StaticIpsecRouteIPv4, ux2_field="ipsec_route"),
     }
 
@@ -344,8 +351,8 @@ class ServiceVpnConverter(FTConverter):
 
         omp_advertise_ipv4 = data.get("omp_advertise_ipv4")
         omp_advertise_ipv6 = data.get("omp_advertise_ipv6")
-        route_gre = data.get("route_gre")
-        route_service = data.get("route_service")
+        gre_route = data.get("gre_route")
+        service_route = data.get("service_route")
         ipsec_route = data.get("ipsec_route")
         route_leak_from_global = data.get("route_leak_from_global")
         route_leak_from_service = data.get("route_leak_from_service")
@@ -373,8 +380,8 @@ class ServiceVpnConverter(FTConverter):
             service=service,
             omp_advertise_ipv4=omp_advertise_ipv4,
             omp_advertise_ipv6=omp_advertise_ipv6,
-            route_gre=route_gre,
-            route_service=route_service,
+            gre_route=gre_route,
+            service_route=service_route,
             ipsec_route=ipsec_route,
             route_leak_from_global=route_leak_from_global,
             route_leak_from_service=route_leak_from_service,
@@ -566,7 +573,7 @@ class ServiceVpnConverter(FTConverter):
             if prefix.option_type == OptionType.GLOBAL:
                 interface = IPv4Interface(prefix.value)
                 route_prefix = RoutePrefix(
-                    ip_address=as_global(interface.network.network_address),
+                    ip_address=as_global(interface.ip),
                     subnet_mask=as_global(str(interface.netmask)),
                 )
 
@@ -634,7 +641,7 @@ class ServiceVpnConverter(FTConverter):
             for route in ipv6_route:
                 ipv6_interface = IPv6Interface(route.get("prefix").value)
                 route_prefix = RoutePrefix(
-                    ip_address=as_global(ipv6_interface.network.network_address),
+                    ip_address=as_global(ipv6_interface.ip),
                     subnet_mask=as_global(str(ipv6_interface.netmask)),
                 )
                 if route_interface := route.pop("route_interface", []):
@@ -654,19 +661,13 @@ class ServiceVpnConverter(FTConverter):
                 self._parse_omp(values, omp_advertises, pydantic_model_omp, pydantic_model_prefix, pydantic_field)
 
     def _parse_omp(
-        self, values: dict, omp_advertises: list, pydantic_model_omp, pydantic_model_prefix, pydantic_field
+        self, values: dict, omp_advertises: list, pydantic_model_omp, pydantic_model_prefix, pydantic_field: OmpUX2Field
     ) -> None:
         omp_advertise_items = []
         for entry in omp_advertises:
             prefix_list_items = []
             for prefix_entry in entry.get("prefix_list", []):
-                prefix_list_items.append(
-                    pydantic_model_prefix(
-                        prefix=prefix_entry["prefix_entry"],
-                        aggregate_only=prefix_entry["aggregate_only"],
-                        region=as_global(prefix_entry["region"].value, Region),
-                    )
-                )
+                prefix_list_items.append(self._parse_prefix_entry(prefix_entry, pydantic_field))
             if pydantic_model_omp == OmpAdvertiseIPv4:
                 pydantic_model_protocol = ProtocolIPv4
             else:
@@ -679,6 +680,24 @@ class ServiceVpnConverter(FTConverter):
             )
         values[pydantic_field] = omp_advertise_items
 
+    def _parse_prefix_entry(self, prefix_entry: dict, pydantic_field: OmpUX2Field) -> Union[IPv4Prefix, IPv6Prefix]:
+        region = prefix_entry.get("region")
+        if region:
+            region = as_global(region.value, Region)
+        aggregate_only = prefix_entry.get("aggregate_only", as_default(False))
+        prefix = prefix_entry["prefix_entry"]
+        if pydantic_field == "omp_advertise_ipv4":
+            if prefix.option_type == OptionType.VARIABLE:
+                route_prefix = AddressWithMask(address=prefix, mask=as_global("0.0.0.0"))
+            else:
+                ipv4_interface = IPv4Interface(prefix.value)
+                route_prefix = AddressWithMask(
+                    address=as_global(ipv4_interface.ip),
+                    mask=as_global(str(ipv4_interface.netmask)),
+                )
+            return IPv4Prefix(prefix=route_prefix, aggregate_only=aggregate_only, region=region)
+        return IPv6Prefix(prefix=prefix, aggregate_only=aggregate_only, region=region)
+
     def parse_routes(self, values: dict) -> None:
         for route in self.routes_mapping.keys():
             if routes := values.get("ip", {}).get(route, []):
@@ -686,16 +705,38 @@ class ServiceVpnConverter(FTConverter):
                 pydantic_field = self.routes_mapping[route].ux2_field
                 self._parse_route(values, routes, pydantic_model, pydantic_field)
 
-    def _parse_route(self, values: dict, routes: list, pydantic_model, pydantic_field) -> None:
+    def _parse_route(
+        self,
+        values: dict,
+        routes: list,
+        pydantic_model,
+        pydantic_field: RouteUX2Field,
+    ) -> None:
         items = []
         for route in routes:
-            ipv4_interface = IPv4Interface(route.get("prefix").value)
-            service_prefix = AddressWithMask(
-                address=as_global(ipv4_interface.network.network_address),
-                mask=as_global(str(ipv4_interface.netmask)),
-            )
-            items.append(pydantic_model(prefix=service_prefix, vpn=route.get("vpn")))
+            prefix = route.get("prefix")
+            if prefix.option_type == OptionType.VARIABLE:
+                route_prefix = RoutePrefix(ip_address=prefix, subnet_mask=as_global("0.0.0.0"))
+            else:
+                ipv4_interface = IPv4Interface(route.get("prefix").value)
+                route_prefix = RoutePrefix(
+                    ip_address=as_global(ipv4_interface.ip),
+                    subnet_mask=as_global(str(ipv4_interface.netmask)),
+                )
+            route_item = pydantic_model(prefix=route_prefix)
+            if pydantic_field == "gre_route" and "interface" in route:
+                route_item.interface = self.parse_interface(route.get("interface"), GRE_INTERFACE_PATTERN)
+            elif pydantic_field == "ipsec_route" and "interface" in route:
+                route_item.interface = self.parse_interface(route.get("interface"), IPSEC_INTERFACE_PATTERN)
+            items.append(route_item)
         values[pydantic_field] = items
+
+    def parse_interface(
+        self, interface: Optional[Union[Global[List[str]], Variable]], pattern: re.Pattern
+    ) -> Optional[Union[Global, Variable]]:
+        if not interface or isinstance(interface, Variable):
+            return interface
+        return Global[List[str]](value=[i for i in interface.value if pattern.match(i)])
 
     def parse_route_leaks(self, values: dict) -> None:
         for leak in self.route_leaks_mapping.keys():

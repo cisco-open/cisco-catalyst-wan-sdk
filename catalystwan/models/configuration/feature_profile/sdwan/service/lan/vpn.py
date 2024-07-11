@@ -1,4 +1,4 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from ipaddress import IPv4Address, IPv6Address, IPv6Interface
 from typing import List, Literal, Optional, Union
@@ -132,7 +132,9 @@ class OmpAdvertiseIPv4(BaseModel):
     route_policy: Optional[Union[Default[None], Global[UUID]]] = Field(
         serialization_alias="routePolicy", validation_alias="routePolicy", default=None
     )
-    prefix_list: Optional[List[IPv4Prefix]] = None
+    prefix_list: Optional[List[IPv4Prefix]] = Field(
+        default=None, serialization_alias="prefixList", validation_alias="prefixList"
+    )
 
 
 class OmpAdvertiseIPv6(BaseModel):
@@ -342,7 +344,7 @@ class Service(BaseModel):
 class ServiceRoute(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    prefix: AddressWithMask
+    prefix: RoutePrefix
     service: Union[Variable, Global[ServiceRouteType], Default[ServiceRouteType]] = Default[ServiceRouteType](
         value="SIG"
     )
@@ -355,7 +357,7 @@ class ServiceRoute(BaseModel):
 class StaticGreRouteIPv4(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    prefix: AddressWithMask
+    prefix: RoutePrefix
     interface: Union[Variable, Global[List[str]], Default[None]] = Default[None](value=None)
     vpn: Global[int] = Global[int](value=0)
 
@@ -363,7 +365,7 @@ class StaticGreRouteIPv4(BaseModel):
 class StaticIpsecRouteIPv4(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    prefix: AddressWithMask
+    prefix: RoutePrefix
     interface: Union[Variable, Global[List[str]], Default[None]] = Default[None](value=None)
 
 

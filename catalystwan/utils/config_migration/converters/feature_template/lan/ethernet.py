@@ -1,8 +1,9 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 from copy import deepcopy
-from typing import Dict, List, Optional
+from ipaddress import IPv4Address
+from typing import Dict, List, Optional, Union
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_default, as_global, as_variable
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_default, as_global
 from catalystwan.models.common import EthernetDuplexMode, EthernetNatType
 from catalystwan.models.configuration.feature_profile.common import (
     Arp,
@@ -21,10 +22,12 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet
     InterfaceEthernetParcel,
     InterfaceStaticIPv4Address,
     InterfaceStaticIPv6Address,
+    NatAttributesIPv6,
     StaticIPv4AddressConfig,
     StaticIPv6AddressConfig,
     Trustsec,
     VrrpIPv4,
+    VrrpIPv6,
 )
 from catalystwan.utils.config_migration.converters.feature_template.base import FTConverter
 from catalystwan.utils.config_migration.converters.utils import parse_interface_name
@@ -79,67 +82,55 @@ class LanInterfaceEthernetConverter(FTConverter):
         "nat66",  # Not sure if this is correct. There is some data in UX1 that is not transferable to UX2
     )
 
-    # Default Values - NAT Attribute
-    nat_attribute_nat_choice = "{{natAttr_natChoice}}"
-
     def create_parcel(self, name: str, description: str, template_values: dict) -> InterfaceEthernetParcel:
-        values = deepcopy(template_values)
+        data = deepcopy(template_values)
+        nat_attributes_ipv4 = self.configure_network_address_translation(data)
+        nat = as_global(True) if nat_attributes_ipv4 else as_global(False)
+        nat_attributes_ipv6 = self.configure_network_address_translation_ipv6(data)
+        nat_ipv6 = as_global(True) if nat_attributes_ipv6 else as_global(False)
+        return InterfaceEthernetParcel(
+            parcel_name=name,
+            parcel_description=description,
+            shutdown=data.get("shutdown", as_default(True)),
+            interface_name=parse_interface_name(self, data),
+            ethernet_description=data.get("description"),
+            interface_ip_address=self.configure_ipv4_address(data),
+            dhcp_helper=data.get("dhcp_helper"),
+            interface_ipv6_address=self.configure_ipv6_address(data),
+            nat=nat,
+            nat_attributes_ipv4=nat_attributes_ipv4,
+            nat_ipv6=nat_ipv6,
+            nat_attributes_ipv6=nat_attributes_ipv6,
+            acl_qos=self.configure_acl_qos(data),
+            vrrp_ipv6=self.configure_virtual_router_redundancy_protocol_ipv6(data),
+            vrrp=self.configure_virtual_router_redundancy_protocol_ipv4(data),
+            arp=self.configure_arp(data),
+            trustsec=self.configure_trustsec(data),
+            advanced=self.configure_advanced_attributes(data),
+        )
 
-        self.configure_interface_name(values)
-        self.configure_ethernet_description(values)
-        self.configure_ipv4_address(values)
-        self.configure_ipv6_address(values)
-        self.configure_arp(values)
-        self.configure_advanced_attributes(values)
-        self.configure_trustsec(values)
-        self.configure_virtual_router_redundancy_protocol_ipv4(values)
-        self.configure_virtual_router_redundancy_protocol_ipv6(values)
-        self.configure_network_address_translation(values)
-        self.configure_acl_qos(values)
-        self.cleanup_keys(values)
-        return InterfaceEthernetParcel(**self.prepare_parcel_values(name, description, values))
-
-    def prepare_parcel_values(self, name: str, description: str, values: dict) -> dict:
-        """
-        Prepare the parcel values by combining the provided name, description, and additional values.
-
-        Args:
-            name (str): The name of the parcel.
-            description (str): The description of the parcel.
-            values (dict): Additional values to include in the parcel.
-
-        Returns:
-            dict: The prepared parcel values for InterfaceSviParcel to consume.
-        """
-        return {"parcel_name": name, "parcel_description": description, **values}
-
-    def configure_interface_name(self, values: dict) -> None:
-        values["interface_name"] = parse_interface_name(self, values)
-
-    def configure_ethernet_description(self, values: dict) -> None:
-        values["ethernet_description"] = values.get("description")
-
-    def configure_ipv4_address(self, values: dict) -> None:
+    def configure_ipv4_address(self, values: dict) -> Union[InterfaceStaticIPv4Address, InterfaceDynamicIPv4Address]:
         if ipv4_address_configuration := values.get("ip"):
             if "address" in ipv4_address_configuration and ipv4_address_configuration["address"].value != "":
-                values["interface_ip_address"] = InterfaceStaticIPv4Address(
+                return InterfaceStaticIPv4Address(
                     static=StaticIPv4AddressConfig(
                         primary_ip_address=self.get_static_ipv4_address(ipv4_address_configuration),
                         secondary_ip_address=self.get_secondary_static_ipv4_address(ipv4_address_configuration),
                     )
                 )
             elif "dhcp_client" in ipv4_address_configuration:
-                values["interface_ip_address"] = InterfaceDynamicIPv4Address(
+                return InterfaceDynamicIPv4Address(
                     dynamic=DynamicDhcpDistance(
                         dynamic_dhcp_distance=ipv4_address_configuration.get("dhcp_distance", as_global(1))
                     )
                 )
         if "address" in values:
-            values["interface_ip_address"] = InterfaceStaticIPv4Address(
+            return InterfaceStaticIPv4Address(
                 static=StaticIPv4AddressConfig(
                     primary_ip_address=self.get_static_ipv4_address(values),
                 )
             )
+        return InterfaceStaticIPv4Address()
 
     def get_static_ipv4_address(self, address_configuration: dict) -> StaticIPv4Address:
         address = address_configuration["address"]
@@ -150,9 +141,9 @@ class LanInterfaceEthernetConverter(FTConverter):
                 subnet_mask=address,
             )
 
-        static_network = address.value.network
+        static_network = address.value
         return StaticIPv4Address(
-            ip_address=as_global(value=static_network.network_address),
+            ip_address=as_global(value=static_network.ip),
             subnet_mask=as_global(value=str(static_network.netmask)),
         )
 
@@ -162,23 +153,28 @@ class LanInterfaceEthernetConverter(FTConverter):
             secondary_address.append(self.get_static_ipv4_address(address))
         return secondary_address if secondary_address else None
 
-    def configure_ipv6_address(self, values: dict) -> None:
-        if ipv6_address_configuration := values.get("ipv6"):
-            if "address" in ipv6_address_configuration:
-                values["interface_ipv6_address"] = InterfaceStaticIPv6Address(
-                    static=StaticIPv6AddressConfig(
-                        primary_ip_address=self.get_static_ipv6_address(ipv6_address_configuration),
-                        secondary_ip_address=self.get_secondary_static_ipv6_address(ipv6_address_configuration),
-                        dhcp_helper_v6=ipv6_address_configuration.get("dhcp_helper"),
-                    )
+    def configure_ipv6_address(
+        self, values: dict
+    ) -> Optional[Union[InterfaceDynamicIPv6Address, InterfaceStaticIPv6Address]]:
+        ipv6_address_configuration = values.get("ipv6")
+        if not ipv6_address_configuration:
+            return None
+        if "address" in ipv6_address_configuration:
+            return InterfaceStaticIPv6Address(
+                static=StaticIPv6AddressConfig(
+                    primary_ip_address=self.get_static_ipv6_address(ipv6_address_configuration),
+                    secondary_ip_address=self.get_secondary_static_ipv6_address(ipv6_address_configuration),
+                    dhcp_helper_v6=ipv6_address_configuration.get("dhcp_helper"),
                 )
-            elif "dhcp_client" in ipv6_address_configuration:
-                values["interface_ipv6_address"] = InterfaceDynamicIPv6Address(
-                    dynamic=DynamicIPv6Dhcp(
-                        dhcp_client=ipv6_address_configuration.get("dhcp_client"),
-                        secondary_ipv6_address=ipv6_address_configuration.get("secondary_address"),
-                    )
+            )
+        elif "dhcp_client" in ipv6_address_configuration:
+            return InterfaceDynamicIPv6Address(
+                dynamic=DynamicIPv6Dhcp(
+                    dhcp_client=ipv6_address_configuration.get("dhcp_client"),
+                    secondary_ipv6_address=ipv6_address_configuration.get("secondary_address"),
                 )
+            )
+        return None
 
     def get_static_ipv6_address(self, address_configuration: dict) -> StaticIPv6Address:
         return StaticIPv6Address(address=address_configuration["address"])
@@ -189,15 +185,15 @@ class LanInterfaceEthernetConverter(FTConverter):
             secondary_address.append(self.get_static_ipv6_address(address))
         return secondary_address if secondary_address else None
 
-    def configure_arp(self, values: dict) -> None:
-        if arps := values.get("arp", {}).get("ip", []):
-            arp_list = []
-            for arp in arps:
-                arp_list.append(Arp(ip_address=arp.get("addr", Default[None](value=None)), mac_address=arp.get("mac")))
-            values["arp"] = arp_list
+    def configure_arp(self, values: dict) -> List[Arp]:
+        arps = values.get("arp", {}).get("ip", [])
+        arp_list = []
+        for arp in arps:
+            arp_list.append(Arp(ip_address=arp.get("addr", Default[None](value=None)), mac_address=arp.get("mac")))
+        return arp_list
 
-    def configure_advanced_attributes(self, values: dict) -> None:
-        values["advanced"] = AdvancedEthernetAttributes(
+    def configure_advanced_attributes(self, values: dict) -> AdvancedEthernetAttributes:
+        return AdvancedEthernetAttributes(
             duplex=self.parse_duplex(values),
             mac_address=values.get("mac_address"),
             speed=values.get("speed"),
@@ -224,8 +220,8 @@ class LanInterfaceEthernetConverter(FTConverter):
             return as_global(",".join(tracker.value))
         return None
 
-    def configure_trustsec(self, values: dict) -> None:
-        values["trustsec"] = Trustsec(
+    def configure_trustsec(self, values: dict) -> Trustsec:
+        return Trustsec(
             enable_sgt_propagation=values.get("propagate", {}).get("sgt", as_default(False)),
             security_group_tag=values.get("static", {}).get("sgt"),
             propagate=values.get("enable", as_default(False)),
@@ -233,21 +229,35 @@ class LanInterfaceEthernetConverter(FTConverter):
             enforced_security_group_tag=values.get("enforced", {}).get("sgt", Default[None](value=None)),
         )
 
-    def configure_virtual_router_redundancy_protocol_ipv4(self, values: dict) -> None:
-        if vrrps := values.get("vrrp", []):
-            vrrp_list = []
-            for vrrp in vrrps:
-                vrrp_list.append(
-                    VrrpIPv4(
-                        group_id=vrrp.get("grp_id", Default[int](value=1)),
-                        priority=vrrp.get("priority", Default[int](value=100)),
-                        timer=vrrp.get("timer", Default[int](value=1000)),
-                        track_omp=vrrp.get("track_omp", Default[bool](value=False)),
-                        ip_address=vrrp.get("ipv4", {}).get("address"),
-                        ip_address_secondary=self.get_vrrp_ipv4_secondary_addresses(vrrp),
-                    )
+    def configure_virtual_router_redundancy_protocol_ipv4(self, values: dict) -> List[VrrpIPv4]:
+        vrrps = values.get("vrrp", [])
+        vrrp_list = []
+        for vrrp in vrrps:
+            ip_address: Union[Global[str], Global[IPv4Address], Variable]
+            address_ipv4 = vrrp.get("ipv4", {}).get("address")
+            address = vrrp.get("address")
+            if isinstance(address_ipv4, Global):
+                ip_address = address_ipv4
+            elif isinstance(address, Variable):
+                ip_address = address
+            if address_ipv4 is None and address is None:
+                self._convert_result.update_status(
+                    "partial",
+                    "VRRP IPv4 address is required in UX2,"
+                    "but in UX1 can be as default with empty value. VRRP group will not be created.",
                 )
-            values["vrrp"] = vrrp_list
+                continue
+            vrrp_list.append(
+                VrrpIPv4(
+                    group_id=vrrp.get("grp_id", Default[int](value=1)),
+                    priority=vrrp.get("priority", Default[int](value=100)),
+                    timer=vrrp.get("timer", Default[int](value=1000)),
+                    track_omp=vrrp.get("track_omp", Default[bool](value=False)),
+                    ip_address=ip_address,
+                    ip_address_secondary=self.get_vrrp_ipv4_secondary_addresses(vrrp),
+                )
+            )
+        return vrrp_list
 
     def get_vrrp_ipv4_secondary_addresses(self, vrrp: dict) -> Optional[List[StaticIPv4Address]]:
         secondary_addresses = []
@@ -255,44 +265,52 @@ class LanInterfaceEthernetConverter(FTConverter):
             secondary_addresses.append(StaticIPv4Address(ip_address=address.get("address")))
         return secondary_addresses if secondary_addresses else None
 
-    def configure_virtual_router_redundancy_protocol_ipv6(self, values: dict) -> None:
-        if vrrps_ipv6 := values.get("ipv6_vrrp", []):
-            for vrrp_ipv6 in vrrps_ipv6:
-                vrrp_ipv6["group_id"] = vrrp_ipv6.pop("grp_id")
-            values["vrrp_ipv6"] = vrrps_ipv6
+    def configure_virtual_router_redundancy_protocol_ipv6(self, values: dict) -> List[VrrpIPv6]:
+        vrrps_ipv6 = values.get("ipv6_vrrp", [])
+        items = []
+        for vrrp_ipv6 in vrrps_ipv6:
+            vrrp_ipv6["group_id"] = vrrp_ipv6.pop("grp_id")
+            items.append(VrrpIPv6(**vrrp_ipv6))
+        return items
 
-    def configure_network_address_translation(self, values: dict) -> None:
-        if nat := values.get("nat"):
-            if isinstance(nat, dict):
-                # Nat can be straight up Global[bool] or a dict with more values
-                nat_type = nat.get("nat_choice")
-
-                if nat_type is None:
-                    nat_type = as_global("loopback", EthernetNatType)
-
-                elif nat_type.value.lower() == "interface":
-                    nat_type = as_variable(self.nat_attribute_nat_choice)
-
-                elif not isinstance(nat_type, Variable):
-                    nat_type = as_global(nat_type.value, EthernetNatType)
-
-                values["nat_attributes_ipv4"] = EthernetNatAttributesIpv4(
-                    nat_type=nat_type,
-                    nat_pool=self.get_nat_pool(nat),
-                    udp_timeout=nat.get("udp_timeout", as_default(1)),
-                    tcp_timeout=nat.get("tcp_timeout", as_default(60)),
-                    new_static_nat=nat.get("static"),
-                )
-                values["nat"] = as_global(True)
+    def configure_network_address_translation(self, values: dict) -> Optional[EthernetNatAttributesIpv4]:
+        nat = values.get("nat", {})
+        if not nat or isinstance(nat, Global):
+            return None
+        # Nat can be straight up Global[bool] or a dict with more values
+        nat_type = nat.get("nat_choice")
+        if nat_type is None:
+            nat_type = as_global("loopback", EthernetNatType)
+        elif not isinstance(nat_type, Variable):
+            nat_type = as_global(nat_type.value, EthernetNatType)
+        return EthernetNatAttributesIpv4(
+            nat_type=nat_type,
+            nat_pool=self.get_nat_pool(nat),
+            udp_timeout=nat.get("udp_timeout", as_default(1)),
+            tcp_timeout=nat.get("tcp_timeout", as_default(60)),
+            new_static_nat=nat.get("static"),
+        )
 
     def get_nat_pool(self, values: dict) -> Optional[EthernetNatPool]:
         if nat_pool := values.get("natpool"):
             return EthernetNatPool(**nat_pool)
         return None
 
-    def configure_acl_qos(self, values: dict) -> None:
+    def configure_acl_qos(self, values: dict) -> Optional[AclQos]:
         if shaping_rate := values.get("shaping_rate"):
-            values["acl_qos"] = AclQos(shaping_rate=shaping_rate)
+            return AclQos(shaping_rate=shaping_rate)
+        return None
+
+    def configure_network_address_translation_ipv6(self, data: dict) -> Optional[NatAttributesIPv6]:
+        if "nat66" in data:
+            self._convert_result.update_status(
+                "partial", "NAT66 is not supported in UX2. NAT66 configuration will not be migrated."
+            )
+            return None
+        nat = data.get("nat64", Default[bool](value=False))
+        if nat.value is False:
+            return None
+        return NatAttributesIPv6(nat64=nat)
 
     def cleanup_keys(self, values: dict) -> None:
         for key in self.delete_keys:

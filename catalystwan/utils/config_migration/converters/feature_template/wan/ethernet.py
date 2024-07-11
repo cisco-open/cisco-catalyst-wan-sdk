@@ -1,6 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
 from copy import deepcopy
+from ipaddress import IPv4Interface
 from typing import Dict, List, Optional, Union
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_default, as_global
@@ -114,7 +115,6 @@ class WanInterfaceEthernetConverter(FTConverter):
 
     def parse_interface_ip_address(self, data: Dict) -> Union[InterfaceDynamicIPv4Address, InterfaceStaticIPv4Address]:
         ip_address = data.get("ip", {})
-
         if "address" in ip_address and ip_address["address"].value != "":
             return InterfaceStaticIPv4Address(
                 static=StaticIPv4AddressConfig(
@@ -122,16 +122,23 @@ class WanInterfaceEthernetConverter(FTConverter):
                     secondary_ip_address=self.get_secondary_static_ipv4_address(ip_address),
                 )
             )
-
         elif "dhcp_client" in ip_address:
             return InterfaceDynamicIPv4Address(
                 dynamic=DynamicDhcpDistance(dynamic_dhcp_distance=ip_address.get("dhcp_distance", as_default(1)))
             )
-
+        address = data.get("address")
+        if isinstance(address, Variable):
+            return InterfaceStaticIPv4Address(
+                static=StaticIPv4AddressConfig(
+                    primary_ip_address=StaticIPv4Address(
+                        ip_address=address,
+                    )
+                ),
+            )
         return InterfaceDynamicIPv4Address(dynamic=DynamicDhcpDistance())
 
     def get_static_ipv4_address(self, address_configuration: dict) -> StaticIPv4Address:
-        address = address_configuration["address"]
+        address: Union[Variable, Global[IPv4Interface]] = address_configuration["address"]
 
         if isinstance(address, Variable):
             return StaticIPv4Address(
@@ -139,10 +146,10 @@ class WanInterfaceEthernetConverter(FTConverter):
                 subnet_mask=address,
             )
 
-        static_network = address.value.network
+        interface = address.value
         return StaticIPv4Address(
-            ip_address=as_global(value=static_network.network_address),
-            subnet_mask=as_global(value=str(static_network.netmask)),
+            ip_address=as_global(value=interface.ip),
+            subnet_mask=as_global(value=str(interface.netmask)),
         )
 
     def get_secondary_static_ipv4_address(self, address_configuration: dict) -> Optional[List[StaticIPv4Address]]:
