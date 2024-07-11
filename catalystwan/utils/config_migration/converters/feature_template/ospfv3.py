@@ -214,7 +214,7 @@ class Ospfv3Ipv4Converter(BaseOspfv3Converter):
     def _set_summary_prefix(self, range_: dict) -> None:
         if address := range_.pop("address"):
             range_["network"] = AddressWithMask(
-                address=as_global(str(address.value.network.network_address)),
+                address=as_global(str(address.value.ip)),
                 mask=as_global(str(address.value.netmask)),
             )
 

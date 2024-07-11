@@ -151,7 +151,7 @@ class BaseTransportAndManagementConverter(FTConverter):
             if prefix.option_type == OptionType.GLOBAL:
                 ipv4route_item = Ipv4RouteItem(
                     prefix=TransportPrefix(
-                        ip_address=as_global(prefix.value.network.network_address),
+                        ip_address=as_global(prefix.value.ip),
                         subnet_mask=as_global(str(prefix.value.netmask), SubnetMask),
                     )
                 )
@@ -569,7 +569,7 @@ class ServiceVpnConverter(FTConverter):
             if prefix.option_type == OptionType.GLOBAL:
                 interface = IPv4Interface(prefix.value)
                 route_prefix = RoutePrefix(
-                    ip_address=as_global(interface.network.network_address),
+                    ip_address=as_global(interface.ip),
                     subnet_mask=as_global(str(interface.netmask)),
                 )
 
@@ -637,7 +637,7 @@ class ServiceVpnConverter(FTConverter):
             for route in ipv6_route:
                 ipv6_interface = IPv6Interface(route.get("prefix").value)
                 route_prefix = RoutePrefix(
-                    ip_address=as_global(ipv6_interface.network.network_address),
+                    ip_address=as_global(ipv6_interface.ip),
                     subnet_mask=as_global(str(ipv6_interface.netmask)),
                 )
                 if route_interface := route.pop("route_interface", []):
@@ -689,7 +689,7 @@ class ServiceVpnConverter(FTConverter):
             else:
                 ipv4_interface = IPv4Interface(prefix.value)
                 route_prefix = AddressWithMask(
-                    address=as_global(ipv4_interface.network.network_address),
+                    address=as_global(ipv4_interface.ip),
                     mask=as_global(str(ipv4_interface.netmask)),
                 )
             return IPv4Prefix(prefix=route_prefix, aggregate_only=aggregate_only, region=region)
@@ -717,7 +717,7 @@ class ServiceVpnConverter(FTConverter):
             else:
                 ipv4_interface = IPv4Interface(route.get("prefix").value)
                 route_prefix = RoutePrefix(
-                    ip_address=as_global(ipv4_interface.network.network_address),
+                    ip_address=as_global(ipv4_interface.ip),
                     subnet_mask=as_global(str(ipv4_interface.netmask)),
                 )
             route_item = pydantic_model(prefix=route_prefix)

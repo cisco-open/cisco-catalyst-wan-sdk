@@ -88,7 +88,7 @@ class LanInterfaceGreConverter(FTConverter):
         if not address:
             return None
         return AddressWithMask(
-            address=as_global(address.value.network.network_address),
+            address=as_global(address.value.ip),
             mask=as_global(str(address.value.netmask)),
         )
 

@@ -448,7 +448,7 @@ class InterfaceDslIPoEConverter(InterfaceBaseConverter):
         return StaticIntfIpAddress(
             static=Static(
                 static_ip_v4=AddressWithMask(
-                    address=as_global(interface.network.network_address),
+                    address=as_global(interface.ip),
                     mask=as_global(str(interface.netmask)),
                 )
             )

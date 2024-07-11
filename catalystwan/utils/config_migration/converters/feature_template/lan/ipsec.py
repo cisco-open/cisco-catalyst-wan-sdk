@@ -66,7 +66,7 @@ class LanInterfaceIpsecConverter(FTConverter):
                 "Ipsec Address is required in UX2 parcel but in a Feature Template can be optional."
             )
         values["address"] = AddressWithMask(
-            address=as_global(str(address.value.network.network_address)),
+            address=as_global(str(address.value.ip)),
             mask=as_global(str(address.value.network.netmask)),
         )
 
@@ -85,7 +85,7 @@ class LanInterfaceIpsecConverter(FTConverter):
         if tunnel_destination := values.get("tunnel_destination"):
             if isinstance(tunnel_destination.value, IPv4Interface):
                 values["tunnel_destination"] = AddressWithMask(
-                    address=as_global(str(tunnel_destination.value.network.network_address)),
+                    address=as_global(str(tunnel_destination.value.ip)),
                     mask=as_global(str(tunnel_destination.value.network.netmask)),
                 )
             elif isinstance(tunnel_destination.value, IPv4Address):

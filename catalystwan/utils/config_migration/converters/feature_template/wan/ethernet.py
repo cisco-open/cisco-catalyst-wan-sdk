@@ -1,4 +1,5 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
+from ipaddress import IPv4Interface
 import logging
 from copy import deepcopy
 from typing import Dict, List, Optional, Union
@@ -137,7 +138,7 @@ class WanInterfaceEthernetConverter(FTConverter):
         return InterfaceDynamicIPv4Address(dynamic=DynamicDhcpDistance())
 
     def get_static_ipv4_address(self, address_configuration: dict) -> StaticIPv4Address:
-        address = address_configuration["address"]
+        address: Union[Variable, Global[IPv4Interface]] = address_configuration["address"]
 
         if isinstance(address, Variable):
             return StaticIPv4Address(
@@ -145,10 +146,10 @@ class WanInterfaceEthernetConverter(FTConverter):
                 subnet_mask=address,
             )
 
-        static_network = address.value.network
+        interface = address.value
         return StaticIPv4Address(
-            ip_address=as_global(value=static_network.network_address),
-            subnet_mask=as_global(value=str(static_network.netmask)),
+            ip_address=as_global(value=interface.ip),
+            subnet_mask=as_global(value=str(interface.netmask)),
         )
 
     def get_secondary_static_ipv4_address(self, address_configuration: dict) -> Optional[List[StaticIPv4Address]]:
