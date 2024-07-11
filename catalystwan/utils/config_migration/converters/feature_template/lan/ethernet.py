@@ -243,7 +243,7 @@ class LanInterfaceEthernetConverter(FTConverter):
             if address_ipv4 is None and address is None:
                 self._convert_result.update_status(
                     "partial",
-                    "VRRP IPv4 address is required in UX2," 
+                    "VRRP IPv4 address is required in UX2,"
                     "but in UX1 can be as default with empty value. VRRP group will not be created.",
                 )
                 continue
