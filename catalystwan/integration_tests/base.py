@@ -27,10 +27,10 @@ RUN_ID: int = int(os.environ.get("RUN_ID", 0))
 
 def create_session() -> ManagerSession:
     """Try to create a session with the environment variables, if it fails, raise an exception"""
-    url = os.environ.get("TEST_VMANAGE_URL")
-    port = os.environ.get("TEST_VMANAGE_PORT")
-    username = os.environ.get("TEST_VMANAGE_USERNAME")
-    password = os.environ.get("TEST_VMANAGE_PASSWORD")
+    url = os.environ.get("VMANAGE_URL")
+    port = os.environ.get("VMANAGE_PORT")
+    username = os.environ.get("VMANAGE_USERNAME")
+    password = os.environ.get("VMANAGE_PASSWORD")
     if url is None or port is None or username is None or password is None:
         raise CatalystwanException("Missing environment variables")
     try:
