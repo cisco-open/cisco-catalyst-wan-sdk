@@ -3,6 +3,11 @@ on:
     branches:
       - dev-uxmt
 
+# This ensures only one job runs at a time across all workflows
+concurrency: 
+  group: integration_tests
+  cancel-in-progress: false
+
 jobs:
   integration_tests:
     runs-on: ubuntu-latest
