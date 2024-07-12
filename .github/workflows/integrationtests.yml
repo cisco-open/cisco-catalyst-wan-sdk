@@ -6,15 +6,16 @@ on:
 jobs:
   integration_tests:
     runs-on: ubuntu-latest
+    env:
+      VMANAGE_URL: ${{ secrets.VMANAGE_URL }}
+      VMANAGE_USERNAME: ${{ secrets.VMANAGE_USERNAME }}
+      VMANAGE_PASSWORD: ${{ secrets.VMANAGE_PASSWORD }}
+      VMANAGE_PORT: ${{ secrets.VMANAGE_PORT }}
+      RUN_ID: ${{ github.event.pull_request.number }}
     defaults:
       run:
         shell: bash
-      env:
-        VMANAGE_URL: ${{ secrets.VMANAGE_URL }}
-        VMANAGE_USERNAME: ${{ secrets.VMANAGE_USERNAME }}
-        VMANAGE_PASSWORD: ${{ secrets.VMANAGE_PASSWORD }}
-        VMANAGE_PORT: ${{ secrets.VMANAGE_PORT }}
-        RUN_ID: ${{ github.event.pull_request.number }}
+      
 
     steps:
       - if: ${{ env.ACT }}
