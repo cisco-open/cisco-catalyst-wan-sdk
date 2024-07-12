@@ -7,10 +7,10 @@ jobs:
   integration_tests:
     runs-on: ubuntu-latest
     env:
-      VMANAGE_URL: ${{ secrets.VMANAGE_URL }}
-      VMANAGE_USERNAME: ${{ secrets.VMANAGE_USERNAME }}
-      VMANAGE_PASSWORD: ${{ secrets.VMANAGE_PASSWORD }}
-      VMANAGE_PORT: ${{ secrets.VMANAGE_PORT }}
+      VMANAGE_URL: ${{ secrets.integration.VMANAGE_URL }}
+      VMANAGE_USERNAME: ${{ secrets.integration.VMANAGE_USERNAME }}
+      VMANAGE_PASSWORD: ${{ secrets.integration.VMANAGE_PASSWORD }}
+      VMANAGE_PORT: ${{ secrets.integration.VMANAGE_PORT }}
       RUN_ID: ${{ github.event.pull_request.number }}
     defaults:
       run:
@@ -27,7 +27,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - name: Set Up Poetry
         uses: abatilo/actions-poetry@v2
         with:
