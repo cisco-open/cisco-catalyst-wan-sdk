@@ -11,7 +11,6 @@ class TestMigrationFlow(TestCaseBase):
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.runner = ConfigMigrationRunner.collect_push_and_rollback(cls.session)
-        cls.runner.dump_schemas()
         cls.runner.run()
 
     def test_collect_artefact(self):
