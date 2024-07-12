@@ -12,10 +12,9 @@ from catalystwan.api.templates.device_template.device_template import DeviceTemp
 from catalystwan.api.templates.feature_template import FeatureTemplate
 from catalystwan.api.templates.models.cisco_aaa_model import CiscoAAAModel
 from catalystwan.api.templates.payloads.aaa.aaa_model import AAAModel, AuthenticationOrder
-from catalystwan.dataclasses import Device, FeatureTemplateInfo, TemplateInfo
+from catalystwan.dataclasses import Device
+from catalystwan.endpoints.configuration_template_master import DeviceTemplateInformation
 from catalystwan.typed_list import DataSequence
-from catalystwan.utils.creation_tools import create_dataclass
-from catalystwan.utils.device_model import DeviceModel
 from catalystwan.utils.personality import Personality
 from catalystwan.utils.reachability import Reachability
 
@@ -55,8 +54,8 @@ class TestTemplatesAPI(unittest.TestCase):
             },
         ]
         self.templates = DataSequence(
-            TemplateInfo,
-            [create_dataclass(TemplateInfo, template) for template in self.data_template],
+            DeviceTemplateInformation,
+            [DeviceTemplateInformation(**template) for template in self.data_template],
         )
         self.device_info = Device(
             personality=Personality.EDGE,
@@ -86,12 +85,10 @@ class TestTemplatesAPI(unittest.TestCase):
         )
         self.task = TaskResult(result=True, sub_tasks_data=[sub_tasks_data])
 
-    @patch("catalystwan.response.ManagerResponse")
     @patch("catalystwan.session.ManagerSession")
-    def test_templates_success(self, mock_session, mocked_response):
+    def test_templates_success(self, mock_session):
         # Arrange
-        mock_session.get.return_value = mocked_response
-        mocked_response.dataseq.return_value = self.templates
+        mock_session.endpoints.configuration_general_template.get_feature_template_list.return_value = self.templates
 
         # Act
         answer = TemplatesAPI(mock_session).get(FeatureTemplate)
@@ -99,18 +96,18 @@ class TestTemplatesAPI(unittest.TestCase):
         # Assert
         self.assertEqual(answer, self.templates)
 
-    @patch("catalystwan.response.ManagerResponse")
     @patch("catalystwan.session.ManagerSession")
-    def test_templates_get(self, mock_session, mocked_response):
+    def test_templates_get(self, mock_session):
         # Arrange
-        mock_session.get_data.return_value = mocked_response
-        mocked_response.dataseq.return_value = DataSequence(FeatureTemplateInfo, [])
+        mock_session.endpoints.configuration_general_template.get_feature_template_list.return_value = self.templates
 
         # Act
         TemplatesAPI(mock_session).get(FeatureTemplate)
 
         # Assert
-        mock_session.get.assert_called_once_with(url="/dataservice/template/feature", params={"summary": True})
+        mock_session.endpoints.configuration_general_template.get_feature_template_list.assert_called_once_with(
+            params={"summary": True}
+        )
 
     @parameterized.expand(
         [
@@ -130,14 +127,14 @@ class TestTemplatesAPI(unittest.TestCase):
                 DeviceTemplate(  # type: ignore
                     template_name="test_device_template",
                     template_description="test_device_template_description",
-                    device_type=DeviceModel.VEDGE_2000,
+                    device_type="vedge-2000",
                     general_templates=[],
                 ),
                 "device_template_id",
             ),
             (
                 CLITemplate(  # type: ignore
-                    template_name="test", template_description="test", device_model=DeviceModel.VEDGE
+                    template_name="test", template_description="test", device_model="vedge-100"
                 ),
                 "cli_id",
             ),
@@ -193,13 +190,13 @@ class TestTemplatesAPI(unittest.TestCase):
                     DeviceTemplate(  # type: ignore
                         template_name="test_device_template",
                         template_description="test_device_template_description",
-                        device_type=DeviceModel.VEDGE_2000,
+                        device_type="vedge-2000",
                         general_templates=[],
                     ),
                     CLITemplate(  # type: ignore
                         template_name="test_cli_template",
                         template_description="test_cli_description",
-                        device_model=DeviceModel.VBOND,
+                        device_model="vedge-cloud",
                     ),
                     CiscoAAAModel(  # type: ignore
                         template_name="test_aaa_model",

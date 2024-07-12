@@ -5,7 +5,7 @@ from typing import List, Literal, Optional, Union
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
-from catalystwan.utils.timezone import Timezone
+from catalystwan.models.common import Timezone
 
 ConsoleBaudRate = Literal["1200", "2400", "4800", "9600", "19200", "38400", "57600", "115200"]
 DefaultConsoleBaudRate = Literal["9600"]

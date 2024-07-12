@@ -13,8 +13,9 @@ dhcp_server = FeatureTemplateInformation(
     resource_group="global",
     template_type="cisco_dhcp_server",
     device_type=["vedge-C1101-4PLTEPW"],
+    config_type="template",
     version="15.0.0",
-    template_definiton='{"address-pool": {"vipObjectType": "object", "vipType": "constant", "vipValue":'
+    template_definition='{"address-pool": {"vipObjectType": "object", "vipType": "constant", "vipValue":'
     '"10.0.0.0/32", "vipVariableName": "dhcp_address_pool"}, "exclude": {"vipObjectType":'
     '"list", "vipType": "ignore ", "vipVariableName": "dhcp-address_exclude"}, "lease-time":'
     '{"vipObjectType": "object", "vipType": "ignore", "vipValue": 86400, "vipVariableName":'
