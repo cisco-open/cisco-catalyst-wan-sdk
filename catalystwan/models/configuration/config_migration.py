@@ -303,7 +303,6 @@ class ConfigTransformResult(BaseModel):
         # TODO: cleanup, also this works only for suffix len = 6 (eg. "_1afc9")
         assert len(self.suffix) == 6
         for name, parcels in self.create_policy_object_parcel_name_lookup().items():
-            print(f"{name} : {[p.parcel_name for p in parcels]}")
             maxlen = self.policy_object_parcel_maxlen
             if use_suffix:
                 # dedicated conflict resolving when suffix is used (we increment suffix digit)
