@@ -1,0 +1,73 @@
+{
+    "templateName": "omp_vsmart_complex",
+    "templateDescription": "Apply OMP settings for vSmart controller",
+    "templateType": "omp-vsmart",
+    "deviceType": [
+        "vsmart"
+    ],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "graceful-restart": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "send-path-limit": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 100
+        },
+        "send-backup-paths": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "discard-rejected": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "false"
+        },
+        "shutdown": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "false"
+        },
+        "timers": {
+            "advertisement-interval": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 30
+            },
+            "graceful-restart-timer": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 120
+            },
+            "eor-timer": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 50
+            },
+            "holdtime": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": 300
+            }
+        },
+        "filter-route": {
+            "outbound": {
+                "affinity-group-preference": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                },
+                "tloc-color": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "true"
+                }
+            }
+        }
+    }
+}

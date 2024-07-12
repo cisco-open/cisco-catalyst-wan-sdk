@@ -1,0 +1,302 @@
+{
+    "templateName": "cisco_ospf_complex",
+    "templateDescription": "cisco_ospf_complex",
+    "templateType": "cisco_ospf",
+    "deviceType": [],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "ospf": {
+            "router-id": {
+                "vipObjectType": "object",
+                "vipType": "constant",
+                "vipValue": "1.1.1.1"
+            },
+            "auto-cost": {
+                "reference-bandwidth": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": 10000
+                }
+            },
+            "compatible": {
+                "rfc1583": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": "false"
+                }
+            },
+            "default-information": {
+                "originate": {
+                    "vipObjectType": "node-only",
+                    "vipType": "constant",
+                    "vipValue": "true",
+                    "always": {
+                        "vipObjectType": "node-only",
+                        "vipType": "constant",
+                        "vipValue": "true"
+                    },
+                    "metric": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 10
+                    },
+                    "metric-type": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "type1"
+                    }
+                }
+            },
+            "distance": {
+                "external": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": 20
+                },
+                "inter-area": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": 30
+                },
+                "intra-area": {
+                    "vipObjectType": "object",
+                    "vipType": "constant",
+                    "vipValue": 40
+                }
+            },
+            "timers": {
+                "spf": {
+                    "delay": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 5
+                    },
+                    "initial-hold": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 10
+                    },
+                    "max-hold": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 40
+                    }
+                }
+            },
+            "redistribute": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "protocol": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "static"
+                        },
+                        "route-policy": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "static_policy"
+                        },
+                        "dia": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "true"
+                        }
+                    },
+                    {
+                        "protocol": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "bgp"
+                        },
+                        "route-policy": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "bgp_to_ospf_policy"
+                        },
+                        "dia": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "false"
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "protocol"
+                ]
+            },
+            "max-metric": {
+                "router-lsa": {
+                    "vipObjectType": "tree",
+                    "vipType": "constant",
+                    "vipValue": [
+                        {
+                            "ad-type": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": "administrative"
+                            },
+                            "time": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": 10
+                            }
+                        }
+                    ],
+                    "vipPrimaryKey": [
+                        "ad-type"
+                    ]
+                }
+            },
+            "route-policy": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "direction": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "in"
+                        },
+                        "pol-name": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "ospf_in_policy"
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "direction"
+                ]
+            },
+            "area": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "a-num": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 0
+                        },
+                        "stub": {
+                            "no-summary": {
+                                "vipObjectType": "node-only",
+                                "vipType": "constant",
+                                "vipValue": "false"
+                            }
+                        },
+                        "nssa": {
+                            "no-summary": {
+                                "vipObjectType": "node-only",
+                                "vipType": "constant",
+                                "vipValue": "false"
+                            }
+                        },
+                        "interface": {
+                            "vipObjectType": "tree",
+                            "vipType": "constant",
+                            "vipValue": [
+                                {
+                                    "name": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": "GigabitEthernet0/0"
+                                    },
+                                    "hello-interval": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": 10
+                                    },
+                                    "dead-interval": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": 40
+                                    },
+                                    "retransmit-interval": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": 5
+                                    },
+                                    "cost": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": 1
+                                    },
+                                    "priority": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": 1
+                                    },
+                                    "network": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": "broadcast"
+                                    },
+                                    "passive-interface": {
+                                        "vipObjectType": "node-only",
+                                        "vipType": "constant",
+                                        "vipValue": "false"
+                                    },
+                                    "authentication": {
+                                        "type": {
+                                            "vipObjectType": "object",
+                                            "vipType": "constant",
+                                            "vipValue": "simple"
+                                        },
+                                        "message-digest": {
+                                            "message-digest-key": {
+                                                "vipObjectType": "object",
+                                                "vipType": "constant",
+                                                "vipValue": 1
+                                            },
+                                            "md5": {
+                                                "vipObjectType": "object",
+                                                "vipType": "constant",
+                                                "vipValue": "md5keystring"
+                                            }
+                                        }
+                                    }
+                                }
+                            ],
+                            "vipPrimaryKey": [
+                                "name"
+                            ]
+                        },
+                        "range": {
+                            "vipObjectType": "tree",
+                            "vipType": "constant",
+                            "vipValue": [
+                                {
+                                    "address": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": "192.168.1.0/24"
+                                    },
+                                    "cost": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": 100
+                                    },
+                                    "no-advertise": {
+                                        "vipObjectType": "node-only",
+                                        "vipType": "constant",
+                                        "vipValue": "true"
+                                    }
+                                }
+                            ],
+                            "vipPrimaryKey": [
+                                "address"
+                            ]
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "a-num"
+                ]
+            }
+        }
+    }
+}

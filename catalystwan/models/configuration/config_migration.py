@@ -94,9 +94,9 @@ class DeviceTemplateWithInfo(DeviceTemplate):
         """
         result = []
         for template in self.general_templates:
-            subtemplates = template.subTemplates
-            if subtemplates and template.templateType not in ["cisco_vpn", "vpn-vedge", "cellular-cedge-controller"]:
-                template.subTemplates = []
+            subtemplates = template.sub_templates
+            if subtemplates and template.template_type not in ["cisco_vpn", "vpn-vedge", "cellular-cedge-controller"]:
+                template.sub_templates = []
                 for subtemplate in subtemplates:
                     result.append(subtemplate)
             result.append(template)

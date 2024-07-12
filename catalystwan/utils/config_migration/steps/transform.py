@@ -110,9 +110,9 @@ def merge_parcels(ux2: UX2Config) -> UX2Config:
 
 def get_vpn_id_or_none(template: FeatureTemplateInformation) -> Optional[int]:
     """Applies only to cisco_vpn tempalte type. Get VPN Id safely from the template definition."""
-    if template.template_definiton is None:
+    if template.template_definition is None:
         return None
-    definition = json.loads(template.template_definiton)
+    definition = json.loads(template.template_definition)
     return definition.get("vpn-id", {}).get("vipValue")
 
 
@@ -123,14 +123,14 @@ def resolve_vpn_and_subtemplates_type(cisco_vpn_template: GeneralTemplate, ux1_c
 
     # Find the target feature template based on the provided template ID
     target_feature_template = next(
-        (t for t in ux1_config.templates.feature_templates if t.id == cisco_vpn_template.templateId), None
+        (t for t in ux1_config.templates.feature_templates if t.id == cisco_vpn_template.template_id), None
     )
 
     if not target_feature_template:
-        logger.error(f"Cisco VPN template {cisco_vpn_template.templateId} not found in Feature Templates list.")
+        logger.error(f"Cisco VPN template {cisco_vpn_template.template_id} not found in Feature Templates list.")
         logger.error(
             "All items depended on this template will NOT be converted:"
-            f"{[sub.templateId for sub in cisco_vpn_template.subTemplates]}"
+            f"{[sub.template_id for sub in cisco_vpn_template.sub_templates]}"
         )
         return set()
 
@@ -140,16 +140,16 @@ def resolve_vpn_and_subtemplates_type(cisco_vpn_template: GeneralTemplate, ux1_c
         logger.error(f"VPN ID not found in Cisco VPN template {target_feature_template.name}.")
         logger.error(
             "All items depended on this template will NOT be converted:"
-            f"{[sub.templateId for sub in cisco_vpn_template.subTemplates]}"
+            f"{[sub.template_id for sub in cisco_vpn_template.sub_templates]}"
         )
         return set()
 
     if vpn_id == 0:
-        cisco_vpn_template.templateType = VPN_TRANSPORT
+        cisco_vpn_template.template_type = VPN_TRANSPORT
     elif vpn_id == 512:
-        cisco_vpn_template.templateType = VPN_MANAGEMENT
+        cisco_vpn_template.template_type = VPN_MANAGEMENT
     else:
-        cisco_vpn_template.templateType = VPN_SERVICE
+        cisco_vpn_template.template_type = VPN_SERVICE
 
     new_vpn_id = str(uuid4())
     new_vpn_name = f"{target_feature_template.name}_{new_vpn_id[:5]}"
@@ -158,19 +158,19 @@ def resolve_vpn_and_subtemplates_type(cisco_vpn_template: GeneralTemplate, ux1_c
     vpn.name = new_vpn_name
 
     ux1_config.templates.feature_templates.append(vpn)
-    cisco_vpn_template.templateId = new_vpn_id
+    cisco_vpn_template.template_id = new_vpn_id
     cisco_vpn_template.name = new_vpn_name
 
     used_feature_templates = {vpn.id}
 
     logger.debug(
         f"Resolved Cisco VPN {target_feature_template.name} "
-        f"template to type {cisco_vpn_template.templateType} and changed name to new name {new_vpn_name}"
+        f"template to type {cisco_vpn_template.template_type } and changed name to new name {new_vpn_name}"
     )
 
     # Get templates that need casting
     general_templates_from_device_template = [
-        t for t in cisco_vpn_template.subTemplates if t.templateType in VPN_ADDITIONAL_TEMPLATES
+        t for t in cisco_vpn_template.sub_templates if t.template_type in VPN_ADDITIONAL_TEMPLATES
     ]
 
     if len(general_templates_from_device_template) == 0:
@@ -183,11 +183,11 @@ def resolve_vpn_and_subtemplates_type(cisco_vpn_template: GeneralTemplate, ux1_c
 
     for ft, gt in feature_and_general_templates:
         new_id = str(uuid4())
-        new_name = f"{ft.name}_{new_id[:5]}{VPN_TEMPLATE_MAPPINGS[cisco_vpn_template.templateType]['suffix']}"
-        new_type = VPN_TEMPLATE_MAPPINGS[cisco_vpn_template.templateType]["mapping"][ft.template_type]  # type: ignore
+        new_name = f"{ft.name}_{new_id[:5]}{VPN_TEMPLATE_MAPPINGS[cisco_vpn_template.template_type ]['suffix']}"
+        new_type = VPN_TEMPLATE_MAPPINGS[cisco_vpn_template.template_type]["mapping"][ft.template_type]  # type: ignore
 
         if NO_SUBSTITUTE_ERROR in new_type:
-            cisco_vpn_template.subTemplates.remove(gt)
+            cisco_vpn_template.sub_templates.remove(gt)
             logger.error(new_type)
             continue
 
@@ -202,8 +202,8 @@ def resolve_vpn_and_subtemplates_type(cisco_vpn_template: GeneralTemplate, ux1_c
 
         ux1_config.templates.feature_templates.append(ft_copy)
 
-        gt.templateId = new_id
-        gt.templateType = new_type
+        gt.template_id = new_id
+        gt.template_type = new_type
         gt.name = new_name
 
         used_feature_templates.add(new_id)
@@ -227,10 +227,10 @@ def create_feature_template_and_general_template_pairs(
 
     pairs: List[Tuple[FeatureTemplateInformation, GeneralTemplate]] = []
     for gt in general_templates:
-        feature_template = next((ft for ft in feature_templates if ft.id == gt.templateId), None)
+        feature_template = next((ft for ft in feature_templates if ft.id == gt.template_id), None)
 
         if not feature_template:
-            logger.error(f"Feature template with UUID [{gt.templateId}] not found in Feature Templates list.")
+            logger.error(f"Feature template with UUID [{gt.template_id}] not found in Feature Templates list.")
             continue
 
         pairs.append((feature_template, gt))

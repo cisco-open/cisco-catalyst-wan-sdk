@@ -14,8 +14,9 @@ ospfv3 = FeatureTemplateInformation(
     resource_group="global",
     template_type="cisco_ospfv3",
     device_type=["vedge-C1101-4PLTEPW"],
+    config_type="template",
     version="15.0.0",
-    template_definiton='{"ospfv3":{"address-family":{"ipv4":{"router-id":{"vipObj'
+    template_definition='{"ospfv3":{"address-family":{"ipv4":{"router-id":{"vipObj'
     'ectType":"object","vipType":"constant","vipValue":"2.3.3.3","vipVariableName":"os'
     'pfv3_router_id"},"auto-cost":{"reference-bandwidth":{"vipObjectType":"object","vi'
     'pType":"ignore","vipValue":100,"vipVariableName":"ospfv3_reference_bandwidth"}},"'

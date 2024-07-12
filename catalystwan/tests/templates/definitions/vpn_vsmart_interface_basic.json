@@ -1,0 +1,42 @@
+{
+    "templateName": "vpn_vsmart_interface_basic",
+    "templateDescription": "vpn_vsmart_interface_basic",
+    "templateType": "vpn-vsmart-interface",
+    "deviceType": [
+        "vsmart"
+    ],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "if-name": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "any"
+        },
+        "clear-dont-fragment": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "false"
+        },
+        "autonegotiate": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "true"
+        },
+        "pmtu": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "false"
+        },
+        "mtu": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 1500
+        },
+        "shutdown": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "false"
+        }
+    }
+}

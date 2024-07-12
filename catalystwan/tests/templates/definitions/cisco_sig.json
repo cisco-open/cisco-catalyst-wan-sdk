@@ -1,0 +1,405 @@
+{
+    "templateName": "CiscoSecureInternetGatewayFeatureTemplate",
+    "templateDescription": "Comprehensive CiscoSecureInternetGateway Configuration",
+    "templateType": "cisco_secure_internet_gateway",
+    "deviceType": [],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "vpn-id": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": 10
+        },
+        "childOrgId": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "example_org"
+        },
+        "interface": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "if-name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "GigabitEthernet0/0"
+                    },
+                    "auto": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": true
+                    },
+                    "shutdown": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": false
+                    },
+                    "description": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "Main interface for SIG"
+                    },
+                    "ip": {
+                        "unnumbered": {
+                            "vipObjectType": "node-only",
+                            "vipType": "constant",
+                            "vipValue": false
+                        },
+                        "address": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "192.168.1.1/24"
+                        }
+                    },
+                    "tunnel-source": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "192.168.1.1"
+                    },
+                    "tunnel-source-interface": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "Loopback0"
+                    },
+                    "tunnel-route-via": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "192.168.2.1"
+                    },
+                    "tunnel-destination": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "203.0.113.1"
+                    },
+                    "application": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "sig"
+                    },
+                    "tunnel-set": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "secure-internet-gateway-umbrella"
+                    },
+                    "tunnel-dc-preference": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "primary-dc"
+                    },
+                    "tcp-mss-adjust": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 1400
+                    },
+                    "mtu": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 1400
+                    },
+                    "dead-peer-detection": {
+                        "dpd-interval": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 30
+                        },
+                        "dpd-retries": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 3
+                        }
+                    },
+                    "ike": {
+                        "ike-version": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 2
+                        },
+                        "authentication-type": {
+                            "pre-shared-key": {
+                                "pre-shared-secret": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": "MyPreSharedSecret"
+                                },
+                                "ike-local-id": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": "local-id"
+                                },
+                                "ike-remote-id": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": "remote-id"
+                                }
+                            },
+                            "pre-shared-key-dynamic": {
+                                "vipObjectType": "node-only",
+                                "vipType": "constant",
+                                "vipValue": false
+                            }
+                        },
+                        "ike-rekey-interval": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 3600
+                        },
+                        "ike-ciphersuite": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "aes256-cbc-sha1"
+                        },
+                        "ike-group": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "14"
+                        }
+                    },
+                    "ipsec": {
+                        "ipsec-rekey-interval": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 3600
+                        },
+                        "ipsec-replay-window": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 32
+                        },
+                        "ipsec-ciphersuite": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "aes256-gcm"
+                        },
+                        "perfect-forward-secrecy": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "group-14"
+                        }
+                    },
+                    "tracker": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": true
+                    },
+                    "track-enable": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": true
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "if-name"
+            ]
+        },
+        "service": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "svc-type": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "sig"
+                    },
+                    "ha-pairs": {
+                        "interface-pair": {
+                            "vipObjectType": "tree",
+                            "vipType": "constant",
+                            "vipValue": [
+                                {
+                                    "active-interface": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": "GigabitEthernet0/0"
+                                    },
+                                    "active-interface-weight": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": 10
+                                    },
+                                    "backup-interface": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": "GigabitEthernet0/1"
+                                    },
+                                    "backup-interface-weight": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": 5
+                                    }
+                                }
+                            ],
+                            "vipPrimaryKey": [
+                                "active-interface",
+                                "backup-interface"
+                            ]
+                        }
+                    },
+                    "zscaler-location-settings": {
+                        "auth-required": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": true
+                        },
+                        "xff-forward-enabled": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": true
+                        },
+                        "ofw-enabled": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": false
+                        },
+                        "ips-control": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": true
+                        },
+                        "caution-enabled": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": false
+                        },
+                        "datacenters": {
+                            "primary-data-center": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": "Auto"
+                            },
+                            "secondary-data-center": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": "Auto"
+                            }
+                        },
+                        "surrogate": {
+                            "ip": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": true
+                            },
+                            "idle-time": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": 30
+                            },
+                            "display-time-unit": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": "MINUTE"
+                            },
+                            "ip-enforced-for-known-browsers": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": true
+                            },
+                            "refresh-time": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": 5
+                            },
+                            "refresh-time-unit": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": "MINUTE"
+                            }
+                        },
+                        "aup": {
+                            "enabled": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": true
+                            },
+                            "block-internet-until-accepted": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": false
+                            },
+                            "force-ssl-inspection": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": true
+                            },
+                            "timeout": {
+                                "vipObjectType": "object",
+                                "vipType": "constant",
+                                "vipValue": 60
+                            }
+                        },
+                        "location-name": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "Auto"
+                        }
+                    },
+                    "umbrella-data-center": {
+                        "data-center-primary": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "Auto"
+                        },
+                        "data-center-secondary": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "Auto"
+                        }
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "svc-type"
+            ]
+        },
+        "tracker-src-ip": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "192.0.2.1/32"
+        },
+        "tracker": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "health-check-tracker"
+                    },
+                    "endpoint-api-url": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "https://api.example.com/health"
+                    },
+                    "threshold": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 5
+                    },
+                    "interval": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 60
+                    },
+                    "multiplier": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": 2
+                    },
+                    "tracker-type": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "SIG"
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "tracker-type",
+                "name"
+            ]
+        }
+    }
+}

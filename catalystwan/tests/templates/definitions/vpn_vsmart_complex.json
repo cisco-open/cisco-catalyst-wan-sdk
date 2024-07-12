@@ -1,0 +1,179 @@
+{
+    "templateName": "vpn_vsmart_complex",
+    "templateDescription": "cvpn_vsmart_complex",
+    "templateType": "vpn-vsmart",
+    "deviceType": [
+        "vsmart"
+    ],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "vpn-id": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "0"
+        },
+        "name": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "vpn_name_x"
+        },
+        "dns": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "dns-addr": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "1.1.1.1"
+                    },
+                    "role": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "primary"
+                    }
+                },
+                {
+                    "dns-addr": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "2.2.2.2"
+                    },
+                    "role": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "secondary"
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "dns-addr"
+            ]
+        },
+        "host": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "hostname": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "test_hostname"
+                    },
+                    "priority-order": [
+                        "hostname",
+                        "ip"
+                    ],
+                    "ip": {
+                        "vipObjectType": "list",
+                        "vipType": "constant",
+                        "vipValue": [
+                            "1.1.1.1"
+                        ]
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "hostname"
+            ]
+        },
+        "ip": {
+            "route": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "prefix": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "prefixv4"
+                        },
+                        "priority-order": [
+                            "prefix",
+                            "next-hop",
+                            "next-hop-with-track"
+                        ],
+                        "next-hop": {
+                            "vipObjectType": "tree",
+                            "vipType": "constant",
+                            "vipValue": [
+                                {
+                                    "address": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": "1.1.1.1"
+                                    },
+                                    "priority-order": [
+                                        "address",
+                                        "distance"
+                                    ],
+                                    "distance": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": 1
+                                    }
+                                }
+                            ],
+                            "vipPrimaryKey": [
+                                "address"
+                            ]
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "prefix"
+                ]
+            }
+        },
+        "ipv6": {
+            "route": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "prefix": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "prefixv6"
+                        },
+                        "next-hop": {
+                            "vipObjectType": "tree",
+                            "vipType": "constant",
+                            "vipValue": [
+                                {
+                                    "address": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": "2.2.2.2"
+                                    },
+                                    "distance": {
+                                        "vipObjectType": "object",
+                                        "vipType": "constant",
+                                        "vipValue": 1
+                                    }
+                                }
+                            ],
+                            "vipPrimaryKey": [
+                                "address"
+                            ]
+                        },
+                        "distance": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 1
+                        },
+                        "vpn": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 0
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "prefix"
+                ]
+            }
+        }
+    }
+}
