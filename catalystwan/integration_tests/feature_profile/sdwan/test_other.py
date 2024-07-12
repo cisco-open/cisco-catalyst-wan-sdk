@@ -1,15 +1,16 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from catalystwan.api.configuration_groups.parcel import Global, as_global
-from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
+from catalystwan.integration_tests.base import TestCaseBase, create_name_with_run_id
 from catalystwan.models.configuration.feature_profile.sdwan.other import ThousandEyesParcel, UcseParcel
 from catalystwan.models.configuration.feature_profile.sdwan.other.ucse import AccessPort, Imc, LomType, SharedLom
 
 
-class TestSystemOtherProfileModels(TestFeatureProfileModels):
+class TestOtherProfileModels(TestCaseBase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.api = cls.session.api.sdwan_feature_profiles.other
-        cls.profile_uuid = cls.api.create_profile("TestProfile", "Description").id
+        cls.profile_uuid = cls.api.create_profile(create_name_with_run_id("TestOtherProfile"), "Description").id
 
     def test_when_default_values_thousandeyes_parcel_expect_successful_post(self):
         # Arrange

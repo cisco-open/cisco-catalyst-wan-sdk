@@ -1,10 +1,12 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
 from typing import List, Literal
 from uuid import UUID
 
+from packaging.version import Version  # type: ignore
+
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
-from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
+from catalystwan.integration_tests.base import TestCaseBase, create_name_with_run_id
 from catalystwan.integration_tests.test_data import cellular_controller_parcel, cellular_profile_parcel, gps_parcel
 from catalystwan.models.common import (
     CableLengthLongValue,
@@ -174,12 +176,12 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
 )
 
 
-class TestTransportFeatureProfileModels(TestFeatureProfileModels):
+class TestTransportFeatureProfileModels(TestCaseBase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.api = cls.session.api.sdwan_feature_profiles.transport
-        cls.profile_uuid = cls.api.create_profile("TestTransportService", "Description").id
+        cls.profile_uuid = cls.api.create_profile(create_name_with_run_id("TestTransportModels"), "Description").id
 
     def test_when_fully_specified_management_vpn_parcel_expect_successful_post(self):
         # Arrange
@@ -519,12 +521,12 @@ class TestTransportFeatureProfileModels(TestFeatureProfileModels):
         super().tearDownClass()
 
 
-class TestTransportFeatureProfileTransportVpn(TestFeatureProfileModels):
+class TestTransportFeatureProfileTransportVpn(TestCaseBase):
     def setUp(self) -> None:
         self.api = self.session.api.sdwan_feature_profiles.transport
-        self.profile_uuid = self.api.create_profile("TestProfileService", "Description").id
+        self.profile_uuid = self.api.create_profile(create_name_with_run_id("TestTransportVpn"), "Description").id
         self.config_id = self.session.api.config_group.create(
-            "TestConfigGroupTransport", "Descr", "sdwan", [self.profile_uuid]
+            create_name_with_run_id("TestConfigGroupTransport"), "Descr", "sdwan", [self.profile_uuid]
         ).id
 
     def test_when_minimal_specifed_transport_vpn_parcel_expect_successful_post(self):
@@ -630,14 +632,14 @@ class TestTransportFeatureProfileTransportVpn(TestFeatureProfileModels):
         self.api.delete_profile(self.profile_uuid)
 
 
-class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
+class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
     wan_uuid: UUID
 
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.api = cls.session.api.sdwan_feature_profiles.transport
-        cls.profile_uuid = cls.api.create_profile("TestTransportService", "Description").id
+        cls.profile_uuid = cls.api.create_profile(create_name_with_run_id("TestTransportInterface"), "Description").id
         cls.wan_uuid = cls.api.create_parcel(
             cls.profile_uuid,
             TransportVpnParcel(
@@ -648,6 +650,16 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
 
     def test_when_fully_specified_t1e1serial_interface_parcel_expect_successfull_post(self):
         # Arrange
+        multi_region_fabric = MultiRegionFabric(
+            core_region=Global[CoreRegion](value="core-shared"),
+            enable_core_region=Global[bool](value=False),
+            enable_secondary_region=Global[bool](value=True),
+            secondary_region=Global[SecondaryRegion](value="secondary-shared"),
+        )
+        if Version("20.12") == self.session.api_version:
+            # {"Validation Errors":{"Not Defined In Schema Attributes":["data.multiRegionFabric"]}}
+            multi_region_fabric = None
+
         t1e1serial = T1E1SerialParcel(
             parcel_name="T1E1FullySpecifiedParcel",
             parcel_description="Description",
@@ -695,12 +707,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
                 ),
             ],
             encapsulation_serial=Variable(value="{{A8/8w4Qr}}"),
-            multi_region_fabric=MultiRegionFabric(
-                core_region=Global[CoreRegion](value="core-shared"),
-                enable_core_region=Global[bool](value=False),
-                enable_secondary_region=Global[bool](value=True),
-                secondary_region=Global[SecondaryRegion](value="secondary-shared"),
-            ),
+            multi_region_fabric=multi_region_fabric,
             shutdown=Global[bool](value=True),
             tunnel=Tunnel(
                 bind=Global[str](value="3123"),
@@ -1070,6 +1077,15 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
 
     def test_when_fully_specified_cellular_interface_parcel_expect_successful_post(self):
         # Arrange
+        multi_region_fabric = MultiRegionFabric(
+            core_region=None,
+            enable_core_region=None,
+            enable_secondary_region=Global[bool](value=False),
+            secondary_region=Default[SecondaryRegion](value="secondary-shared"),
+        )
+        if Version("20.12") == self.session.api_version:
+            multi_region_fabric = None
+
         cellular_parcel = InterfaceCellularParcel(
             parcel_name="InterfaceCellularParcel",
             parcel_description="Description",
@@ -1133,12 +1149,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
             bandwidth_downstream=Global[int](value=247),
             bandwidth_upstream=Global[int](value=185),
             dhcp_helper=Global[List[str]](value=["1.1.1.1", "2.2.2.2"]),
-            multi_region_fabric=MultiRegionFabric(
-                core_region=None,
-                enable_core_region=None,
-                enable_secondary_region=Global[bool](value=False),
-                secondary_region=Default[SecondaryRegion](value="secondary-shared"),
-            ),
+            multi_region_fabric=multi_region_fabric,
             nat_attributes_ipv4=NatAttributesIpv4(
                 tcp_timeout=Global[int](value=456), udp_timeout=Global[int](value=163)
             ),
@@ -1172,6 +1183,14 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
 
     def test_when_fully_specified_ethernet_interface_expect_successfull_post(self):
         # Arrange
+        multi_region_fabric = MultiRegionFabric(
+            core_region=None,
+            enable_core_region=None,
+            enable_secondary_region=Global[bool](value=False),
+            secondary_region=Default[SecondaryRegion](value="secondary-shared"),
+        )
+        if Version("20.12") == self.session.api_version:
+            multi_region_fabric = None
         ethernet_parcel = InterfaceEthernetParcel(
             parcel_name="InterfaceEthernetParcel",
             parcel_description="Description",
@@ -1224,7 +1243,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
                 snmp=None,
                 sshd=None,
                 stun=Variable(value="{{IOg/gP626}}"),
-                ssh=Default[bool](value=True),
+                ssh=Global[bool](value=True),
             ),
             arp=[
                 CommonArp(
@@ -1243,12 +1262,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
             block_non_source_ip=Global[bool](value=True),
             dhcp_helper=Global[List[str]](value=["1.1.1.1,2.3.3.3"]),
             iperf_server=Global[str](value="OXYQIcr"),
-            multi_region_fabric=MultiRegionFabric(
-                core_region=None,
-                enable_core_region=None,
-                enable_secondary_region=Global[bool](value=False),
-                secondary_region=Default[SecondaryRegion](value="secondary-shared"),
-            ),
+            multi_region_fabric=multi_region_fabric,
             nat_attributes_ipv4=EthernetNatAttributesIpv4(
                 nat_type=Variable(value="{{Qs6}}"),
                 udp_timeout=Variable(value="{{2DdkYshx]a}}"),
@@ -1275,14 +1289,14 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
                     StaticNat66(
                         source_prefix=Global[str](value="0::/16"),
                         source_vpn_id=Global[int](value=10),
-                        egress_interface=Global[bool](value=False),
+                        # egress_interface=Global[bool](value=False), for 20.12 not definied
                         translated_source_prefix=Global[str](value="0::/16"),
                     ),
                     StaticNat66(
                         source_prefix=Global[str](value="2::/16"),
                         source_vpn_id=Global[int](value=282),
-                        egress_interface=Global[bool](value=True),
-                        translated_source_prefix=None,
+                        # egress_interface=Global[bool](value=True), for 20.12 not definied
+                        translated_source_prefix=Global[str](value="2::/16"),
                     ),
                 ],
             ),
@@ -1319,6 +1333,15 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
         assert parcel_id
 
     def test_when_fully_specified_multilink_interface_parcel_expect_successful_post(self):
+        # Arrange
+        multi_region_fabric = MultiRegionFabric(
+            core_region=None,
+            enable_core_region=None,
+            enable_secondary_region=None,
+            secondary_region=None,
+        )
+        if Version("20.12") == self.session.api_version:
+            multi_region_fabric = None
         nim_list = [
             MultilinkNimList(
                 if_name=Global[str](value="Serial1"),
@@ -1420,12 +1443,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
             mask_ipv4=Global[SubnetMask](value="255.255.255.254"),
             max_control_connections=Global[int](value=50),
             mtu=Global[int](value=5266),
-            multi_region_fabric=MultiRegionFabric(
-                core_region=None,
-                enable_core_region=None,
-                enable_secondary_region=None,
-                secondary_region=None,
-            ),
+            multi_region_fabric=multi_region_fabric,
             nat_refresh_interval=Global[int](value=33),
             netconf=Global[bool](value=False),
             network_broadcast=Global[bool](value=False),
@@ -1461,14 +1479,14 @@ class TestTransportFeatureProfileWanInterfaceModels(TestFeatureProfileModels):
         super().tearDownClass()
 
 
-class TestTransportFeatureProfileWanManagementModels(TestFeatureProfileModels):
+class TestTransportFeatureProfileWanManagementModels(TestCaseBase):
     wan_uuid: UUID
 
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.api = cls.session.api.sdwan_feature_profiles.transport
-        cls.profile_uuid = cls.api.create_profile("TestTransportService", "Description").id
+        cls.profile_uuid = cls.api.create_profile(create_name_with_run_id("TestTransportManagement"), "Description").id
         cls.wan_uuid = cls.api.create_parcel(
             cls.profile_uuid,
             ManagementVpnParcel(

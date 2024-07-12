@@ -1,16 +1,17 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 import pytest
 
 from catalystwan.exceptions import ManagerHTTPError
-from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
+from catalystwan.integration_tests.base import TestCaseBase, create_name_with_run_id
 from catalystwan.models.configuration.feature_profile.sdwan.cli import ConfigParcel
 
 
-class TestCliConfigParcel(TestFeatureProfileModels):
+class TestCliConfigParcel(TestCaseBase):
     def setUp(self) -> None:
         self.api = self.session.api.sdwan_feature_profiles.cli
-        self.profile_id = self.api.create_profile("TestCliProfileService", "Description").id
+        self.profile_id = self.api.create_profile(create_name_with_run_id("TestCliProfileService"), "Description").id
         self.config_group_id = self.session.api.config_group.create(
-            "TestCLIConfigGroup", "TestCLIConfigGroup", "sdwan", [self.profile_id]
+            create_name_with_run_id("TestCLIConfigGroup"), "TestCLIConfigGroup", "sdwan", [self.profile_id]
         ).id
 
     def test_create_cli_config_parcel(self):

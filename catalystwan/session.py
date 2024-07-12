@@ -1,4 +1,4 @@
-# Copyright 2022 Cisco Systems, Inc. and its affiliates
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from __future__ import annotations
 
@@ -180,6 +180,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self.restart_timeout: int = 1200
         self.polling_requests_timeout: int = 10
         self._validate_responses = validate_responses
+        self._is_for_testing = False
 
     @cached_property
     def api(self) -> APIContainer:
@@ -505,10 +506,20 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
     def validate_responses(self, value: bool):
         self._validate_responses = value
 
+    @property
+    def is_for_testing(self) -> bool:
+        return self._is_for_testing
+
+    @is_for_testing.setter
+    def is_for_testing(self, value: bool):
+        self._is_for_testing = value
+
     def __str__(self) -> str:
         return f"{self.username}@{self.base_url}"
 
     def __repr__(self):
+        if self._is_for_testing:
+            return f"{self.__class__.__name__}('TEST_SESSION')"
         return (
             f"{self.__class__.__name__}('{self.url}', '{self.username}', '{self.password}', port={self.port}, "
             f"subdomain='{self.subdomain}')"

@@ -282,7 +282,9 @@ class AAAParcel(_ParcelBase):
         max_length=4,
         description="ServerGroups priority order",
     )
-    user: Optional[List[UserItem]] = Field(default=None, description="Create local login account", min_length=1)
+    user: Optional[List[UserItem]] = Field(
+        default=None, validation_alias=AliasPath("data", "user"), description="Create local login account", min_length=1
+    )
     radius: Optional[List[Radius]] = Field(
         default=None, validation_alias=AliasPath("data", "radius"), description="Configure the Radius serverGroup"
     )

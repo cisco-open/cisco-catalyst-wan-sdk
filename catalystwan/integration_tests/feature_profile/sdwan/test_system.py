@@ -1,4 +1,9 @@
-from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+import unittest
+from typing import List
+
+from catalystwan.api.configuration_groups.parcel import Global
+from catalystwan.integration_tests.base import IS_API_20_12, TestCaseBase, create_name_with_run_id
 from catalystwan.models.configuration.feature_profile.sdwan.system import (
     BannerParcel,
     BasicParcel,
@@ -14,9 +19,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.system import (
     SNMPParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.system.aaa import DEFAULT_USER_PRIVILEGE, AAAParcel
+from catalystwan.models.configuration.feature_profile.sdwan.system.security import IntegrityType
 
 
-class TestAAAParcel(TestFeatureProfileModels):
+class TestAAAParcel(TestCaseBase):
     def setUp(self) -> None:
         self.api = self.session.api.sdwan_feature_profiles.system
         self.profile_id = self.api.create_profile("TestProfileService", "Description").id
@@ -75,12 +81,12 @@ class TestAAAParcel(TestFeatureProfileModels):
         self.api.delete_profile(self.profile_id)
 
 
-class TestSystemFeatureProfileModels(TestFeatureProfileModels):
+class TestSystemFeatureProfileModels(TestCaseBase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.api = cls.session.api.sdwan_feature_profiles.system
-        cls.profile_uuid = cls.api.create_profile("TestProfileService", "Description").id
+        cls.profile_uuid = cls.api.create_profile(create_name_with_run_id("TestProfileService"), "Description").id
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -223,7 +229,9 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
         security_parcel = SecurityParcel(
             parcel_name="SecurityDefault",
             parcel_description="Security Parcel",
+            integrity_type=Global[List[IntegrityType]](value=["ip-udp-esp"]),
         )
+
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, security_parcel).id
         # Assert
@@ -251,6 +259,13 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
         # Assert
         assert parcel_id
 
+    @unittest.skipIf(
+        IS_API_20_12,
+        "Region is not allowed to be configured when the setting"
+        "(Administration -> Settings -> Multi-Region Fabric) is disabled."
+        "Once Multi-Region Fabric is enabled, it cannot be disabled but "
+        "all the configuration related to that can be removed manually.",
+    )
     def test_when_default_values_mrf_parcel_expect_successful_post(self):
         # Arrange
         mrf_parcel = MRFParcel(
@@ -303,13 +318,13 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
         )
         for i in range(2):
             sequence = device_access_parcel.add_sequence(
-                sequence_id=i + 1,
-                sequence_name=f"sequence_{i+1}",
+                id_=i + 1,
+                name=f"sequence_{i+1}",
                 destination_port=22,
                 base_action="accept",
             )
-            sequence.match_destination_data_prefix(["10.0.0.1/32", "10.0.0.0/16"])
-            sequence.match_source_data_prefix(["10.0.0.1/32", "10.0.0.0/16"])
+            sequence.match_destination_data_prefixes(["10.0.0.1/32", "10.0.0.0/16"])
+            sequence.match_source_data_prefixes(["10.0.0.1/32", "10.0.0.0/16"])
             sequence.match_source_ports([1, 2, 3])
 
         parcel_id = self.api.create_parcel(self.profile_uuid, device_access_parcel).id
@@ -337,13 +352,13 @@ class TestSystemFeatureProfileModels(TestFeatureProfileModels):
         )
         for i in range(2):
             sequence = device_access_ipv6_parcel.add_sequence(
-                sequence_id=i + 1,
-                sequence_name=f"sequence_{i+1}",
+                id_=i + 1,
+                name=f"sequence_{i+1}",
                 destination_port=22,
                 base_action="accept",
             )
-            sequence.match_destination_data_prefix(["::250/100", "::54a/64"])
-            sequence.match_source_data_prefix(["::250/100", "::54a/64"])
+            sequence.match_destination_data_prefixes(["::250/100", "::54a/64"])
+            sequence.match_source_data_prefixes(["::250/100", "::54a/64"])
             sequence.match_source_ports([1, 2, 3])
 
         parcel_id = self.api.create_parcel(self.profile_uuid, device_access_ipv6_parcel).id

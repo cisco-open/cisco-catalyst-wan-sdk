@@ -387,7 +387,7 @@ class GroupsOfInterestBuildReport(BaseModel):
             parcel_name=parcel.parcel_name,
             parcel_type=parcel._get_parcel_type(),
             error_info=error.info,
-            request_details=FailedRequestDetails.from_response(ManagerHTTPError.response),
+            request_details=FailedRequestDetails.from_response(error.response),
         )
         self.failed_parcels.append(failed_parcel)
 

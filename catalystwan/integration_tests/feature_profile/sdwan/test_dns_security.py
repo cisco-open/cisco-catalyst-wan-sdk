@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from typing import List
 
 import pytest
@@ -5,14 +6,14 @@ from pydantic import ValidationError
 
 from catalystwan.api.configuration_groups.parcel import Global
 from catalystwan.exceptions import ManagerHTTPError
-from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
+from catalystwan.integration_tests.base import TestCaseBase, create_name_with_run_id
 from catalystwan.models.configuration.feature_profile.sdwan.dns_security import DnsParcel, TargetVpns
 
 
-class TestDnsSecurityParcel(TestFeatureProfileModels):
+class TestDnsSecurityParcel(TestCaseBase):
     def setUp(self) -> None:
         self.api = self.session.api.sdwan_feature_profiles.dns_security
-        self.profile_id = self.api.create_profile("TestDnsSecurityProfile", "Description").id
+        self.profile_id = self.api.create_profile(create_name_with_run_id("TestDnsSecurityProfile"), "Description").id
 
     def test_create_cli_config_parcel(self):
         dns_parcel = DnsParcel(

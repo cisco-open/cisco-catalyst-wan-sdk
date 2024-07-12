@@ -14,6 +14,9 @@ from catalystwan.models.configuration.feature_profile.common import (
 )
 from catalystwan.models.configuration.feature_profile.parcel import Parcel, ParcelCreationResponse
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority import AnyApplicationPriorityParcel
+from catalystwan.models.configuration.feature_profile.sdwan.application_priority.policy_settings import (
+    PolicySettingsParcel,
+)
 from catalystwan.typed_list import DataSequence
 
 
@@ -91,4 +94,14 @@ class ApplicationPriorityFeatureProfile(APIEndpoints):
         resp_json_key="data",
     )
     def get_all(self, profile_id: UUID, application_priority_list_type: str) -> DataSequence[Parcel]:
+        ...
+
+    @versions(supported_versions=(">20.12"), raises=False)
+    @post("/v1/feature-profile/sdwan/application-priority/{profile_id}/policy-settings")
+    def create_policy_settings(self, profile_id: UUID, payload: PolicySettingsParcel) -> ParcelCreationResponse:
+        ...
+
+    @versions(supported_versions=(">20.12"), raises=False)
+    @get("/v1/feature-profile/sdwan/application-priority/{profile_id}/policy-settings/{list_object_id}")
+    def get_policy_settings(self, profile_id: UUID, list_object_id: UUID) -> Parcel:
         ...
