@@ -79,15 +79,15 @@ class TemplatesAPI:
         self.session = session
 
     @overload
-    def get(self, template: Type[DeviceTemplate]) -> DataSequence[DeviceTemplateInformation]:  # type: ignore
+    def get(self, template: Type[DeviceTemplate]) -> DataSequence[DeviceTemplateInformation]:
         ...
 
     @overload
-    def get(self, template: Type[FeatureTemplate]) -> DataSequence[FeatureTemplateInformation]:  # type: ignore
+    def get(self, template: Type[FeatureTemplate]) -> DataSequence[FeatureTemplateInformation]:
         ...
 
     @overload
-    def get(self, template: Type[CLITemplate]) -> DataSequence[TemplateInformation]:  # type: ignore
+    def get(self, template: Type[CLITemplate]) -> DataSequence[TemplateInformation]:
         ...
 
     def get(self, template):
