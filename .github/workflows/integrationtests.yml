@@ -30,6 +30,15 @@ jobs:
         run: |
             curl -fsSL https://deb.nodesource.com/setup_12.x | sudo -E bash -
             sudo apt-get install -y nodejs
+      - name: Check if in allowed time window
+        run: |
+          hour=$(TZ='America/Los_Angeles' date +%H)
+          if [ $hour -ge 22 ] || [ $hour -lt 7 ]; then
+            echo "Current time is within the allowed window (10 PM - 7 AM PDT)."
+          else
+            echo "Error: Current time is outside the allowed window (10 PM - 7 AM PDT)."
+            exit 1
+          fi
       - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
