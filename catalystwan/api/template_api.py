@@ -107,7 +107,9 @@ class TemplatesAPI:
         summary: bool = True,
     ) -> DataSequence[FeatureTemplateInformation]:
         """In a multitenant vManage system, this API is only available in the Provider view."""
-        return self.session.endpoints.configuration_general_template.get_feature_template_list(params={"summary": True})
+        return self.session.endpoints.configuration_general_template.get_feature_template_list(
+            params={"summary": summary}
+        )
 
     def _get_device_templates(
         self, feature: DeviceTemplateFeature = DeviceTemplateFeature.ALL
