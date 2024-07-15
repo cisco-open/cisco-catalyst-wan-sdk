@@ -1,5 +1,5 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
-from catalystwan.integration_tests.profile_builder.base import TestFeatureProfileBuilder
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+from catalystwan.integration_tests.base import TestCaseBase, create_name_with_run_id
 from catalystwan.integration_tests.test_data import (
     bgp_parcel,
     cellular_controller_parcel,
@@ -13,9 +13,9 @@ from catalystwan.models.configuration.feature_profile.common import FeatureProfi
 from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import TransportVpnParcel
 
 
-class TestTransportFeatureProfileBuilder(TestFeatureProfileBuilder):
+class TestTransportFeatureProfileBuilder(TestCaseBase):
     def setUp(self) -> None:
-        self.fp_name = "FeatureProfileBuilderTransport"
+        self.fp_name = create_name_with_run_id("FeatureProfileBuilderTransport")
         self.fp_description = "Transport feature profile"
         self.builder = self.session.api.builders.feature_profiles.create_builder("transport")
         self.builder.add_profile_name_and_description(

@@ -4,7 +4,7 @@ from typing import Literal
 from uuid import UUID
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global, as_variable
-from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
+from catalystwan.integration_tests.base import TestCaseBase, create_name_with_run_id
 from catalystwan.models.common import (
     CableLengthLongValue,
     ClockRate,
@@ -121,12 +121,12 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.wireless_lan
 )
 
 
-class TestServiceFeatureProfileModels(TestFeatureProfileModels):
+class TestServiceFeatureProfileModels(TestCaseBase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.api = cls.session.api.sdwan_feature_profiles.service
-        cls.profile_uuid = cls.api.create_profile("TestProfileService", "Description").id
+        cls.profile_uuid = cls.api.create_profile(create_name_with_run_id("TestProfileService"), "Description").id
 
     def test_when_default_values_dhcp_server_parcel_expect_successful_post(self):
         # Arrange
@@ -658,14 +658,14 @@ class TestServiceFeatureProfileModels(TestFeatureProfileModels):
         super().tearDownClass()
 
 
-class TestServiceFeatureProfileVPNSubparcelModels(TestFeatureProfileModels):
+class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
     vpn_parcel_uuid: UUID
 
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.api = cls.session.api.sdwan_feature_profiles.service
-        cls.profile_uuid = cls.api.create_profile("TestProfileService", "Description").id
+        cls.profile_uuid = cls.api.create_profile(create_name_with_run_id("TestProfileServiceVpn"), "Description").id
         cls.vpn_parcel_uuid = cls.api.create_parcel(
             cls.profile_uuid,
             LanVpnParcel(

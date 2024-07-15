@@ -257,18 +257,30 @@ class ConfigTransformResult(BaseModel):
     unsupported_items: List[UnsupportedConversionItem] = Field(default_factory=list)
 
     @property
-    def suffix(self):
+    def policy_object_parcel_maxlen(self) -> int:
+        return 32
+
+    @property
+    def suffix(self) -> str:
         return f"_{str(self.uuid)[:5]}"
 
-    def create_policy_object_parcel_name_lookup(self) -> Dict[str, List[AnyPolicyObjectParcel]]:
+    def create_policy_object_parcel_name_lookup(
+        self, use_suffix: bool = False
+    ) -> Dict[str, List[AnyPolicyObjectParcel]]:
+        namelen = (
+            self.policy_object_parcel_maxlen - len(self.suffix)
+            if use_suffix
+            else (self.policy_object_parcel_maxlen - 2)
+        )
         lookup: Dict[str, List[AnyPolicyObjectParcel]] = {}
         # parcel rename only for policy groups-of-interest which share global profile
         for profile_parcel in self.ux2_config.profile_parcels:
             profile_parcel.header.origname = profile_parcel.parcel.parcel_name
             if profile_parcel.header.type in [t._get_parcel_type() for t in list_types(AnyPolicyObjectParcel)]:
                 # build lookup by parcel name to find duplicates
+                # if suffix is added we need to take into consideration shortened names
                 parcel = cast(AnyPolicyObjectParcel, profile_parcel.parcel)
-                name = profile_parcel.header.origname
+                name = profile_parcel.header.origname[:namelen]
                 if not lookup.get(name):
                     lookup[name] = [parcel]
                 else:
@@ -291,7 +303,7 @@ class ConfigTransformResult(BaseModel):
         # TODO: cleanup, also this works only for suffix len = 6 (eg. "_1afc9")
         assert len(self.suffix) == 6
         for name, parcels in self.create_policy_object_parcel_name_lookup().items():
-            maxlen = 32
+            maxlen = self.policy_object_parcel_maxlen
             if use_suffix:
                 # dedicated conflict resolving when suffix is used (we increment suffix digit)
                 for i, parcel in enumerate(parcels):
@@ -302,7 +314,7 @@ class ConfigTransformResult(BaseModel):
                         continue
                     # add suffix
                     if len(name) >= (maxlen - 6):
-                        name = name[maxlen - 7 :]
+                        name = name[: maxlen - 7]
                     name = name + self.suffix
                     parcel.parcel_name = name
             else:
@@ -387,7 +399,7 @@ class GroupsOfInterestBuildReport(BaseModel):
             parcel_name=parcel.parcel_name,
             parcel_type=parcel._get_parcel_type(),
             error_info=error.info,
-            request_details=FailedRequestDetails.from_response(ManagerHTTPError.response),
+            request_details=FailedRequestDetails.from_response(error.response),
         )
         self.failed_parcels.append(failed_parcel)
 

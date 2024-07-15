@@ -1,3 +1,5 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+import unittest
 from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 from typing import List
 
@@ -5,7 +7,7 @@ import pytest
 
 from catalystwan.api.configuration_groups.parcel import Default, Global
 from catalystwan.exceptions import ManagerHTTPError
-from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
+from catalystwan.integration_tests.base import IS_API_20_12, TestCaseBase, create_name_with_run_id
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority import (
     PolicySettingsParcel,
     QosMap,
@@ -82,12 +84,16 @@ from catalystwan.models.configuration.feature_profile.sdwan.application_priority
     TrafficTargetType,
     TrafficToMatch,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
 
 
-class TestPolicySettingsParcel(TestFeatureProfileModels):
+@unittest.skipIf(IS_API_20_12, "PolicySettingsParcel is not supported in 20.12")
+class TestPolicySettingsParcel(TestCaseBase):
     def setUp(self) -> None:
         self.api = self.session.api.sdwan_feature_profiles.application_priority
-        self.profile_id = self.api.create_profile("TestApplicationPriorityProfile", "Description").id
+        self.profile_id = self.api.create_profile(
+            create_name_with_run_id("TestApplicationPriorityProfile"), "Description"
+        ).id
 
     def test_create_policy_settings_parcel(self):
         policy_settings_parcel = PolicySettingsParcel(
@@ -139,10 +145,12 @@ class TestPolicySettingsParcel(TestFeatureProfileModels):
         self.api.delete_profile(self.profile_id)
 
 
-class TestQosPolicyParcel(TestFeatureProfileModels):
+class TestQosPolicyParcel(TestCaseBase):
     def setUp(self) -> None:
         self.api = self.session.api.sdwan_feature_profiles.application_priority
-        self.profile_id = self.api.create_profile("TestApplicationPriorityProfile", "Description").id
+        self.profile_id = self.api.create_profile(
+            create_name_with_run_id("TestApplicationPriorityProfile"), "Description"
+        ).id
 
     def test_create_qos_policy_parcel(self):
         qos_policy_parcel = QosPolicyParcel(
@@ -191,17 +199,38 @@ class TestQosPolicyParcel(TestFeatureProfileModels):
         self.api.delete_profile(self.profile_id)
 
 
-class TestTrafficPolicyParcel(TestFeatureProfileModels):
+@unittest.skip("Prepare for 20.12")
+class TestTrafficPolicyParcel(TestCaseBase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.service_api = cls.session.api.sdwan_feature_profiles.service
+        cls.service_profile_uuid = cls.service_api.create_profile(
+            create_name_with_run_id("TestProfileServiceVpn"), "Description"
+        ).id
+        cls.vpn_name_1 = create_name_with_run_id("TestVpnParcelForTraffic")
+        cls.service_api.create_parcel(
+            cls.service_profile_uuid,
+            LanVpnParcel(parcel_name=cls.vpn_name_1, parcel_description="Test Vpn Parcel", vpn_id=Global[int](value=2)),
+        )
+        cls.vpn_name_2 = create_name_with_run_id("TestVpnParcelForTraffic2")
+        cls.service_api.create_parcel(
+            cls.service_profile_uuid,
+            LanVpnParcel(parcel_name=cls.vpn_name_2, parcel_description="Test Vpn Parcel", vpn_id=Global[int](value=2)),
+        )
+
     def setUp(self) -> None:
         self.api = self.session.api.sdwan_feature_profiles.application_priority
-        self.profile_id = self.api.create_profile("TestApplicationPriorityProfile", "Description").id
+        self.profile_id = self.api.create_profile(
+            create_name_with_run_id("TestApplicationPriorityProfile"), "Description"
+        ).id
 
     def test_create_traffic_policy_parcel(self):
         traffic_policy_parcel = TrafficPolicyParcel(
             name="traffic_policy_test_parcel",
             data_default_action=Global[BaseAction](value="accept"),
             target=TrafficPolicyTarget(
-                direction=Global[TrafficDataDirection](value="all"), vpn=Global[List[str]](value=["VPN_1"])
+                direction=Global[TrafficDataDirection](value="all"), vpn=Global[List[str]](value=[self.vpn_name_1])
             ),
         )
         # Act
@@ -344,7 +373,7 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
             data_default_action=Global[BaseAction](value="accept"),
             sequences=sequences,
             target=TrafficPolicyTarget(
-                direction=Global[TrafficDataDirection](value="all"), vpn=Global[List[str]](value=["VPN_1"])
+                direction=Global[TrafficDataDirection](value="all"), vpn=Global[List[str]](value=[self.vpn_name_1])
             ),
         )
         # Act
@@ -360,13 +389,13 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
             name="traffic_policy_test_parcel",
             data_default_action=Global[BaseAction](value="accept"),
             target=TrafficPolicyTarget(
-                direction=Global[TrafficDataDirection](value="all"), vpn=Global[List[str]](value=["VPN_1"])
+                direction=Global[TrafficDataDirection](value="all"), vpn=Global[List[str]](value=[self.vpn_name_1])
             ),
         )
         parcel_id = self.api.create_parcel(self.profile_id, traffic_policy_parcel).id
         parcel = self.api.get_parcel(self.profile_id, TrafficPolicyParcel, parcel_id).payload
         parcel.target = TrafficPolicyTarget(
-            direction=Global[TrafficDataDirection](value="service"), vpn=Global[List[str]](value=["VPN_2"])
+            direction=Global[TrafficDataDirection](value="service"), vpn=Global[List[str]](value=[self.vpn_name_2])
         )
         # Act
         self.api.update_parcel(self.profile_id, parcel, parcel_id)
@@ -374,7 +403,7 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
 
         # Assert
         assert parcel.target == TrafficPolicyTarget(
-            direction=Global[TrafficDataDirection](value="service"), vpn=Global[List[str]](value=["VPN_2"])
+            direction=Global[TrafficDataDirection](value="service"), vpn=Global[List[str]](value=[self.vpn_name_2])
         )
 
     def test_delete_traffic_policy_parcel(self):
@@ -382,7 +411,7 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
             name="traffic_policy_test_parcel",
             data_default_action=Global[BaseAction](value="accept"),
             target=TrafficPolicyTarget(
-                direction=Global[TrafficDataDirection](value="all"), vpn=Global[List[str]](value=["VPN_1"])
+                direction=Global[TrafficDataDirection](value="all"), vpn=Global[List[str]](value=[self.vpn_name_1])
             ),
         )
         parcel_id = self.api.create_parcel(self.profile_id, traffic_policy_parcel).id
@@ -395,3 +424,8 @@ class TestTrafficPolicyParcel(TestFeatureProfileModels):
 
     def tearDown(self) -> None:
         self.api.delete_profile(self.profile_id)
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        cls.service_api.delete_profile(cls.service_profile_uuid)

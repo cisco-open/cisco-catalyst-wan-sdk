@@ -1,16 +1,17 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Address
 from uuid import UUID
 
 from catalystwan.api.configuration_groups.parcel import as_global
 from catalystwan.api.feature_profile_api import ServiceFeatureProfileAPI, TopologyFeatureProfileAPI
-from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
+from catalystwan.integration_tests.base import TestCaseBase, create_name_with_run_id
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
 
 
-class TestTopologyFeatureProfile(TestFeatureProfileModels):
+class TestTopologyFeatureProfile(TestCaseBase):
     topology_api: TopologyFeatureProfileAPI
     topology_profile_id: UUID
     service_api: ServiceFeatureProfileAPI
@@ -22,11 +23,15 @@ class TestTopologyFeatureProfile(TestFeatureProfileModels):
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.topology_api = cls.session.api.sdwan_feature_profiles.topology
-        cls.topology_profile_id = cls.topology_api.create_profile("TestProfile", "Description").id
+        cls.topology_profile_id = cls.topology_api.create_profile(
+            create_name_with_run_id("TestTopologyProfile"), "Description"
+        ).id
         # preconditions
         cls.lanvpn_parcel_name = "VPN-1"
         cls.service_api = cls.session.api.sdwan_feature_profiles.service
-        cls.service_profile_id = cls.service_api.create_profile("PreconditionServiceProfile", "Description").id
+        cls.service_profile_id = cls.service_api.create_profile(
+            create_name_with_run_id("PreconditionServiceProfile"), "Description"
+        ).id
         lanvpn_parcel = LanVpnParcel(
             parcel_name=cls.lanvpn_parcel_name,
             parcel_description="Test Vpn Parcel",

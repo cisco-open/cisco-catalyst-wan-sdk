@@ -1,25 +1,17 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 import json
-import os
-import unittest
-from typing import Any, List, cast
+from typing import Any, List
 
-from catalystwan.session import create_manager_session
+from catalystwan.integration_tests.base import TestCaseBase
 from catalystwan.utils.feature_template.find_template_values import find_template_values
 
 
-class TestFindTemplateValues(unittest.TestCase):
-    def setUp(self) -> None:
-        self.session = create_manager_session(
-            url=cast(str, os.environ.get("TEST_VMANAGE_URL")),
-            port=cast(int, int(os.environ.get("TEST_VMANAGE_PORT"))),  # type: ignore
-            username=cast(str, os.environ.get("TEST_VMANAGE_USERNAME")),
-            password=cast(str, os.environ.get("TEST_VMANAGE_PASSWORD")),
-        )
-        self.templates = self.session.api.templates._get_feature_templates(summary=False)
-
+class TestFindTemplateValues(TestCaseBase):
     def test_find_template_value(self):
+        # Arrange
+        self.templates = self.session.api.templates._get_feature_templates(summary=False)
+        # Act, Assert
         for template in self.templates:
             definition = json.loads(template.template_definiton)
             with self.subTest(template_name=template.name):
@@ -44,6 +36,3 @@ class TestFindTemplateValues(unittest.TestCase):
                         if self.is_key_present(v, keys):
                             return True
         return False
-
-    def tearDown(self) -> None:
-        self.session.close()

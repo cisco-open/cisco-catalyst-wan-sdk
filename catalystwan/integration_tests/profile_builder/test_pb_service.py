@@ -2,7 +2,7 @@
 from ipaddress import IPv4Address
 
 from catalystwan.api.configuration_groups.parcel import Global, as_global, as_variable
-from catalystwan.integration_tests.profile_builder.base import TestFeatureProfileBuilder
+from catalystwan.integration_tests.base import TestCaseBase, create_name_with_run_id
 from catalystwan.integration_tests.test_data import bgp_parcel, ospf_parcel, ospfv3ipv4_parcel, ospfv3ipv6_parcel
 from catalystwan.models.common import SubnetMask
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
@@ -14,9 +14,9 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
 
 
-class TestServiceFeatureProfileBuilder(TestFeatureProfileBuilder):
+class TestServiceFeatureProfileBuilder(TestCaseBase):
     def setUp(self) -> None:
-        self.fp_name = "FeatureProfileBuilderService"
+        self.fp_name = create_name_with_run_id("FeatureProfileBuilderService")
         self.fp_description = "Transport feature profile"
         self.builder = self.session.api.builders.feature_profiles.create_builder("service")
         self.builder.add_profile_name_and_description(

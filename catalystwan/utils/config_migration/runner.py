@@ -1,3 +1,5 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
+import logging
 import re
 from dataclasses import dataclass
 from json import dumps
@@ -20,6 +22,8 @@ from catalystwan.workflows.config_migration import (
 )
 
 DEFAULT_ARTIFACT_DIR = "artifacts"
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -65,6 +69,19 @@ class ConfigMigrationRunner:
     @staticmethod
     def push_and_rollback(session: ManagerSession, filter: str = ".*") -> "ConfigMigrationRunner":
         return ConfigMigrationRunner(session=session, collect=False, push=True, rollback=True, dt_filter=filter)
+
+    @staticmethod
+    def collect_push_and_rollback(session: ManagerSession, filter: str = ".*") -> "ConfigMigrationRunner":
+        return ConfigMigrationRunner(session=session, collect=True, push=True, rollback=True, dt_filter=filter)
+
+    def load_collected_config(self) -> UX1Config:
+        return UX1Config.model_validate_json(open(self.ux1_dump).read())
+
+    def load_transform_result(self) -> ConfigTransformResult:
+        return ConfigTransformResult.model_validate_json(open(self.ux2_dump).read())
+
+    def load_push_result(self) -> UX2ConfigPushResult:
+        return UX2ConfigPushResult.model_validate_json(open(self.ux2_push_dump).read())
 
     def dump_schemas(self):
         with open(self.ux1_schema_dump, "w") as f:
@@ -126,7 +143,7 @@ class ConfigMigrationRunner:
             self.progress("deleting default policy object profile parcels...", 12, 12)
             po_profiles = fp_api.policy_object.get_profiles()
             if len(po_profiles) > 1:
-                print("WARNING! MORE THAN ONE DEFAULT POLICY OBJECT PROFILE DETECTED")
+                logger.warning("WARNING! MORE THAN ONE DEFAULT POLICY OBJECT PROFILE DETECTED")
 
             for po_profile in po_profiles:
                 sorted_parcel_types = sorted(
@@ -152,7 +169,7 @@ class ConfigMigrationRunner:
                     f.write(ux1.model_dump_json(exclude_none=True, by_alias=True, indent=4, warnings=False))
 
             # transform to ux2 and dump to json file
-            _ux1 = UX1Config.model_validate_json(open(self.ux1_dump).read())
+            _ux1 = self.load_collected_config()
             _filtered_dts = [
                 dt for dt in _ux1.templates.device_templates if re.search(self.dt_pattern, dt.template_name) is not None
             ]
@@ -163,12 +180,12 @@ class ConfigMigrationRunner:
 
             # push ux2 to remote and dump push result
             if self.push:
-                transform_result = ConfigTransformResult.model_validate_json(open(self.ux2_dump).read())
+                transform_result = self.load_transform_result()
                 ux2_push_result = push_ux2_config(session, transform_result.ux2_config, self.progress)
                 with open(self.ux2_push_dump, "w") as f:
                     f.write(ux2_push_result.model_dump_json(exclude_none=True, by_alias=True, indent=4, warnings=False))
 
             # rollback
             if self.rollback:
-                ux2_push_result = UX2ConfigPushResult.model_validate_json(open(self.ux2_push_dump).read())
+                ux2_push_result = self.load_push_result()
                 rollback_ux2_config(session, ux2_push_result.rollback, self.progress)

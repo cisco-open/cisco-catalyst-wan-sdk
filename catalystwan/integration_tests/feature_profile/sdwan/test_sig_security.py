@@ -1,7 +1,8 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Address
 
 from catalystwan.api.configuration_groups.parcel import Global
-from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
+from catalystwan.integration_tests.base import TestCaseBase, create_name_with_run_id
 from catalystwan.models.common import IkeCiphersuite
 from catalystwan.models.configuration.feature_profile.sdwan.sig_security.sig_security import (
     Application,
@@ -22,11 +23,11 @@ from catalystwan.models.configuration.feature_profile.sdwan.sig_security.sig_sec
 )
 
 
-class TestSIGSecurityProfileModels(TestFeatureProfileModels):
+class TestSIGSecurityProfileModels(TestCaseBase):
     @classmethod
     def setUp(cls) -> None:
         cls.api = cls.session.api.sdwan_feature_profiles.sig_security
-        cls.profile_uuid = cls.api.create_profile("TestProfile", "Description").id
+        cls.profile_uuid = cls.api.create_profile(create_name_with_run_id("TestSigProfile"), "Description").id
 
     def test_when_fully_specified_sig_generic_ipsec_parcel_expect_successful_post(self):
         interface_pair = InterfacePair(

@@ -1,13 +1,14 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from catalystwan.api.feature_profile_api import PolicyObjectFeatureProfileAPI
 from catalystwan.endpoints.configuration_feature_profile import ConfigurationFeatureProfile
-from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
+from catalystwan.integration_tests.base import TestCaseBase, create_name_with_run_id
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import ExtendedCommunityParcel
 from catalystwan.typed_list import DataSequence
 
 PROFILE_NAME = "Default_Policy_Object_Profile"
 
 
-class TestExtendedCommunityParcel(TestFeatureProfileModels):
+class TestExtendedCommunityParcel(TestCaseBase):
     policy_api: PolicyObjectFeatureProfileAPI
 
     @classmethod
@@ -15,9 +16,9 @@ class TestExtendedCommunityParcel(TestFeatureProfileModels):
         super().setUpClass()
         cls.policy_api = cls.session.api.sdwan_feature_profiles.policy_object
         cls.profile_uuid = (
-            ConfigurationFeatureProfile(cls.session.api.sdwan_feature_profiles.policy_object.session)
+            ConfigurationFeatureProfile(cls.session)
             .get_sdwan_feature_profiles()
-            .filter(profile_name=PROFILE_NAME)
+            .filter(profile_type="policy-object")
             .single_or_default()
         ).profile_id
 
@@ -36,16 +37,18 @@ class TestExtendedCommunityParcel(TestFeatureProfileModels):
         assert type(parcels) is DataSequence
 
     def test_create_extended_community_parcel(self):
-        ext = ExtendedCommunityParcel(parcel_name="ExampleTestName")
+        # Arrange
+        parcel_name = create_name_with_run_id("ExampleTestName")
+        ext = ExtendedCommunityParcel(parcel_name=parcel_name)
         ext.add_route_target_community(100, 2000)
         ext.add_route_target_community(300, 5000)
         ext.add_site_of_origin_community("1.2.3.4", 1000)
         ext.add_site_of_origin_community("10.20.30.40", 3000)
-
+        # Act
         self.created_id = self.policy_api.create_parcel(self.profile_uuid, ext).id
         parcel = self.policy_api.get(self.profile_uuid, ExtendedCommunityParcel, parcel_id=self.created_id)
-
-        assert parcel.payload.parcel_name == "ExampleTestName"
+        # Assert
+        assert parcel.payload.parcel_name == parcel_name
         assert len(parcel.payload.entries) == 4
         assert parcel.payload.entries[0].extended_community.value == "rt 100:2000"
         assert parcel.payload.entries[1].extended_community.value == "rt 300:5000"

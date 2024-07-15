@@ -1,6 +1,7 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from catalystwan.api.feature_profile_api import PolicyObjectFeatureProfileAPI
 from catalystwan.endpoints.configuration_feature_profile import ConfigurationFeatureProfile
-from catalystwan.integration_tests.feature_profile.sdwan.base import TestFeatureProfileModels
+from catalystwan.integration_tests.base import TestCaseBase, create_name_with_run_id
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.ssl_decryption import (
     CaCertBundle,
     SslDecryptionParcel,
@@ -10,7 +11,7 @@ from catalystwan.typed_list import DataSequence
 PROFILE_NAME = "Default_Policy_Object_Profile"
 
 
-class TestSslDecryptionParcel(TestFeatureProfileModels):
+class TestSslDecryptionParcel(TestCaseBase):
     policy_api: PolicyObjectFeatureProfileAPI
 
     @classmethod
@@ -18,9 +19,9 @@ class TestSslDecryptionParcel(TestFeatureProfileModels):
         super().setUpClass()
         cls.policy_api = cls.session.api.sdwan_feature_profiles.policy_object
         cls.profile_uuid = (
-            ConfigurationFeatureProfile(cls.session.api.sdwan_feature_profiles.policy_object.session)
+            ConfigurationFeatureProfile(cls.session)
             .get_sdwan_feature_profiles()
-            .filter(profile_name=PROFILE_NAME)
+            .filter(profile_type="policy-object")
             .single_or_default()
         ).profile_id
 
@@ -35,12 +36,13 @@ class TestSslDecryptionParcel(TestFeatureProfileModels):
         return super().tearDown()
 
     def test_create_ssl_decryption_parcel(self):
+        # Arrange
         cert_bundle = CaCertBundle.create(
             default=False, bundle_string="cert_content", file_name="certificate.ca-bundle"
         )
-
+        parcel_name = create_name_with_run_id("test_ssl_profile")
         ssl_decryption_parcel = SslDecryptionParcel.create(
-            parcel_name="test_ssl_profile",
+            parcel_name=parcel_name,
             parcel_description="description",
             ssl_enable=True,
             expired_certificate="drop",
@@ -56,11 +58,11 @@ class TestSslDecryptionParcel(TestFeatureProfileModels):
             certificate_lifetime="1",
             min_tls_ver="TLSv1.1",
         )
-
+        # Act
         self.created_id = self.policy_api.create_parcel(self.profile_uuid, ssl_decryption_parcel).id
         read_parcel = self.policy_api.get(self.profile_uuid, SslDecryptionParcel, parcel_id=self.created_id)
-
-        assert read_parcel.payload.parcel_name == "test_ssl_profile"
+        # Assert
+        assert read_parcel.payload.parcel_name == parcel_name
         assert read_parcel.payload.parcel_description == "description"
         assert read_parcel.payload.ssl_enable.value is True
         assert read_parcel.payload.expired_certificate.value == "drop"
