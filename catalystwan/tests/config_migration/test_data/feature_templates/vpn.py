@@ -14,8 +14,9 @@ vpn_management = FeatureTemplateInformation(
     resource_group="global",
     template_type="cisco_vpn",
     device_type=[""],
+    config_type="template",
     version="15.0.0",
-    template_definiton='{"vpn-id":{"vipObjectType":"object","vipType":"constant","vipValue":512},'
+    template_definition='{"vpn-id":{"vipObjectType":"object","vipType":"constant","vipValue":512},'
     '"name":{"vipObjectType":"object","vipType":"constant","vipValue":"Management VPN"},'
     '"ecmp-hash-key":{"layer4":{"vipObjectType":"object","vipType":"ignore","vipValue":"false"}},'
     '"host":{"vipType":"ignore","vipValue":[],"vipObjectType":"tree","vipPrimaryKey":["hostname"]}}',
@@ -32,8 +33,9 @@ vpn_transport = FeatureTemplateInformation(
     resource_group="global",
     template_type="cisco_vpn",
     device_type=[""],
+    config_type="template",
     version="15.0.0",
-    template_definiton='{"vpn-id":{"vipObjectType":"object","vipType":"constant","vipValue":0},'
+    template_definition='{"vpn-id":{"vipObjectType":"object","vipType":"constant","vipValue":0},'
     '"name":{"vipObjectType":"object","vipType":"constant","vipValue":"Transport VPN"},'
     '"ecmp-hash-key":{"layer4":{"vipObjectType":"object","vipType":"ignore","vipValue":"false"}},'
     '"host":{"vipType":"ignore","vipValue":[],"vipObjectType":"tree","vipPrimaryKey":["hostname"]}}',
@@ -50,8 +52,9 @@ vpn_service = FeatureTemplateInformation(
     resource_group="global",
     template_type="cisco_vpn",
     device_type=[""],
+    config_type="template",
     version="15.0.0",
-    template_definiton='{"vpn-id":{"vipValue":1,"vipObjectType":"object",'
+    template_definition='{"vpn-id":{"vipValue":1,"vipObjectType":"object",'
     '"vipType":"constant","vipVariableName":""},"name":{"vipValue":"","vipObjectType":'
     '"object","vipType":"ignore"},"dns":{"vipValue":[],"vipObjectType":"tree",'
     '"vipType":"ignore","vipPrimaryKey":["dns-addr"]},"dns-ipv6":{"vipValue":[],'

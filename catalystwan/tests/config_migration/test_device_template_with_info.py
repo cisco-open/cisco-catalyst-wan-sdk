@@ -16,40 +16,40 @@ class TestDeviceTemplate(unittest.TestCase):
             device_type="None",
             security_policy_id="None",
             policy_id="None",
-            generalTemplates=[
+            general_templates=[
                 # Flat - stays flat
-                GeneralTemplate(name="1level", templateId="1", templateType="cedge_aaa", subTemplates=[]),
+                GeneralTemplate(name="1level", template_id="1", template_type="cedge_aaa", sub_templates=[]),
                 # No relation between system and logging in the UX2 - flatten them
                 GeneralTemplate(
                     name="1level",
-                    templateId="2",
-                    templateType="cisco_system",
-                    subTemplates=[
+                    template_id="2",
+                    template_type="cisco_system",
+                    sub_templates=[
                         GeneralTemplate(
                             name="2level",
-                            templateId="3",
-                            templateType="cisco_logging",
-                            subTemplates=[],
+                            template_id="3",
+                            template_type="cisco_logging",
+                            sub_templates=[],
                         ),
                     ],
                 ),
                 # Cisco VPN - keep the structure
                 GeneralTemplate(
                     name="1level",
-                    templateId="4",
-                    templateType="cisco_vpn",
-                    subTemplates=[
+                    template_id="4",
+                    template_type="cisco_vpn",
+                    sub_templates=[
                         GeneralTemplate(
                             name="2level",
-                            templateId="5",
-                            templateType="cisco_vpn_interface",
-                            subTemplates=[],
+                            template_id="5",
+                            template_type="cisco_vpn_interface",
+                            sub_templates=[],
                         ),
                         GeneralTemplate(
                             name="2level",
-                            templateId="6",
-                            templateType="cedge_multicast",
-                            subTemplates=[],
+                            template_id="6",
+                            template_type="cedge_multicast",
+                            sub_templates=[],
                         ),
                     ],
                 ),
@@ -61,30 +61,30 @@ class TestDeviceTemplate(unittest.TestCase):
         self.assertEqual(
             self.device_template.get_flattened_general_templates(),
             [
-                GeneralTemplate(name="1level", templateId="1", templateType="cedge_aaa", subTemplates=[]),
+                GeneralTemplate(name="1level", template_id="1", template_type="cedge_aaa", sub_templates=[]),
                 GeneralTemplate(
                     name="2level",
-                    templateId="3",
-                    templateType="cisco_logging",
-                    subTemplates=[],
+                    template_id="3",
+                    template_type="cisco_logging",
+                    sub_templates=[],
                 ),
-                GeneralTemplate(name="1level", templateId="2", templateType="cisco_system", subTemplates=[]),
+                GeneralTemplate(name="1level", template_id="2", template_type="cisco_system", sub_templates=[]),
                 GeneralTemplate(
                     name="1level",
-                    templateId="4",
-                    templateType="cisco_vpn",
-                    subTemplates=[
+                    template_id="4",
+                    template_type="cisco_vpn",
+                    sub_templates=[
                         GeneralTemplate(
                             name="2level",
-                            templateId="5",
-                            templateType="cisco_vpn_interface",
-                            subTemplates=[],
+                            template_id="5",
+                            template_type="cisco_vpn_interface",
+                            sub_templates=[],
                         ),
                         GeneralTemplate(
                             name="2level",
-                            templateId="6",
-                            templateType="cedge_multicast",
-                            subTemplates=[],
+                            template_id="6",
+                            template_type="cedge_multicast",
+                            sub_templates=[],
                         ),
                     ],
                 ),

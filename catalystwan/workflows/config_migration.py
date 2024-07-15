@@ -300,34 +300,34 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
 
         for template in templates:
             # Those feature templates IDs are real UUIDs and are used to map to the feature profiles
-            if template.templateType in VPN_TEMPLATE_TYPES:
+            if template.template_type in VPN_TEMPLATE_TYPES:
                 copied_feature_templates = resolve_vpn_and_subtemplates_type(template, ux1)
                 used_feature_templates.update(copied_feature_templates)
             else:
-                used_feature_templates.add(template.templateId)
-            template_uuid = UUID(template.templateId)
-            if template.templateType in FEATURE_PROFILE_SYSTEM:
+                used_feature_templates.add(template.template_id)
+            template_uuid = UUID(template.template_id)
+            if template.template_type in FEATURE_PROFILE_SYSTEM:
                 transformed_fp_system.header.subelements.add(template_uuid)
-            elif template.templateType in FEATURE_PROFILE_OTHER:
+            elif template.template_type in FEATURE_PROFILE_OTHER:
                 transformed_fp_other.header.subelements.add(template_uuid)
-            elif template.templateType in FEATURE_PROFILE_SERVICE:
+            elif template.template_type in FEATURE_PROFILE_SERVICE:
                 transformed_fp_service.header.subelements.add(template_uuid)
-            elif template.templateType in FEATURE_PROFILE_TRANSPORT:
+            elif template.template_type in FEATURE_PROFILE_TRANSPORT:
                 transformed_fp_transport_and_management.header.subelements.add(template_uuid)
-            elif template.templateType in FEATURE_PROFILE_CLI:
+            elif template.template_type in FEATURE_PROFILE_CLI:
                 transformed_fp_cli.header.subelements.add(template_uuid)
             # Map subtemplates
-            if len(template.subTemplates) > 0:
+            if len(template.sub_templates) > 0:
                 # Interfaces, BGP, OSPF, etc
-                for subtemplate_level_1 in template.subTemplates:
-                    used_feature_templates.add(subtemplate_level_1.templateId)
-                    subtemplates_mapping[template_uuid].add(UUID(subtemplate_level_1.templateId))
-                    if len(subtemplate_level_1.subTemplates) > 0:
+                for subtemplate_level_1 in template.sub_templates:
+                    used_feature_templates.add(subtemplate_level_1.template_id)
+                    subtemplates_mapping[template_uuid].add(UUID(subtemplate_level_1.template_id))
+                    if len(subtemplate_level_1.sub_templates) > 0:
                         # DHCPs, Trackers
-                        for subtemplate_level_2 in subtemplate_level_1.subTemplates:
-                            used_feature_templates.add(subtemplate_level_2.templateId)
-                            subtemplates_mapping[UUID(subtemplate_level_1.templateId)].add(
-                                UUID(subtemplate_level_2.templateId)
+                        for subtemplate_level_2 in subtemplate_level_1.sub_templates:
+                            used_feature_templates.add(subtemplate_level_2.template_id)
+                            subtemplates_mapping[UUID(subtemplate_level_1.template_id)].add(
+                                UUID(subtemplate_level_2.template_id)
                             )
         policy_id = dt.get_policy_uuid()
         transformed_cg = TransformedConfigGroup(

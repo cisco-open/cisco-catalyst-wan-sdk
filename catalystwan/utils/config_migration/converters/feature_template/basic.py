@@ -2,6 +2,7 @@ from copy import deepcopy
 from typing import Dict, Optional
 
 from catalystwan.api.configuration_groups.parcel import Global, OptionType, as_default, as_global
+from catalystwan.models.common import Timezone
 from catalystwan.models.configuration.feature_profile.sdwan.system import BasicParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.basic import (
     Clock,
@@ -11,7 +12,6 @@ from catalystwan.models.configuration.feature_profile.sdwan.system.basic import 
     Sms,
 )
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
-from catalystwan.utils.timezone import Timezone
 
 from .base import FTConverter
 

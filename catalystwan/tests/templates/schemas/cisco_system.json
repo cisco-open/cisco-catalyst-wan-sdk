@@ -1974,6 +1974,52 @@
             "objectType": "object"
         },
         {
+            "key": "site-type",
+            "description": "Site Type",
+            "details": "Configure site type",
+            "optionType": [
+                "constant",
+                "ignore",
+                "variable"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "enum",
+                "values": [
+                    {
+                        "key": "type-1",
+                        "value": "type-1"
+                    },
+                    {
+                        "key": "type-2",
+                        "value": "type-2"
+                    },
+                    {
+                        "key": "type-3",
+                        "value": "type-3"
+                    },
+                    {
+                        "key": "cloud",
+                        "value": "cloud"
+                    },
+                    {
+                        "key": "branch",
+                        "value": "branch"
+                    },
+                    {
+                        "key": "br",
+                        "value": "br"
+                    },
+                    {
+                        "key": "spoke",
+                        "value": "spoke"
+                    }
+                ]
+            },
+            "dataPath": [],
+            "objectType": "list"
+        },
+        {
             "key": "port-offset",
             "description": "Port Offset",
             "details": "Set the TLOC port offset when multiple devices are behind a NAT",
@@ -2795,6 +2841,78 @@
             "objectType": "list"
         },
         {
+            "key": "preference-auto",
+            "description": "Affinity Group Preference Auto",
+            "details": "Enable affinity preference auto flag",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "boolean",
+                "default": "false"
+            },
+            "dataPath": [
+                "affinity-group"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "affinity-per-vrf",
+            "description": "Affinity Group Number for VRFs",
+            "details": "Set Affinity per VRF",
+            "optionType": [
+                "constant",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "primaryKeys": [
+                "affinity-group-number"
+            ],
+            "children": [
+                {
+                    "key": "affinity-group-number",
+                    "description": "Affinity Group Number",
+                    "details": "Router affinity group number",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 1,
+                        "max": 63
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "vrf-range",
+                    "description": "VRFs",
+                    "details": "Range of VRFs",
+                    "optionType": [
+                        "constant",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 11
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                }
+            ],
+            "dataPath": [
+                "affinity-group"
+            ],
+            "objectType": "tree"
+        },
+        {
             "key": "transport-gateway",
             "description": "Transport Gateway",
             "details": "Enable transport gateway",
@@ -2849,6 +2967,130 @@
                 "type": "number",
                 "min": 1,
                 "max": 4294967295
+            },
+            "dataPath": [],
+            "objectType": "object"
+        },
+        {
+            "key": "enable-management-region",
+            "description": "Management Region",
+            "details": "Enable Management Region",
+            "optionType": [
+                "constant",
+                "ignore",
+                "variable"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "boolean",
+                "default": "false"
+            },
+            "dataPath": [],
+            "objectType": "object"
+        },
+        {
+            "key": "vrf",
+            "description": "VRF Name",
+            "details": "VRF Name for Management Region",
+            "optionType": [
+                "constant",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataPath": [
+                "management-region"
+            ],
+            "objectType": "tree",
+            "maxElements": 1,
+            "primaryKeys": [
+                "vrf-id"
+            ],
+            "children": [
+                {
+                    "key": "vrf-id",
+                    "description": "VRF ID",
+                    "details": "VRF ID for management region",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "number",
+                        "min": 0,
+                        "max": 65531
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "gateway-preference",
+                    "description": "List of affinity group preferences for VRF",
+                    "details": "List of affinity group preferences for VRF",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 1,
+                        "max": 63
+                    },
+                    "dataPath": [],
+                    "objectType": "list"
+                }
+            ]
+        },
+        {
+            "key": "management-gateway",
+            "description": "Management Gateway",
+            "details": "Enable Management Gateway",
+            "optionType": [
+                "constant",
+                "ignore",
+                "variable"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "boolean",
+                "default": "false"
+            },
+            "dataPath": [],
+            "objectType": "object"
+        },
+        {
+            "key": "epfr",
+            "description": "Enhanced App-Aware Routing",
+            "details": "Enable SLA Dampening and Enhanced App-Aware Routing.",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "enum",
+                "values": [
+                    {
+                        "key": "disabled",
+                        "value": "Disabled"
+                    },
+                    {
+                        "key": "aggressive",
+                        "value": "Aggressive"
+                    },
+                    {
+                        "key": "moderate",
+                        "value": "Moderate"
+                    },
+                    {
+                        "key": "conservative",
+                        "value": "Conservative"
+                    }
+                ],
+                "default": "disabled"
             },
             "dataPath": [],
             "objectType": "object"

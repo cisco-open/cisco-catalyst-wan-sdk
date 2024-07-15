@@ -1,0 +1,1096 @@
+
+{
+    "name": "aaa",
+    "xmlPath": [],
+    "xmlRootTag": "system",
+    "nameSpace": "http://viptela.com/system",
+    "fields": [
+        {
+            "key": "auth-order",
+            "description": "Authentication Order",
+            "details": "Set order to try different authentication methods",
+            "optionType": [
+                "constant",
+                "variable"
+            ],
+            "defaultOption": "constant",
+            "dataType": {
+                "type": "enum",
+                "values": [
+                    {
+                        "key": "local",
+                        "value": "Local"
+                    },
+                    {
+                        "key": "radius",
+                        "value": "Radius"
+                    },
+                    {
+                        "key": "tacacs",
+                        "value": "Tacacs"
+                    }
+                ]
+            },
+            "dataPath": [
+                "aaa"
+            ],
+            "objectType": "list"
+        },
+        {
+            "key": "radius-servers",
+            "description": "Radius Server List (Separated by commas)",
+            "details": "Designate radius servers for authentication and accounting",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "string"
+            },
+            "dataPath": [
+                "aaa"
+            ],
+            "objectType": "list"
+        },
+        {
+            "key": "auth-fallback",
+            "description": "Authentication Fallback",
+            "details": "Fall back if higher-priority authentication fails",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "boolean",
+                "default": "false"
+            },
+            "dataPath": [
+                "aaa"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "admin-auth-order",
+            "description": "Admin Authentication Order",
+            "details": "Authenticate admin user as per auth-order",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "boolean",
+                "default": "false"
+            },
+            "dataPath": [
+                "aaa"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "audit-disable",
+            "description": "Disable Audit Logs",
+            "details": "Disable audit logs",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "boolean",
+                "default": "false"
+            },
+            "dataPath": [
+                "aaa",
+                "logs"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "netconf-disable",
+            "description": "Disable Netconf Logs",
+            "details": "Disable Netconf logs",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "boolean",
+                "default": "false"
+            },
+            "dataPath": [
+                "aaa",
+                "logs"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "task",
+            "description": "Task Permissions",
+            "details": "Set the user group\u2019s tasks and task privileges",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataPath": [
+                "aaa"
+            ],
+            "objectType": "tree",
+            "primaryKeys": [
+                "name"
+            ],
+            "children": [
+                {
+                    "key": "name",
+                    "description": "Name",
+                    "details": "Select the name for the task",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "accept",
+                    "description": "Accept",
+                    "details": "List of oper-exec commands to allow",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataPath": [
+                        "oper-exec"
+                    ],
+                    "objectType": "tree",
+                    "primaryKeys": [
+                        "command"
+                    ],
+                    "children": [
+                        {
+                            "key": "command",
+                            "description": "CLI",
+                            "details": "Define oper-exec accept command",
+                            "optionType": [
+                                "constant",
+                                "variable"
+                            ],
+                            "defaultOption": "constant",
+                            "dataType": {
+                                "type": "string"
+                            },
+                            "dataPath": [],
+                            "objectType": "object"
+                        }
+                    ]
+                },
+                {
+                    "key": "deny",
+                    "description": "Deny",
+                    "details": "List of oper-exec commands to deny",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataPath": [
+                        "oper-exec"
+                    ],
+                    "objectType": "tree",
+                    "primaryKeys": [
+                        "command"
+                    ],
+                    "children": [
+                        {
+                            "key": "command",
+                            "description": "CLI",
+                            "details": "Define oper-exec deny command",
+                            "optionType": [
+                                "constant",
+                                "variable"
+                            ],
+                            "defaultOption": "constant",
+                            "dataType": {
+                                "type": "string"
+                            },
+                            "dataPath": [],
+                            "objectType": "object"
+                        }
+                    ]
+                },
+                {
+                    "key": "default-action",
+                    "description": "Default action",
+                    "details": "Define oper-exec default action",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "accept",
+                                "value": "accept"
+                            },
+                            {
+                                "key": "deny",
+                                "value": "deny"
+                            }
+                        ]
+                    },
+                    "dataPath": [
+                        "oper-exec"
+                    ],
+                    "objectType": "object"
+                },
+                {
+                    "key": "accept",
+                    "description": "Accept",
+                    "details": "List of config commands to allow",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataPath": [
+                        "config"
+                    ],
+                    "objectType": "tree",
+                    "primaryKeys": [
+                        "command"
+                    ],
+                    "children": [
+                        {
+                            "key": "command",
+                            "description": "CLI",
+                            "details": "Define configure accept command",
+                            "optionType": [
+                                "constant",
+                                "variable"
+                            ],
+                            "defaultOption": "constant",
+                            "dataType": {
+                                "type": "string"
+                            },
+                            "dataPath": [],
+                            "objectType": "object"
+                        }
+                    ]
+                },
+                {
+                    "key": "deny",
+                    "description": "Deny",
+                    "details": "List of config commands to deny",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataPath": [
+                        "config"
+                    ],
+                    "objectType": "tree",
+                    "primaryKeys": [
+                        "command"
+                    ],
+                    "children": [
+                        {
+                            "key": "command",
+                            "description": "CLI",
+                            "details": "Define config accept command",
+                            "optionType": [
+                                "constant",
+                                "variable"
+                            ],
+                            "defaultOption": "constant",
+                            "dataType": {
+                                "type": "string"
+                            },
+                            "dataPath": [],
+                            "objectType": "object"
+                        }
+                    ]
+                },
+                {
+                    "key": "default-action",
+                    "description": "Default action",
+                    "details": "Define config default action",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "enum",
+                        "values": [
+                            {
+                                "key": "accept",
+                                "value": "accept"
+                            },
+                            {
+                                "key": "deny",
+                                "value": "deny"
+                            }
+                        ]
+                    },
+                    "dataPath": [
+                        "config"
+                    ],
+                    "objectType": "object"
+                }
+            ]
+        },
+        {
+            "key": "accounting",
+            "description": "Enable/disable user accounting",
+            "details": "Enable/disable user accounting",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "boolean",
+                "default": "false"
+            },
+            "dataPath": [
+                "aaa"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "usergroup",
+            "description": "User Group Configuration",
+            "details": "Create groupings of users with the same authorization privileges",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataPath": [
+                "aaa"
+            ],
+            "objectType": "tree",
+            "primaryKeys": [
+                "name"
+            ],
+            "children": [
+                {
+                    "key": "name",
+                    "description": "Name",
+                    "details": "Set name of user group",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "task",
+                    "description": "Task Permissions",
+                    "details": "Set the user group\u2019s tasks and task privileges",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataPath": [],
+                    "objectType": "tree",
+                    "primaryKeys": [
+                        "mode"
+                    ],
+                    "children": [
+                        {
+                            "key": "mode",
+                            "description": "Mode",
+                            "details": "Select the task to set privileges for",
+                            "optionType": [
+                                "constant"
+                            ],
+                            "defaultOption": "constant",
+                            "dataType": {
+                                "type": "string"
+                            },
+                            "dataPath": [],
+                            "objectType": "object"
+                        },
+                        {
+                            "key": "permission",
+                            "description": "Permissions",
+                            "details": "Set read or write permission for the task",
+                            "optionType": [
+                                "constant",
+                                "variable",
+                                "ignore"
+                            ],
+                            "defaultOption": "constant",
+                            "dataType": {
+                                "type": "enum",
+                                "values": [
+                                    {
+                                        "key": "read",
+                                        "value": "read"
+                                    },
+                                    {
+                                        "key": "write",
+                                        "value": "write"
+                                    }
+                                ]
+                            },
+                            "dataPath": [],
+                            "objectType": "list"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "user",
+            "description": "User Configuration",
+            "details": "Create local login account",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataPath": [
+                "aaa"
+            ],
+            "objectType": "tree",
+            "primaryKeys": [
+                "name"
+            ],
+            "children": [
+                {
+                    "key": "name",
+                    "description": "Name",
+                    "details": "Set the username",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "password",
+                    "description": "Password",
+                    "details": "Set the user password",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "passphrase"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "secret",
+                    "description": "Password",
+                    "details": "Set the user scrypt password/hash",
+                    "optionType": [
+                        "constant"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "passphrase"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "description",
+                    "description": "Description",
+                    "details": "Add a description of the user",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "group",
+                    "description": "User Groups",
+                    "details": "Configure the groups that the user is part of",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "string"
+                    },
+                    "dataPath": [],
+                    "objectType": "list"
+                },
+                {
+                    "key": "pubkey-chain",
+                    "description": "SSH pubkey",
+                    "details": "List of public-keys per user",
+                    "maxElements": 10,
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataPath": [],
+                    "objectType": "tree",
+                    "primaryKeys": [
+                        "usertag"
+                    ],
+                    "children": [
+                        {
+                            "key": "usertag",
+                            "description": "key-type",
+                            "details": "ssh key-type",
+                            "optionType": [
+                                "constant"
+                            ],
+                            "defaultOption": "constant",
+                            "dataType": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                            },
+                            "dataPath": [],
+                            "objectType": "object"
+                        },
+                        {
+                            "key": "key-string",
+                            "description": "key-string",
+                            "details": "Public-key to be copied from client",
+                            "optionType": [
+                                "constant"
+                            ],
+                            "defaultOption": "constant",
+                            "dataType": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 1024
+                            },
+                            "dataPath": [],
+                            "objectType": "object"
+                        },
+                        {
+                            "key": "key-type",
+                            "description": "key-type",
+                            "details": "ssh key-type",
+                            "optionType": [
+                                "constant"
+                            ],
+                            "defaultOption": "constant",
+                            "dataType": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 32,
+                                "default": "ssh-rsa"
+                            },
+                            "dataPath": [],
+                            "objectType": "object"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "ciscotacro-user",
+            "description": "Cisco Tac Enable Read only",
+            "details": "Cisco Tac Enable Read only",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "boolean",
+                "default": "true"
+            },
+            "dataPath": [
+                "aaa"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "ciscotacrw-user",
+            "description": "Cisco Tac Enable Read and Write",
+            "details": "Cisco Tac Enable Read and Write",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "boolean",
+                "default": "true"
+            },
+            "dataPath": [
+                "aaa"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "timeout",
+            "description": "Timeout",
+            "details": "Configure how long to wait for replies from the TACACS server",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "number",
+                "min": 1,
+                "max": 1000,
+                "default": 5
+            },
+            "dataPath": [
+                "tacacs"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "authentication",
+            "description": "Authentication",
+            "details": "TACACS authentication type",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "enum",
+                "values": [
+                    {
+                        "key": "ascii",
+                        "value": "ASCII"
+                    },
+                    {
+                        "key": "pap",
+                        "value": "PAP"
+                    }
+                ],
+                "default": "pap"
+            },
+            "dataPath": [
+                "tacacs"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "server",
+            "description": "Server",
+            "details": "Configure the TACACS server",
+            "maxElements": 8,
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataPath": [
+                "tacacs"
+            ],
+            "objectType": "tree",
+            "primaryKeys": [
+                "address"
+            ],
+            "children": [
+                {
+                    "key": "address",
+                    "description": "Address",
+                    "details": "Set IP address of TACACS server",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "ip"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "auth-port",
+                    "description": "Authentication Port",
+                    "details": "Set port to use to connect to TACACS server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 0,
+                        "max": 65535,
+                        "default": 49
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "vpn",
+                    "description": "VPN ID",
+                    "details": "Set VPN in which TACACS server is located",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 0,
+                        "max": 65530,
+                        "default": 0
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "source-interface",
+                    "description": "Source Interface",
+                    "details": "Set interface to use to reach TACACS server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "key",
+                    "description": "Key",
+                    "details": "Set the password to access the TACACS server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string"
+                    },
+                    "dataPath": [],
+                    "objectType": "object",
+                    "objectStatus": "deprecated"
+                },
+                {
+                    "key": "secret-key",
+                    "description": "Secret Key",
+                    "details": "Set the AES encrypted key to access the TACACS server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "restrictedPassphrase",
+                        "minLength": 1,
+                        "maxLength": 128
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "priority",
+                    "description": "Priority",
+                    "details": "TACACS server priority <0..7>",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 0,
+                        "max": 7,
+                        "default": 0
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                }
+            ]
+        },
+        {
+            "key": "timeout",
+            "description": "Timeout",
+            "details": "Configure how long to wait for replies from the RADIUS server",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "number",
+                "min": 1,
+                "max": 1000,
+                "default": 5
+            },
+            "dataPath": [
+                "radius"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "retransmit",
+            "description": "Retransmit Count",
+            "details": "Configure how many times to contact each RADIUS server",
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataType": {
+                "type": "number",
+                "min": 1,
+                "max": 1000,
+                "default": 3
+            },
+            "dataPath": [
+                "radius"
+            ],
+            "objectType": "object"
+        },
+        {
+            "key": "server",
+            "description": "Server",
+            "details": "Configure the RADIUS server",
+            "maxElements": 8,
+            "optionType": [
+                "constant",
+                "variable",
+                "ignore"
+            ],
+            "defaultOption": "ignore",
+            "dataPath": [
+                "radius"
+            ],
+            "objectType": "tree",
+            "primaryKeys": [
+                "address"
+            ],
+            "children": [
+                {
+                    "key": "address",
+                    "description": "Address",
+                    "details": "Set IP address of RADIUS server",
+                    "optionType": [
+                        "constant",
+                        "variable"
+                    ],
+                    "defaultOption": "constant",
+                    "dataType": {
+                        "type": "ip"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "tag",
+                    "description": "Tag",
+                    "details": "Reference tag/name for the server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string",
+                        "minLength": 4,
+                        "maxLength": 16
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "auth-port",
+                    "description": "Authentication Port",
+                    "details": "Set port to use to connect to RADIUS server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 0,
+                        "max": 65535,
+                        "default": 1812
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "acct-port",
+                    "description": "Accounting Port",
+                    "details": "Set port to use to connect to RADIUS server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 0,
+                        "max": 65535,
+                        "default": 1813
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "vpn",
+                    "description": "VPN ID",
+                    "details": "Set VPN in which RADIUS server is located",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 0,
+                        "max": 65530,
+                        "default": 0
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "source-interface",
+                    "description": "Source Interface",
+                    "details": "Set interface to use to reach RADIUS server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string"
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "key",
+                    "description": "Key",
+                    "details": "Set the password to access the RADIUS server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "string"
+                    },
+                    "dataPath": [],
+                    "objectType": "object",
+                    "objectStatus": "deprecated"
+                },
+                {
+                    "key": "secret-key",
+                    "description": "Secret Key",
+                    "details": "Set the AES encrypted key to access the RADIUS server",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "restrictedPassphrase",
+                        "ngth": 1,
+                        "maxLength": 128
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                },
+                {
+                    "key": "priority",
+                    "description": "Priority",
+                    "details": "RADIUS server priority <0..7>",
+                    "optionType": [
+                        "constant",
+                        "variable",
+                        "ignore"
+                    ],
+                    "defaultOption": "ignore",
+                    "dataType": {
+                        "type": "number",
+                        "min": 0,
+                        "max": 7,
+                        "default": 0
+                    },
+                    "dataPath": [],
+                    "objectType": "object"
+                }
+            ]
+        }
+    ]
+}
