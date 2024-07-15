@@ -554,6 +554,7 @@ class PolicyConvertContext:
     zone_based_firewall_residues: Dict[UUID, List[ZoneBasedFWPolicyEntry]] = field(default_factory=dict)
     security_policy_residues: Dict[UUID, SecurityPolicyResidues] = field(default_factory=dict)
     qos_map_residues: Dict[UUID, List[QoSMapResidues]] = field(default_factory=dict)
+    as_path_list_num_mapping: Dict[str, int] = field(default_factory=dict)
 
     def get_vpn_id_to_vpn_name_map(self) -> Dict[Union[str, int], List[str]]:
         vpn_map: Dict[Union[str, int], List[str]] = {}
@@ -561,6 +562,14 @@ class PolicyConvertContext:
             vpn_map[v] = vpn_map.get(v, [])
             vpn_map[v].append(k)
         return vpn_map
+
+    def generate_as_path_list_num_from_name(self, name: str) -> int:
+        """The UX1 and UX2 intersection in AS Path list name and ID but only for the vEdge router (number 1 to 500).
+        If there is number we can insert the value in as_path_list_num field otherwise we will
+        generate the value and keep track of it in the context."""
+        number = len(self.as_path_list_num_mapping) + 1
+        self.as_path_list_num_mapping[name] = number
+        return number
 
     @staticmethod
     def from_configs(

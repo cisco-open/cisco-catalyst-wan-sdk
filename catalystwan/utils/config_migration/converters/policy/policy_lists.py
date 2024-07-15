@@ -4,6 +4,7 @@ from typing import Any, Callable, Dict, List, Mapping, Type, TypeVar, cast
 
 from pydantic import ValidationError
 
+from catalystwan.api.configuration_groups.parcel import as_global
 from catalystwan.models.common import int_range_serializer, int_range_str_validator
 from catalystwan.models.configuration.config_migration import ConvertResult, PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import (
@@ -92,11 +93,33 @@ def app_list(in_: AppList, context) -> ConvertResult[ApplicationListParcel]:
     return ConvertResult[ApplicationListParcel](output=out, status="complete")
 
 
-def as_path(in_: ASPathList, context) -> ConvertResult[AsPathParcel]:
-    out = AsPathParcel(**_get_parcel_name_desc(in_))
+def as_path(in_: ASPathList, context: PolicyConvertContext) -> ConvertResult[AsPathParcel]:
+    """There is a mismatch between UX1 and UX2 models:
+    UX1:
+    - AS Path List Name (Alphanumeric value for vEdge, or number from 1 to 500 for ISR Edge router)
+    - AS Path list
+
+    UX2:
+    - Parcel name
+    - Parcel description
+    - AS Path List ID (Number from 1 to 500)
+    - AS Path list
+
+    The UX1 and UX2 intersection in AS Path list name and ID but only for the vEdge router (number 1 to 500).
+    If there is number we can insert the value in as_path_list_num field otherwise we will
+    generate the value and keep track of it in the context.
+    """
+    result = ConvertResult[AsPathParcel](output=None)
+    if in_.name.isdigit():
+        as_path_list_num = int(in_.name)
+    else:
+        as_path_list_num = context.generate_as_path_list_num_from_name(in_.name)
+        result.update_status("partial", f"Mapped AS Path List Name: '{in_.name}' to ID: '{as_path_list_num}'")
+    out = AsPathParcel(**_get_parcel_name_desc(in_), as_path_list_num=as_global(as_path_list_num))
     for entry in in_.entries:
         out.add_as_path(entry.as_path)
-    return ConvertResult[AsPathParcel](output=out, status="complete")
+    result.output = out
+    return result
 
 
 def class_map(in_: ClassMapList, context) -> ConvertResult[FowardingClassParcel]:
@@ -388,7 +411,7 @@ Output = ConvertResult[OPL]
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     AppProbeClassList: app_probe,
     AppList: app_list,
-    #  ASPathList: as_path,
+    ASPathList: as_path,
     ClassMapList: class_map,
     ColorList: color,
     CommunityList: community,
