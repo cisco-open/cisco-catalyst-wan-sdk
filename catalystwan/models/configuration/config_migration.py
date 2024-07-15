@@ -69,6 +69,7 @@ class VersionInfo(BaseModel):
 class DeviceTemplateWithInfo(DeviceTemplate):
     model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
     template_id: str
+    factory_default: bool
     devices_attached: int
 
     @staticmethod
@@ -76,6 +77,7 @@ class DeviceTemplateWithInfo(DeviceTemplate):
         info_dict = template.model_dump()
         return DeviceTemplateWithInfo(
             template_id=info.id,
+            factory_default=info.factory_default,
             devices_attached=info.devices_attached,
             **info_dict,
         )
@@ -92,9 +94,9 @@ class DeviceTemplateWithInfo(DeviceTemplate):
         """
         result = []
         for template in self.general_templates:
-            subtemplates = template.sub_templates
-            if subtemplates and template.template_type not in ["cisco_vpn", "vpn-vedge", "cellular-cedge-controller"]:
-                template.sub_templates = []
+            subtemplates = template.subTemplates
+            if subtemplates and template.templateType not in ["cisco_vpn", "vpn-vedge", "cellular-cedge-controller"]:
+                template.subTemplates = []
                 for subtemplate in subtemplates:
                     result.append(subtemplate)
             result.append(template)

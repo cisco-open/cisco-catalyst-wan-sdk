@@ -9,6 +9,7 @@ from ciscoconfparse import CiscoConfParse  # type: ignore
 from catalystwan.api.templates.cli_template import CLITemplate
 from catalystwan.dataclasses import Device
 from catalystwan.exceptions import TemplateTypeError
+from catalystwan.utils.device_model import DeviceModel
 
 
 class TestCLITemplate(unittest.TestCase):
@@ -39,7 +40,7 @@ class TestCLITemplate(unittest.TestCase):
         # Arrange
         mock_session.get_json.return_value = {"configType": "file", "templateConfiguration": self.config}
         # Act
-        temp = CLITemplate(template_name="test", template_description="test", device_model="vedge-cloud")
+        temp = CLITemplate(template_name="test", template_description="test", device_model=DeviceModel.VEDGE)
         answer = temp.load(session=mock_session, id="temp_id")
         # Assert
         self.assertEqual(answer.ioscfg, self.template.ioscfg)
@@ -53,7 +54,7 @@ class TestCLITemplate(unittest.TestCase):
             "templateConfiguration": self.config,
         }
         # Act
-        temp = CLITemplate(template_name="test", template_description="test", device_model="vedge-cloud")
+        temp = CLITemplate(template_name="test", template_description="test", device_model=DeviceModel.VEDGE)
 
         def answer():
             return temp.load(session=mock_session, id="temp_id")
@@ -78,7 +79,7 @@ class TestCLITemplate(unittest.TestCase):
             model="vedge-cloud",
         )
         # Act
-        temp = CLITemplate(template_name="test", template_description="test", device_model="vedge-cloud")
+        temp = CLITemplate(template_name="test", template_description="test", device_model=DeviceModel.VEDGE)
         answer = temp.load_running(session=mock_session, device=device)
         # Assert
         self.assertEqual(answer.ioscfg, self.template.ioscfg)
@@ -86,7 +87,7 @@ class TestCLITemplate(unittest.TestCase):
     def test_generate_payload(self):
         # Arrange
         template = CLITemplate(
-            template_name="test", template_description="test", device_model="vedge-cloud", config=self.template
+            template_name="test", template_description="test", device_model=DeviceModel.VEDGE, config=self.template
         )
         # Act
         answer = template.generate_payload()
@@ -125,7 +126,7 @@ class TestCLITemplate(unittest.TestCase):
         template = CLITemplate(
             template_name="test",
             template_description="test",
-            device_model="vedge-C8000V",
+            device_model=DeviceModel.VEDGE_C8000V,
             config=self.template,
         )
         # Act
@@ -173,7 +174,7 @@ class TestCLITemplate(unittest.TestCase):
         )
         config = CiscoConfParse(templateConfiguration.splitlines())
         # Act
-        template = CLITemplate(template_name="test", template_description="test", device_model="vedge-cloud")
+        template = CLITemplate(template_name="test", template_description="test", device_model=DeviceModel.VEDGE)
         result = template.update(session=mock_session, id="temp_id", config=config)
         # Assert
         self.assertTrue(result)
@@ -190,7 +191,7 @@ class TestCLITemplate(unittest.TestCase):
             "        system-ip               192.168.1.26\n"
         )
         config = CiscoConfParse(templateConfiguration.splitlines())
-        template = CLITemplate(template_name="test", template_description="test", device_model="vedge-cloud")
+        template = CLITemplate(template_name="test", template_description="test", device_model=DeviceModel.VEDGE)
 
         # Act
         with self.assertRaises(HTTPError):
@@ -212,7 +213,7 @@ class TestCLITemplate(unittest.TestCase):
         config2 = CiscoConfParse(templateConfiguration2.splitlines())
         # Act
         result = CLITemplate(
-            template_name="test", template_description="test", device_model="vedge-cloud"
+            template_name="test", template_description="test", device_model=DeviceModel.VEDGE
         ).compare_template(config1, config2)
         # Assert
         self.assertEqual(result, "")

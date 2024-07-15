@@ -1,7 +1,8 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
+from enum import Enum
 from pathlib import Path
-from typing import ClassVar, List, Literal, Optional
+from typing import ClassVar, List, Optional
 
 from pydantic import ConfigDict, Field
 
@@ -16,106 +17,95 @@ DEFAULT_OMP_SENDPATH_LIMIT = 4
 DEFAULT_OMP_ECMP_LIMIT = 4
 
 
-IPv4AdvertiseProtocol = Literal["bgp", "ospf", "ospfv3", "connected", "static", "eigrp", "lisp", "isis"]
-IPv6AdvertiseProtocol = Literal["bgp", "ospf", "connected", "static", "eigrp", "lisp", "isis"]
-TransportGateway = Literal["prefer", "ecmp-with-direct-path"]
-SiteTypes = Literal["type-1", "type-2", "type-3", "cloud", "branch", "br", "spoke"]
-Route = Literal["external"]
+class IPv4AdvertiseProtocol(str, Enum):
+    BGP = "bgp"
+    OSPF = "ospf"
+    OSPFV3 = "ospfv3"
+    CONNECTED = "connected"
+    STATIC = "static"
+    EIGRP = "eigrp"
+    LISP = "lisp"
+    ISIS = "isis"
+
+
+class Route(str, Enum):
+    EXTERNAL = "external"
 
 
 class IPv4Advertise(FeatureTemplateValidator):
-    protocol: IPv4AdvertiseProtocol = Field(description="The IPv4 routing protocol whose routes are to be advertised.")
-    route: Optional[Route] = Field(
-        default=None,
-        description="The type of IPv4 routes to be advertised. For example, 'external' for external routes.",
-    )
+    protocol: IPv4AdvertiseProtocol
+    route: Optional[Route] = None
+
+
+class IPv6AdvertiseProtocol(str, Enum):
+    BGP = "bgp"
+    OSPF = "ospf"
+    CONNECTED = "connected"
+    STATIC = "static"
+    EIGRP = "eigrp"
+    LISP = "lisp"
+    ISIS = "isis"
 
 
 class IPv6Advertise(FeatureTemplateValidator):
-    protocol: IPv6AdvertiseProtocol = Field(description="The IPv6 routing protocol whose routes are to be advertised.")
+    protocol: IPv6AdvertiseProtocol
+
+
+class TransportGateway(str, Enum):
+    PREFER = "prefer"
+    ECMP_WITH_DIRECT_PATH = "ecmp-with-direct-path"
+
+
+class SiteTypes(str, Enum):
+    TYPE_1 = "type-1"
+    TYPE_2 = "type-2"
+    TYPE_3 = "type-3"
+    CLOUD = "cloud"
+    BRANCH = "branch"
+    BR = "br"
+    SPOKE = "spoke"
 
 
 class CiscoOMPModel(FeatureTemplate):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-    _docs_description: str = "Configuration settings for the Cisco Overlay Management Protocol (OMP) feature template."
 
-    graceful_restart: Optional[BoolStr] = Field(
-        default=True,
-        description="Enable or disable graceful restart for OMP.",
-        json_schema_extra={"vmanage_key": "graceful-restart"},
-    )
-    overlay_as: Optional[int] = Field(
-        default=None,
-        description="The autonomous system number used for the overlay.",
-        json_schema_extra={"vmanage_key": "overlay-as"},
-    )
+    graceful_restart: Optional[BoolStr] = Field(default=True, json_schema_extra={"vmanage_key": "graceful-restart"})
+    overlay_as: Optional[int] = Field(default=None, json_schema_extra={"vmanage_key": "overlay-as"})
     send_path_limit: Optional[int] = Field(
-        default=DEFAULT_OMP_SENDPATH_LIMIT,
-        ge=1,
-        le=32,
-        description="The maximum number of paths that can be sent for each prefix.",
-        json_schema_extra={"vmanage_key": "send-path-limit"},
+        DEFAULT_OMP_SENDPATH_LIMIT, json_schema_extra={"vmanage_key": "send-path-limit"}
     )
-    ecmp_limit: Optional[int] = Field(
-        default=DEFAULT_OMP_ECMP_LIMIT,
-        description="The maximum number of equal-cost multi-path routes.",
-        json_schema_extra={"vmanage_key": "ecmp-limit"},
-    )
-    shutdown: Optional[BoolStr] = Field(default=None, description="Enable or disable the shutdown of OMP.")
+    ecmp_limit: Optional[int] = Field(DEFAULT_OMP_ECMP_LIMIT, json_schema_extra={"vmanage_key": "ecmp-limit"})
+    shutdown: Optional[BoolStr] = None
     omp_admin_distance_ipv4: Optional[int] = Field(
-        default=None,
-        description="The administrative distance for IPv4 routes learned via OMP.",
-        json_schema_extra={"vmanage_key": "omp-admin-distance-ipv4"},
+        default=None, json_schema_extra={"vmanage_key": "omp-admin-distance-ipv4"}
     )
     omp_admin_distance_ipv6: Optional[int] = Field(
-        default=None,
-        description="The administrative distance for IPv6 routes learned via OMP.",
-        json_schema_extra={"vmanage_key": "omp-admin-distance-ipv6"},
+        default=None, json_schema_extra={"vmanage_key": "omp-admin-distance-ipv6"}
     )
     advertisement_interval: Optional[int] = Field(
-        default=DEFAULT_OMP_ADVERTISEMENT_INTERVAL,
-        description="The interval between sending unsolicited OMP route advertisements.",
+        DEFAULT_OMP_ADVERTISEMENT_INTERVAL,
         json_schema_extra={"vmanage_key": "advertisement-interval", "data_path": ["timers"]},
     )
     graceful_restart_timer: Optional[int] = Field(
-        default=DEFAULT_OMP_GRACEFUL_RESTART_TIMER,
-        description="The timer for graceful restart, specifying the period during which peerings are preserved.",
+        DEFAULT_OMP_GRACEFUL_RESTART_TIMER,
         json_schema_extra={"vmanage_key": "graceful-restart-timer", "data_path": ["timers"]},
     )
     eor_timer: Optional[int] = Field(
-        default=DEFAULT_OMP_EOR_TIMER,
-        description="End-of-RIB (EOR) timer which indicates stability of the route table.",
-        json_schema_extra={"vmanage_key": "eor-timer", "data_path": ["timers"]},
+        DEFAULT_OMP_EOR_TIMER, json_schema_extra={"vmanage_key": "eor-timer", "data_path": ["timers"]}
     )
-    holdtime: Optional[int] = Field(
-        default=DEFAULT_OMP_HOLDTIME,
-        description="The amount of time that the routes are preserved while the peer is unreachable.",
-        json_schema_extra={"data_path": ["timers"]},
-    )
-    advertise: Optional[List[IPv4Advertise]] = Field(default=None, description="A list of IPv4 advertise rules.")
+    holdtime: Optional[int] = Field(DEFAULT_OMP_HOLDTIME, json_schema_extra={"data_path": ["timers"]})
+    advertise: Optional[List[IPv4Advertise]] = None
     ipv6_advertise: Optional[List[IPv6Advertise]] = Field(
-        default=None, description="A list of IPv6 advertise rules.", json_schema_extra={"vmanage_key": "ipv6-advertise"}
+        default=None, json_schema_extra={"vmanage_key": "ipv6-advertise"}
     )
     ignore_region_path_length: Optional[BoolStr] = Field(
-        default=False,
-        description="Whether to ignore the region part of the path length for OMP routes.",
-        json_schema_extra={"vmanage_key": "ignore-region-path-length"},
+        default=False, json_schema_extra={"vmanage_key": "ignore-region-path-length"}
     )
     transport_gateway: Optional[TransportGateway] = Field(
-        default=None,
-        description="Specifies the preferred transport gateway selection strategy.",
-        json_schema_extra={"vmanage_key": "transport-gateway"},
+        default=None, json_schema_extra={"vmanage_key": "transport-gateway"}
     )
-    site_types: Optional[List[SiteTypes]] = Field(
-        default=None,
-        description="A list of site types that are allowed to participate in the overlay network.",
-        json_schema_extra={"vmanage_key": "site-types"},
-    )
-    auto_translate: Optional[BoolStr] = Field(
-        default=False,
-        description="Enable or disable automatic translation of network settings.",
-        json_schema_extra={"vmanage_key": "auto-translate"},
-    )
+    site_types: Optional[List[SiteTypes]] = Field(default=None, json_schema_extra={"vmanage_key": "site-types"})
+    auto_translate: Optional[BoolStr] = Field(default=False, json_schema_extra={"vmanage_key": "auto-translate"})
 
     payload_path: ClassVar[Path] = Path(__file__).parent / "DEPRECATED"
     type: ClassVar[str] = "cisco_omp"

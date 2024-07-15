@@ -1,5 +1,6 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
+from enum import Enum
 from pathlib import Path
 from typing import ClassVar, List, Optional
 
@@ -7,7 +8,6 @@ from pydantic import ConfigDict, Field
 
 from catalystwan.api.templates.bool_str import BoolStr
 from catalystwan.api.templates.feature_template import FeatureTemplate, FeatureTemplateValidator
-from catalystwan.models.common import TLOCColor
 
 DEFAULT_BFD_COLOR_MULTIPLIER = 7
 DEFAULT_BFD_DSCP = 48
@@ -16,46 +16,51 @@ DEFAULT_BFD_POLL_INTERVAL = 600000
 DEFAULT_BFD_MULTIPLIER = 6
 
 
-class Color(FeatureTemplateValidator):
-    model_config = ConfigDict(populate_by_name=True)
+class ColorType(str, Enum):
+    DEFAULT = "default"
+    MPLS = "mpls"
+    METRO_ETHERNET = "metro-ethernet"
+    BIZ_INTERNET = "biz-internet"
+    PUBLIC_INTERNET = "public-internet"
+    LTE = "lte"
+    THREEG = "3g"
+    RED = "red"
+    GREEN = "green"
+    BLUE = "blue"
+    GOLD = "gold"
+    SILVER = "silver"
+    BRONZE = "bronze"
+    CUSTOM1 = "custom1"
+    CUSTOM2 = "custom2"
+    CUSTOM3 = "custom3"
+    PRIVATE1 = "private1"
+    PRIVATE2 = "private2"
+    PRIVATE3 = "private3"
+    PRIVATE4 = "private4"
+    PRIVATE5 = "private5"
+    PRIVATE6 = "private6"
 
-    color: TLOCColor = Field(description="The color of the BFD session, representing various transport types")
+
+class Color(FeatureTemplateValidator):
+    color: ColorType
     hello_interval: Optional[int] = Field(
-        default=DEFAULT_BFD_HELLO_INTERVAL,
-        json_schema_extra={"vmanage_key": "hello-interval"},
-        description="The BFD hello interval in milliseconds",
+        DEFAULT_BFD_HELLO_INTERVAL, json_schema_extra={"vmanage_key": "hello-interval"}
     )
-    multiplier: Optional[int] = Field(
-        default=DEFAULT_BFD_COLOR_MULTIPLIER, description="The BFD multiplier for the color"
-    )
-    pmtu_discovery: Optional[BoolStr] = Field(
-        default=True,
-        json_schema_extra={"vmanage_key": "pmtu-discovery"},
-        description="Whether to enable Path MTU Discovery",
-    )
-    dscp: Optional[int] = Field(default=DEFAULT_BFD_DSCP, description="The DSCP value used for BFD packets")
+    multiplier: Optional[int] = DEFAULT_BFD_COLOR_MULTIPLIER
+    pmtu_discovery: Optional[BoolStr] = Field(default=True, json_schema_extra={"vmanage_key": "pmtu-discovery"})
+    dscp: Optional[int] = DEFAULT_BFD_DSCP
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class CiscoBFDModel(FeatureTemplate):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
-    _docs_description: str = "Cisco Bidirectional Forwarding Detection (BFD) configuration"
 
-    multiplier: Optional[int] = Field(
-        default=DEFAULT_BFD_MULTIPLIER,
-        json_schema_extra={"data_path": ["app-route"]},
-        description="The default BFD multiplier for all colors",
-    )
+    multiplier: Optional[int] = Field(DEFAULT_BFD_MULTIPLIER, json_schema_extra={"data_path": ["app-route"]})
     poll_interval: Optional[int] = Field(
-        default=DEFAULT_BFD_POLL_INTERVAL,
-        json_schema_extra={"vmanage_key": "poll-interval", "data_path": ["app-route"]},
-        description="The BFD poll interval in milliseconds",
+        DEFAULT_BFD_POLL_INTERVAL, json_schema_extra={"vmanage_key": "poll-interval", "data_path": ["app-route"]}
     )
-    default_dscp: Optional[int] = Field(
-        default=DEFAULT_BFD_DSCP,
-        json_schema_extra={"vmanage_key": "default-dscp"},
-        description="The default DSCP value for BFD packets",
-    )
-    color: Optional[List[Color]] = Field(default=None, description="List of color-specific BFD configurations")
+    default_dscp: Optional[int] = Field(DEFAULT_BFD_DSCP, json_schema_extra={"vmanage_key": "default-dscp"})
+    color: Optional[List[Color]] = None
 
     payload_path: ClassVar[Path] = Path(__file__).parent / "DEPRECATED"
     type: ClassVar[str] = "cisco_bfd"

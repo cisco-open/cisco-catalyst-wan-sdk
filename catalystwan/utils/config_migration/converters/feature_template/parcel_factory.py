@@ -133,16 +133,16 @@ def unsupported_type(template_type: str) -> ConvertResult[AnyParcel]:
     return ConvertResult(status="unsupported", output=None, info=[f"Template type {template_type} not supported"])
 
 
-def extract_template_values(template_definition: str) -> Dict[str, Any]:
+def extract_template_values(template_definiton: str) -> Dict[str, Any]:
     """Extracts the template values from the template definition and create easy to consume dictionary."""
-    template_definition_as_dict = json.loads(cast(str, template_definition))
+    template_definition_as_dict = json.loads(cast(str, template_definiton))
     template_values = find_template_values(template_definition_as_dict)
     template_values_normalized = template_values_normalization(template_values)
     return template_values_normalized
 
 
 def convert(converter: FTConverter, template: FeatureTemplateInformation) -> ConvertResult[AnyParcel]:
-    definition = template.template_definition
+    definition = template.template_definiton
     if definition is None:
         return ConvertResult(status="failed", output=None, info=["Template definition is empty"])
     template_values = extract_template_values(definition)

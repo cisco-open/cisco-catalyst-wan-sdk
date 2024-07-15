@@ -2,7 +2,7 @@
     "name": "cedge_aaa",
     "xmlPath": [],
     "xmlRootTag": "aaa",
-    "nameSpace": "http://viptela.com/cedge_aaa",
+    "nameSpace": "http: //viptela.com/cedge_aaa",
     "fields": [
         {
             "key": "authentication_group",

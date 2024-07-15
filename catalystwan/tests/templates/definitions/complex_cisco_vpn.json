@@ -1,6 +1,6 @@
 {
-    "templateName": "cisco_vpn_complex",
-    "templateDescription": "cisco_vpn_complex",
+    "templateName": "test_vpn_new",
+    "templateDescription": "NA",
     "templateType": "cisco_vpn",
     "deviceType": [
         "vedge-cloud"
@@ -91,7 +91,7 @@
                         "vipObjectType": "object",
                         "vipType": "constant",
                         "vipValue": "test_hostname"
-                    },
+                    },                
                     "priority-order": [
                         "hostname",
                         "ip"
@@ -245,11 +245,11 @@
                             "vipObjectType": "object",
                             "vipType": "constant",
                             "vipValue": "prefixv4"
-                        },
+                        },                    
                         "priority-order": [
                             "prefix",
                             "next-hop",
-                            "next-hop-with-track"
+                            "next-hop-with-track"                            
                         ],
                         "next-hop": {
                             "vipObjectType": "tree",
@@ -445,12 +445,7 @@
                                     "aggregate-only": {
                                         "vipObjectType": "object",
                                         "vipType": "constant",
-                                        "vipValue": "true"
-                                    },
-                                    "region": {
-                                        "vipObjectType": "object",
-                                        "vipType": "constant",
-                                        "vipValue": "access"
+                                        "vipValue": true
                                     }
                                 }
                             ],
@@ -499,12 +494,7 @@
                                     "aggregate-only": {
                                         "vipObjectType": "object",
                                         "vipType": "constant",
-                                        "vipValue": "false"
-                                    },
-                                    "region": {
-                                        "vipObjectType": "object",
-                                        "vipType": "constant",
-                                        "vipValue": "core"
+                                        "vipValue": false
                                     }
                                 }
                             ],
@@ -544,12 +534,7 @@
                                     "aggregate-only": {
                                         "vipObjectType": "object",
                                         "vipType": "constant",
-                                        "vipValue": "true"
-                                    },
-                                    "region": {
-                                        "vipObjectType": "object",
-                                        "vipType": "constant",
-                                        "vipValue": "access"
+                                        "vipValue": true
                                     }
                                 }
                             ],
@@ -589,12 +574,12 @@
                             "overload": {
                                 "vipObjectType": "node-only",
                                 "vipType": "constant",
-                                "vipValue": "false"
+                                "vipValue": false
                             },
                             "leak_from_global": {
                                 "vipObjectType": "object",
                                 "vipType": "constant",
-                                "vipValue": "true"
+                                "vipValue": true
                             },
                             "leak_from_global_protocol": {
                                 "vipObjectType": "object",
@@ -604,7 +589,7 @@
                             "leak_to_global": {
                                 "vipObjectType": "object",
                                 "vipType": "constant",
-                                "vipValue": "false"
+                                "vipValue": false
                             }
                         }
                     ],
@@ -743,7 +728,7 @@
                         "static-nat-direction": {
                             "vipObjectType": "object",
                             "vipType": "constant",
-                            "vipValue": "inside"
+                            "vipValue": "outside"
                         }
                     }
                 ],

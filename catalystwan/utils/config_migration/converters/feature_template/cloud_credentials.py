@@ -39,7 +39,7 @@ def parse_zscaler_credentials(template_values: dict):
 def create_cloud_credentials_from_templates(templates: List[FeatureTemplateInformation]) -> CloudCredentials:
     merged_credentials = {}
     for template in templates:
-        template_definition_as_dict = json.loads(cast(str, template.template_definition))
+        template_definition_as_dict = json.loads(cast(str, template.template_definiton))
         template_values = find_template_values(template_definition_as_dict)
         if template.name == "Cisco-Zscaler-Global-Credentials":
             merged_credentials.update(parse_zscaler_credentials(template_values))

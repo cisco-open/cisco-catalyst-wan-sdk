@@ -13,7 +13,7 @@ from requests.exceptions import HTTPError
 
 from catalystwan.dataclasses import Device
 from catalystwan.exceptions import TemplateTypeError
-from catalystwan.models.common import DeviceModel
+from catalystwan.utils.device_model import DeviceModel
 from catalystwan.utils.template_type import TemplateType
 
 logger = logging.getLogger(__name__)
@@ -62,31 +62,21 @@ class CLITemplate:
         logger.debug(f"Template loaded from {device.hostname}.")
         return self.config
 
-    def load_from_file(self, file: str) -> CiscoConfParse:
-        """Load CLI config from file.
-        Args:
-            file: The path of the file to be loaded.
-        Returns:
-            CiscoConfParse: Loaded template.
-        """
-        self.config = CiscoConfParse(file)
-        return self.config
-
     def generate_payload(self) -> dict:
         config_str = "\n".join(self.config.ioscfg)
         payload = {
             "templateName": self.template_name,
             "templateDescription": self.template_description,
-            "deviceType": self.device_model,
+            "deviceType": self.device_model.value,
             "templateConfiguration": config_str,
             "factoryDefault": False,
             "configType": "file",
         }
         if self.device_model not in [
-            "vedge",
-            "vsmart",
-            "vmanage",
-            "vedge-cloud",
+            DeviceModel.VEDGE,
+            DeviceModel.VSMART,
+            DeviceModel.VMANAGE,
+            DeviceModel.VBOND,
         ]:
             payload["cliType"] = "device"
             payload["draftMode"] = False
@@ -110,7 +100,7 @@ class CLITemplate:
             "templateId": id,
             "templateName": self.template_name,
             "templateDescription": self.template_description,
-            "deviceType": self.device_model,
+            "deviceType": self.device_model.value,
             "templateConfiguration": config_str,
             "factoryDefault": False,
             "configType": "file",

@@ -3,12 +3,12 @@
   "templateDescription": "{{ template_description }}",
   "deviceType": "{{ device_type }}",
   "deviceRole": "{{ device_role }}",
-  "configType": "{{ config_type }}",
+  "configType": "template",
   "factoryDefault": false,
   "policyId": "{{ policy_id }}",
   "featureTemplateUidRange": [],
-  "connectionPreferenceRequired": {{ connection_preference_required }},
-  "connectionPreference": {{ connection_preference }},
+  "connectionPreferenceRequired": true,
+  "connectionPreference": true,
   "generalTemplates": [
         {% for template in general_templates %}
 			{{ template | tojson }}

@@ -13,7 +13,7 @@ class TestFindTemplateValues(TestCaseBase):
         self.templates = self.session.api.templates._get_feature_templates(summary=False)
         # Act, Assert
         for template in self.templates:
-            definition = json.loads(template.template_definition)
+            definition = json.loads(template.template_definiton)
             with self.subTest(template_name=template.name):
                 parsed_values = find_template_values(definition)
                 self.assertFalse(

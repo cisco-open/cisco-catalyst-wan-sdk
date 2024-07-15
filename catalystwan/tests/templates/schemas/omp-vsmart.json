@@ -197,26 +197,6 @@
                 "outbound"
             ],
             "objectType": "object"
-        },
-        {
-            "key": "tloc-color",
-            "description": "Enable Filtering Route Updates Based on TLOC-Color",
-            "details": "Filter routes based on TLOC color",
-            "optionType": [
-                "constant",
-                "variable",
-                "ignore"
-            ],
-            "defaultOption": "ignore",
-            "dataType": {
-                "type": "boolean",
-                "default": "false"
-            },
-            "dataPath": [
-                "filter-route",
-                "outbound"
-            ],
-            "objectType": "object"
         }
     ]
 }
