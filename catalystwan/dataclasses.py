@@ -13,6 +13,7 @@ from catalystwan.utils.colors import PrintColors
 from catalystwan.utils.creation_tools import FIELD_NAME, asdict, convert_attributes
 from catalystwan.utils.personality import Personality
 from catalystwan.utils.reachability import Reachability
+from catalystwan.utils.template_type import TemplateType
 
 
 class DataclassBase:
@@ -251,6 +252,36 @@ class User(DataclassBase):
     resource_group: Optional[str] = field(default=None, metadata={FIELD_NAME: "resGroupName"})
 
 
+@define(kw_only=True)
+class TemplateInfo(DataclassBase):
+    last_updated_by: str = field(metadata={FIELD_NAME: "lastUpdatedBy"})
+    id: str = field(metadata={FIELD_NAME: "templateId"})
+    factory_default: bool = field(metadata={FIELD_NAME: "factoryDefault"})
+    name: str = field(metadata={FIELD_NAME: "templateName"})
+    devices_attached: int = field(metadata={FIELD_NAME: "devicesAttached"})
+    description: str = field(metadata={FIELD_NAME: "templateDescription"})
+    last_updated_on: dt.datetime = field(metadata={FIELD_NAME: "lastUpdatedOn"})
+    resource_group: Optional[str] = field(default=None, metadata={FIELD_NAME: "resourceGroup"})
+
+
+@define(kw_only=True)
+class FeatureTemplateInfo(TemplateInfo):
+    template_type: str = field(metadata={FIELD_NAME: "templateType"})
+    device_type: List[str] = field(metadata={FIELD_NAME: "deviceType"})
+    version: str = field(metadata={FIELD_NAME: "templateMinVersion"})
+    template_definiton: Optional[str] = field(default=None, metadata={FIELD_NAME: "templateDefinition"})
+
+
+@define(kw_only=True)
+class DeviceTemplateInfo(TemplateInfo):
+    device_type: str = field(metadata={FIELD_NAME: "deviceType"})
+    template_class: str = field(metadata={FIELD_NAME: "templateClass"})
+    config_type: TemplateType = field(converter=TemplateType, metadata={FIELD_NAME: "configType"})
+    template_attached: int = field(metadata={FIELD_NAME: "templateAttached"})
+    draft_mode: Optional[str] = field(default=None, metadata={FIELD_NAME: "draftMode"})
+    device_role: Optional[str] = field(default=None, metadata={FIELD_NAME: "deviceRole"})
+
+
 @define
 class Speedtest(DataclassBase):
     device_ip: str
@@ -341,6 +372,27 @@ class TierInfo(DataclassBase):
     tlocs: List[TLOC] = field(default=[])
     # New in 20.12 version
     nat_session_limit: Optional[int] = field(default=None, metadata={FIELD_NAME: "natSessionLimit"})
+
+
+@define(frozen=True)
+class FeatureTemplateInformation(DataclassBase):
+    """Endpoint: /dataservice/template/feature"""
+
+    id: str = field(metadata={FIELD_NAME: "templateId"})
+    name: str = field(metadata={FIELD_NAME: "templateName"})
+    description: str = field(metadata={FIELD_NAME: "templateDescription"})
+    type: str = field(metadata={FIELD_NAME: "templateType"})  # TODO Enum
+    device_types: List[str] = field(metadata={FIELD_NAME: "deviceType"})  # TODO Enum
+    last_updated_by: str = field(metadata={FIELD_NAME: "lastUpdatedBy"})
+    last_updated_on: dt.datetime = field(metadata={FIELD_NAME: "lastUpdatedOn"})
+    factory_default: bool = field(metadata={FIELD_NAME: "factoryDefault"})
+    devices_attached: int = field(metadata={FIELD_NAME: "devicesAttached"})
+    attached_masters: int = field(metadata={FIELD_NAME: "attachedMastersCount"})
+    version: str = field(metadata={FIELD_NAME: "templateMinVersion"})
+    config_type: str = field(metadata={FIELD_NAME: "configType"})
+    created_by: str = field(metadata={FIELD_NAME: "createdBy"})
+    created_on: dt.datetime = field(metadata={FIELD_NAME: "createdOn"})
+    resource_group: str = field(metadata={FIELD_NAME: "resourceGroup"})
 
 
 @define

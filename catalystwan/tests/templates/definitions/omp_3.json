@@ -1,5 +1,5 @@
 {
-    "templateName": "omp_vsmart_3",
+    "templateName": "omp_3",
     "templateDescription": "advanced",
     "templateType": "omp-vsmart",
     "deviceType": [
@@ -51,20 +51,6 @@
                 "vipObjectType": "object",
                 "vipType": "constant",
                 "vipValue": 30
-            }
-        },
-        "filter-route": {
-            "outbound": {
-                "affinity-group-preference": {
-                    "vipObjectType": "object",
-                    "vipType": "constant",
-                    "vipValue": "false"
-                },
-                "tloc-color": {
-                    "vipObjectType": "object",
-                    "vipType": "constant",
-                    "vipValue": "false"
-                }
             }
         }
     }

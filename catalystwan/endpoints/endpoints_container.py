@@ -87,10 +87,8 @@ from catalystwan.endpoints.configuration_feature_profile import (
     ConfigurationFeatureProfile,
     SDRoutingConfigurationFeatureProfile,
 )
-from catalystwan.endpoints.configuration_general_template import ConfigurationGeneralTemplate
 from catalystwan.endpoints.configuration_group import ConfigurationGroup
 from catalystwan.endpoints.configuration_settings import ConfigurationSettings
-from catalystwan.endpoints.configuration_template_master import ConfigurationTemplateMaster
 from catalystwan.endpoints.misc import MiscellaneousEndpoints
 from catalystwan.endpoints.monitoring.device_details import MonitoringDeviceDetails
 from catalystwan.endpoints.monitoring.server_info import ServerInfo
@@ -229,5 +227,3 @@ class APIEndpointContainter:
         self.real_time_monitoring = RealTimeMonitoringContainer(session)
         self.certificate_management_device = CertificateManagementDevice(session)
         self.sig_security = SIGSecurity(session)
-        self.configuration_general_template = ConfigurationGeneralTemplate(session)
-        self.configuration_template_master = ConfigurationTemplateMaster(session)

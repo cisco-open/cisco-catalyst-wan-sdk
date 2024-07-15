@@ -15,9 +15,8 @@ interface_ethernet = FeatureTemplateInformation(
     resource_group="global",
     template_type="cisco_vpn_interface",
     device_type=["vedge-C1101-4PLTEPW"],
-    config_type="template",
     version="15.0.0",
-    template_definition='{"if-name":'
+    template_definiton='{"if-name":'
     '{"vipValue": "GigabitEthernet2", "vipObjectType": "object", "vipType":'
     '"constant", "vipVariableName": ""}, "description": {"vipValue": "", "vipObjectType":'
     '"object", "vipType": "ignore"}, "poe": {"vipValue": "", "vipObjectType": "object",'
@@ -74,9 +73,8 @@ interface_gre = FeatureTemplateInformation(
     resource_group="global",
     template_type="cisco_vpn_interface_gre",
     device_type=["vedge-C1101-4PLTEPW"],
-    config_type="template",
     version="15.0.0",
-    template_definition='{"if-name":{"vipObjectType":"object","vipType":"constant","vipValue":'
+    template_definiton='{"if-name":{"vipObjectType":"object","vipType":"constant","vipValue":'
     '"ImW32","vipVariableName":"vpn_if_name"},"description":{"vipObjectType":"object","vipType":'
     '"constant","vipValue":"AVDYACBJ","vipVariableName":"vpn_if_description"},"application":'
     '{"vipObjectType":"object","vipType":"constant","vipValue":"none","vipVariableName":'
@@ -115,9 +113,8 @@ interface_ipsec = FeatureTemplateInformation(
     resource_group="global",
     template_type="cisco_vpn_interface_ipsec",
     device_type=["vedge-C1101-4PLTEPW"],
-    config_type="template",
     version="15.0.0",
-    template_definition='{"if-name": {"vipObjectType":'
+    template_definiton='{"if-name": {"vipObjectType":'
     '"object", "vipType": "constant", "vipValue": "ipsec4",'
     '"vipVariableName": "vpn_if_name"}, "description": {"vipObjectType": "object", "vipType":'
     '"ignore", "vipVariableName": "vpn_if_description"}, "application": {"vipObjectType":'
@@ -168,9 +165,8 @@ interface_multilink = FeatureTemplateInformation(
     resource_group="global",
     template_type="vpn-cedge-interface-multilink-controller",
     device_type=["vedge-C1101-4PLTEPW"],
-    config_type="template",
     version="15.0.0",
-    template_definition='{"if-name": {"vipObjectType": "object", "vipType":'
+    template_definiton='{"if-name": {"vipObjectType": "object", "vipType":'
     '"constant", "vipValue": "Multilink1",'
     '"vipVariableName": "if_multilink_ctrl_if_name"}, "ppp": {"authentication": {"method":'
     '{"vipObjectType": "object", "vipType": "constant", "vipValue": "pap"}, "pap":'

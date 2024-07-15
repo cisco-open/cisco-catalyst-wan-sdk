@@ -1,5 +1,5 @@
 {
-    "templateName": "cisco_aaa",
+    "templateName": "iuo",
     "templateDescription": "zyx",
     "templateType": "cedge_aaa",
     "deviceType": [
@@ -8,30 +8,6 @@
     "factoryDefault": false,
     "templateMinVersion": "15.0.0",
     "templateDefinition": {
-        "authentication": {
-            "dot1x": {
-                "default": {
-                    "authentication_group": {
-                        "vipObjectType": "object",
-                        "vipType": "constant",
-                        "vipValue": "true"
-                    }
-                }
-            }
-        },
-        "accounting": {
-            "dot1x": {
-                "default": {
-                    "start-stop": {
-                        "accounting_group": {
-                            "vipObjectType": "object",
-                            "vipType": "constant",
-                            "vipValue": "false"
-                        }
-                    }
-                }
-            }
-        },
         "server-auth-order": {
             "vipObjectType": "object",
             "vipType": "constant",
@@ -61,6 +37,12 @@
                         "vipObjectType": "object",
                         "vipType": "constant",
                         "vipValue": "15"
+                    },
+                    "pubkey-chain": {
+                        "vipObjectType": "tree",
+                        "vipPrimaryKey": ["key-string"],
+                        "vipType": "ignore",
+                        "vipValue": []
                     }
                 },
                 {
@@ -82,7 +64,13 @@
                     "privilege": {
                         "vipObjectType": "object",
                         "vipType": "constant",
-                        "vipValue": "1"
+                        "vipValue": "14"
+                    },
+                    "pubkey-chain": {
+                        "vipObjectType": "tree",
+                        "vipPrimaryKey": ["key-string"],
+                        "vipType": "ignore",
+                        "vipValue": []
                     }
                 }
             ],
@@ -156,23 +144,6 @@
             "vipPrimaryKey": [
                 "group-name"
             ]
-        },
-        "radius-dynamic-author": {
-            "domain-stripping": {
-                "vipObjectType": "object",
-                "vipType": "constant",
-                "vipValue": "no"
-            },
-            "auth-type": {
-                "vipObjectType": "object",
-                "vipType": "constant",
-                "vipValue": "any"
-            },
-            "port": {
-                "vipObjectType": "object",
-                "vipType": "constant",
-                "vipValue": 1700
-            }
         }
     }
 }

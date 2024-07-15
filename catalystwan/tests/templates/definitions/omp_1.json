@@ -1,0 +1,11 @@
+{
+    "templateName": "omp_1",
+    "templateDescription": "default",
+    "templateType": "omp-vsmart",
+    "deviceType": [
+        "vedge-C8000V"
+    ],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {}
+}
