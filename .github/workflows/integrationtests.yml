@@ -1,5 +1,11 @@
 name: Run Integration Tests
 
+# How to decrypt a file
+# 1. Download the file from the artifacts
+# 2. Unzip: unzip encrypted-artifacts.zip
+# 3. Decrypt: gpg --decrypt --passphrase='***' archive.tar.gz.gpg > decrypted_archive.tar.gz && tar -zxvf decrypted_archive.tar.gz
+# 4. One-liner: unzip encrypted-artifacts.zip && gpg --decrypt --passphrase='***' archive.tar.gz.gpg > decrypted_archive.tar.gz && tar -zxvf decrypted_archive.tar.gz
+
 on:
   push:
     branches:
