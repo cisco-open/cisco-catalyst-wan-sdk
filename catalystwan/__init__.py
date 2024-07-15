@@ -76,7 +76,7 @@ __version__ = metadata.version(__package__)
 pkg_src_list = list_package_sources()
 
 
-if environ.get("catalystwan_devel") is not None:
+if environ.get("catalystwan_devel") is not None or environ.get("CATALYSTWAN_DEVEL") is not None:
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     catalystwan_logger = logging.getLogger(__name__)
     logging.config.fileConfig(LOGGING_CONF_DIR, disable_existing_loggers=False)
