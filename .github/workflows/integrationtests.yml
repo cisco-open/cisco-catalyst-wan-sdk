@@ -19,7 +19,7 @@ jobs:
       VMANAGE_PASSWORD: ${{ secrets.VMANAGE_PASSWORD }}
       VMANAGE_PORT: ${{ secrets.VMANAGE_PORT }}
       RUN_ID: ${{ github.event.pull_request.number }}
-      CATALYSTWAN_DEVEL: True
+      CATALYSTWAN_DEVEL: true
     defaults:
       run:
         shell: bash
