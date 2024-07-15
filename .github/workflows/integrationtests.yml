@@ -1,5 +1,5 @@
 on:
-  pull_request:
+  push:
     branches:
       - dev-uxmt
 
@@ -18,18 +18,14 @@ jobs:
       VMANAGE_USERNAME: ${{ secrets.VMANAGE_USERNAME }}
       VMANAGE_PASSWORD: ${{ secrets.VMANAGE_PASSWORD }}
       VMANAGE_PORT: ${{ secrets.VMANAGE_PORT }}
-      RUN_ID: ${{ github.event.pull_request.number }} 
+      RUN_ID: ${{ github.event.pull_request.number }}
+      CATALYSTWAN_DEVEL: True
     defaults:
       run:
         shell: bash
       
 
     steps:
-      - if: ${{ env.ACT }}
-        name: Hack container for local development
-        run: |
-            curl -fsSL https://deb.nodesource.com/setup_12.x | sudo -E bash -
-            sudo apt-get install -y nodejs
       - name: Check if in allowed time window
         run: |
           hour=$(TZ='America/Los_Angeles' date +%H)
@@ -54,10 +50,12 @@ jobs:
         run: poetry run pytest catalystwan/integration_tests
       - name: Encrypt artifacts
         run: |
-          find artifacts/ -type f -exec sh -c 'openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 -in "$1" -out "${1}.enc" -k "$PASSPHRASE" && echo "Encrypted: $1"' sh {} \;
+          mv catalystwan.log artifacts/catalystwan.log
+          tar -czf archive.tar.gz artifacts
+          gpg --batch --yes --passphrase="$PASSPHRASE" -c archive.tar.gz
       - name: Store encrypted artifacts
         uses: actions/upload-artifact@v3
         with:
           name: encrypted-artifacts
-          path: artifacts/**/*.enc
+          path: archive.tar.gz.gpg
           retention-days: 1
