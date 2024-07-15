@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: integration
     env:
-      PASSPHRASE: ${{ secrets.PASSPHRASE }}
+      PASSPHRASE: ${{ secrets.VMANAGE_PASSWORD }}
       VMANAGE_URL: ${{ secrets.VMANAGE_URL }}
       VMANAGE_USERNAME: ${{ secrets.VMANAGE_USERNAME }}
       VMANAGE_PASSWORD: ${{ secrets.VMANAGE_PASSWORD }}
@@ -50,11 +50,13 @@ jobs:
       - name: Run Tests
         run: poetry run pytest catalystwan/integration_tests
       - name: Encrypt artifacts
+        if: always()
         run: |
           mv catalystwan.log artifacts/catalystwan.log
           tar -czf archive.tar.gz artifacts
           gpg --batch --yes --passphrase="$PASSPHRASE" -c archive.tar.gz
       - name: Store encrypted artifacts
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: encrypted-artifacts
