@@ -3,6 +3,8 @@ on:
     branches:
       - dev-uxmt
 
+permissions: read-all
+
 # This ensures only one job runs at a time across all workflows
 concurrency: 
   group: integration_tests
@@ -18,7 +20,6 @@ jobs:
       VMANAGE_USERNAME: ${{ secrets.VMANAGE_USERNAME }}
       VMANAGE_PASSWORD: ${{ secrets.VMANAGE_PASSWORD }}
       VMANAGE_PORT: ${{ secrets.VMANAGE_PORT }}
-      RUN_ID: ${{ github.event.pull_request.number }}
       CATALYSTWAN_DEVEL: true
     defaults:
       run:

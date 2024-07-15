@@ -3,7 +3,7 @@ import logging
 import os
 import unittest
 from typing import Union
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from packaging.version import Version  # type: ignore
 
@@ -22,7 +22,7 @@ from catalystwan.session import ManagerSession, create_manager_session
 
 logger = logging.getLogger(__name__)
 
-RUN_ID: int = int(os.environ.get("RUN_ID", 0))
+RUN_ID: str = str(uuid4())[:4]
 
 
 def create_session() -> ManagerSession:
