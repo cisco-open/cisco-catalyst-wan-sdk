@@ -7,7 +7,12 @@ from pathlib import Path
 from typing import Callable, cast
 from uuid import UUID
 
-from catalystwan.models.configuration.config_migration import ConfigTransformResult, UX1Config, UX2ConfigPushResult
+from catalystwan.models.configuration.config_migration import (
+    ConfigTransformResult,
+    UX1CollectResult,
+    UX2ConfigPushResult,
+    UX2RollbackResult,
+)
 from catalystwan.models.configuration.feature_profile.parcel import Parcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
 from catalystwan.session import ManagerSession
@@ -41,9 +46,11 @@ class ConfigMigrationRunner:
         self.ux1_dump: Path = self.artifact_dir / Path("ux1.json")
         self.ux2_dump: Path = self.artifact_dir / Path("ux2.json")
         self.ux2_push_dump: Path = self.artifact_dir / Path("ux2-push-result.json")
-        self.ux1_schema_dump: Path = self.artifact_dir / Path("ux1-schema.json")
+        self.ux2_rollback_dump: Path = self.artifact_dir / Path("rollback.json")
+        self.ux1_schema_dump: Path = self.artifact_dir / Path("collect-result-schema.json")
         self.transform_schema_dump: Path = self.artifact_dir / Path("transform-result-schema.json")
         self.push_schema_dump: Path = self.artifact_dir / Path("push-result-schema.json")
+        self.rollback_schema_dump: Path = self.artifact_dir / Path("rollback-result-schema.json")
         self.dt_pattern: re.Pattern = re.compile(self.dt_filter)
 
     @staticmethod
@@ -74,8 +81,8 @@ class ConfigMigrationRunner:
     def collect_push_and_rollback(session: ManagerSession, filter: str = ".*") -> "ConfigMigrationRunner":
         return ConfigMigrationRunner(session=session, collect=True, push=True, rollback=True, dt_filter=filter)
 
-    def load_collected_config(self) -> UX1Config:
-        return UX1Config.model_validate_json(open(self.ux1_dump).read())
+    def load_collect_result(self) -> UX1CollectResult:
+        return UX1CollectResult.model_validate_json(open(self.ux1_dump).read())
 
     def load_transform_result(self) -> ConfigTransformResult:
         return ConfigTransformResult.model_validate_json(open(self.ux2_dump).read())
@@ -83,13 +90,18 @@ class ConfigMigrationRunner:
     def load_push_result(self) -> UX2ConfigPushResult:
         return UX2ConfigPushResult.model_validate_json(open(self.ux2_push_dump).read())
 
+    def load_rollback_result(self) -> UX2RollbackResult:
+        return UX2RollbackResult.model_validate_json(open(self.ux2_rollback_dump).read())
+
     def dump_schemas(self):
         with open(self.ux1_schema_dump, "w") as f:
-            f.write(dumps(UX1Config.model_json_schema(by_alias=True), indent=4))
+            f.write(dumps(UX1CollectResult.model_json_schema(by_alias=True), indent=4))
         with open(self.transform_schema_dump, "w") as f:
             f.write(dumps(ConfigTransformResult.model_json_schema(by_alias=True), indent=4))
         with open(self.push_schema_dump, "w") as f:
             f.write(dumps(UX2ConfigPushResult.model_json_schema(by_alias=True), indent=4))
+        with open(self.rollback_schema_dump, "w") as f:
+            f.write(dumps(UX2RollbackResult.model_json_schema(by_alias=True), indent=4))
 
     def clear_ux2(self) -> None:
         with self.session.login() as session:
@@ -163,13 +175,14 @@ class ConfigMigrationRunner:
         with self.session.login() as session:
             # collext and dump ux1 to json file
             if self.collect:
-                ux1 = collect_ux1_config(session, self.progress)
+                collect_result = collect_ux1_config(session, self.progress)
                 # ux1.templates = UX1Templates()
                 with open(self.ux1_dump, "w") as f:
-                    f.write(ux1.model_dump_json(exclude_none=True, by_alias=True, indent=4, warnings=False))
+                    f.write(collect_result.model_dump_json(exclude_none=True, by_alias=True, indent=4, warnings=False))
 
             # transform to ux2 and dump to json file
-            _ux1 = self.load_collected_config()
+            _collect_result = self.load_collect_result()
+            _ux1 = _collect_result.ux1_config
             _filtered_dts = [
                 dt for dt in _ux1.templates.device_templates if re.search(self.dt_pattern, dt.template_name) is not None
             ]
@@ -188,4 +201,6 @@ class ConfigMigrationRunner:
             # rollback
             if self.rollback:
                 ux2_push_result = self.load_push_result()
-                rollback_ux2_config(session, ux2_push_result.rollback, self.progress)
+                rollback_result = rollback_ux2_config(session, ux2_push_result.rollback, self.progress)
+                with open(self.ux2_rollback_dump, "w") as f:
+                    f.write(rollback_result.model_dump_json(exclude_none=True, by_alias=True, indent=4, warnings=False))

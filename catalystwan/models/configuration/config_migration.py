@@ -17,7 +17,7 @@ from catalystwan.api.builders.feature_profiles.report import (
 from catalystwan.api.templates.device_template.device_template import DeviceTemplate, GeneralTemplate
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
 from catalystwan.endpoints.configuration_settings import CloudCredentials
-from catalystwan.exceptions import ManagerHTTPError
+from catalystwan.exceptions import CatalystwanException, ManagerHTTPError
 from catalystwan.models.common import VpnId
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, list_types
@@ -43,9 +43,13 @@ from catalystwan.version import parse_api_version
 T = TypeVar("T", bound=AnyParcel)
 TO = TypeVar("TO")
 
+ConfigurationType = Literal["Template", "Policy"]
+
 ConvertOutputStatus = Literal["complete", "partial"]
 ConvertAbortStatus = Literal["failed", "unsupported"]
 ConvertStatus = Literal[ConvertOutputStatus, ConvertAbortStatus]
+
+RollbackFailedItemType = Literal["Config Group", "Topology Group", "Feature Profile", "Parcel"]
 
 camel = AliasGenerator(
     serialization_alias=to_camel,
@@ -137,6 +141,27 @@ class UX1Config(BaseModel):
     policies: UX1Policies = UX1Policies()
     templates: UX1Templates = UX1Templates()
     network_hierarchy: List[NodeInfo] = Field(default_factory=list)
+
+
+class ExcludedItem(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
+    element_type: str
+    reason: str
+    configuration_type: ConfigurationType
+    name: Optional[str] = None
+
+
+class UX1CollectResult(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
+    ux1_config: UX1Config = UX1Config()
+    excluded_items: List[ExcludedItem] = Field(default_factory=list)
+
+    def add_excluded_item(
+        self, type_: str, reason: str, configuration_type: ConfigurationType, name: Optional[str] = None
+    ) -> None:
+        self.excluded_items.append(
+            ExcludedItem(element_type=type_, reason=reason, configuration_type=configuration_type, name=name)
+        )
 
 
 class TransformHeader(BaseModel):
@@ -504,6 +529,23 @@ class UX2ConfigPushResult(BaseModel):
     model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
     rollback: UX2RollbackInfo = UX2RollbackInfo()
     report: UX2ConfigPushReport = UX2ConfigPushReport()
+
+
+class FailedRollbackItem(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
+    type: RollbackFailedItemType
+    id: UUID
+    exception_message: str
+
+
+class UX2RollbackResult(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
+    all_deleted: bool = True
+    failed_items: List[FailedRollbackItem] = Field(default_factory=list)
+
+    def add_failed_rollback_item(self, type_: RollbackFailedItemType, id_: UUID, e: CatalystwanException) -> None:
+        self.all_deleted = False
+        self.failed_items.append(FailedRollbackItem(type=type_, id=id_, exception_message=str(e)))
 
 
 @dataclass

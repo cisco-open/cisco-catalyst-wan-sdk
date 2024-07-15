@@ -1,8 +1,8 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-
 from catalystwan.integration_tests.base import TestCaseBase
 from catalystwan.utils.config_migration.runner import ConfigMigrationRunner
+from catalystwan.workflows.config_migration import DEVICE_TYPE_BLOCKLIST
 
 
 class TestMigrationFlow(TestCaseBase):
@@ -16,9 +16,10 @@ class TestMigrationFlow(TestCaseBase):
 
     def test_collect_artefact(self):
         # Arrange
-        ux1_config = self.runner.load_collected_config()
+        collect_result = self.runner.load_collect_result()
         # Act, Assert
-        assert ux1_config
+        for item in collect_result.excluded_items:
+            assert item.element_type in DEVICE_TYPE_BLOCKLIST
 
     def test_transform_artefact(self):
         # Arrange
@@ -31,6 +32,12 @@ class TestMigrationFlow(TestCaseBase):
         push_result = self.runner.load_push_result()
         # Act, Assert
         assert push_result.report.failed_push_parcels == list()
+
+    def test_rollback_artefact(self):
+        # Arrange
+        rollback_result = self.runner.load_rollback_result()
+        # Act, Assert
+        assert rollback_result.failed_items == list()
 
     @classmethod
     def tearDownClass(cls) -> None:

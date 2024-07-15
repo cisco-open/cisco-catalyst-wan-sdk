@@ -1,8 +1,8 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from typing import Callable
-from venv import logger
 
 from catalystwan.exceptions import CatalystwanException
-from catalystwan.models.configuration.config_migration import UX2RollbackInfo
+from catalystwan.models.configuration.config_migration import UX2RollbackInfo, UX2RollbackResult
 from catalystwan.models.configuration.feature_profile.parcel import find_type
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
 from catalystwan.session import ManagerSession
@@ -13,23 +13,21 @@ class UX2ConfigReverter:
     def __init__(self, session: ManagerSession) -> None:
         self._session = session
 
-    def rollback(self, rollback_info: UX2RollbackInfo, progress: Callable[[str, int, int], None]) -> bool:
-        all_deleted = True
+    def rollback(self, rollback_info: UX2RollbackInfo, progress: Callable[[str, int, int], None]) -> UX2RollbackResult:
+        rollback_result = UX2RollbackResult()
         for i, cg_id in enumerate(rollback_info.config_group_ids):
             try:
                 self._session.endpoints.configuration_group.delete_config_group(cg_id)
                 progress("Removing Configuration Groups", i + 1, len(rollback_info.config_group_ids))
             except CatalystwanException as e:
-                all_deleted = False
-                logger.error(f"Error occured during deleting config group {cg_id}: {e}")
+                rollback_result.add_failed_rollback_item("Config Group", cg_id, e)
 
         for i, tg_id in enumerate(rollback_info.topology_group_ids):
             try:
                 self._session.endpoints.configuration.topology_group.delete(tg_id)
                 progress("Removing Topology Groups", i + 1, len(rollback_info.topology_group_ids))
             except CatalystwanException as e:
-                all_deleted = False
-                logger.error(f"Error occured during deleting topolofy group {cg_id}: {e}")
+                rollback_result.add_failed_rollback_item("Topology Group", tg_id, e)
 
         for i, feature_profile_entry in enumerate(rollback_info.feature_profile_ids):
             feature_profile_id, type_ = feature_profile_entry
@@ -42,8 +40,7 @@ class UX2ConfigReverter:
                 api.delete_profile(feature_profile_id)  # type: ignore
                 progress("Removing Feature Profiles", i + 1, len(rollback_info.feature_profile_ids))
             except CatalystwanException as e:
-                all_deleted = False
-                logger.error(f"Error occured during deleting feature profile {feature_profile_id}: {e}")
+                rollback_result.add_failed_rollback_item("Feature Profile", feature_profile_id, e)
 
         if rollback_info.default_policy_object_profile is not None:
             profile_id = rollback_info.default_policy_object_profile.profile_id
@@ -63,7 +60,6 @@ class UX2ConfigReverter:
                         len(rollback_info.default_policy_object_profile.parcels),
                     )
                 except CatalystwanException as e:
-                    all_deleted = False
-                    logger.error(f"Error occured during deleting feature profile {feature_profile_id}: {e}")
+                    rollback_result.add_failed_rollback_item("Parcel", parcel_id, e)
 
-        return all_deleted
+        return rollback_result

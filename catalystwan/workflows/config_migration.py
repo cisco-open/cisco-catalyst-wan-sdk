@@ -1,5 +1,4 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
 import logging
 from collections import defaultdict
 from typing import Callable, Optional, Set, TypeVar, cast
@@ -19,9 +18,11 @@ from catalystwan.models.configuration.config_migration import (
     TransformedParcel,
     TransformedTopologyGroup,
     TransformHeader,
+    UX1CollectResult,
     UX1Config,
     UX2Config,
     UX2RollbackInfo,
+    UX2RollbackResult,
     VersionInfo,
 )
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
@@ -505,8 +506,11 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
     return transform_result
 
 
-def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, int], None] = log_progress) -> UX1Config:
+def collect_ux1_config(
+    session: ManagerSession, progress: Callable[[str, int, int], None] = log_progress
+) -> UX1CollectResult:
     ux1 = UX1Config(version=get_version_info(session))
+    result = UX1CollectResult()
 
     """Get Network Hierarchy"""
     ux1.network_hierarchy = session.endpoints.network_hierarchy.list_nodes().data
@@ -514,11 +518,12 @@ def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, in
     """Collect Policies"""
     policy_api = session.api.policy
 
-    def guard(func: Callable[..., T], *args, **kwargs) -> Optional[T]:
+    def guard(result: UX1CollectResult, func: Callable[..., T], *args, **kwargs) -> Optional[T]:
         try:
             return func(*args, **kwargs)
         except ValidationError as e:
             logger.warning(f"{args} {kwargs}\n{e}")
+            result.add_excluded_item(type_=args[0], reason=str(e), configuration_type="Policy")
         return None
 
     progress("Collecting Policy Info", 0, 1)
@@ -529,12 +534,12 @@ def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, in
 
     policy_list_types = POLICY_LIST_ENDPOINTS_MAP.keys()
     for i, policy_list_type in enumerate(policy_list_types):
-        if policy_list := guard(policy_api.lists.get, policy_list_type):
+        if policy_list := guard(result, policy_api.lists.get, policy_list_type):
             ux1.policies.policy_lists.extend(policy_list)
         progress("Collecting Policy Lists", i + 1, len(policy_list_types))
 
     for i, type_and_id in enumerate(policy_definition_types_and_ids):
-        if _policy_definition := guard(policy_api.definitions.get, *type_and_id):
+        if _policy_definition := guard(result, policy_api.definitions.get, *type_and_id):
             # type checker cannot infer correct signature not knowing arguments (it is overloaded method)
             policy_definition = cast(AnyPolicyDefinitionInfo, _policy_definition)
             ux1.policies.policy_definitions.append(policy_definition)
@@ -563,11 +568,20 @@ def collect_ux1_config(session: ManagerSession, progress: Callable[[str, int, in
     for i, device_template_information in enumerate(device_templates_information):
         device_template = template_api.get_device_template(device_template_information.id)
         device_template_with_info = DeviceTemplateWithInfo.from_merged(device_template, device_template_information)
-        if device_template_with_info.device_type not in DEVICE_TYPE_BLOCKLIST:
+        device_type = device_template_with_info.device_type
+        if device_type not in DEVICE_TYPE_BLOCKLIST:
             ux1.templates.device_templates.append(device_template_with_info)
+        else:
+            result.add_excluded_item(
+                device_type,
+                f"Device type is on block list: {DEVICE_TYPE_BLOCKLIST}",
+                "Template",
+                device_template_with_info.template_name,
+            )
         progress("Collecting Device Templates", i + 1, len(device_templates_information))
 
-    return ux1
+    result.ux1_config = ux1
+    return result
 
 
 def push_ux2_config(
@@ -587,7 +601,7 @@ def rollback_ux2_config(
     session: ManagerSession,
     rollback_config: UX2RollbackInfo,
     progress: Callable[[str, int, int], None] = log_progress,
-) -> bool:
+) -> UX2RollbackResult:
     config_reverter = UX2ConfigReverter(session)
-    status = config_reverter.rollback(rollback_config, progress)
-    return status
+    result = config_reverter.rollback(rollback_config, progress)
+    return result
