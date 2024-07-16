@@ -7,7 +7,7 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 from typing_extensions import Annotated
 
-from catalystwan.models.common import AcceptRejectActionType, EncapType, TLOCColor
+from catalystwan.models.common import AcceptRejectActionType, EncapType, SequenceIpType, TLOCColor
 from catalystwan.models.policy.policy_definition import (
     AffinityEntry,
     CarrierEntry,
@@ -49,6 +49,7 @@ from catalystwan.models.policy.policy_definition import (
     TLOCEntry,
     TLOCEntryValue,
     TLOCListEntry,
+    VPNEntry,
     VPNListEntry,
     accept_action,
 )
@@ -73,6 +74,7 @@ AnyControlPolicyRouteSequenceMatchEntry = Annotated[
         TLOCEntry,
         TLOCListEntry,
         VPNListEntry,
+        VPNEntry,
     ],
     Field(discriminator="field"),
 ]
@@ -322,23 +324,23 @@ class ControlPolicy(ControlPolicyHeader, DefinitionWithSequencesCommonBase):
     model_config = ConfigDict(populate_by_name=True)
 
     def add_route_sequence(
-        self, name: str = "Route", base_action: AcceptRejectActionType = "reject"
+        self, name: str = "Route", base_action: AcceptRejectActionType = "reject", ip_type: SequenceIpType = "ipv4"
     ) -> ControlPolicyRouteSequence:
         seq = ControlPolicyRouteSequence(
             sequence_name=name,
             base_action=base_action,
-            sequence_ip_type="ipv4",
+            sequence_ip_type=ip_type,
         )
         self.add(seq)
         return seq
 
     def add_tloc_sequence(
-        self, name: str = "TLOC", base_action: AcceptRejectActionType = "reject"
+        self, name: str = "TLOC", base_action: AcceptRejectActionType = "reject", ip_type: SequenceIpType = "ipv4"
     ) -> ControlPolicyTLOCSequence:
         seq = ControlPolicyTLOCSequence(
             sequence_name=name,
             base_action=base_action,
-            sequence_ip_type="ipv4",
+            sequence_ip_type=ip_type,
         )
         self.add(seq)
         return seq
