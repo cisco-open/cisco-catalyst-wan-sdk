@@ -13,7 +13,7 @@ from parameterized import parameterized
 
 import catalystwan.tests.templates.models as models
 from catalystwan.api.templates.feature_template import FeatureTemplate
-from catalystwan.dataclasses import FeatureTemplateInfo
+from catalystwan.models.templates import FeatureTemplateInformation
 from catalystwan.typed_list import DataSequence
 from catalystwan.utils.creation_tools import create_dataclass
 
@@ -42,13 +42,13 @@ class TestFeatureTemplate(TestCase):
                     "template_type": template.type,
                     "device_type": ["vedge-C8000V"],
                     "version": "15.0.0",
-                    "template_definiton": f"{json.dumps(definition)}",
+                    "template_definition": f"{json.dumps(definition)}",
                 }
             )
 
         self.get_feature_templates_response = DataSequence(
-            FeatureTemplateInfo,
-            [create_dataclass(FeatureTemplateInfo, response) for response in feature_template_response],
+            FeatureTemplateInformation,
+            [create_dataclass(FeatureTemplateInformation, response) for response in feature_template_response],
         )
 
     @parameterized.expand([(template,) for template in map(models.__dict__.get, models.__all__)])

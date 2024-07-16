@@ -11,7 +11,7 @@ from jinja2 import DebugUndefined, Environment, FileSystemLoader, meta  # type: 
 from pydantic import BaseModel, model_validator
 
 from catalystwan.api.templates.device_variable import DeviceVariable
-from catalystwan.utils.device_model import DeviceModel
+from catalystwan.models.common import DeviceModel
 from catalystwan.utils.dict import FlattenedDictValue, flatten_dict
 from catalystwan.utils.feature_template.find_template_values import find_template_values
 from catalystwan.utils.pydantic_field import get_extra_field
@@ -118,7 +118,7 @@ class FeatureTemplate(FeatureTemplateValidator, ABC):
         template_info = (
             session.api.templates._get_feature_templates(summary=False).filter(name=name).single_or_default()
         )
-        template_definition_as_dict = json.loads(cast(str, template_info.template_definiton))
+        template_definition_as_dict = json.loads(cast(str, template_info.template_definition))
 
         feature_template_model = choose_model(type_value=template_info.template_type)
 
@@ -128,6 +128,6 @@ class FeatureTemplate(FeatureTemplateValidator, ABC):
         return feature_template_model(
             template_name=template_info.name,
             template_description=template_info.description,
-            device_models=[DeviceModel(model) for model in template_info.device_type],
+            device_models=[model for model in template_info.device_type],
             **flattened_values,
         )

@@ -53,7 +53,7 @@ def find_subelement_parcel(
 
 def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_profile():
     """Cisco VPN Feature Templates can represent Service, Transport, or Security VPNs,
-    but there is only one templateType for all of them in UX1.
+    but there is only one template_type for all of them in UX1.
 
     Additionally, the additional templates for VPNs (Ethernet, SVI, GRE, IPSec) can be shared between all VPNs in UX1.
 
@@ -97,55 +97,55 @@ def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_
                     device_type="None",
                     security_policy_id="None",
                     policy_id="None",
-                    generalTemplates=[
+                    general_templates=[
                         GeneralTemplate(
                             name=vpn_management.name,
-                            templateId=vpn_management.id,
-                            templateType=vpn_management.template_type,
-                            subTemplates=[
+                            template_id=vpn_management.id,
+                            template_type=vpn_management.template_type,
+                            sub_templates=[
                                 GeneralTemplate(
                                     name=ethernet.name,
-                                    templateId=ethernet.id,
-                                    templateType=ethernet.template_type,
+                                    template_id=ethernet.id,
+                                    template_type=ethernet.template_type,
                                 ),
                             ],
                         ),
                         GeneralTemplate(
                             name=vpn_0_transport.name,
-                            templateId=vpn_0_transport.id,
-                            templateType=vpn_0_transport.template_type,
-                            subTemplates=[
+                            template_id=vpn_0_transport.id,
+                            template_type=vpn_0_transport.template_type,
+                            sub_templates=[
                                 GeneralTemplate(
                                     name=gre.name,
-                                    templateId=gre.id,
-                                    templateType=gre.template_type,
+                                    template_id=gre.id,
+                                    template_type=gre.template_type,
                                 ),
                                 GeneralTemplate(
                                     name=ethernet.name,
-                                    templateId=ethernet.id,
-                                    templateType=ethernet.template_type,
+                                    template_id=ethernet.id,
+                                    template_type=ethernet.template_type,
                                 ),
                             ],
                         ),
                         GeneralTemplate(
                             name=vpn_1_service.name,
-                            templateId=vpn_1_service.id,
-                            templateType=vpn_1_service.template_type,
-                            subTemplates=[
+                            template_id=vpn_1_service.id,
+                            template_type=vpn_1_service.template_type,
+                            sub_templates=[
                                 GeneralTemplate(
                                     name=gre.name,
-                                    templateId=gre.id,
-                                    templateType=gre.template_type,
+                                    template_id=gre.id,
+                                    template_type=gre.template_type,
                                 ),
                                 GeneralTemplate(
                                     name=ethernet.name,
-                                    templateId=ethernet.id,
-                                    templateType=ethernet.template_type,
+                                    template_id=ethernet.id,
+                                    template_type=ethernet.template_type,
                                 ),
                                 GeneralTemplate(
                                     name=ipsec.name,
-                                    templateId=ipsec.id,
-                                    templateType=ipsec.template_type,
+                                    template_id=ipsec.id,
+                                    template_type=ipsec.template_type,
                                 ),
                             ],
                         ),
@@ -258,30 +258,30 @@ def test_when_ospfv3_feature_template_expect_two_parcels_assigin_to_correct_prof
                     device_type="None",
                     security_policy_id="None",
                     policy_id="None",
-                    generalTemplates=[
+                    general_templates=[
                         GeneralTemplate(
                             name=vpn_0_transport.name,
-                            templateId=str(vpn_0_transport.id),
-                            templateType=vpn_0_transport.template_type,
-                            subTemplates=[
+                            template_id=str(vpn_0_transport.id),
+                            template_type=vpn_0_transport.template_type,
+                            sub_templates=[
                                 GeneralTemplate(
                                     name=ospfv3_ft_1.name,
-                                    templateId=ospfv3_ft_1.id,
-                                    templateType=ospfv3_ft_1.template_type,
-                                    subTemplates=[],
+                                    template_id=ospfv3_ft_1.id,
+                                    template_type=ospfv3_ft_1.template_type,
+                                    sub_templates=[],
                                 ),
                             ],
                         ),
                         GeneralTemplate(
                             name=vpn_service_.name,
-                            templateId=str(vpn_service_.id),
-                            templateType=vpn_service_.template_type,
-                            subTemplates=[
+                            template_id=str(vpn_service_.id),
+                            template_type=vpn_service_.template_type,
+                            sub_templates=[
                                 GeneralTemplate(
                                     name=ospfv3_ft_2.name,
-                                    templateId=ospfv3_ft_2.id,
-                                    templateType=ospfv3_ft_2.template_type,
-                                    subTemplates=[],
+                                    template_id=ospfv3_ft_2.id,
+                                    template_type=ospfv3_ft_2.template_type,
+                                    sub_templates=[],
                                 ),
                             ],
                         ),
@@ -371,28 +371,28 @@ def test_when_nested_feature_templates_with_interfaces_and_dhcp_servers_expect_c
                     device_type="None",
                     security_policy_id="None",
                     policy_id="None",
-                    generalTemplates=[
+                    general_templates=[
                         GeneralTemplate(
                             name=vpn_service_.name,
-                            templateId=vpn_service_.id,
-                            templateType=vpn_service_.template_type,
-                            subTemplates=[
+                            template_id=vpn_service_.id,
+                            template_type=vpn_service_.template_type,
+                            sub_templates=[
                                 GeneralTemplate(
                                     name=ethernet.name,
-                                    templateId=ethernet.id,
-                                    templateType=ethernet.template_type,
-                                    subTemplates=[
+                                    template_id=ethernet.id,
+                                    template_type=ethernet.template_type,
+                                    sub_templates=[
                                         GeneralTemplate(
                                             name=dhcp.name,
-                                            templateId=dhcp.id,
-                                            templateType=dhcp.template_type,
+                                            template_id=dhcp.id,
+                                            template_type=dhcp.template_type,
                                         ),
                                     ],
                                 ),
                                 GeneralTemplate(
                                     name=multilink.name,
-                                    templateId=multilink.id,
-                                    templateType=multilink.template_type,
+                                    template_id=multilink.id,
+                                    template_type=multilink.template_type,
                                 ),
                             ],
                         ),
@@ -458,16 +458,16 @@ def test_when_transform_expect_removed_copies():
                     device_type="None",
                     security_policy_id="None",
                     policy_id="None",
-                    generalTemplates=[
+                    general_templates=[
                         GeneralTemplate(
                             name=vpn_service_.name,
-                            templateId=vpn_service_.id,
-                            templateType=vpn_service_.template_type,
-                            subTemplates=[
+                            template_id=vpn_service_.id,
+                            template_type=vpn_service_.template_type,
+                            sub_templates=[
                                 GeneralTemplate(
                                     name=ethernet.name,
-                                    templateId=ethernet.id,
-                                    templateType=ethernet.template_type,
+                                    template_id=ethernet.id,
+                                    template_type=ethernet.template_type,
                                 ),
                             ],
                         ),
@@ -483,16 +483,16 @@ def test_when_transform_expect_removed_copies():
                     device_type="None",
                     security_policy_id="None",
                     policy_id="None",
-                    generalTemplates=[
+                    general_templates=[
                         GeneralTemplate(
                             name=vpn_service_.name,
-                            templateId=vpn_service_.id,
-                            templateType=vpn_service_.template_type,
-                            subTemplates=[
+                            template_id=vpn_service_.id,
+                            template_type=vpn_service_.template_type,
+                            sub_templates=[
                                 GeneralTemplate(
                                     name=ethernet.name,
-                                    templateId=ethernet.id,
-                                    templateType=ethernet.template_type,
+                                    template_id=ethernet.id,
+                                    template_type=ethernet.template_type,
                                 ),
                             ],
                         ),

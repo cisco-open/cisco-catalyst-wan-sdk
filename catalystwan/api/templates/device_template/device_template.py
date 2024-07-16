@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, List, Optional
+from typing import TYPE_CHECKING, ClassVar, List, Literal, Optional
 from uuid import UUID
 
 from jinja2 import DebugUndefined, Environment, FileSystemLoader, meta  # type: ignore
@@ -16,6 +16,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+TemplateType = Literal["file", "template"]  # file == cli, template == feature
+
+
 def str_to_uuid(s: str) -> Optional[UUID]:
     try:
         return UUID(s)
@@ -24,13 +27,15 @@ def str_to_uuid(s: str) -> Optional[UUID]:
 
 
 class GeneralTemplate(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    name: str = ""
-    subTemplates: List[GeneralTemplate] = []
+    name: str = Field(default="")
 
-    templateId: str = ""
-    templateType: str = ""
+    sub_templates: List[GeneralTemplate] = Field(
+        default=[], serialization_alias="subTemplates", validation_alias="subTemplates"
+    )
+    template_id: str = Field(default="", serialization_alias="templateId", validation_alias="templateId")
+    template_type: str = Field(default="", serialization_alias="templateType", validation_alias="templateType")
 
 
 class DeviceTemplate(BaseModel):
@@ -50,6 +55,8 @@ class DeviceTemplate(BaseModel):
     >>> session.api.templates.create(device_template)
     """
 
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+
     template_name: str = Field(serialization_alias="templateName", validation_alias="templateName")
     template_description: str = Field(serialization_alias="templateDescription", validation_alias="templateDescription")
     general_templates: List[GeneralTemplate] = Field(
@@ -61,6 +68,23 @@ class DeviceTemplate(BaseModel):
         default="", serialization_alias="securityPolicyId", validation_alias="securityPolicyId"
     )
     policy_id: str = Field(default="", serialization_alias="policyId", validation_alias="policyId")
+    feature_template_uid_range: Optional[List] = Field(
+        default=[], serialization_alias="featureTemplateUidRange", validation_alias="featureTemplateUidRange"
+    )
+    config_type: Optional[str] = Field(
+        default="template", serialization_alias="configType", validation_alias="configType"
+    )
+    connection_preference_required: Optional[bool] = Field(
+        default=True,
+        serialization_alias="connectionPreferenceRequired",
+        validation_alias="connectionPreferenceRequired",
+    )
+    connection_preference: Optional[bool] = Field(
+        default=True, serialization_alias="connectionPreference", validation_alias="connectionPreference"
+    )
+    factory_default: Optional[bool] = Field(
+        default=False, serialization_alias="factoryDefault", validation_alias="factoryDefault"
+    )
 
     def get_security_policy_uuid(self) -> Optional[UUID]:
         return str_to_uuid(self.security_policy_id)

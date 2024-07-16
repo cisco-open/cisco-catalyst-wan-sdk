@@ -1,0 +1,258 @@
+{
+    "templateName": "cisco_snmp_complex",
+    "templateDescription": "Comprehensive Cisco SNMP Configuration",
+    "templateType": "cisco_snmp",
+    "deviceType": [],
+    "factoryDefault": false,
+    "templateMinVersion": "15.0.0",
+    "templateDefinition": {
+        "shutdown": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "false"
+        },
+        "contact": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "SNMP Admin"
+        },
+        "location": {
+            "vipObjectType": "object",
+            "vipType": "constant",
+            "vipValue": "Data Center A"
+        },
+        "view": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "SystemView"
+                    },
+                    "oid": {
+                        "vipObjectType": "tree",
+                        "vipType": "constant",
+                        "vipValue": [
+                            {
+                                "id": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": "1.3.6.1.2.1.1"
+                                },
+                                "exclude": {
+                                    "vipObjectType": "node-only",
+                                    "vipType": "constant",
+                                    "vipValue": "false"
+                                }
+                            },
+                            {
+                                "id": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": "1.3.6.1.2.1.2"
+                                },
+                                "exclude": {
+                                    "vipObjectType": "node-only",
+                                    "vipType": "constant",
+                                    "vipValue": "true"
+                                }
+                            }
+                        ],
+                        "vipPrimaryKey": [
+                            "id"
+                        ]
+                    }
+                },
+                {
+                    "name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "AllView"
+                    },
+                    "oid": {
+                        "vipObjectType": "tree",
+                        "vipType": "constant",
+                        "vipValue": [
+                            {
+                                "id": {
+                                    "vipObjectType": "object",
+                                    "vipType": "constant",
+                                    "vipValue": "1.3.6.1"
+                                },
+                                "exclude": {
+                                    "vipObjectType": "node-only",
+                                    "vipType": "constant",
+                                    "vipValue": "false"
+                                }
+                            }
+                        ],
+                        "vipPrimaryKey": [
+                            "id"
+                        ]
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "name"
+            ]
+        },
+        "community": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "public"
+                    },
+                    "view": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "SystemView"
+                    },
+                    "authorization": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "read-only"
+                    }
+                },
+                {
+                    "name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "private"
+                    },
+                    "view": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "AllView"
+                    },
+                    "authorization": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "read-only"
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "name"
+            ]
+        },
+        "group": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "v3group"
+                    },
+                    "security-level": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "auth-priv"
+                    },
+                    "view": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "AllView"
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "name",
+                "security-level"
+            ]
+        },
+        "user": {
+            "vipObjectType": "tree",
+            "vipType": "constant",
+            "vipValue": [
+                {
+                    "name": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "snmpuser"
+                    },
+                    "auth": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "md5"
+                    },
+                    "auth-password": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "authpass"
+                    },
+                    "priv": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "aes-cfb-128"
+                    },
+                    "priv-password": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "privpass"
+                    },
+                    "group": {
+                        "vipObjectType": "object",
+                        "vipType": "constant",
+                        "vipValue": "v3group"
+                    }
+                }
+            ],
+            "vipPrimaryKey": [
+                "name"
+            ]
+        },
+        "trap": {
+            "target": {
+                "vipObjectType": "tree",
+                "vipType": "constant",
+                "vipValue": [
+                    {
+                        "vpn-id": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 10
+                        },
+                        "ip": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "192.0.2.50"
+                        },
+                        "port": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": 162
+                        },
+                        "community-name": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "public"
+                        },
+                        "user": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "snmpuser"
+                        },
+                        "source-interface": {
+                            "vipObjectType": "object",
+                            "vipType": "constant",
+                            "vipValue": "GigabitEthernet0/0"
+                        }
+                    }
+                ],
+                "vipPrimaryKey": [
+                    "vpn-id",
+                    "ip",
+                    "port"
+                ]
+            }
+        }
+    }
+}
