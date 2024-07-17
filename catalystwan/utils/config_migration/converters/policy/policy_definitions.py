@@ -12,12 +12,14 @@ from catalystwan.models.common import DeviceAccessProtocolPort, int_range_str_va
 from catalystwan.models.configuration.config_migration import (
     ConvertResult,
     PolicyConvertContext,
+    QoSMapResidues,
     SslDecryptioneResidues,
     SslProfileResidues,
 )
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
+from catalystwan.models.configuration.feature_profile.sdwan.application_priority.qos_policy import QosPolicyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.dns_security.dns import DnsParcel, TargetVpns
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import AnyEmbeddedSecurityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.aip import (
@@ -63,6 +65,7 @@ from catalystwan.models.policy.definition.dns_security import DnsSecurityPolicy,
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
 from catalystwan.models.policy.definition.intrusion_prevention import IntrusionPreventionPolicy
 from catalystwan.models.policy.definition.mesh import MeshPolicy
+from catalystwan.models.policy.definition.qos_map import QoSMapPolicy
 from catalystwan.models.policy.definition.route_policy import RoutePolicy
 from catalystwan.models.policy.definition.ssl_decryption import SslDecryptionPolicy
 from catalystwan.models.policy.definition.ssl_decryption_utd_profile import SslDecryptionUtdProfilePolicy
@@ -484,6 +487,39 @@ def device_access_ipv4(
     return ConvertResult[DeviceAccessIPv4Parcel](output=out)
 
 
+def qos_map(in_: QoSMapPolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[QosPolicyParcel]:
+    result = ConvertResult[QosPolicyParcel]()
+
+    try:
+        context.qos_map_residues[uuid] = []
+        out = QosPolicyParcel.create(**_get_parcel_name_desc(in_))
+        result.output = out
+
+        # add target
+        # out.set_variable_target("Interface_1")  # for tests
+
+        for scheduler in in_.definition.qos_schedulers:
+            out.add_scheduler(
+                queue=str(scheduler.queue),
+                class_map_ref=scheduler.class_map_ref,
+                bandwidth_percent=str(scheduler.bandwidth_percent),
+                drops=scheduler.drops,
+                scheduling=scheduler.scheduling,
+            )
+
+            context.qos_map_residues[uuid].append(
+                QoSMapResidues(
+                    buffer_percent=scheduler.buffer_percent,
+                    burst=scheduler.burst,
+                    temp_key_values=scheduler.temp_key_values,
+                )
+            )
+    except ValidationError as e:
+        result.update_status("failed", f"Cannot convert QOS Map: {e}")
+
+    return result
+
+
 def route(in_: RoutePolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[RoutePolicyParcel]:
     out = RoutePolicyParcel(**_get_parcel_name_desc(in_))
     out.set_default_action(in_.default_action.type)
@@ -735,6 +771,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     DeviceAccessPolicy: device_access_ipv4,
     RoutePolicy: route,
     ZoneBasedFWPolicy: convert_zone_based_fw,
+    QoSMapPolicy: qos_map,
 }
 
 

@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
 from typing import Callable, cast
 from uuid import UUID
@@ -32,6 +33,7 @@ class SecurityPolicyPusher:
         self._ux2_config = ux2_config
         self._dns_security_api = session.api.sdwan_feature_profiles.dns_security
         self._embedded_security_api = session.api.sdwan_feature_profiles.embedded_security
+        self._app_profile_api = session.api.sdwan_feature_profiles.application_priority
         self._push_result: UX2ConfigPushResult = push_result
         self._progress: Callable[[str, int, int], None] = progress
         self.push_context = push_context

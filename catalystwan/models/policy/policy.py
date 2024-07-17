@@ -1,7 +1,7 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 import datetime
-from typing import List, Literal, Optional, Sequence, Union
+from typing import Any, List, Literal, Optional, Sequence, Union
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -64,6 +64,7 @@ class SSLDecryptionAssemblyItem(AssemblyItemBase):
 
 class PolicyDefinition(BaseModel):
     assembly: Sequence[AssemblyItemBase] = []
+    settings: Optional[Any] = None
 
 
 class PolicyCreationPayload(BaseModel):

@@ -1,6 +1,7 @@
 from typing import Callable, Mapping, Union
 
 from catalystwan.api.feature_profile_api import (
+    ApplicationPriorityFeatureProfileAPI,
     CliFeatureProfileAPI,
     DnsSecurityFeatureProfileAPI,
     EmbeddedSecurityFeatureProfileAPI,
@@ -24,6 +25,7 @@ FEATURE_PROFILE_API_MAPPING: Mapping[ProfileType, Callable] = {
     "topology": TopologyFeatureProfileAPI,
     "dns-security": DnsSecurityFeatureProfileAPI,
     "embedded-security": EmbeddedSecurityFeatureProfileAPI,
+    "application-priority": ApplicationPriorityFeatureProfileAPI,
 }
 
 FeatureProfile = Union[

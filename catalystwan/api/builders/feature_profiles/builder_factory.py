@@ -1,7 +1,9 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, Mapping, Union
 
+from catalystwan.api.builders.feature_profiles.application_priority import ApplicationPriorityFeatureProfileBuilder
 from catalystwan.api.builders.feature_profiles.cli import CliFeatureProfileBuilder
 from catalystwan.api.builders.feature_profiles.other import OtherFeatureProfileBuilder
 from catalystwan.api.builders.feature_profiles.service import ServiceFeatureProfileBuilder
@@ -19,6 +21,7 @@ FeatureProfileBuilder = Union[
     OtherFeatureProfileBuilder,
     TransportAndManagementProfileBuilder,
     CliFeatureProfileBuilder,
+    ApplicationPriorityFeatureProfileBuilder,
 ]
 
 BUILDER_MAPPING: Mapping[ProfileType, Callable] = {
@@ -27,6 +30,7 @@ BUILDER_MAPPING: Mapping[ProfileType, Callable] = {
     "other": OtherFeatureProfileBuilder,
     "transport": TransportAndManagementProfileBuilder,
     "cli": CliFeatureProfileBuilder,
+    "application-priority": ApplicationPriorityFeatureProfileBuilder,
 }
 
 

@@ -1,4 +1,4 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from typing import Any, List, Literal, Optional, Union
 from uuid import UUID
@@ -116,6 +116,9 @@ class LocalizedPolicy(PolicyCreationPayload):
 
     def add_route_policy(self, definition_id: UUID) -> None:
         self._add_item("vedgeRoute", definition_id)
+
+    def set_definition(self, assembly: List[LocalizedPolicyAssemblyItem], settings: LocalizedPolicySettings) -> None:
+        self.policy_definition = LocalizedPolicyDefinition(assembly=assembly, settings=settings)
 
     @model_validator(mode="before")
     @classmethod

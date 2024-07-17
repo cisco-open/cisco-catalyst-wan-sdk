@@ -33,6 +33,7 @@ from catalystwan.utils.config_migration.converters.feature_template.cloud_creden
 )
 from catalystwan.utils.config_migration.converters.policy.policy_definitions import convert as convert_policy_definition
 from catalystwan.utils.config_migration.converters.policy.policy_lists import convert as convert_policy_list
+from catalystwan.utils.config_migration.converters.policy.policy_settings import convert_localized_policy_settings
 from catalystwan.utils.config_migration.converters.policy.security_policy import convert_security_policy
 from catalystwan.utils.config_migration.creators.config_pusher import UX2ConfigPusher, UX2ConfigPushResult
 from catalystwan.utils.config_migration.reverters.config_reverter import UX2ConfigReverter
@@ -426,25 +427,73 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
     _lookup = ux1.templates.create_device_template_by_policy_id_lookup()
     dt_by_policy_id = _lookup["policy"]
     for localized_policy in ux1.policies.localized_policies:
-        if not isinstance(localized_policy.policy_definition, str):
-            if dt_id := dt_by_policy_id.get(localized_policy.policy_id):
-                for item in localized_policy.policy_definition.assembly:
-                    if item.type == "deviceaccesspolicy" or item.type == "deviceaccesspolicyv6":
-                        ux2.add_subelement_in_config_group(
-                            profile_types=["system"], device_template_id=dt_id, subelement=item.definition_id
-                        )
-                    elif item.type == "acl" or item.type == "aclv6":
-                        ux2.add_subelement_in_config_group(
-                            profile_types=["transport", "service"],
-                            device_template_id=dt_id,
-                            subelement=item.definition_id,
-                        )
-                    elif item.type == "vedgeRoute":
-                        ux2.add_subelement_in_config_group(
-                            profile_types=["transport", "service"],
-                            device_template_id=dt_id,
-                            subelement=item.definition_id,
-                        )
+        if isinstance(localized_policy.policy_definition, str):
+            continue
+        application_prio = TransformedFeatureProfile(
+            header=TransformHeader(
+                type="application-priority",
+                origin=localized_policy.policy_id,
+                origname=localized_policy.policy_name,
+            ),
+            feature_profile=FeatureProfileCreationPayload(
+                name=f"FROM_{localized_policy.policy_name}",
+                description=localized_policy.policy_description,
+            ),
+        )
+        ux2.feature_profiles.append(application_prio)
+        settings_result = convert_localized_policy_settings(
+            localized_policy, localized_policy.policy_id, policy_context
+        )
+        settings_parcel = settings_result.output
+        settings_status = settings_result.status
+        if settings_status == "unsupported":
+            transform_result.add_unsupported_item(
+                name=f"{localized_policy.policy_name} Settings",
+                uuid=policy_definition.definition_id,
+                type=policy_definition.type,
+            )
+        elif settings_status == "failed":
+            transform_result.add_failed_conversion_parcel(
+                exception_message="\n".join(pd_result.info),
+                policy=localized_policy,
+            )
+        elif settings_parcel is not None:
+            header = TransformHeader(
+                type=settings_parcel._get_parcel_type(),
+                origin=localized_policy.policy_id,
+                origname=localized_policy.policy_description,
+                status=settings_status,
+                info=settings_result.info,
+            )
+            tp_settings = TransformedParcel(header=header, parcel=settings_parcel)
+            ux2.profile_parcels.append(tp_settings)
+            application_prio.header.subelements.add(tp_settings.header.origin)
+
+        for item in localized_policy.policy_definition.assembly:
+            # ----- Device Template Independent Items -----
+            if item.type == "qosMap":
+                application_prio.header.subelements.add(item.definition_id)
+                continue
+            # ----- Device Template Dependent Items -----
+            dt_id = dt_by_policy_id.get(localized_policy.policy_id)
+            if dt_id is None:
+                continue
+            if item.type == "deviceaccesspolicy" or item.type == "deviceaccesspolicyv6":
+                ux2.add_subelement_in_config_group(
+                    profile_types=["system"], device_template_id=dt_id, subelement=item.definition_id
+                )
+            elif item.type == "acl" or item.type == "aclv6":
+                ux2.add_subelement_in_config_group(
+                    profile_types=["transport", "service"],
+                    device_template_id=dt_id,
+                    subelement=item.definition_id,
+                )
+            elif item.type == "vedgeRoute":
+                ux2.add_subelement_in_config_group(
+                    profile_types=["transport", "service"],
+                    device_template_id=dt_id,
+                    subelement=item.definition_id,
+                )
 
     # Security policies
     for security_policy in ux1.policies.security_policies:

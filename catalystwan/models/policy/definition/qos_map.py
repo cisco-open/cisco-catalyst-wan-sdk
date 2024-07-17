@@ -24,7 +24,7 @@ QoSDropType = Literal[
 
 
 class QoSScheduler(BaseModel):
-    queue: IntStr = Field(ge=0, le=8)
+    queue: IntStr = Field(ge=0, le=7)
     class_map_ref: Optional[UUID] = Field(
         default=None, serialization_alias="classMapRef", validation_alias="classMapRef"
     )

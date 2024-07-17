@@ -18,7 +18,7 @@ from catalystwan.api.templates.device_template.device_template import DeviceTemp
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
 from catalystwan.endpoints.configuration_settings import CloudCredentials
 from catalystwan.exceptions import ManagerHTTPError
-from catalystwan.models.common import VpnId
+from catalystwan.models.common import IntStr, VpnId
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload, ProfileType
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
@@ -149,6 +149,12 @@ class TransformHeader(BaseModel):
     localized_policy_subelements: Optional[Set[UUID]] = Field(default=None)
     status: ConvertOutputStatus = Field(default="complete")
     info: List[str] = Field(default_factory=list)
+
+    def add_localized_policy_subelement(self, subelement: UUID) -> None:
+        if self.localized_policy_subelements is None:
+            self.localized_policy_subelements = {subelement}
+        else:
+            self.localized_policy_subelements.add(subelement)
 
 
 class TransformedTopologyGroup(BaseModel):
@@ -423,10 +429,8 @@ class UX2ConfigPushReport(BaseModel):
     def add_report(self, name: str, uuid: UUID, feature_profiles: List[FeatureProfileBuildReport]) -> None:
         self.config_groups.append(ConfigGroupReport(name=name, uuid=uuid, feature_profiles=feature_profiles))
 
-    def add_feature_profiles_not_assosiated_with_config_group(
-        self, feature_profiles: List[FeatureProfileBuildReport]
-    ) -> None:
-        """This happends when config group failes to create but we have to store created feature profiles in report"""
+    def add_standalone_feature_profiles(self, feature_profiles: List[FeatureProfileBuildReport]) -> None:
+        """This happends when parent config group failes to create or profile don't have config group"""
         self.standalone_feature_profiles.extend(feature_profiles)
 
     def set_failed_push_parcels_flat_list(self):
@@ -525,6 +529,13 @@ class SecurityPolicyResidues:
 
 
 @dataclass
+class QoSMapResidues:
+    buffer_percent: IntStr
+    burst: Optional[IntStr] = None
+    temp_key_values: Optional[str] = None
+
+
+@dataclass
 class PolicyConvertContext:
     # conversion input
     region_map: Dict[str, int] = field(default_factory=dict)
@@ -542,6 +553,7 @@ class PolicyConvertContext:
     url_filtering_target_vpns: Dict[UUID, List[VpnId]] = field(default_factory=dict)
     zone_based_firewall_residues: Dict[UUID, List[ZoneBasedFWPolicyEntry]] = field(default_factory=dict)
     security_policy_residues: Dict[UUID, SecurityPolicyResidues] = field(default_factory=dict)
+    qos_map_residues: Dict[UUID, List[QoSMapResidues]] = field(default_factory=dict)
 
     def get_vpn_id_to_vpn_name_map(self) -> Dict[Union[str, int], List[str]]:
         vpn_map: Dict[Union[str, int], List[str]] = {}
