@@ -1,15 +1,7 @@
 import unittest
-from uuid import uuid4
 
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.policy.as_path import AsPathParcel
-from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.amp import (
-    AdvancedMalwareProtectionParcel,
-)
-from catalystwan.models.policy.definition.amp import (
-    AdvancedMalwareProtectionDefinition,
-    AdvancedMalwareProtectionPolicy,
-)
 from catalystwan.models.policy.list.as_path import ASPathList, ASPathListEntry
 from catalystwan.utils.config_migration.converters.policy.policy_lists import convert
 
@@ -59,5 +51,3 @@ class TestAsPathConverter(unittest.TestCase):
         assert parcel.parcel_description == description
         assert len(parcel.entries) == 0
         assert parcel.as_path_list_num.value == 490
-
-
