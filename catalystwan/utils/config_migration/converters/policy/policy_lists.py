@@ -37,6 +37,9 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
     URLBlockParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.policy.sla_class import SLAClassCriteria
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.application_list import (
+    SecurityApplicationListParcel,
+)
 from catalystwan.models.policy import (
     AnyPolicyList,
     AppList,
@@ -66,6 +69,7 @@ from catalystwan.models.policy import (
     URLBlockList,
     ZoneList,
 )
+from catalystwan.models.policy.list.local_app import LocalAppList
 from catalystwan.models.policy.list.region import RegionList, RegionListInfo
 from catalystwan.models.policy.list.site import SiteList, SiteListInfo
 from catalystwan.models.policy.list.vpn import VPNList, VPNListInfo
@@ -77,6 +81,10 @@ def _get_parcel_name_desc(policy_list: AnyPolicyList) -> Dict[str, Any]:
     return dict(parcel_name=policy_list.name, parcel_description=policy_list.description)
 
 
+def _get_sorted_unique_list(in_list: List[str]) -> List[str]:
+    return sorted(list(set(in_list)))
+
+
 def app_probe(in_: AppProbeClassList, context) -> ConvertResult[AppProbeParcel]:
     out = AppProbeParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
@@ -86,9 +94,9 @@ def app_probe(in_: AppProbeClassList, context) -> ConvertResult[AppProbeParcel]:
 
 def app_list(in_: AppList, context) -> ConvertResult[ApplicationListParcel]:
     out = ApplicationListParcel(**_get_parcel_name_desc(in_))
-    for app in set(in_.list_all_app()):
+    for app in _get_sorted_unique_list(in_.list_all_app()):
         out.add_application(app)
-    for app_family in set(in_.list_all_app_family()):
+    for app_family in _get_sorted_unique_list(in_.list_all_app_family()):
         out.add_application_family(app_family)
     return ConvertResult[ApplicationListParcel](output=out, status="complete")
 
@@ -403,26 +411,38 @@ def zone(in_: ZoneList, context) -> ConvertResult[SecurityZoneListParcel]:
     return ConvertResult[SecurityZoneListParcel](output=out, status="complete")
 
 
+def local_app_list(in_: LocalAppList, context: PolicyConvertContext) -> ConvertResult[SecurityApplicationListParcel]:
+    out = SecurityApplicationListParcel(**_get_parcel_name_desc(in_))
+    for app in _get_sorted_unique_list(in_.list_all_app()):
+        out.add_application(app)
+    for app_family in _get_sorted_unique_list(in_.list_all_app_family()):
+        out.add_application_family(app_family)
+    return ConvertResult[SecurityApplicationListParcel](output=out, status="complete")
+
+
 OPL = TypeVar("OPL", AnyPolicyObjectParcel, None)
 Input = AnyPolicyList
 Output = ConvertResult[OPL]
 
 
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
-    AppProbeClassList: app_probe,
-    AppList: app_list,
     ASPathList: as_path,
+    AppList: app_list,
+    AppProbeClassList: app_probe,
     ClassMapList: class_map,
     ColorList: color,
     CommunityList: community,
     DataIPv6PrefixList: data_prefix_ipv6,
     DataPrefixList: data_prefix,
     ExpandedCommunityList: expanded_community,
+    ExtendedCommunityList: extended_community,
     FQDNList: fqdn,
     GeoLocationList: geo_location,
     IPSSignatureList: ips_signature,
     IPv6PrefixList: prefix_ipv6,
+    LocalAppList: local_app_list,
     LocalDomainList: local_domain,
+    MirrorList: mirror,
     PolicerList: policer,
     PortList: port,
     PreferredColorGroupList: preferred_color_group,
@@ -436,8 +456,6 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     URLBlockList: url_block,
     VPNList: vpn,
     ZoneList: zone,
-    MirrorList: mirror,
-    ExtendedCommunityList: extended_community,
 }
 
 

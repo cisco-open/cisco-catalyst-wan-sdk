@@ -24,6 +24,18 @@ class LocalAppList(PolicyListBase):
     type: Literal["localApp"] = "localApp"
     entries: List[LocalAppListEntry] = []
 
+    def add_app(self, app: str) -> None:
+        self._add_entry(LocalAppListEntry(app=app))
+
+    def add_app_family(self, app_family: str) -> None:
+        self._add_entry(LocalAppListEntry(app_family=app_family))
+
+    def list_all_app(self) -> List[str]:
+        return [e.app for e in self.entries if e.app is not None]
+
+    def list_all_app_family(self) -> List[str]:
+        return [e.app_family for e in self.entries if e.app_family is not None]
+
 
 class LocalAppListEditPayload(LocalAppList, PolicyListId):
     pass
