@@ -7,7 +7,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object.securi
 from catalystwan.typed_list import DataSequence
 
 
-class TestSecurityApplicationListParcelParcel(PolicyTestCaseBase):
+class TestSecurityApplicationListParcel(PolicyTestCaseBase):
     parcel_type = SecurityApplicationListParcel
 
     def test_get_all_parcels(self):
