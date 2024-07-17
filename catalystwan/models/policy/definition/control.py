@@ -110,7 +110,7 @@ class ControlPolicyHeader(PolicyDefinitionBase):
 
 
 class ControlPolicyRouteSequenceMatch(Match):
-    entries: List[AnyControlPolicyRouteSequenceMatchEntry] = []
+    entries: List[AnyControlPolicyRouteSequenceMatchEntry] = Field(default_factory=list)
 
 
 class ControlPolicyTLOCSequenceMatch(Match):

@@ -171,7 +171,7 @@ def advanced_malware_protection(
     )
 
 
-def control(in_: ControlPolicy, uuid: UUID, context) -> ConvertResult[CustomControlParcel]:
+def control(in_: ControlPolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[CustomControlParcel]:
     result = ConvertResult[CustomControlParcel](output=None)
     out = CustomControlParcel(
         **_get_parcel_name_desc(in_), default_action=as_global(in_.default_action.type, BaseAction)
@@ -215,22 +215,44 @@ def control(in_: ControlPolicy, uuid: UUID, context) -> ConvertResult[CustomCont
             elif in_match.field == "regionId":
                 out_seq.match_region(in_match.value)
             elif in_match.field == "regionList":
-                # No region list in v2
-                pass
+                regions = context.regions_by_list_id.get(in_match.ref, [])
+                if regions:
+                    for region in regions:
+                        out_seq.match_region(region=region)
+                else:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] contains region list which is not matching any defined region "
+                        f"{in_match.field} = {in_match.ref}",
+                    )
             elif in_match.field == "role":
                 out_seq.match_role(in_match.value)
             elif in_match.field == "siteId":
-                out_seq.match_sites([in_match.value])  # Why it is str in ux1 and list in ux2
+                out_seq.match_sites([in_match.value])
             elif in_match.field == "siteList":
-                # out_seq.match_sites(in_match.ref) there is ref UUID in ux1
-                pass
+                sites = context.sites_by_list_id.get(in_match.ref, [])
+                if sites:
+                    out_seq.match_sites(sites=sites)
+                else:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] contains site list which is not matching any defined site "
+                        f"{in_match.field} = {in_match.ref}",
+                    )
             elif in_match.field == "tloc":
                 out_seq.match_tloc(ip=in_match.value.ip, color=in_match.value.color, encap=in_match.value.encap)
             elif in_match.field == "tlocList":
                 out_seq.match_tloc_list(in_match.ref)
             elif in_match.field == "vpnList":
-                # out_seq.match_vpns(in_match.ref) there is ref UUID in ux1 and List[str] in ux2
-                pass
+                vpns = context.lan_vpns_by_list_id.get(in_match.ref, [])
+                if vpns:
+                    out_seq.match_vpns(vpns=vpns)
+                else:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] contains vpn list which is not matching any defined vpn "
+                        f"{in_match.field} = {in_match.ref}",
+                    )
     result.output = out
     return result
 
