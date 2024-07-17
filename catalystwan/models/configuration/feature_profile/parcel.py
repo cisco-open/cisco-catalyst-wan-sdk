@@ -1,6 +1,6 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from functools import lru_cache
-from typing import Generic, List, Literal, Sequence, TypeVar, Union, cast
+from typing import Generic, List, Literal, Optional, Sequence, TypeVar, Union, cast
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -18,6 +18,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.sig_security import 
 from catalystwan.models.configuration.feature_profile.sdwan.system import AnySystemParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology import AnyTopologyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport import AnyTransportParcel
+from catalystwan.models.configuration.network_hierarchy import AnyNetworkHierarchy
 from catalystwan.utils.model import resolve_nested_base_model_unions
 
 ParcelType = Literal[
@@ -31,6 +32,7 @@ ParcelType = Literal[
     "bfd",
     "bgp",
     "cellular-controller",
+    "cflowd",
     "class",
     "color",
     "config",
@@ -128,6 +130,7 @@ AnyParcel = Annotated[
         AnyApplicationPriorityParcel,
         AnyTopologyParcel,
         AnyRoutingParcel,
+        AnyNetworkHierarchy,
     ],
     Field(discriminator="type_"),
 ]
@@ -136,20 +139,30 @@ T = TypeVar("T", bound=AnyParcel)
 
 
 class Parcel(BaseModel, Generic[T]):
-    parcel_id: Union[str, UUID] = Field(alias="parcelId")
+    parcel_id: UUID = Field(alias="parcelId")
     parcel_type: ParcelType = Field(alias="parcelType")
     created_by: str = Field(alias="createdBy")
-    last_updated_by: str = Field(alias="lastUpdatedBy")
+    last_updated_by: Optional[str] = Field(default=None, alias="lastUpdatedBy")
     created_on: int = Field(alias="createdOn")
-    last_updated_on: int = Field(alias="lastUpdatedOn")
+    last_updated_on: Optional[int] = Field(default=None, alias="lastUpdatedOn")
     payload: T
 
     @model_validator(mode="before")
     def validate_payload(cls, data):
         if not isinstance(data, dict):
             return data
-        data["payload"]["type_"] = data["parcelType"]
+        type_ = data.get("parcelType") or data.get("type")
+        id_ = data.get("parcelId") or data.get("id")
+        assert type_ is not None
+        assert id_ is not None
+        data["parcelType"] = type_
+        data["payload"]["type_"] = type_
+        data["parcelId"] = id_
         return data
+
+    def model_post_init(self, __context):
+        """We do not want to store the JSON as dict data in the 'data' field, as it is already deserialized"""
+        self.payload.data = None
 
 
 class Header(BaseModel):

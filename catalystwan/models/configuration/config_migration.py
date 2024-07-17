@@ -23,7 +23,7 @@ from catalystwan.models.configuration.feature_profile.common import FeatureProfi
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
-from catalystwan.models.configuration.network_hierarchy import NodeInfo
+from catalystwan.models.configuration.network_hierarchy.node import NodeInfo
 from catalystwan.models.configuration.topology_group import TopologyGroup
 from catalystwan.models.policy import AnyPolicyDefinitionInfo, AnyPolicyListInfo, URLAllowListInfo, URLBlockListInfo
 from catalystwan.models.policy.centralized import CentralizedPolicyInfo
