@@ -105,7 +105,7 @@ def as_path(in_: ASPathList, context: PolicyConvertContext) -> ConvertResult[AsP
     - AS Path List ID (Number from 1 to 500)
     - AS Path list
 
-    The UX1 and UX2 intersection in AS Path list name and ID but only for the vEdge router (number 1 to 500).
+    The UX1 and UX2 intersection in AS Path list name and ID but only for the ISR Edge router (number 1 to 500).
     If there is number we can insert the value in as_path_list_num field otherwise we will
     generate the value and keep track of it in the context.
     """

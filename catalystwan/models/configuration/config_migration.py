@@ -564,7 +564,7 @@ class PolicyConvertContext:
         return vpn_map
 
     def generate_as_path_list_num_from_name(self, name: str) -> int:
-        """The UX1 and UX2 intersection in AS Path list name and ID but only for the vEdge router (number 1 to 500).
+        """The UX1 and UX2 intersection in AS Path list name and ID but only for the ISR Edge router (number 1 to 500).
         If there is number we can insert the value in as_path_list_num field otherwise we will
         generate the value and keep track of it in the context."""
         number = len(self.as_path_list_num_mapping) + 1
