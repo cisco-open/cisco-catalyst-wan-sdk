@@ -4,7 +4,7 @@ import io
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, MagicMock, patch
 
 from catalystwan.api.admin_tech_api import (
     AdminTechAPI,
@@ -93,16 +93,22 @@ class TestAdminTechAPI(unittest.TestCase):
     @patch("catalystwan.response.ManagerResponse")
     def test_generate(self, mock_session, mock_response):
         # Arrange
-        mock_session.post.return_value = mock_response
-        mock_response.status_code = 200
-        mock_response.json.return_value = self.admin_tech_generate_response
+        post_response = MagicMock()
+        mock_session.post.return_value = post_response
+        post_response.status_code = 200
+        post_response.json.return_value = self.admin_tech_generate_response
+        get_response = MagicMock()
+        mock_session.get.return_value = get_response
+        get_response.json.return_value = self.admin_tech_infos
+
         # Act
         filename = AdminTechAPI(mock_session).generate(
             device_id=self.device_ip, polling_timeout=0.01, polling_interval=0.01
         )
-        print(filename)
+
         # Assert
         mock_session.post.assert_called_once_with(url="/dataservice/device/tools/admintech", json=ANY, timeout=ANY)
+        mock_session.get.assert_called_once_with("/dataservice/device/tools/admintechs")
         self.assertEqual(filename, self.admin_tech_generate_response["fileName"])
 
     @patch("catalystwan.session.ManagerSession")
