@@ -89,8 +89,7 @@ class GroupsOfInterestPusher:
                     ),
                 )
                 for ep in exsisting_parcel_list:
-                    id_ = UUID(ep.parcel_id) if not isinstance(ep.parcel_id, UUID) else ep.parcel_id
-                    system_created_parcels[parcel_type][ep.payload.parcel_name] = id_
+                    system_created_parcels[parcel_type][ep.payload.parcel_name] = ep.parcel_id
 
             # if parcel with given name exists we skip it
             if system_created_parcels[parcel_type].get(header.origname or ""):
