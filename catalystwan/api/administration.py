@@ -392,7 +392,7 @@ class AdministrationSettingsAPI:
     def update(self, payload: Union[Organization, Certificate, Password, Vbond, ThreadGridApi]) -> bool:
         if isinstance(payload, ThreadGridApi):
             dataseq = self.__update_thread_grid_api(payload)
-            return True
+            return len(dataseq) == 1
         json_payload = asdict(payload)  # type: ignore
         if isinstance(payload, Organization):
             response = self.__update_organization(json_payload)
