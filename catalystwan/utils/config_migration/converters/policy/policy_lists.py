@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from logging import getLogger
 from re import match
 from typing import Any, Callable, Dict, List, Mapping, Type, TypeVar, cast
@@ -72,7 +73,9 @@ from catalystwan.models.policy import (
 from catalystwan.models.policy.list.local_app import LocalAppList
 from catalystwan.models.policy.list.region import RegionList, RegionListInfo
 from catalystwan.models.policy.list.site import SiteList, SiteListInfo
+from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList
 from catalystwan.models.policy.list.vpn import VPNList, VPNListInfo
+from catalystwan.models.settings import ThreadGridApi
 
 logger = getLogger(__name__)
 
@@ -420,6 +423,14 @@ def local_app_list(in_: LocalAppList, context: PolicyConvertContext) -> ConvertR
     return ConvertResult[SecurityApplicationListParcel](output=out, status="complete")
 
 
+def threat_grid_api(in_: ThreatGridApiKeyList, context: PolicyConvertContext) -> ConvertResult[None]:
+    out = ThreadGridApi()
+    for entry in in_.entries:
+        out.set_region_api_key(region=entry.region, apikey=entry.api_key)
+    context.thread_grid_api = out
+    return ConvertResult[None](status="complete")
+
+
 OPL = TypeVar("OPL", AnyPolicyObjectParcel, None)
 Input = AnyPolicyList
 Output = ConvertResult[OPL]
@@ -452,6 +463,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     SiteList: site,
     SLAClassList: sla_class,
     TLOCList: tloc,
+    ThreatGridApiKeyList: threat_grid_api,
     URLAllowList: url_allow,
     URLBlockList: url_block,
     VPNList: vpn,

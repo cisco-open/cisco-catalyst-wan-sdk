@@ -1,4 +1,4 @@
-# Copyright 2022 Cisco Systems, Inc. and its affiliates
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from __future__ import annotations
 
@@ -34,6 +34,7 @@ from catalystwan.endpoints.administration_user_and_group import (
     UserUpdateRequest,
 )
 from catalystwan.exceptions import CatalystwanDeprecationWarning, CatalystwanException
+from catalystwan.models.settings import ThreadGridApi
 from catalystwan.typed_list import DataSequence
 from catalystwan.utils.creation_tools import asdict, create_dataclass
 
@@ -384,7 +385,14 @@ class AdministrationSettingsAPI:
     def update(self, payload: Organization) -> bool:
         ...
 
-    def update(self, payload: Union[Organization, Certificate, Password, Vbond]) -> bool:
+    @overload
+    def update(self, payload: ThreadGridApi) -> bool:
+        ...
+
+    def update(self, payload: Union[Organization, Certificate, Password, Vbond, ThreadGridApi]) -> bool:
+        if isinstance(payload, ThreadGridApi):
+            dataseq = self.__update_thread_grid_api(payload)
+            return True
         json_payload = asdict(payload)  # type: ignore
         if isinstance(payload, Organization):
             response = self.__update_organization(json_payload)
@@ -413,6 +421,9 @@ class AdministrationSettingsAPI:
     def __update_vbond(self, payload: dict) -> Response:
         endpoint = "/dataservice/settings/configuration/device"
         return self.session.post(endpoint, json=payload)
+
+    def __update_thread_grid_api(self, payload: ThreadGridApi) -> DataSequence[ThreadGridApi]:
+        return self.session.endpoints.configuration_settings.create_threat_grid_api_key(payload)
 
     @deprecated(
         "Use .endpoints.configuration_settings.edit_organizations() instead", category=CatalystwanDeprecationWarning

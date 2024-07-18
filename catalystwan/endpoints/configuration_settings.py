@@ -1,4 +1,4 @@
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 # mypy: disable-error-code="empty-body"
 import datetime
@@ -7,6 +7,7 @@ from typing import List, Literal, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, IPvAnyAddress, field_validator
 
 from catalystwan.endpoints import JSON, APIEndpoints, get, post, put, view
+from catalystwan.models.settings import ThreadGridApi
 from catalystwan.typed_list import DataSequence
 from catalystwan.utils.session_type import ProviderView, SingleTenantView
 
@@ -717,4 +718,8 @@ class ConfigurationSettings(APIEndpoints):
 
     @post("/settings/configuration/cloudProviderSetting", "data")
     def create_cloud_credentials(self, payload: CloudCredentials) -> DataSequence[CloudCredentials]:
+        ...
+
+    @post("/settings/configuration/threatGridApiKey", "data")
+    def create_threat_grid_api_key(self, payload: ThreadGridApi) -> DataSequence[ThreadGridApi]:
         ...

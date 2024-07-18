@@ -545,6 +545,9 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
         )
     )
 
+    # Add additional objects emmited by the conversion
+    ux2.thread_grid_api = policy_context.thread_grid_api
+
     ux2 = merge_parcels(ux2)
     transform_result.ux2_config = ux2
     if add_suffix:
