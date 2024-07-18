@@ -1,11 +1,9 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
-import typing
 from typing import List, Literal, Optional
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
-from catalystwan.models.configuration.feature_profile.common import arguments_as_optional_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global, as_optional_global
 
 Protocol = Literal[
     "both",
@@ -45,7 +43,13 @@ class Collectors(BaseModel):
 class CflowdParcel(_ParcelBase):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
     type_: Literal["cflowd"] = Field(default="cflowd", exclude=True)
-    parcel_name: Optional[str] = Field(default=None, description="This parcel does not have this field") # type: ignore
+    parcel_name: str = Field(
+        default="Cflowd",
+        exclude=True,
+        description="This field is not defined for this model",
+        serialization_alias="name",
+        validation_alias="name",
+    )
     collect_tloc_loopback: Optional[Global[bool]] = Field(
         default=Global[bool](value=False), validation_alias=AliasPath("data", "collectTlocLoopback")
     )
@@ -71,8 +75,6 @@ class CflowdParcel(_ParcelBase):
     )
     protocol: Optional[Global[Protocol]] = Field(default=None, validation_alias=AliasPath("data", "protocol"))
 
-    @typing.no_type_check
-    @arguments_as_optional_global
     def add_collector(
         self,
         address: Optional[str] = None,
@@ -86,26 +88,22 @@ class CflowdParcel(_ParcelBase):
             self.collectors = []
         self.collectors.append(
             Collectors(
-                address=address,
-                udp_port=udp_port,
-                vpn_id=vpn_id,
-                export_spread=export_spread,
-                bfd_metrics_export=bfd_metrics_export,
-                export_interval=export_interval,
+                address=as_optional_global(address),
+                udp_port=as_optional_global(udp_port),
+                vpn_id=as_optional_global(vpn_id),
+                export_spread=as_optional_global(export_spread),
+                bfd_metrics_export=as_optional_global(bfd_metrics_export),
+                export_interval=as_optional_global(export_interval),
             )
         )
 
-    @typing.no_type_check
-    @arguments_as_optional_global
     def set_customized_ipv4_record_fields(
         self, collect_dscp_output: Optional[bool] = False, collect_tos: Optional[bool] = False
     ):
         self.customized_ipv4_record_fields = CustomizedIpv4RecordFields(
-            collect_dscp_output=collect_dscp_output, collect_tos=collect_tos
+            collect_dscp_output=as_optional_global(collect_dscp_output), collect_tos=as_optional_global(collect_tos)
         )
 
-    @typing.no_type_check
-    @arguments_as_optional_global
     def set_flow(
         self,
         active_timeout: Optional[int] = 600,
@@ -113,10 +111,10 @@ class CflowdParcel(_ParcelBase):
         refresh_time: Optional[int] = 600,
         sampling_interval: Optional[int] = 1,
     ):
-        self.flow_active_timeout = active_timeout
-        self.flow_inactive_timeout = inactive_timeout
-        self.flow_refresh_time = refresh_time
-        self.flow_sampling_interval = sampling_interval
+        self.flow_active_timeout = as_optional_global(active_timeout)
+        self.flow_inactive_timeout = as_optional_global(inactive_timeout)
+        self.flow_refresh_time = as_optional_global(refresh_time)
+        self.flow_sampling_interval = as_optional_global(sampling_interval)
 
     def set_protocol(self, protocol: Protocol):
         self.protocol = as_global(protocol, Protocol)

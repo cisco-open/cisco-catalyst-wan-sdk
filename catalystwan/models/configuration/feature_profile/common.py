@@ -1,7 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from datetime import datetime
-from functools import wraps
 from ipaddress import IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
 from typing import List, Literal, Optional, Union
 from uuid import UUID
@@ -9,14 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing_extensions import Self
 
-from catalystwan.api.configuration_groups.parcel import (
-    Default,
-    Global,
-    Variable,
-    as_default,
-    as_global,
-    as_optional_global,
-)
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_default, as_global
 from catalystwan.models.common import (
     CableLengthLongValue,
     CableLengthShortValue,
@@ -825,14 +817,3 @@ Icmp6Msg = Literal[
     "time-exceeded",
     "unreachable",
 ]
-
-
-def arguments_as_optional_global(func):
-    wraps(func)
-
-    def wrapper(self, *args, **kwargs):
-        new_args = [as_optional_global(a) for a in args]
-        new_kwargs = {k: as_optional_global(v) for k, v in kwargs.items()}
-        return func(self, *new_args, **new_kwargs)
-
-    return wrapper

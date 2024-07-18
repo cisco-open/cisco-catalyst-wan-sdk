@@ -1,5 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
+import os
 import unittest
 from typing import Union
 from uuid import UUID, uuid4
@@ -38,7 +39,6 @@ def load_config() -> dict:
         username=username,
         password=password,
     )
-
 
 
 def create_session() -> ManagerSession:
