@@ -18,7 +18,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.sig_security import 
 from catalystwan.models.configuration.feature_profile.sdwan.system import AnySystemParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology import AnyTopologyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport import AnyTransportParcel
-from catalystwan.models.configuration.network_hierarchy import AnyNetworkHierarchy
+from catalystwan.models.configuration.network_hierarchy import AnyNetworkHierarchyParcel
 from catalystwan.utils.model import resolve_nested_base_model_unions
 
 ParcelType = Literal[
@@ -130,7 +130,7 @@ AnyParcel = Annotated[
         AnyApplicationPriorityParcel,
         AnyTopologyParcel,
         AnyRoutingParcel,
-        AnyNetworkHierarchy,
+        AnyNetworkHierarchyParcel,
     ],
     Field(discriminator="type_"),
 ]

@@ -7,7 +7,7 @@ from typing_extensions import Annotated
 from .cflowd import CflowdParcel
 from .node import NodeInfo
 
-AnyNetworkHierarchy = Annotated[
+AnyNetworkHierarchyParcel = Annotated[
     Union[CflowdParcel],
     Field(discriminator="type_"),
 ]
