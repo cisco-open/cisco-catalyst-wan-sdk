@@ -32,7 +32,6 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
 )
 from catalystwan.utils.config_migration.converters.feature_template.base import FTConverter
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
-from catalystwan.utils.config_migration.converters.utils import parse_interface_name
 from catalystwan.utils.config_migration.steps.constants import WAN_VPN_ETHERNET
 
 logger = logging.getLogger(__name__)
@@ -45,7 +44,7 @@ class WanInterfaceEthernetConverter(FTConverter):
         data = deepcopy(template_values)
 
         encapsulation = self.parse_encapsulations(data.get("tunnel_interface", {}).get("encapsulation", []))
-        interface_name = parse_interface_name(self, data)
+        interface_name = self.parse_interface_name(data)
         interface_description = data.get(
             "description", as_global(description)
         )  # Edge case where model doesn't have description but its required

@@ -10,9 +10,6 @@ from catalystwan.utils.config_migration.converters.policy.policy_definitions imp
 
 
 class TestCustomControlConverter(unittest.TestCase):
-    def setUp(self) -> None:
-        self.context = PolicyConvertContext()
-
     def test_custom_control_with_route_sequence_conversion(self):
         # Arrange
         default_action = "accept"
@@ -37,11 +34,11 @@ class TestCustomControlConverter(unittest.TestCase):
         region_id = 200
         region_role = "border-router"
         site_id = 1
-        site_list = uuid4()
         tloc_ip = IPv4Address("30.1.2.3")
         tloc_color = "private5"
         tloc_encap = "ipsec"
-        vpn_list = uuid4()
+        vpn_list_id = uuid4()
+        vpn_list_entries = map(str, [30, 31, 32])
         seq_name = "route_sequence"
         base_action = "accept"
         ip_type = "ipv4"
@@ -62,12 +59,12 @@ class TestCustomControlConverter(unittest.TestCase):
         route.match_prefix_list(prefix_list)
         route.match_region(region_id, region_role)
         route.match_site(site_id)
-        # route.match_site_list(site_list) siteList is mutually exclusive with {'siteId'}
         route.match_tloc(ip=tloc_ip, color=tloc_color, encap=tloc_encap)
-        route.match_vpn_list(vpn_list)
+        route.match_vpn_list(vpn_list_id)
+        # Arrange context
+        context = PolicyConvertContext(lan_vpns_by_list_id=dict.fromkeys([vpn_list_id], vpn_list_entries))
         # Act
-        uuid = uuid4()
-        parcel = convert(policy, uuid, context=self.context).output
+        parcel = convert(policy, uuid4(), context).output
         # Assert parcel
         assert isinstance(parcel, CustomControlParcel)
         assert parcel.parcel_name == name
@@ -116,12 +113,12 @@ class TestCustomControlConverter(unittest.TestCase):
         omp_tag = 2
         originator = IPv4Address("20.30.3.1")
         preference = 100
-        region_id = 200
-        region_role = "border-router"
-        site_id = 1
-        tloc_ip = IPv4Address("30.1.2.3")
-        tloc_color = "private5"
-        tloc_encap = "ipsec"
+        region_list_id = uuid4()
+        region_list_entries = ["Region-9", "Region-10"]
+        region_role = "edge-router"
+        site_list_id = uuid4()
+        site_list_entries = ["SITE_100", "SITE_200"]
+        tloc_list_id = uuid4()
         seq_name = "tloc_sequence"
         base_action = "accept"
         ip_type = "ipv4"
@@ -137,14 +134,16 @@ class TestCustomControlConverter(unittest.TestCase):
         tloc.match_omp_tag(omp_tag)
         tloc.match_originator(originator)
         tloc.match_preference(preference)
-        tloc.match_region(region_id, region_role)
-        tloc.match_site(site_id)
-        # tloc.match_site_list(site_list) siteList is mutually exclusive with {'siteId'}
-        tloc.match_tloc(ip=tloc_ip, color=tloc_color, encap=tloc_encap)
-        # tloc.match_tloc_list(tloc_list) tlocList is mutually exclusive with {'tloc'}
+        tloc.match_region_list(region_list_id, region_role)
+        tloc.match_site_list(site_list_id)
+        tloc.match_tloc_list(tloc_list_id)
+        # Arrange context
+        context = PolicyConvertContext(
+            sites_by_list_id=dict.fromkeys([site_list_id], site_list_entries),
+            regions_by_list_id=dict.fromkeys([region_list_id], region_list_entries),
+        )
         # Act
-        uuid = uuid4()
-        parcel = convert(policy, uuid, context=self.context).output
+        parcel = convert(policy, uuid4(), context).output
         # Assert parcel
         assert isinstance(parcel, CustomControlParcel)
         assert parcel.parcel_name == name
@@ -164,10 +163,8 @@ class TestCustomControlConverter(unittest.TestCase):
         assert seq.match.entries[4].omp_tag.value == omp_tag
         assert seq.match.entries[5].originator.value == str(originator)
         assert seq.match.entries[6].preference.value == preference
-        # assert seq.match.entries[9]..value == region_id
-        # assert seq.match.entries[10].region_role.value == region_role
-        # assert seq.match.entries[11].site.value == site_id
-        assert seq.match.entries[10].tloc.ip.value == str(tloc_ip)
-        assert seq.match.entries[10].tloc.color.value == tloc_color
-        assert seq.match.entries[10].tloc.encap.value == tloc_encap
-        # assert seq.match.entries[13].vpn_list.ref_id.value == str(vpn_list)
+        assert seq.match.entries[7].regions[0].region.value == region_list_entries[0]
+        assert seq.match.entries[7].regions[1].region.value == region_list_entries[1]
+        assert seq.match.entries[8].site.value[0] == site_list_entries[0]
+        assert seq.match.entries[8].site.value[1] == site_list_entries[1]
+        assert seq.match.entries[9].tloc_list.ref_id == str(tloc_list_id)

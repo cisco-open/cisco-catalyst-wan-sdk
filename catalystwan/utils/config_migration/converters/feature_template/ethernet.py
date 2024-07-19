@@ -23,7 +23,6 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.management
     StaticIPv6AddressConfig,
 )
 from catalystwan.utils.config_migration.converters.feature_template.helpers import create_dict_without_none
-from catalystwan.utils.config_migration.converters.utils import parse_interface_name
 from catalystwan.utils.config_migration.steps.constants import MANAGEMENT_VPN_ETHERNET
 
 from .base import FTConverter
@@ -39,7 +38,7 @@ class ManagementInterfaceEthernetConverter(FTConverter):
             parcel_name=name,
             parcel_description=description,
             advanced=self.parse_advanced(data),
-            interface_name=parse_interface_name(self, data),
+            interface_name=self.parse_interface_name(data),
             interface_description=data.get("description", Default[None](value=None)),
             intf_ip_address=self.parse_ipv4_address(data),
             shutdown=data.get("shutdown"),
