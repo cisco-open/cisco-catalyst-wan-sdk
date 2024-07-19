@@ -3,6 +3,8 @@ name: Run unittests
 on:
   pull_request:
 
+permissions: read-all
+
 jobs:
   unittests:
     runs-on: ubuntu-latest
