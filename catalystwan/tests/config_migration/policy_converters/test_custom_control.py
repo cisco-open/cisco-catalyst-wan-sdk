@@ -38,7 +38,7 @@ class TestCustomControlConverter(unittest.TestCase):
         tloc_color = "private5"
         tloc_encap = "ipsec"
         vpn_list_id = uuid4()
-        vpn_list_entries = map(str, [30, 31, 32])
+        vpn_list_entries = ["30", "31", "32"]
         seq_name = "route_sequence"
         base_action = "accept"
         ip_type = "ipv4"
@@ -77,22 +77,23 @@ class TestCustomControlConverter(unittest.TestCase):
         assert seq.sequence_ip_type.value == ip_type
         assert seq.sequence_name.value == seq_name
         assert seq.base_action.value == base_action
-        assert seq.match.entries[0].color_list.ref_id.value == str(color_list)
-        assert seq.match.entries[1].community.ref_id.value == str(community_list)
-        assert seq.match.entries[2].expanded_community.ref_id.value == str(expanded_community_list)
-        assert seq.match.entries[3].omp_tag.value == omp_tag
-        assert seq.match.entries[4].origin.value == origin
-        assert seq.match.entries[5].originator.value == str(originator)
-        assert seq.match.entries[6].path_type.value == path_type
-        assert seq.match.entries[7].preference.value == preference
-        assert seq.match.entries[8].prefix_list.ref_id.value == str(prefix_list)
-        # assert seq.match.entries[9]..value == region_id
-        # assert seq.match.entries[10].region_role.value == region_role
-        # assert seq.match.entries[11].site.value == site_id
-        assert seq.match.entries[12].tloc.ip.value == str(tloc_ip)
-        assert seq.match.entries[12].tloc.color.value == tloc_color
-        assert seq.match.entries[12].tloc.encap.value == tloc_encap
-        # assert seq.match.entries[13].vpn_list.ref_id.value == str(vpn_list)
+        entries = seq.match.entries
+        assert entries[0].color_list.ref_id.value == str(color_list)
+        assert entries[1].community.ref_id.value == str(community_list)
+        assert entries[2].expanded_community.ref_id.value == str(expanded_community_list)
+        assert entries[3].omp_tag.value == omp_tag
+        assert entries[4].origin.value == origin
+        assert entries[5].originator.value == str(originator)
+        assert entries[6].path_type.value == path_type
+        assert entries[7].preference.value == preference
+        assert entries[8].prefix_list.ref_id.value == str(prefix_list)
+        assert entries[9].regions[0].region.value == str(region_id)
+        assert entries[10].role.value == region_role
+        assert entries[11].site.value == [str(site_id)]
+        assert entries[12].tloc.ip.value == str(tloc_ip)
+        assert entries[12].tloc.color.value == tloc_color
+        assert entries[12].tloc.encap.value == tloc_encap
+        assert entries[13].vpn.value == vpn_list_entries
 
     def test_custom_control_with_tloc_sequence_conversion(self):
         # Arrange
@@ -156,15 +157,16 @@ class TestCustomControlConverter(unittest.TestCase):
         assert seq.sequence_ip_type.value == ip_type
         assert seq.sequence_name.value == seq_name
         assert seq.base_action.value == base_action
-        assert seq.match.entries[0].carrier.value == carrier
-        assert seq.match.entries[1].color_list.ref_id.value == str(color_list)
-        assert seq.match.entries[2].domain_id.value == domain_id
-        assert seq.match.entries[3].group_id.value == group_id
-        assert seq.match.entries[4].omp_tag.value == omp_tag
-        assert seq.match.entries[5].originator.value == str(originator)
-        assert seq.match.entries[6].preference.value == preference
-        assert seq.match.entries[7].regions[0].region.value == region_list_entries[0]
-        assert seq.match.entries[7].regions[1].region.value == region_list_entries[1]
-        assert seq.match.entries[8].site.value[0] == site_list_entries[0]
-        assert seq.match.entries[8].site.value[1] == site_list_entries[1]
-        assert seq.match.entries[9].tloc_list.ref_id == str(tloc_list_id)
+        entries = seq.match.entries
+        assert entries[0].carrier.value == carrier
+        assert entries[1].color_list.ref_id.value == str(color_list)
+        assert entries[2].domain_id.value == domain_id
+        assert entries[3].group_id.value == group_id
+        assert entries[4].omp_tag.value == omp_tag
+        assert entries[5].originator.value == str(originator)
+        assert entries[6].preference.value == preference
+        assert entries[7].regions[0].region.value == region_list_entries[0]
+        assert entries[7].regions[1].region.value == region_list_entries[1]
+        assert entries[8].role.value == region_role
+        assert entries[9].site.value == site_list_entries
+        assert entries[10].tloc_list.ref_id.value == str(tloc_list_id)
