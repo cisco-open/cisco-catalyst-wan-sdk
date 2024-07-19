@@ -42,6 +42,16 @@ class TestCustomControlConverter(unittest.TestCase):
         seq_name = "route_sequence"
         base_action = "accept"
         ip_type = "ipv4"
+        action_affinity = 3
+        action_community = "1000:10000"
+        action_community_additive = True
+        action_export_vpn_list_id = uuid4()
+        # action_export_vpn_list_entries = ["50", "51"]
+        action_omp_tag = 5
+        action_preference = 109
+        action_service_type = "netsvc1"
+        action_service_tloc_list_id = uuid4()
+        action_service_vpn = 70
 
         route = policy.add_route_sequence(
             name=seq_name,
@@ -61,6 +71,14 @@ class TestCustomControlConverter(unittest.TestCase):
         route.match_site(site_id)
         route.match_tloc(ip=tloc_ip, color=tloc_color, encap=tloc_encap)
         route.match_vpn_list(vpn_list_id)
+        route.associate_affinity_action(action_affinity)
+        route.associate_community_action(action_community, action_community_additive)
+        route.associate_export_to_action(action_export_vpn_list_id)
+        route.associate_omp_tag_action(action_omp_tag)
+        route.associate_preference_action(action_preference)
+        route.associate_service_action(
+            action_service_type, action_service_vpn, tloc_list_id=action_service_tloc_list_id
+        )
         # Arrange context
         context = PolicyConvertContext(lan_vpns_by_list_id=dict.fromkeys([vpn_list_id], vpn_list_entries))
         # Act
@@ -94,6 +112,9 @@ class TestCustomControlConverter(unittest.TestCase):
         assert entries[12].tloc.color.value == tloc_color
         assert entries[12].tloc.encap.value == tloc_encap
         assert entries[13].vpn.value == vpn_list_entries
+        action_set = seq.actions[0].set[0]
+        assert action_set.community.value == str(action_community)
+        assert action_set.community_additive.value == action_community_additive
 
     def test_custom_control_with_tloc_sequence_conversion(self):
         # Arrange
@@ -123,6 +144,9 @@ class TestCustomControlConverter(unittest.TestCase):
         seq_name = "tloc_sequence"
         base_action = "accept"
         ip_type = "ipv4"
+        action_affinity = 3
+        action_omp_tag = 9
+        action_preference = 11
         tloc = policy.add_tloc_sequence(
             name=seq_name,
             base_action=base_action,
@@ -138,6 +162,9 @@ class TestCustomControlConverter(unittest.TestCase):
         tloc.match_region_list(region_list_id, region_role)
         tloc.match_site_list(site_list_id)
         tloc.match_tloc_list(tloc_list_id)
+        tloc.associate_affinity_action(action_affinity)
+        tloc.associate_omp_tag_action(action_omp_tag)
+        tloc.associate_preference_action(action_preference)
         # Arrange context
         context = PolicyConvertContext(
             sites_by_list_id=dict.fromkeys([site_list_id], site_list_entries),

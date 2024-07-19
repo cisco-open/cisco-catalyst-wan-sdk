@@ -199,6 +199,19 @@ class Sequence(BaseModel):
         entries.append(entry)
         return entry
 
+    @property
+    def _action(self) -> Actions:
+        if self.actions is None:
+            self.actions = [Actions()]
+        return self.actions[0]
+
+    @property
+    def _action_set(self) -> ActionSet:
+        action = self._action
+        if action.set is None:
+            action.set = [ActionSet()]
+        return action.set[0]
+
     def match_carrier(self, carrier: CarrierType):
         entry = Entry(carrier=as_global(carrier, CarrierType))
         self._match(entry)
@@ -283,6 +296,12 @@ class Sequence(BaseModel):
     def match_vpns(self, vpns: List[str]):
         entry = Entry(vpn=as_global(vpns))
         self._match(entry)
+
+    def associate_community_additive_action(self, additive: bool) -> None:
+        self._action_set.community_additive = as_global(additive)
+
+    def associate_community_action(self, community: str) -> None:
+        self._action_set.community = as_global(community)
 
 
 class CustomControlParcel(_ParcelBase):

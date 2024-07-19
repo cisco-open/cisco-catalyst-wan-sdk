@@ -1,7 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from ipaddress import IPv4Address
-from typing import Any, List, Literal, Optional, Union, overload
+from typing import List, Literal, Optional, Union, overload
 from uuid import UUID
 
 from pydantic import ConfigDict, Field
@@ -9,6 +9,7 @@ from typing_extensions import Annotated
 
 from catalystwan.models.common import AcceptRejectActionType, EncapType, SequenceIpType, TLOCColor
 from catalystwan.models.policy.policy_definition import (
+    ActionSet,
     AffinityEntry,
     CarrierEntry,
     CarrierType,
@@ -101,8 +102,14 @@ AnyControlPolicyTLOCSequenceMatchEntry = Annotated[
     Field(discriminator="field"),
 ]
 
-ControlPolicyRouteSequenceActions = Any  # TODO
-ControlPolicyTLOCSequenceActions = Any  # TODO
+ControlPolicyRouteSequenceActions = Annotated[
+    Union[
+        ActionSet,
+        ExportToAction,
+    ],
+    Field(discriminator="type"),
+]
+ControlPolicyTLOCSequenceActions = ActionSet
 
 
 class ControlPolicyHeader(PolicyDefinitionBase):

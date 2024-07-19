@@ -253,6 +253,13 @@ def control(in_: ControlPolicy, uuid: UUID, context: PolicyConvertContext) -> Co
                         f"sequence[{in_seq.sequence_id}] contains vpn list which is not matching any defined vpn "
                         f"{in_match.field} = {in_match.ref}",
                     )
+        for in_action in in_seq.actions:
+            if in_action.type == "set":
+                for param in in_action.parameter:
+                    if param.field == "community" and param.value is not None:
+                        out_seq.associate_community_action(community=param.value)
+                    elif param.field == "communityAdditive":
+                        out_seq.associate_community_additive_action(additive=True)
     result.output = out
     return result
 
