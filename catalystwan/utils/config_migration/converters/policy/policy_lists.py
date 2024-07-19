@@ -75,7 +75,7 @@ from catalystwan.models.policy.list.region import RegionList, RegionListInfo
 from catalystwan.models.policy.list.site import SiteList, SiteListInfo
 from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList
 from catalystwan.models.policy.list.vpn import VPNList, VPNListInfo
-from catalystwan.models.settings import ThreadGridApi
+from catalystwan.models.settings import ThreatGridApi
 
 logger = getLogger(__name__)
 
@@ -424,10 +424,10 @@ def local_app_list(in_: LocalAppList, context: PolicyConvertContext) -> ConvertR
 
 
 def threat_grid_api(in_: ThreatGridApiKeyList, context: PolicyConvertContext) -> ConvertResult[None]:
-    out = ThreadGridApi()
+    out = ThreatGridApi()
     for entry in in_.entries:
         out.set_region_api_key(region=entry.region, apikey=entry.api_key)
-    context.thread_grid_api = out
+    context.threat_grid_api = out
     return ConvertResult[None](status="complete")
 
 

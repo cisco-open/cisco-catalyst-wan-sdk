@@ -12,7 +12,7 @@ class ThreadGridApiEntires(BaseModel):
     apikey: Optional[str] = Field(default="")
 
 
-class ThreadGridApi(BaseModel):
+class ThreatGridApi(BaseModel):
     model_config = ConfigDict(extra="forbid")
     entries: List[ThreadGridApiEntires] = Field(
         default_factory=lambda: [
@@ -26,7 +26,7 @@ class ThreadGridApi(BaseModel):
             if entry.region == region:
                 entry.apikey = apikey
                 return
-        raise ValueError(f"Region {region} not found in ThreadGridApi")
+        raise ValueError(f"Region {region} not found in ThreatGridApi")
 
     @model_serializer(mode="wrap")
     def envelope_data(self, handler: SerializerFunctionWrapHandler, info: SerializationInfo) -> Dict[str, Any]:

@@ -7,7 +7,7 @@ from typing import List, Literal, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, IPvAnyAddress, field_validator
 
 from catalystwan.endpoints import JSON, APIEndpoints, get, post, put, view
-from catalystwan.models.settings import ThreadGridApi
+from catalystwan.models.settings import ThreatGridApi
 from catalystwan.typed_list import DataSequence
 from catalystwan.utils.session_type import ProviderView, SingleTenantView
 
@@ -721,5 +721,5 @@ class ConfigurationSettings(APIEndpoints):
         ...
 
     @post("/settings/configuration/threatGridApiKey", "data")
-    def create_threat_grid_api_key(self, payload: ThreadGridApi) -> DataSequence[ThreadGridApi]:
+    def create_threat_grid_api_key(self, payload: ThreatGridApi) -> DataSequence[ThreatGridApi]:
         ...

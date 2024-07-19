@@ -34,7 +34,7 @@ from catalystwan.endpoints.administration_user_and_group import (
     UserUpdateRequest,
 )
 from catalystwan.exceptions import CatalystwanDeprecationWarning, CatalystwanException
-from catalystwan.models.settings import ThreadGridApi
+from catalystwan.models.settings import ThreatGridApi
 from catalystwan.typed_list import DataSequence
 from catalystwan.utils.creation_tools import asdict, create_dataclass
 
@@ -386,11 +386,11 @@ class AdministrationSettingsAPI:
         ...
 
     @overload
-    def update(self, payload: ThreadGridApi) -> bool:
+    def update(self, payload: ThreatGridApi) -> bool:
         ...
 
-    def update(self, payload: Union[Organization, Certificate, Password, Vbond, ThreadGridApi]) -> bool:
-        if isinstance(payload, ThreadGridApi):
+    def update(self, payload: Union[Organization, Certificate, Password, Vbond, ThreatGridApi]) -> bool:
+        if isinstance(payload, ThreatGridApi):
             dataseq = self.__update_thread_grid_api(payload)
             return len(dataseq) == 1
         json_payload = asdict(payload)  # type: ignore
@@ -422,7 +422,7 @@ class AdministrationSettingsAPI:
         endpoint = "/dataservice/settings/configuration/device"
         return self.session.post(endpoint, json=payload)
 
-    def __update_thread_grid_api(self, payload: ThreadGridApi) -> DataSequence[ThreadGridApi]:
+    def __update_thread_grid_api(self, payload: ThreatGridApi) -> DataSequence[ThreatGridApi]:
         return self.session.endpoints.configuration_settings.create_threat_grid_api_key(payload)
 
     @deprecated(

@@ -6,11 +6,11 @@ from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyE
 from catalystwan.utils.config_migration.converters.policy.policy_lists import convert
 
 
-class TestThreadGridApiConverter(unittest.TestCase):
+class TestThreatGridApiConverter(unittest.TestCase):
     def setUp(self) -> None:
         self.context = PolicyConvertContext()
 
-    def test_thread_grid_api_conversion(self):
+    def test_threat_grid_api_conversion(self):
         # Arrange
         policy = ThreatGridApiKeyList(
             name="ThreatGridApiKeyList",
@@ -22,10 +22,10 @@ class TestThreadGridApiConverter(unittest.TestCase):
         )
         # Act -- This action adds object to the context
         convert(policy, context=self.context)
-        thread = self.context.thread_grid_api
+        threat = self.context.threat_grid_api
         # Assert
-        assert len(thread.entries) == 2
-        assert thread.entries[0].region == "nam"
-        assert thread.entries[0].apikey == "456"
-        assert thread.entries[1].region == "eur"
-        assert thread.entries[1].apikey == "123"
+        assert len(threat.entries) == 2
+        assert threat.entries[0].region == "nam"
+        assert threat.entries[0].apikey == "456"
+        assert threat.entries[1].region == "eur"
+        assert threat.entries[1].apikey == "123"
