@@ -32,6 +32,7 @@ from .security.application_list import (
 from .security.data_prefix import SecurityDataPrefixEntry, SecurityDataPrefixParcel
 from .security.fqdn import FQDNDomainParcel, FQDNListEntry
 from .security.geolocation_list import GeoLocationListEntry, GeoLocationListParcel
+from .security.identity import IdentityEntries, IdentityParcel
 from .security.intrusion_prevention import IntrusionPreventionParcel
 from .security.ips_signature import IPSSignatureListEntry, IPSSignatureParcel
 from .security.local_domain import LocalDomainListEntry, LocalDomainParcel
@@ -57,6 +58,7 @@ AnyPolicyObjectParcel = Annotated[
         FowardingClassParcel,
         FQDNDomainParcel,
         GeoLocationListParcel,
+        IdentityParcel,
         IntrusionPreventionParcel,
         IPSSignatureParcel,
         IPv6DataPrefixParcel,
@@ -116,6 +118,8 @@ __all__ = (
     "FQDNListEntry",
     "GeoLocationListEntry",
     "GeoLocationListParcel",
+    "IdentityParcel",
+    "IdentityEntries",
     "IntrusionPreventionParcel",
     "IPSSignatureListEntry",
     "IPSSignatureParcel",
