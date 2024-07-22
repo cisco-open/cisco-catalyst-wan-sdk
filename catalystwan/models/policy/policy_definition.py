@@ -720,7 +720,7 @@ class ClassMapListEntry(BaseModel):
 class ServiceEntryValue(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     type: ServiceType
-    vpn: str
+    vpn: IntStr
     tloc: Optional[TLOCEntryValue] = None
     tloc_list: Optional[TLOCListEntry] = Field(
         default=None, validation_alias="tlocList", serialization_alias="tlocList"

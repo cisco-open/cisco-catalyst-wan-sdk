@@ -256,10 +256,33 @@ def control(in_: ControlPolicy, uuid: UUID, context: PolicyConvertContext) -> Co
         for in_action in in_seq.actions:
             if in_action.type == "set":
                 for param in in_action.parameter:
-                    if param.field == "community" and param.value is not None:
+                    if param.field == "affinity":
+                        out_seq.associate_affinitty_action(affinity=int(param.value))
+                    elif param.field == "community" and param.value is not None:
                         out_seq.associate_community_action(community=param.value)
                     elif param.field == "communityAdditive":
                         out_seq.associate_community_additive_action(additive=True)
+                    elif param.field == "service":
+                        if param.value.tloc_list is not None:
+                            out_seq.associate_service_action(
+                                service_type=param.value.type,
+                                vpn=param.value.vpn,
+                                tloc_list_id=param.value.tloc_list.ref,
+                            )
+                        elif param.value.tloc is not None:
+                            out_seq.associate_service_action(
+                                service_type=param.value.type,
+                                vpn=param.value.vpn,
+                                ip=param.value.tloc.ip,
+                                color=param.value.tloc.color,
+                                encap=param.value.tloc.encap,
+                            )
+                    elif param.field == "tloc":
+                        out_seq.associate_tloc(color=param.value.color, encap=param.value.encap, ip=param.value.ip)
+                    elif param.field == "tlocAction":
+                        out_seq.associate_tloc_action(tloc_action_type=param.value)
+                    elif param.field == "tlocList":
+                        out_seq.associate_tloc_list(tloc_list_id=param.ref)
     result.output = out
     return result
 

@@ -1,5 +1,5 @@
 from ipaddress import IPv4Address
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, overload
 from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, model_validator
@@ -68,6 +68,13 @@ class Tloc(BaseModel):
     color: Optional[Global[TLOCColor]] = Field(default=None)
     encap: Optional[Global[EncapType]] = Field(default=None)
     ip: Optional[Global[str]] = Field(default=None)
+
+    @staticmethod
+    def from_params(color: TLOCColor, encap: EncapType, ip: IPv4Address) -> "Tloc":
+        _color = as_global(color, TLOCColor)
+        _encap = as_global(encap, EncapType)
+        _ip = as_global(str(ip))
+        return Tloc(color=_color, encap=_encap, ip=_ip)
 
 
 class Entry(BaseModel):
@@ -297,11 +304,55 @@ class Sequence(BaseModel):
         entry = Entry(vpn=as_global(vpns))
         self._match(entry)
 
+    def associate_affinitty_action(self, affinity: int) -> None:
+        self._action_set.affinity = as_global(affinity)
+
     def associate_community_additive_action(self, additive: bool) -> None:
         self._action_set.community_additive = as_global(additive)
 
     def associate_community_action(self, community: str) -> None:
         self._action_set.community = as_global(community)
+
+    def associate_omp_tag_action(self, omp_tag: int) -> None:
+        self._action_set.omp_tag = as_global(omp_tag)
+
+    def associate_preference_action(self, preference: int) -> None:
+        self._action_set.preference = as_global(preference)
+
+    @overload
+    def associate_service_action(self, service_type: ServiceType, vpn: Optional[int], *, tloc_list_id: UUID) -> None:
+        ...
+
+    @overload
+    def associate_service_action(
+        self, service_type: ServiceType, vpn: Optional[int], *, ip: IPv4Address, color: TLOCColor, encap: EncapType
+    ) -> None:
+        ...
+
+    def associate_service_action(
+        self, service_type=ServiceType, vpn=Optional[int], *, tloc_list_id=None, ip=None, color=None, encap=None
+    ) -> None:
+        _vpn = as_global(vpn) if vpn is not None else None
+        _service_type = as_global(service_type, ServiceType)
+        if tloc_list_id is not None:
+            service = Service(
+                tloc_list=RefIdItem(ref_id=as_global(str(tloc_list_id))),
+                type=_service_type,
+                vpn=_vpn,
+            )
+        else:
+            _tloc = Tloc.from_params(color=color, encap=encap, ip=ip)
+            service = Service(tloc=_tloc, type=_service_type, vpn=_vpn)
+        self._action_set.service = service
+
+    def associate_tloc(self, color: TLOCColor, encap: EncapType, ip: IPv4Address) -> None:
+        self._action_set.tloc = Tloc.from_params(color=color, encap=encap, ip=ip)
+
+    def associate_tloc_action(self, tloc_action_type: TLOCActionType) -> None:
+        self._action_set.tloc_action = as_global(tloc_action_type, TLOCActionType)
+
+    def associate_tloc_list(self, tloc_list_id: UUID) -> None:
+        self._action_set.tloc_list = RefIdItem(ref_id=as_global(str(tloc_list_id)))
 
 
 class CustomControlParcel(_ParcelBase):

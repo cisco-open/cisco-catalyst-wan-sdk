@@ -113,6 +113,7 @@ class TestCustomControlConverter(unittest.TestCase):
         assert entries[12].tloc.encap.value == tloc_encap
         assert entries[13].vpn.value == vpn_list_entries
         action_set = seq.actions[0].set[0]
+        assert action_set.affinity.value == action_affinity
         assert action_set.community.value == str(action_community)
         assert action_set.community_additive.value == action_community_additive
 

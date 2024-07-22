@@ -227,7 +227,7 @@ class ControlPolicyRouteSequence(PolicyDefinitionSequenceBase):
         else:
             tloc_entry = None
             tloc_list_entry = TLOCListEntry(ref=tloc_list_id)
-        service_value = ServiceEntryValue(type=service_type, vpn=str(vpn), tloc=tloc_entry, tloc_list=tloc_list_entry)
+        service_value = ServiceEntryValue(type=service_type, vpn=vpn, tloc=tloc_entry, tloc_list=tloc_list_entry)
         self._insert_action_in_set(ServiceEntry(value=service_value))
 
     @accept_action
