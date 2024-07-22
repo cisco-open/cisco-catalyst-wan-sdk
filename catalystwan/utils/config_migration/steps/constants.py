@@ -26,6 +26,7 @@ VPN_ADDITIONAL_TEMPLATES = [
     "bgp",
     "cisco_ospfv3",
     "cisco_ospf",
+    "ospf"
 ]
 
 NO_SUBSTITUTE_ERROR = "NO_SUBSTITUTE_ERROR"
@@ -69,6 +70,7 @@ VPN_TEMPLATE_MAPPINGS: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {
             "cisco_bgp": WAN_BGP,
             "bgp": WAN_BGP,
             "cisco_ospf": WAN_OSPF,
+            "ospf": WAN_OSPF,
             "cisco_ospfv3": WAN_OSPFV3,
             "vpn-vedge-interface-gre": WAN_VPN_GRE,
             "cisco_vpn_interface_gre": WAN_VPN_GRE,
@@ -87,6 +89,7 @@ VPN_TEMPLATE_MAPPINGS: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {
             "cisco_bgp": LAN_BGP,
             "bgp": LAN_BGP,
             "cisco_ospf": LAN_OSPF,
+            "ospf": LAN_OSPF,
             "cisco_ospfv3": LAN_OSPFV3,
             "vpn-vedge-interface-gre": LAN_VPN_GRE,
             "cisco_vpn_interface": LAN_VPN_ETHERNET,
