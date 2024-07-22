@@ -119,10 +119,10 @@ class TemplatesAPI:
 
     def attach(self, name: str, device: Device, timeout_seconds: int = 300, **kwargs):
         template_type = self.get(DeviceTemplate).filter(name=name).single_or_default().config_type
-        if template_type == TemplateType.CLI:
+        if template_type == TemplateType.CLI.value:
             return self._attach_cli(name, device, timeout_seconds=timeout_seconds, **kwargs)
 
-        if template_type == TemplateType.FEATURE:
+        if template_type == TemplateType.FEATURE.value:
             return self._attach_feature(name, device, timeout_seconds=timeout_seconds, **kwargs)
 
         raise NotImplementedError()
