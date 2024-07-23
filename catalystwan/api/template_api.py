@@ -118,11 +118,14 @@ class TemplatesAPI:
         return self.session.endpoints.configuration_template_master.get_device_template_list(params=feature.value)
 
     def attach(self, name: str, device: Device, timeout_seconds: int = 300, **kwargs):
-        template_type = self.get(DeviceTemplate).filter(name=name).single_or_default().config_type
-        if template_type == TemplateType.CLI.value:
+        template_info = self.get(DeviceTemplate).filter(name=name).single_or_default()
+        if not template_info:
+            raise TemplateNotFoundError(f"Template with name [{name}] does not exists.")
+
+        if template_info.config_type == TemplateType.CLI.value:
             return self._attach_cli(name, device, timeout_seconds=timeout_seconds, **kwargs)
 
-        if template_type == TemplateType.FEATURE.value:
+        if template_info.config_type == TemplateType.FEATURE.value:
             return self._attach_feature(name, device, timeout_seconds=timeout_seconds, **kwargs)
 
         raise NotImplementedError()
