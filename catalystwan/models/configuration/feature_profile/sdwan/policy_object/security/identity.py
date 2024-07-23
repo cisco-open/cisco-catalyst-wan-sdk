@@ -5,7 +5,7 @@ from pydantic import AliasPath, BaseModel, Field
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_optional_global
 
 
-class IdentityEntries(BaseModel):
+class IdentityEntry(BaseModel):
     user: Optional[Global[str]] = Field(default=None)
     user_group: Optional[Global[str]] = Field(
         default=None, validation_alias="userGroup", serialization_alias="userGroup"
@@ -14,7 +14,7 @@ class IdentityEntries(BaseModel):
 
 class IdentityParcel(_ParcelBase):
     type_: Literal["security-identity"] = Field(default="security-identity", exclude=True)
-    entries: List[IdentityEntries] = Field(
+    entries: List[IdentityEntry] = Field(
         validation_alias=AliasPath("data", "entries"),
         default_factory=list,
         description="Array of Users and User Groups",
@@ -22,7 +22,7 @@ class IdentityParcel(_ParcelBase):
 
     def add_entry(self, user: Optional[str] = None, user_group: Optional[str] = None):
         self.entries.append(
-            IdentityEntries(
+            IdentityEntry(
                 user=as_optional_global(user),
                 user_group=as_optional_global(user_group),
             )

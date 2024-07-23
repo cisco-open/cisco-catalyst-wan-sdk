@@ -32,11 +32,12 @@ from .security.application_list import (
 from .security.data_prefix import SecurityDataPrefixEntry, SecurityDataPrefixParcel
 from .security.fqdn import FQDNDomainParcel, FQDNListEntry
 from .security.geolocation_list import GeoLocationListEntry, GeoLocationListParcel
-from .security.identity import IdentityEntries, IdentityParcel
+from .security.identity import IdentityEntry, IdentityParcel
 from .security.intrusion_prevention import IntrusionPreventionParcel
 from .security.ips_signature import IPSSignatureListEntry, IPSSignatureParcel
 from .security.local_domain import LocalDomainListEntry, LocalDomainParcel
 from .security.protocol_list import ProtocolListEntry, ProtocolListParcel
+from .security.scalable_group_tag import ScalableGroupTagEntry, ScalableGroupTagParcel
 from .security.security_port import SecurityPortListEntry, SecurityPortParcel
 from .security.ssl_decryption import SslDecryptionParcel
 from .security.ssl_decryption_profile import SslDecryptionProfileParcel
@@ -57,38 +58,40 @@ AnyPolicyObjectParcel = Annotated[
         ExtendedCommunityParcel,
         FowardingClassParcel,
         FQDNDomainParcel,
+        FQDNDomainParcel,
         GeoLocationListParcel,
+        GeoLocationListParcel,
+        IdentityParcel,
         IdentityParcel,
         IntrusionPreventionParcel,
         IPSSignatureParcel,
+        IPSSignatureParcel,
         IPv6DataPrefixParcel,
         IPv6PrefixListParcel,
+        LocalDomainParcel,
         LocalDomainParcel,
         MirrorParcel,
         PolicerParcel,
         PreferredColorGroupParcel,
         PrefixListParcel,
-        SLAClassParcel,
-        TlocParcel,
-        StandardCommunityParcel,
-        LocalDomainParcel,
-        FQDNDomainParcel,
-        IPSSignatureParcel,
-        SecurityPortParcel,
         ProtocolListParcel,
-        GeoLocationListParcel,
-        SecurityZoneListParcel,
+        ScalableGroupTagParcel,
         SecurityApplicationListParcel,
         SecurityDataPrefixParcel,
         SecurityPortParcel,
+        SecurityPortParcel,
         SecurityZoneListParcel,
+        SecurityZoneListParcel,
+        SLAClassParcel,
         SLAClassParcel,
         SslDecryptionParcel,
         SslDecryptionProfileParcel,
         StandardCommunityParcel,
+        StandardCommunityParcel,
         TlocParcel,
-        URLParcel,
+        TlocParcel,
         UrlFilteringParcel,
+        URLParcel,
     ],
     Field(discriminator="type_"),
 ]
@@ -118,8 +121,10 @@ __all__ = (
     "FQDNListEntry",
     "GeoLocationListEntry",
     "GeoLocationListParcel",
+    "IdentityEntry",
+    "IdentityEntry",
     "IdentityParcel",
-    "IdentityEntries",
+    "IdentityParcel",
     "IntrusionPreventionParcel",
     "IPSSignatureListEntry",
     "IPSSignatureParcel",
@@ -139,6 +144,8 @@ __all__ = (
     "PrefixListParcel",
     "ProtocolListEntry",
     "ProtocolListParcel",
+    "ScalableGroupTagEntry",
+    "ScalableGroupTagParcel",
     "SecurityApplicationFamilyListEntry",
     "SecurityApplicationListEntry",
     "SecurityApplicationListParcel",
@@ -158,9 +165,9 @@ __all__ = (
     "StandardCommunityParcel",
     "TlocEntry",
     "TlocParcel",
-    "URLParcel",
     "URLAllowParcel",
     "URLBlockParcel",
+    "URLParcel",
 )
 
 
