@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, List, Literal, Optional
+from typing import TYPE_CHECKING, List, Literal, Optional
 from uuid import UUID
 
-from jinja2 import DebugUndefined, Environment, FileSystemLoader, meta  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 if TYPE_CHECKING:
@@ -59,21 +57,19 @@ class DeviceTemplate(BaseModel):
 
     template_name: str = Field(serialization_alias="templateName", validation_alias="templateName")
     template_description: str = Field(serialization_alias="templateDescription", validation_alias="templateDescription")
-    general_templates: List[GeneralTemplate] = Field(
-        default=[], serialization_alias="generalTemplates", validation_alias="generalTemplates"
-    )
-    device_role: str = Field(default="sdwan-edge", serialization_alias="deviceRole", validation_alias="deviceRole")
     device_type: str = Field(serialization_alias="deviceType", validation_alias="deviceType")
-    security_policy_id: str = Field(
-        default="", serialization_alias="securityPolicyId", validation_alias="securityPolicyId"
+    device_role: str = Field(default="sdwan-edge", serialization_alias="deviceRole", validation_alias="deviceRole")
+    config_type: Optional[str] = Field(
+        default="template", serialization_alias="configType", validation_alias="configType"
+    )
+    factory_default: Optional[bool] = Field(
+        default=False, serialization_alias="factoryDefault", validation_alias="factoryDefault"
     )
     policy_id: str = Field(default="", serialization_alias="policyId", validation_alias="policyId")
     feature_template_uid_range: Optional[List] = Field(
         default=[], serialization_alias="featureTemplateUidRange", validation_alias="featureTemplateUidRange"
     )
-    config_type: Optional[str] = Field(
-        default="template", serialization_alias="configType", validation_alias="configType"
-    )
+
     connection_preference_required: Optional[bool] = Field(
         default=True,
         serialization_alias="connectionPreferenceRequired",
@@ -82,8 +78,12 @@ class DeviceTemplate(BaseModel):
     connection_preference: Optional[bool] = Field(
         default=True, serialization_alias="connectionPreference", validation_alias="connectionPreference"
     )
-    factory_default: Optional[bool] = Field(
-        default=False, serialization_alias="factoryDefault", validation_alias="factoryDefault"
+
+    general_templates: List[GeneralTemplate] = Field(
+        default=[], serialization_alias="generalTemplates", validation_alias="generalTemplates"
+    )
+    security_policy_id: str = Field(
+        default="", serialization_alias="securityPolicyId", validation_alias="securityPolicyId"
     )
 
     def get_security_policy_uuid(self) -> Optional[UUID]:
@@ -93,19 +93,7 @@ class DeviceTemplate(BaseModel):
         return str_to_uuid(self.policy_id)
 
     def generate_payload(self) -> str:
-        env = Environment(
-            loader=FileSystemLoader(self.payload_path.parent),
-            trim_blocks=True,
-            lstrip_blocks=True,
-            undefined=DebugUndefined,
-        )
-        template = env.get_template(self.payload_path.name)
-        output = template.render(self.model_dump())
-
-        ast = env.parse(output)
-        if meta.find_undeclared_variables(ast):
-            logger.info(meta.find_undeclared_variables(ast))
-            raise Exception("There are undeclared variables.")
+        output = self.model_dump_json(by_alias=True)
         return output
 
     @field_validator("general_templates", mode="before")
@@ -118,8 +106,6 @@ class DeviceTemplate(BaseModel):
             else:
                 output.append(template)
         return output
-
-    payload_path: ClassVar[Path] = Path(__file__).parent / "device_template_payload.json.j2"
 
     @classmethod
     def get(self, name: str, session: ManagerSession) -> DeviceTemplate:

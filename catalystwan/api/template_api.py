@@ -495,18 +495,18 @@ class TemplatesAPI:
                 .id
             )
             payload = json.loads(device_template.generate_payload())
-            response = self.session.put(f"/dataservice/template/device/{template_id}", json=payload)
+            response = self.session.endpoints.configuration_template_master.edit_template(
+                template_id=template_id, payload=payload
+            )
+            return response
         else:
-            # endpoint = "/dataservice/template/device/feature/"
-            # response = self.session.post(endpoint, json=payload)
             payload = json.loads(device_template.generate_payload())
             response = (
                 self.session.endpoints.configuration_template_master.create_device_template_from_feature_templates(
                     payload=payload
                 )
             )
-
-        return response.text
+            return response.template_id
 
     def is_created_by_generator(self, template: FeatureTemplate) -> bool:
         """Checks if template is created by generator
