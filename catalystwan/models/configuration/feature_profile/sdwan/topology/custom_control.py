@@ -377,14 +377,12 @@ class CustomControlParcel(_ParcelBase):
 
     def assign_target(
         self,
-        vpns: List[str],
         inbound_sites: Optional[List[str]] = None,
         outbound_sites: Optional[List[str]] = None,
     ) -> Target:
         self.target = Target(
             inbound_sites=as_global(inbound_sites) if inbound_sites else None,
             outbound_sites=as_global(outbound_sites) if outbound_sites else None,
-            vpn=Global[List[str]](value=vpns),
         )
         return self.target
 

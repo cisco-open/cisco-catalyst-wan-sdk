@@ -17,7 +17,6 @@ from catalystwan.models.configuration.config_migration import (
     TransformedConfigGroup,
     TransformedFeatureProfile,
     TransformedParcel,
-    TransformedTopologyGroup,
     TransformHeader,
     UX1Config,
     UX2Config,
@@ -25,12 +24,12 @@ from catalystwan.models.configuration.config_migration import (
     VersionInfo,
 )
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
-from catalystwan.models.configuration.topology_group import TopologyGroup
 from catalystwan.models.policy import AnyPolicyDefinitionInfo
 from catalystwan.session import ManagerSession
 from catalystwan.utils.config_migration.converters.feature_template.cloud_credentials import (
     create_cloud_credentials_from_templates,
 )
+from catalystwan.utils.config_migration.converters.policy.centralized_policy import CentralizedPolicyConverter
 from catalystwan.utils.config_migration.converters.policy.policy_definitions import convert as convert_policy_definition
 from catalystwan.utils.config_migration.converters.policy.policy_lists import convert as convert_policy_list
 from catalystwan.utils.config_migration.converters.policy.policy_settings import convert_localized_policy_settings
@@ -223,8 +222,6 @@ VPN_TEMPLATE_TYPES = [
     "vpn-vedge",
 ]
 
-TOPOLOGY_POLICIES = ["control", "hubAndSpoke", "mesh"]
-
 
 def log_progress(task: str, completed: int, total: int) -> None:
     logger.info(f"{task} {completed}/{total}")
@@ -373,7 +370,9 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
         ux2.cloud_credentials = create_cloud_credentials_from_templates(cloud_credential_templates)
 
     # Prepare Context for Policy Conversion (VPN Parcels must be already transformed)
-    policy_context = PolicyConvertContext.from_configs(ux1.network_hierarchy, ux2.profile_parcels)
+    policy_context = PolicyConvertContext.from_configs(
+        ux1.network_hierarchy, ux2.profile_parcels, ux1.version.platform_api
+    )
     policy_context.populate_activated_centralized_policy_item_ids(ux1.policies.centralized_policies)
 
     # Policy Lists
@@ -521,30 +520,8 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
             )
             ux2.profile_parcels.append(TransformedParcel(header=header, parcel=sp_parcel))
 
-    # Topology Group and Profile
-    topology_sources = [p.definition_id for p in ux1.policies.policy_definitions if p.type in TOPOLOGY_POLICIES]
-    topology_name = "Migrated-from-policy-config"
-    topology_description = "Created by config migration tool"
-    ux2.feature_profiles.append(
-        TransformedFeatureProfile(
-            header=TransformHeader(
-                type="topology",
-                origin=UUID(int=0),
-                subelements=set(topology_sources),
-                origname=topology_name,
-            ),
-            feature_profile=FeatureProfileCreationPayload(
-                name=topology_name,
-                description=topology_description,
-            ),
-        )
-    )
-    ux2.topology_groups.append(
-        TransformedTopologyGroup(
-            header=TransformHeader(type="", origin=UUID(int=0), origname=topology_name, subelements=set()),
-            topology_group=TopologyGroup(name=topology_name, description=topology_description, solution="sdwan"),
-        )
-    )
+    # Centralized Policies
+    CentralizedPolicyConverter(ux1=ux1, context=policy_context, ux2=ux2).update_topology_groups_and_profiles()
 
     # Add additional objects emmited by the conversion
     ux2.thread_grid_api = policy_context.threat_grid_api

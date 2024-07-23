@@ -40,7 +40,7 @@ from catalystwan.models.policy.security import (
 )
 from catalystwan.models.settings import ThreatGridApi
 from catalystwan.models.templates import FeatureTemplateInformation, TemplateInformation
-from catalystwan.version import parse_api_version
+from catalystwan.version import NullVersion, parse_api_version
 
 T = TypeVar("T", bound=AnyParcel)
 TO = TypeVar("TO")
@@ -234,6 +234,9 @@ class UX2Config(BaseModel):
 
     def list_transformed_parcels_with_origin(self, origin: Set[UUID]) -> List[TransformedParcel]:
         return [p for p in self.profile_parcels if p.header.origin in origin]
+
+    def remove_transformed_parcels_with_origin(self, origin: Set[UUID]):
+        self.profile_parcels = [p for p in self.profile_parcels if p.header.origin not in origin]
 
     def add_subelement_in_config_group(
         self, profile_types: List[ProfileType], device_template_id: UUID, subelement: UUID
@@ -542,6 +545,7 @@ class QoSMapResidues:
 @dataclass
 class PolicyConvertContext:
     # conversion input
+    platform_version: Version = NullVersion()
     region_map: Dict[str, int] = field(default_factory=dict)
     site_map: Dict[str, int] = field(default_factory=dict)
     lan_vpn_map: Dict[str, Union[int, str]] = field(default_factory=dict)
@@ -582,8 +586,9 @@ class PolicyConvertContext:
     def from_configs(
         network_hierarchy: List[NodeInfo],
         transformed_parcels: List[TransformedParcel],
+        platform_version: Version,
     ) -> "PolicyConvertContext":
-        context = PolicyConvertContext()
+        context = PolicyConvertContext(platform_version=platform_version)
         for node in network_hierarchy:
             if node.data.hierarchy_id is not None:
                 if node.data.label == "SITE" and node.data.hierarchy_id.site_id is not None:

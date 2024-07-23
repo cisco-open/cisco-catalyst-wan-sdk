@@ -31,5 +31,21 @@ class TopologyGroup(BaseModel):
         self.profiles.extend([Profile(id=i) for i in ids])
 
 
+class ActivateRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    deactivate_topology: bool = Field(validation_alias="deactivateTopology", serialization_alias="deactivateTopology")
+
+
+class DeployResponse(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    parent_task_id: str = Field(validation_alias="parentTaskId", serialization_alias="parentTaskId")
+
+
+class Preview(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    existing_config: str = Field(validation_alias="existingConfig", serialization_alias="existingConfig")
+    new_config: str = Field(validation_alias="newConfig", serialization_alias="newConfig")
+
+
 class TopologyGroupId(BaseModel):
     id: UUID
