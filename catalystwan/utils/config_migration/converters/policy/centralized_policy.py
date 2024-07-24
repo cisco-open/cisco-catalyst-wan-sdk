@@ -4,7 +4,10 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Set
 from uuid import UUID, uuid4
 
+from pydantic import ValidationError
+
 from catalystwan.models.configuration.config_migration import (
+    FailedConversionItem,
     PolicyConvertContext,
     TransformedFeatureProfile,
     TransformedParcel,
@@ -65,6 +68,7 @@ class CentralizedPolicyConverter:
         self.unreferenced_topologies: List[TransformedParcel] = list()
         self.topology_lookup: Dict[UUID, List[TransformedParcel]] = dict()
         self._create_topology_by_policy_id_lookup()
+        self.failed_items: List[FailedConversionItem] = list()
 
     def _create_topology_by_policy_id_lookup(self) -> None:
         for policy_definition in self.ux1.policies.policy_definitions:
@@ -84,27 +88,33 @@ class CentralizedPolicyConverter:
     def update_topology_groups_and_profiles(self) -> None:
         parcel_remove_ids: Set[UUID] = set()
         for centralized_policy in self.ux1.policies.centralized_policies:
+            problems: List[str] = list()
             if centralized_policy.policy_type == "feature":
                 dst_transformed_parcels: List[TransformedParcel] = list()
                 if src_transformed_parcels := self.topology_lookup.get(centralized_policy.policy_id):
                     for src_transformed_parcel in src_transformed_parcels:
-                        assert isinstance(
-                            src_transformed_parcel.parcel, (MeshParcel, HubSpokeParcel, CustomControlParcel)
-                        )
-                        parcel_remove_ids.add(src_transformed_parcel.header.origin)
-                        parcel = src_transformed_parcel.parcel.model_copy(deep=True)
-                        header = src_transformed_parcel.header.model_copy(deep=True)
-                        if parcel.type_ == "custom-control":
-                            assembly = find_control_assembly(centralized_policy, header.origin)
-                            application = convert_control_policy_application(assembly=assembly, context=self.context)
-                            parcel.assign_target_sites(
-                                inbound_sites=application.inbound_sites,
-                                outbound_sites=application.outbound_sites,
+                        try:
+                            assert isinstance(
+                                src_transformed_parcel.parcel, (MeshParcel, HubSpokeParcel, CustomControlParcel)
                             )
-                        header.origin = uuid4()
-                        dst_transformed_parcel = TransformedParcel(header=header, parcel=parcel)
-                        dst_transformed_parcels.append(dst_transformed_parcel)
-                        self.ux2.profile_parcels.append(dst_transformed_parcel)
+                            parcel_remove_ids.add(src_transformed_parcel.header.origin)
+                            parcel = src_transformed_parcel.parcel.model_copy(deep=True)
+                            header = src_transformed_parcel.header.model_copy(deep=True)
+                            if parcel.type_ == "custom-control":
+                                assembly = find_control_assembly(centralized_policy, header.origin)
+                                application = convert_control_policy_application(
+                                    assembly=assembly, context=self.context
+                                )
+                                parcel.assign_target_sites(
+                                    inbound_sites=application.inbound_sites,
+                                    outbound_sites=application.outbound_sites,
+                                )
+                            header.origin = uuid4()
+                            dst_transformed_parcel = TransformedParcel(header=header, parcel=parcel)
+                            dst_transformed_parcels.append(dst_transformed_parcel)
+                            self.ux2.profile_parcels.append(dst_transformed_parcel)
+                        except (ValidationError, AssertionError) as e:
+                            problems.append(str(e))
                 if dst_transformed_parcels:
                     self.ux2.feature_profiles.append(
                         TransformedFeatureProfile(
@@ -135,6 +145,10 @@ class CentralizedPolicyConverter:
                             ),
                         )
                     )
+            if problems:
+                self.failed_items.append(
+                    FailedConversionItem(policy=centralized_policy, exception_message="\n".join(problems))
+                )
         self.export_standalone_topology_parcels()
         self.ux2.remove_transformed_parcels_with_origin(parcel_remove_ids)
 

@@ -384,8 +384,8 @@ class CustomControlParcel(_ParcelBase):
         self.target = Target(
             vpn=Global[List[str]](value=_dummy_vpns),
             level=as_global("SITE", Level),
-            inbound_sites=as_global(inbound_sites),
-            outbound_sites=as_global(outbound_sites),
+            inbound_sites=as_global(inbound_sites) if inbound_sites else None,
+            outbound_sites=as_global(outbound_sites) if outbound_sites else None,
         )
         return self.target
 
