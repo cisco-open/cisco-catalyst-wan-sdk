@@ -75,11 +75,11 @@ class CentralizedPolicyConverter:
                 )
                 if policy_definition.reference_count == 0:
                     self.unreferenced_topologies.extend(transformed_topology_parcels)
-                for ref in policy_definition.references:
-                    if self.topology_lookup.get(ref.id) is not None:
-                        self.topology_lookup[ref.id].extend(transformed_topology_parcels)
+                for ref_id in set([ref.id for ref in policy_definition.references]):
+                    if self.topology_lookup.get(ref_id) is not None:
+                        self.topology_lookup[ref_id].extend(transformed_topology_parcels)
                     else:
-                        self.topology_lookup[ref.id] = list(transformed_topology_parcels)
+                        self.topology_lookup[ref_id] = list(transformed_topology_parcels)
 
     def update_topology_groups_and_profiles(self) -> None:
         parcel_remove_ids: Set[UUID] = set()
@@ -97,8 +97,9 @@ class CentralizedPolicyConverter:
                         if parcel.type_ == "custom-control":
                             assembly = find_control_assembly(centralized_policy, header.origin)
                             application = convert_control_policy_application(assembly=assembly, context=self.context)
-                            parcel.assign_target(
-                                inbound_sites=application.inbound_sites, outbound_sites=application.outbound_sites
+                            parcel.assign_target_sites(
+                                inbound_sites=application.inbound_sites,
+                                outbound_sites=application.outbound_sites,
                             )
                         header.origin = uuid4()
                         dst_transformed_parcel = TransformedParcel(header=header, parcel=parcel)
@@ -134,13 +135,17 @@ class CentralizedPolicyConverter:
                             ),
                         )
                     )
+        self.export_standalone_topology_parcels()
         self.ux2.remove_transformed_parcels_with_origin(parcel_remove_ids)
 
     def export_standalone_topology_parcels(self):
         # Topology Group and Profile
         if self.unreferenced_topologies:
-            topology_name = "Unreferenced Topologies"
-            topology_description = "Created by config migration tool"
+            topology_name = "Unreferenced-Topologies"
+            topology_description = (
+                "Created by config migration tool, "
+                "contains topologies which were not attached to any Centralized Policy"
+            )
             self.ux2.feature_profiles.append(
                 TransformedFeatureProfile(
                     header=TransformHeader(

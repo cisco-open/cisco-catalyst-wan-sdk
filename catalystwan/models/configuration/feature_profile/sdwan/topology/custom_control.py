@@ -169,7 +169,7 @@ class Actions(BaseModel):
 
 class Sequence(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    actions: Optional[List[Actions]] = Field(default=None)
+    actions: Optional[List[Actions]] = Field(default_factory=list)
     base_action: Optional[Global[BaseAction]] = Field(
         default=None, validation_alias="baseAction", serialization_alias="baseAction"
     )
@@ -208,7 +208,7 @@ class Sequence(BaseModel):
 
     @property
     def _action(self) -> Actions:
-        if self.actions is None:
+        if not self.actions:
             self.actions = [Actions()]
         return self.actions[0]
 
@@ -375,14 +375,17 @@ class CustomControlParcel(_ParcelBase):
     def set_default_action(self, action: BaseAction = "reject"):
         self.default_action = as_global(action, BaseAction)
 
-    def assign_target(
+    def assign_target_sites(
         self,
-        inbound_sites: Optional[List[str]] = None,
-        outbound_sites: Optional[List[str]] = None,
+        inbound_sites: List[str],
+        outbound_sites: List[str],
+        _dummy_vpns: List[str] = [";dummy-vpn"],
     ) -> Target:
         self.target = Target(
-            inbound_sites=as_global(inbound_sites) if inbound_sites else None,
-            outbound_sites=as_global(outbound_sites) if outbound_sites else None,
+            vpn=Global[List[str]](value=_dummy_vpns),
+            level=as_global("SITE", Level),
+            inbound_sites=as_global(inbound_sites),
+            outbound_sites=as_global(outbound_sites),
         )
         return self.target
 
