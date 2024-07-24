@@ -78,19 +78,41 @@ class UX2ConfigPusher:
         )
 
     def push(self) -> UX2ConfigPushResult:
-        self._create_cloud_credentials()
-        self._create_thread_grid_api()
-        self._create_cflowd()
-        self._create_config_groups()
-        self._groups_of_interests_pusher.push()
-        self._localized_policy_feature_pusher.push()
-        self._security_policy_pusher.push()
-        self._create_topology_groups(
-            self._push_context.default_policy_object_profile_id
-        )  # needs to be executed after vpn parcels and groups of interests are created
-        self._push_result.report.set_failed_push_parcels_flat_list()
-        logger.debug(f"Configuration push completed. Rollback configuration {self._push_result}")
+        self._create_sigs()
+        # self._create_cloud_credentials()
+        # self._create_thread_grid_api()
+        # self._create_cflowd()
+        # self._create_config_groups()
+        # self._groups_of_interests_pusher.push()
+        # self._localized_policy_feature_pusher.push()
+        # self._security_policy_pusher.push()
+        # self._create_topology_groups(
+        #     self._push_context.default_policy_object_profile_id
+        # )  # needs to be executed after vpn parcels and groups of interests are created
+        # self._push_result.report.set_failed_push_parcels_flat_list()
+        # logger.debug(f"Configuration push completed. Rollback configuration {self._push_result}")
         return self._push_result
+
+    def _create_sigs(self):
+        api = self._session.api.sdwan_feature_profiles.sig_security
+        sigs = [p for p in self._ux2_config.profile_parcels if p.header.type == "sig"]
+        profiles = []
+        for sig in sigs:
+            self._ux2_config.profile_parcels.remove(sig)
+            try:
+                profile_name = f"FROM_{sig.header.origname}"
+                profile_uuid = api.create_profile(profile_name, "Feature Profile created from SIG Feature Template").id
+                parcel_uuid = api.create_parcel(profile_uuid, sig.parcel).id
+                created_parcel = (sig.parcel.parcel_name, parcel_uuid)
+                profiles.append(
+                    FeatureProfileBuildReport(
+                        profile_name=profile_name, profile_uuid=profile_uuid, created_parcels=[created_parcel]
+                    )
+                )
+                self._push_result.rollback.add_feature_profile(profile_uuid, "sig-security")
+            except ManagerHTTPError as e:
+                logger.error(f"Error occured during sig creation: {e}")
+        self._push_result.report.add_standalone_feature_profiles(profiles)
 
     def _create_cloud_credentials(self):
         cloud_credentials = self._ux2_config.cloud_credentials
