@@ -23,6 +23,7 @@ from catalystwan.models.policy.list.data_ipv6_prefix import DataIPv6PrefixList, 
 from catalystwan.models.policy.list.data_prefix import DataPrefixList, DataPrefixListInfo
 from catalystwan.models.policy.list.fqdn import FQDNList, FQDNListInfo
 from catalystwan.models.policy.list.geo_location import GeoLocationList, GeoLocationListInfo
+from catalystwan.models.policy.list.identity import IdentityList, IdentityListInfo
 from catalystwan.models.policy.list.ips_signature import IPSSignatureList, IPSSignatureListInfo
 from catalystwan.models.policy.list.ipv6_prefix import IPv6PrefixList, IPv6PrefixListInfo
 from catalystwan.models.policy.list.local_app import LocalAppList, LocalAppListInfo
@@ -34,6 +35,7 @@ from catalystwan.models.policy.list.preferred_color_group import PreferredColorG
 from catalystwan.models.policy.list.prefix import PrefixList, PrefixListInfo
 from catalystwan.models.policy.list.protocol_name import ProtocolNameList, ProtocolNameListInfo
 from catalystwan.models.policy.list.region import RegionList, RegionListInfo
+from catalystwan.models.policy.list.scalable_group_tag import ScalableGroupTagList, ScalableGroupTagListInfo
 from catalystwan.models.policy.list.site import SiteList, SiteListInfo
 from catalystwan.models.policy.list.sla import SLAClassList, SLAClassListInfo
 from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList, ThreatGridApiKeyListInfo
@@ -129,6 +131,7 @@ AnyPolicyList = Annotated[
         GeoLocationList,
         IPSSignatureList,
         IPv6PrefixList,
+        IdentityList,
         LocalAppList,
         LocalDomainList,
         MirrorList,
@@ -148,6 +151,7 @@ AnyPolicyList = Annotated[
         URLAllowList,
         VPNList,
         ZoneList,
+        ScalableGroupTagList,
     ],
     Field(discriminator="type"),
 ]
@@ -169,6 +173,7 @@ AnyPolicyListInfo = Annotated[
         IPSSignatureListInfo,
         IPv6PrefixListInfo,
         LocalAppListInfo,
+        IdentityListInfo,
         LocalDomainListInfo,
         MirrorListInfo,
         PolicerListInfo,
@@ -187,6 +192,7 @@ AnyPolicyListInfo = Annotated[
         URLBlockListInfo,
         VPNListInfo,
         ZoneListInfo,
+        ScalableGroupTagListInfo,
     ],
     Field(discriminator="type"),
 ]
@@ -294,6 +300,8 @@ __all__ = (
     "VPNMembershipPolicy",
     "ZoneBasedFWPolicy",
     "ZoneList",
+    "ScalableGroupTagList",
+    "IdentityList",
 )
 
 
