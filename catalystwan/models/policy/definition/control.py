@@ -1,14 +1,15 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from ipaddress import IPv4Address
-from typing import Any, List, Literal, Optional, Union, overload
+from typing import List, Literal, Optional, Union, overload
 from uuid import UUID
 
 from pydantic import ConfigDict, Field
 from typing_extensions import Annotated
 
-from catalystwan.models.common import AcceptRejectActionType, EncapType, TLOCColor
+from catalystwan.models.common import AcceptRejectActionType, EncapType, SequenceIpType, TLOCColor
 from catalystwan.models.policy.policy_definition import (
+    ActionSet,
     AffinityEntry,
     CarrierEntry,
     CarrierType,
@@ -49,6 +50,7 @@ from catalystwan.models.policy.policy_definition import (
     TLOCEntry,
     TLOCEntryValue,
     TLOCListEntry,
+    VPNEntry,
     VPNListEntry,
     accept_action,
 )
@@ -73,6 +75,7 @@ AnyControlPolicyRouteSequenceMatchEntry = Annotated[
         TLOCEntry,
         TLOCListEntry,
         VPNListEntry,
+        VPNEntry,
     ],
     Field(discriminator="field"),
 ]
@@ -99,8 +102,14 @@ AnyControlPolicyTLOCSequenceMatchEntry = Annotated[
     Field(discriminator="field"),
 ]
 
-ControlPolicyRouteSequenceActions = Any  # TODO
-ControlPolicyTLOCSequenceActions = Any  # TODO
+ControlPolicyRouteSequenceActions = Annotated[
+    Union[
+        ActionSet,
+        ExportToAction,
+    ],
+    Field(discriminator="type"),
+]
+ControlPolicyTLOCSequenceActions = ActionSet
 
 
 class ControlPolicyHeader(PolicyDefinitionBase):
@@ -108,7 +117,7 @@ class ControlPolicyHeader(PolicyDefinitionBase):
 
 
 class ControlPolicyRouteSequenceMatch(Match):
-    entries: List[AnyControlPolicyRouteSequenceMatchEntry] = []
+    entries: List[AnyControlPolicyRouteSequenceMatchEntry] = Field(default_factory=list)
 
 
 class ControlPolicyTLOCSequenceMatch(Match):
@@ -218,7 +227,7 @@ class ControlPolicyRouteSequence(PolicyDefinitionSequenceBase):
         else:
             tloc_entry = None
             tloc_list_entry = TLOCListEntry(ref=tloc_list_id)
-        service_value = ServiceEntryValue(type=service_type, vpn=str(vpn), tloc=tloc_entry, tloc_list=tloc_list_entry)
+        service_value = ServiceEntryValue(type=service_type, vpn=vpn, tloc=tloc_entry, tloc_list=tloc_list_entry)
         self._insert_action_in_set(ServiceEntry(value=service_value))
 
     @accept_action
@@ -322,23 +331,23 @@ class ControlPolicy(ControlPolicyHeader, DefinitionWithSequencesCommonBase):
     model_config = ConfigDict(populate_by_name=True)
 
     def add_route_sequence(
-        self, name: str = "Route", base_action: AcceptRejectActionType = "reject"
+        self, name: str = "Route", base_action: AcceptRejectActionType = "reject", ip_type: SequenceIpType = "ipv4"
     ) -> ControlPolicyRouteSequence:
         seq = ControlPolicyRouteSequence(
             sequence_name=name,
             base_action=base_action,
-            sequence_ip_type="ipv4",
+            sequence_ip_type=ip_type,
         )
         self.add(seq)
         return seq
 
     def add_tloc_sequence(
-        self, name: str = "TLOC", base_action: AcceptRejectActionType = "reject"
+        self, name: str = "TLOC", base_action: AcceptRejectActionType = "reject", ip_type: SequenceIpType = "ipv4"
     ) -> ControlPolicyTLOCSequence:
         seq = ControlPolicyTLOCSequence(
             sequence_name=name,
             base_action=base_action,
-            sequence_ip_type="ipv4",
+            sequence_ip_type=ip_type,
         )
         self.add(seq)
         return seq

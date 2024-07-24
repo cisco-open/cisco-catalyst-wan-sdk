@@ -17,6 +17,10 @@ class ASPathList(PolicyListBase):
     type: Literal["asPath"] = "asPath"
     entries: List[ASPathListEntry] = []
 
+    def add_as_path(self, as_path: str):
+        as_path_entry = ASPathListEntry(as_path=as_path)
+        self._add_entry(entry=as_path_entry)
+
 
 class ASPathListEditPayload(ASPathList, PolicyListId):
     pass

@@ -30,7 +30,6 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet
     VrrpIPv6,
 )
 from catalystwan.utils.config_migration.converters.feature_template.base import FTConverter
-from catalystwan.utils.config_migration.converters.utils import parse_interface_name
 from catalystwan.utils.config_migration.steps.constants import LAN_VPN_ETHERNET
 
 
@@ -92,7 +91,7 @@ class LanInterfaceEthernetConverter(FTConverter):
             parcel_name=name,
             parcel_description=description,
             shutdown=data.get("shutdown", as_default(True)),
-            interface_name=parse_interface_name(self, data),
+            interface_name=self.parse_interface_name(data),
             ethernet_description=data.get("description"),
             interface_ip_address=self.configure_ipv4_address(data),
             dhcp_helper=data.get("dhcp_helper"),

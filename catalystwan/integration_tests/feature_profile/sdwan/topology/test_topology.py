@@ -67,7 +67,7 @@ class TestTopologyFeatureProfile(TestCaseBase):
     def test_custom_control(self):
         cc = CustomControlParcel(parcel_name="CustomControlParcel-1")
         cc.set_default_action("accept")
-        cc.assign_target([self.lanvpn_parcel_name])
+        cc.assign_target_sites([self.lanvpn_parcel_name])
         s = cc.add_sequence("my_sequence", 1, "route", "ipv4", "reject")
         s.match_carrier("carrier4")
         s.match_domain_id(555)

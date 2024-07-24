@@ -1,6 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
-from typing import Callable, Dict, List, Optional, Set, Tuple, cast
+from typing import Callable, Dict, List, cast
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -10,20 +10,17 @@ from catalystwan.endpoints.configuration_group import ProfileId
 from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.models.configuration.config_migration import (
     PushContext,
-    TopologyGroupReport,
     TransformedFeatureProfile,
     TransformedParcel,
     UX2Config,
     UX2ConfigPushResult,
 )
 from catalystwan.models.configuration.feature_profile.common import ProfileType
-from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
-from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
-from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
 from catalystwan.session import ManagerSession
 from catalystwan.utils.config_migration.creators.groups_of_interests_pusher import GroupsOfInterestPusher
 from catalystwan.utils.config_migration.creators.localized_policy_pusher import LocalizedPolicyPusher
 from catalystwan.utils.config_migration.creators.security_policy_pusher import SecurityPolicyPusher
+from catalystwan.utils.config_migration.creators.topology_groups_pusher import TopologyGroupsPusher
 from catalystwan.utils.config_migration.factories.parcel_pusher import ParcelPusherFactory
 
 logger = logging.getLogger(__name__)
@@ -67,6 +64,13 @@ class UX2ConfigPusher:
             push_result=self._push_result,
             push_context=self._push_context,
         )
+        self._topology_groups_pusher = TopologyGroupsPusher(
+            ux2_config=ux2_config,
+            session=session,
+            progress=progress,
+            push_result=self._push_result,
+            push_context=self._push_context,
+        )
 
         self._ux2_config = ux2_config
         self._progress = progress
@@ -85,9 +89,7 @@ class UX2ConfigPusher:
         self._groups_of_interests_pusher.push()
         self._localized_policy_feature_pusher.push()
         self._security_policy_pusher.push()
-        self._create_topology_groups(
-            self._push_context.default_policy_object_profile_id
-        )  # needs to be executed after vpn parcels and groups of interests are created
+        self._topology_groups_pusher.push()
         self._push_result.report.set_failed_push_parcels_flat_list()
         logger.debug(f"Configuration push completed. Rollback configuration {self._push_result}")
         return self._push_result
@@ -193,63 +195,3 @@ class UX2ConfigPusher:
             else:
                 parcels.append(transformed_parcel)
         return parcels
-
-    def _create_topology_groups(self, default_policy_object_profile_id: Optional[UUID]):
-        if default_policy_object_profile_id is None:
-            logger.error("Cannot create Topology Group without Default Policy Object Profile")
-            return
-        profile_origin_map: Dict[str, Tuple[UUID, Set[UUID]]] = {}
-        profile_api = self._session.api.sdwan_feature_profiles.topology
-        group_api = self._session.endpoints.configuration.topology_group
-        ttps = [p for p in self._ux2_config.feature_profiles if p.header.type == "topology"]
-        for i, ttp in enumerate(ttps):
-            profile = ttp.feature_profile
-            try:
-                profile_id = profile_api.create_profile(profile.name, profile.description).id
-                self._push_result.rollback.add_feature_profile(profile_id, "topology")
-                profile_origin_map[profile.name] = (profile_id, ttp.header.subelements)
-                self._progress(
-                    f"Creating Topology Profile: {profile.name}",
-                    i + 1,
-                    len(ttps),
-                )
-            except ManagerHTTPError as e:
-                logger.error(f"Error occured during topology profile creation: {e}")
-
-        ttgs = self._ux2_config.topology_groups
-        for ttg in ttgs:
-            group = ttg.topology_group
-            profile_id, origins = profile_origin_map[group.name]
-            group.add_profiles([profile_id, default_policy_object_profile_id])
-            try:
-                group_id = group_api.create_topology_group(group).id
-                self._push_result.rollback.add_topology_group(group_id)
-                self._progress(
-                    f"Creating Topology Group: {group.name}",
-                    i + 1,
-                    len(ttps),
-                )
-                profile_report = FeatureProfileBuildReport(profile_name=group.name, profile_uuid=profile_id)
-                group_report = TopologyGroupReport(name=group.name, uuid=group_id, feature_profiles=[profile_report])
-                self._push_result.report.topology_groups.append(group_report)
-            except ManagerHTTPError as e:
-                logger.error(f"Error occured during topology group creation: {e}")
-                continue
-
-            for transformed_parcel in self._ux2_config.list_transformed_parcels_with_origin(origins):
-                parcel = transformed_parcel.parcel
-                if isinstance(parcel, (CustomControlParcel, HubSpokeParcel, MeshParcel)):
-                    try:
-                        parcel_id = profile_api.create_parcel(profile_id, parcel).id
-                        profile_report.add_created_parcel(parcel_name=parcel.parcel_name, parcel_uuid=parcel_id)
-                        self._push_context.id_lookup[transformed_parcel.header.origin] = parcel_id
-                    except ManagerHTTPError as e:
-                        logger.error(f"Error occured during topology profile parcel creation: {e}")
-                        profile_report.add_failed_parcel(
-                            parcel_name=parcel.parcel_name,
-                            parcel_type=parcel.type_,
-                            error_info=e.info,
-                            request=e.request,
-                        )
-                else:
-                    logger.warning(f"Unexpected parcel type {type(parcel)}")

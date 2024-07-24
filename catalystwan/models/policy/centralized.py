@@ -71,7 +71,7 @@ class ControlPolicyItem(AssemblyItemBase):
         self.entries.append(entry)
 
     def assign_to_outbound_sites(self, site_lists: List[UUID]) -> None:
-        entry = ControlApplicationEntry(direction="in", site_lists=site_lists)
+        entry = ControlApplicationEntry(direction="out", site_lists=site_lists)
         self.entries.append(entry)
 
     @overload
@@ -199,6 +199,12 @@ class CentralizedPolicyDefinition(PolicyDefinition):
     )
     assembly: List[AnyAssemblyItem] = []
     model_config = ConfigDict(populate_by_name=True)
+
+    def find_assembly_item_by_definition_id(self, definition_id: UUID) -> Optional[AnyAssemblyItem]:
+        for item in self.assembly:
+            if item.definition_id == definition_id:
+                return item
+        return None
 
 
 class CentralizedPolicy(PolicyCreationPayload):

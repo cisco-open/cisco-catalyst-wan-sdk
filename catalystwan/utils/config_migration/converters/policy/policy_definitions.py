@@ -50,7 +50,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy
 )
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import DeviceAccessIPv4Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import DeviceAccessIPv6Parcel
-from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
+from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import (
+    BaseAction,
+    CustomControlParcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
 from catalystwan.models.configuration.network_hierarchy.cflowd import CflowdParcel
@@ -168,10 +171,120 @@ def advanced_malware_protection(
     )
 
 
-def control(in_: ControlPolicy, uuid: UUID, context) -> ConvertResult[CustomControlParcel]:
-    # out = CustomControlParcel(**_get_parcel_name_desc(in_))
-    # TODO: convert definition
-    return ConvertResult[CustomControlParcel](output=None, status="unsupported")
+def control(in_: ControlPolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[CustomControlParcel]:
+    result = ConvertResult[CustomControlParcel](output=None)
+    out = CustomControlParcel(
+        **_get_parcel_name_desc(in_), default_action=as_global(in_.default_action.type, BaseAction)
+    )
+    for in_seq in in_.sequences:
+        ip_type = in_seq.sequence_ip_type
+        if not ip_type:
+            ip_type = "ipv4"
+        out_seq = out.add_sequence(
+            id_=in_seq.sequence_id,
+            name=in_seq.sequence_name,
+            type_=in_seq.sequence_type,
+            ip_type=ip_type,
+            base_action=in_seq.base_action,
+        )
+        for in_match in in_seq.match.entries:
+            if in_match.field == "carrier":
+                out_seq.match_carrier(in_match.value)
+            elif in_match.field == "colorList":
+                out_seq.match_color_list(in_match.ref)
+            elif in_match.field == "community":
+                out_seq.match_community(in_match.ref)
+            elif in_match.field == "domainId":
+                out_seq.match_domain_id(int(in_match.value))
+            elif in_match.field == "expandedCommunity":
+                out_seq.match_expanded_community(in_match.ref)
+            elif in_match.field == "groupId":
+                out_seq.match_group_id(int(in_match.value))
+            elif in_match.field == "ompTag":
+                out_seq.match_omp_tag(int(in_match.value))
+            elif in_match.field == "origin":
+                out_seq.match_origin(in_match.value)
+            elif in_match.field == "originator":
+                out_seq.match_originator(in_match.value)
+            elif in_match.field == "pathType":
+                out_seq.match_path_type(in_match.value)
+            elif in_match.field == "preference":
+                out_seq.match_preference(int(in_match.value))
+            elif in_match.field == "prefixList":
+                out_seq.match_prefix_list(in_match.ref)
+            elif in_match.field == "regionId":
+                out_seq.match_region(in_match.value)
+            elif in_match.field == "regionList":
+                regions = context.regions_by_list_id.get(in_match.ref, [])
+                if regions:
+                    for region in regions:
+                        out_seq.match_region(region=region)
+                else:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] contains region list which is not matching any defined region "
+                        f"{in_match.field} = {in_match.ref}",
+                    )
+            elif in_match.field == "role":
+                out_seq.match_role(in_match.value)
+            elif in_match.field == "siteId":
+                out_seq.match_sites([in_match.value])
+            elif in_match.field == "siteList":
+                sites = context.sites_by_list_id.get(in_match.ref, [])
+                if sites:
+                    out_seq.match_sites(sites=sites)
+                else:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] contains site list which is not matching any defined site "
+                        f"{in_match.field} = {in_match.ref}",
+                    )
+            elif in_match.field == "tloc":
+                out_seq.match_tloc(ip=in_match.value.ip, color=in_match.value.color, encap=in_match.value.encap)
+            elif in_match.field == "tlocList":
+                out_seq.match_tloc_list(in_match.ref)
+            elif in_match.field == "vpnList":
+                vpns = context.lan_vpns_by_list_id.get(in_match.ref, [])
+                if vpns:
+                    out_seq.match_vpns(vpns=vpns)
+                else:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] contains vpn list which is not matching any defined vpn "
+                        f"{in_match.field} = {in_match.ref}",
+                    )
+        for in_action in in_seq.actions:
+            if in_action.type == "set":
+                for param in in_action.parameter:
+                    if param.field == "affinity":
+                        out_seq.associate_affinitty_action(affinity=int(param.value))
+                    elif param.field == "community" and param.value is not None:
+                        out_seq.associate_community_action(community=param.value)
+                    elif param.field == "communityAdditive":
+                        out_seq.associate_community_additive_action(additive=True)
+                    elif param.field == "service":
+                        if param.value.tloc_list is not None:
+                            out_seq.associate_service_action(
+                                service_type=param.value.type,
+                                vpn=param.value.vpn,
+                                tloc_list_id=param.value.tloc_list.ref,
+                            )
+                        elif param.value.tloc is not None:
+                            out_seq.associate_service_action(
+                                service_type=param.value.type,
+                                vpn=param.value.vpn,
+                                ip=param.value.tloc.ip,
+                                color=param.value.tloc.color,
+                                encap=param.value.tloc.encap,
+                            )
+                    elif param.field == "tloc":
+                        out_seq.associate_tloc(color=param.value.color, encap=param.value.encap, ip=param.value.ip)
+                    elif param.field == "tlocAction":
+                        out_seq.associate_tloc_action(tloc_action_type=param.value)
+                    elif param.field == "tlocList":
+                        out_seq.associate_tloc_list(tloc_list_id=param.ref)
+    result.output = out
+    return result
 
 
 def dns_security(in_: DnsSecurityPolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[DnsParcel]:
