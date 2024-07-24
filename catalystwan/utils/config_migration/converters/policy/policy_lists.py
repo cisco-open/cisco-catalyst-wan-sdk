@@ -434,7 +434,7 @@ def threat_grid_api(in_: ThreatGridApiKeyList, context: PolicyConvertContext) ->
     context.threat_grid_api = out
     return ConvertResult[None](status="complete")
 
-  
+
 def scalable_group_tag(
     in_: ScalableGroupTagList, context: PolicyConvertContext
 ) -> ConvertResult[ScalableGroupTagParcel]:
