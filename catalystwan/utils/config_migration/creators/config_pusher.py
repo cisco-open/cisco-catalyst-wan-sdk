@@ -79,6 +79,7 @@ class UX2ConfigPusher:
 
     def push(self) -> UX2ConfigPushResult:
         self._create_cloud_credentials()
+        self._create_thread_grid_api()
         self._create_config_groups()
         self._groups_of_interests_pusher.push()
         self._localized_policy_feature_pusher.push()
@@ -98,6 +99,15 @@ class UX2ConfigPusher:
             self._session.endpoints.configuration_settings.create_cloud_credentials(cloud_credentials)
         except ManagerHTTPError as e:
             logger.error(f"Error occured during credentials migration: {e}")
+
+    def _create_thread_grid_api(self):
+        thread_grid_api = self._ux2_config.thread_grid_api
+        if thread_grid_api is None:
+            return
+        try:
+            self._session.api.administration_settings.update(thread_grid_api)
+        except ManagerHTTPError as e:
+            logger.error(f"Error occured during thread grid api migration: {e}")
 
     def _create_config_groups(self):
         config_groups = self._ux2_config.config_groups

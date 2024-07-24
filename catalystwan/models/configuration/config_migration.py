@@ -37,6 +37,7 @@ from catalystwan.models.policy.security import (
     LoggingEntry,
     ZoneToNoZoneInternet,
 )
+from catalystwan.models.settings import ThreatGridApi
 from catalystwan.models.templates import FeatureTemplateInformation, TemplateInformation
 from catalystwan.version import parse_api_version
 
@@ -213,6 +214,7 @@ class UX2Config(BaseModel):
     feature_profiles: List[TransformedFeatureProfile] = Field(default_factory=list)
     profile_parcels: List[TransformedParcel] = Field(default_factory=list)
     cloud_credentials: Optional[CloudCredentials] = Field(default=None)
+    thread_grid_api: Optional[ThreatGridApi] = Field(default=None)
 
     @model_validator(mode="before")
     @classmethod
@@ -555,6 +557,7 @@ class PolicyConvertContext:
     security_policy_residues: Dict[UUID, SecurityPolicyResidues] = field(default_factory=dict)
     qos_map_residues: Dict[UUID, List[QoSMapResidues]] = field(default_factory=dict)
     as_path_list_num_mapping: Dict[str, int] = field(default_factory=dict)
+    threat_grid_api: Optional[ThreatGridApi] = None
 
     def get_vpn_id_to_vpn_name_map(self) -> Dict[Union[str, int], List[str]]:
         vpn_map: Dict[Union[str, int], List[str]] = {}
