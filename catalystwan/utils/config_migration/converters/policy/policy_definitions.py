@@ -53,11 +53,13 @@ from catalystwan.models.configuration.feature_profile.sdwan.system.device_access
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
+from catalystwan.models.configuration.network_hierarchy.cflowd import CflowdParcel
 from catalystwan.models.policy import AnyPolicyDefinition
 from catalystwan.models.policy.definition.access_control_list import AclPolicy
 from catalystwan.models.policy.definition.access_control_list_ipv6 import AclIPv6Policy
 from catalystwan.models.policy.definition.aip import AdvancedInspectionProfilePolicy
 from catalystwan.models.policy.definition.amp import AdvancedMalwareProtectionPolicy
+from catalystwan.models.policy.definition.cflowd import CflowdPolicy
 from catalystwan.models.policy.definition.control import ControlPolicy
 from catalystwan.models.policy.definition.device_access import DeviceAccessPolicy
 from catalystwan.models.policy.definition.device_access_ipv6 import DeviceAccessIPv6Policy
@@ -754,9 +756,46 @@ def intrusion_prevention(
     return ConvertResult[IntrusionPreventionParcel](output=out)
 
 
+def cflowd(in_: CflowdPolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[None]:
+    """Only Cflowd from activated centralized policy is converted,
+    because it there is only one cflowd parcel in the Network Hierarchy global node."""
+    if uuid not in context.activated_centralized_policy_item_ids:
+        logger.debug(
+            f"Skipping CflowdPolicy: {uuid} conversion, because the parent centralized policy is not activated."
+        )
+        return ConvertResult[None]()
+    out = CflowdParcel()
+    definition = in_.definition
+    customized = definition.customized_ipv4_record_fields
+    out.set_customized_ipv4_record_fields(
+        collect_dscp_output=customized.collect_dscp_output,
+        collect_tos=customized.collect_tos,
+    )
+    out.set_flow(
+        active_timeout=definition.flow_active_timeout,
+        inactive_timeout=definition.flow_inactive_timeout,
+        refresh_time=definition.template_refresh,
+        sampling_interval=definition.flow_sampling_interval,
+    )
+    out.set_protocol(definition.protocol)
+    for col in definition.collectors:
+        out.add_collector(
+            address=col.address,
+            udp_port=col.port,
+            vpn_id=col.vpn,
+            export_spread=col.export_spread is not None,
+            bfd_metrics_export=col.bfd_metrics_export is not None,
+            export_interval=col.export_interval,
+            # col.transport
+        )
+    context.cflowd = out
+    return ConvertResult[None]()
+
+
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     AclPolicy: ipv4acl,
     AclIPv6Policy: ipv6acl,
+    CflowdPolicy: cflowd,
     ControlPolicy: control,
     HubAndSpokePolicy: hubspoke,
     MeshPolicy: mesh,

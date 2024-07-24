@@ -25,21 +25,26 @@ logger = logging.getLogger(__name__)
 RUN_ID: str = str(uuid4())[:4]
 
 
-def create_session() -> ManagerSession:
-    """Try to create a session with the environment variables, if it fails, raise an exception"""
+def load_config() -> dict:
+    """Load the configuration from the environment variables"""
     url = os.environ.get("VMANAGE_URL")
     port = os.environ.get("VMANAGE_PORT")
     username = os.environ.get("VMANAGE_USERNAME")
     password = os.environ.get("VMANAGE_PASSWORD")
     if url is None or port is None or username is None or password is None:
         raise CatalystwanException("Missing environment variables")
+    return dict(
+        url=url,
+        port=port,
+        username=username,
+        password=password,
+    )
+
+
+def create_session() -> ManagerSession:
+    """Try to create a session with the environment variables, if it fails, raise an exception"""
     try:
-        session = create_manager_session(
-            url=url,
-            port=int(port),
-            username=username,
-            password=password,
-        )
+        session = create_manager_session(**load_config())
         session.is_for_testing = True
         return session
     except Exception:

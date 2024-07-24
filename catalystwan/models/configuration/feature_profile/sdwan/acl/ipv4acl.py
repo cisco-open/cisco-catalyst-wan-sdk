@@ -1,3 +1,4 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Address, IPv4Interface
 from typing import List, Literal, Optional, Tuple, Union
 from uuid import UUID
@@ -313,7 +314,7 @@ class Ipv4AclParcel(_ParcelBase):
         default=Default[Literal["drop"]](value="drop"), validation_alias=AliasPath("data", "defaultAction")
     )
     sequences: List[Sequence] = Field(
-        default=[], validation_alias=AliasPath("data", "sequences"), description="Access Control List"
+        default_factory=list, validation_alias=AliasPath("data", "sequences"), description="Access Control List"
     )
 
     def set_default_action(self, action: AcceptDropActionType):
