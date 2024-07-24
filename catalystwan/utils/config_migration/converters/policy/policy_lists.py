@@ -1,9 +1,11 @@
+# Copyright 2024 Cisco Systems, Inc. and its affiliates
 from logging import getLogger
 from re import match
 from typing import Any, Callable, Dict, List, Mapping, Type, TypeVar, cast
 
 from pydantic import ValidationError
 
+from catalystwan.api.configuration_groups.parcel import as_global
 from catalystwan.models.common import int_range_serializer, int_range_str_validator
 from catalystwan.models.configuration.config_migration import ConvertResult, PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import (
@@ -18,6 +20,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
     FowardingClassParcel,
     FQDNDomainParcel,
     GeoLocationListParcel,
+    IdentityParcel,
     IPSSignatureParcel,
     IPv6DataPrefixParcel,
     IPv6PrefixListParcel,
@@ -27,6 +30,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
     PreferredColorGroupParcel,
     PrefixListParcel,
     ProtocolListParcel,
+    ScalableGroupTagParcel,
     SecurityPortParcel,
     SecurityZoneListParcel,
     SLAClassParcel,
@@ -68,10 +72,14 @@ from catalystwan.models.policy import (
     URLBlockList,
     ZoneList,
 )
+from catalystwan.models.policy.list.identity import IdentityList
 from catalystwan.models.policy.list.local_app import LocalAppList
 from catalystwan.models.policy.list.region import RegionList, RegionListInfo
+from catalystwan.models.policy.list.scalable_group_tag import ScalableGroupTagList
 from catalystwan.models.policy.list.site import SiteList, SiteListInfo
+from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList
 from catalystwan.models.policy.list.vpn import VPNList, VPNListInfo
+from catalystwan.models.settings import ThreatGridApi
 
 logger = getLogger(__name__)
 
@@ -100,11 +108,33 @@ def app_list(in_: AppList, context) -> ConvertResult[ApplicationListParcel]:
     return ConvertResult[ApplicationListParcel](output=out, status="complete")
 
 
-def as_path(in_: ASPathList, context) -> ConvertResult[AsPathParcel]:
-    out = AsPathParcel(**_get_parcel_name_desc(in_))
+def as_path(in_: ASPathList, context: PolicyConvertContext) -> ConvertResult[AsPathParcel]:
+    """There is a mismatch between UX1 and UX2 models:
+    UX1:
+    - AS Path List Name (Alphanumeric value for vEdge, or number from 1 to 500 for ISR Edge router)
+    - AS Path list
+
+    UX2:
+    - Parcel name
+    - Parcel description
+    - AS Path List ID (Number from 1 to 500)
+    - AS Path list
+
+    The UX1 and UX2 intersection in AS Path list name and ID but only for the ISR Edge router (number 1 to 500).
+    If there is number we can insert the value in as_path_list_num field otherwise we will
+    generate the value and keep track of it in the context.
+    """
+    result = ConvertResult[AsPathParcel](output=None)
+    if in_.name.isdigit():
+        as_path_list_num = int(in_.name)
+    else:
+        as_path_list_num = context.generate_as_path_list_num_from_name(in_.name)
+        result.update_status("partial", f"Mapped AS Path List Name: '{in_.name}' to ID: '{as_path_list_num}'")
+    out = AsPathParcel(**_get_parcel_name_desc(in_), as_path_list_num=as_global(as_path_list_num))
     for entry in in_.entries:
         out.add_as_path(entry.as_path)
-    return ConvertResult[AsPathParcel](output=out, status="complete")
+    result.output = out
+    return result
 
 
 def class_map(in_: ClassMapList, context) -> ConvertResult[FowardingClassParcel]:
@@ -397,15 +427,42 @@ def local_app_list(in_: LocalAppList, context: PolicyConvertContext) -> ConvertR
     return ConvertResult[SecurityApplicationListParcel](output=out, status="complete")
 
 
+def threat_grid_api(in_: ThreatGridApiKeyList, context: PolicyConvertContext) -> ConvertResult[None]:
+    out = ThreatGridApi()
+    for entry in in_.entries:
+        out.set_region_api_key(region=entry.region, apikey=entry.api_key)
+    context.threat_grid_api = out
+    return ConvertResult[None](status="complete")
+
+
+def scalable_group_tag(
+    in_: ScalableGroupTagList, context: PolicyConvertContext
+) -> ConvertResult[ScalableGroupTagParcel]:
+    out = ScalableGroupTagParcel(**_get_parcel_name_desc(in_))
+    for e in in_.entries:
+        out.add_entry(sgt_name=e.stg_name, tag=e.tag)
+    return ConvertResult[ScalableGroupTagParcel](output=out)
+
+
+def identity_list(in_: IdentityList, context: PolicyConvertContext) -> ConvertResult[IdentityParcel]:
+    out = IdentityParcel(**_get_parcel_name_desc(in_))
+    for e in in_.entries:
+        out.add_entry(
+            user=e.user,
+            user_group=e.user_group,
+        )
+    return ConvertResult[IdentityParcel](output=out)
+
+
 OPL = TypeVar("OPL", AnyPolicyObjectParcel, None)
 Input = AnyPolicyList
 Output = ConvertResult[OPL]
 
 
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
-    #  ASPathList: as_path,
     AppList: app_list,
     AppProbeClassList: app_probe,
+    ASPathList: as_path,
     ClassMapList: class_map,
     ColorList: color,
     CommunityList: community,
@@ -415,6 +472,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     ExtendedCommunityList: extended_community,
     FQDNList: fqdn,
     GeoLocationList: geo_location,
+    IdentityList: identity_list,
     IPSSignatureList: ips_signature,
     IPv6PrefixList: prefix_ipv6,
     LocalAppList: local_app_list,
@@ -426,9 +484,11 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     PrefixList: prefix,
     ProtocolNameList: protocol,
     RegionList: region,
+    ScalableGroupTagList: scalable_group_tag,
     SiteList: site,
     SLAClassList: sla_class,
     TLOCList: tloc,
+    ThreatGridApiKeyList: threat_grid_api,
     URLAllowList: url_allow,
     URLBlockList: url_block,
     VPNList: vpn,

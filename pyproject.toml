@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "catalystwan"
-version = "0.33.8dev6"
+version = "0.34.0dev0"
 description = "Cisco Catalyst WAN SDK for Python"
 authors = ["kagorski <kagorski@cisco.com>"]
 readme = "README.md"
@@ -29,7 +29,7 @@ pytest-mock = "^3.7.0"
 pytest-subtests = "^0.11.0"
 isort = "^5.10.1"
 pre-commit = "^2.19.0"
-mypy = "^1.0.0"
+mypy = ">=1.0.0, <1.11.0"
 flake8 = "^5.0.4"
 Sphinx = "^5.2.3"
 
