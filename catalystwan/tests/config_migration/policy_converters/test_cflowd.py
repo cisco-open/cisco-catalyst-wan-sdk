@@ -65,8 +65,10 @@ class TestCflowdConverter(unittest.TestCase):
             definition=definition,
         )
         uuid = uuid4()
+        self.context.activated_centralized_policy_item_ids = set([uuid])
         # Act
-        parcel = convert(cflowd, uuid, context=self.context).output
+        convert(cflowd, uuid, context=self.context)
+        parcel = self.context.cflowd
         # Assert
         assert isinstance(parcel, CflowdParcel)
         assert parcel.protocol.value == protocol
