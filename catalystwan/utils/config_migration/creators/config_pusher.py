@@ -79,18 +79,18 @@ class UX2ConfigPusher:
 
     def push(self) -> UX2ConfigPushResult:
         self._create_sigs()
-        # self._create_cloud_credentials()
-        # self._create_thread_grid_api()
-        # self._create_cflowd()
-        # self._create_config_groups()
-        # self._groups_of_interests_pusher.push()
-        # self._localized_policy_feature_pusher.push()
-        # self._security_policy_pusher.push()
-        # self._create_topology_groups(
-        #     self._push_context.default_policy_object_profile_id
-        # )  # needs to be executed after vpn parcels and groups of interests are created
-        # self._push_result.report.set_failed_push_parcels_flat_list()
-        # logger.debug(f"Configuration push completed. Rollback configuration {self._push_result}")
+        self._create_cloud_credentials()
+        self._create_thread_grid_api()
+        self._create_cflowd()
+        self._create_config_groups()
+        self._groups_of_interests_pusher.push()
+        self._localized_policy_feature_pusher.push()
+        self._security_policy_pusher.push()
+        self._create_topology_groups(
+            self._push_context.default_policy_object_profile_id
+        )  # needs to be executed after vpn parcels and groups of interests are created
+        self._push_result.report.set_failed_push_parcels_flat_list()
+        logger.debug(f"Configuration push completed. Rollback configuration {self._push_result}")
         return self._push_result
 
     def _create_sigs(self):
