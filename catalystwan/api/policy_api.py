@@ -60,6 +60,7 @@ from catalystwan.endpoints.configuration.policy.list.expanded_community import C
 from catalystwan.endpoints.configuration.policy.list.extended_community import ConfigurationPolicyExtendedCommunityList
 from catalystwan.endpoints.configuration.policy.list.fqdn import ConfigurationPolicyFQDNList, FQDNListInfo
 from catalystwan.endpoints.configuration.policy.list.geo_location import ConfigurationPolicyGeoLocationList
+from catalystwan.endpoints.configuration.policy.list.identity import ConfigurationPolicyIdentityList
 from catalystwan.endpoints.configuration.policy.list.ips_signature import ConfigurationPolicyIPSSignatureList
 from catalystwan.endpoints.configuration.policy.list.ipv6_prefix import ConfigurationPolicyIPv6PrefixList
 from catalystwan.endpoints.configuration.policy.list.local_app import ConfigurationPolicyLocalAppList, LocalAppListInfo
@@ -77,6 +78,7 @@ from catalystwan.endpoints.configuration.policy.list.protocol_name import (
     ProtocolNameListInfo,
 )
 from catalystwan.endpoints.configuration.policy.list.region import ConfigurationPolicyRegionList, RegionListInfo
+from catalystwan.endpoints.configuration.policy.list.scalable_group_tag import ConfigurationPolicyScalableGroupTagList
 from catalystwan.endpoints.configuration.policy.list.site import ConfigurationPolicySiteList, SiteListInfo
 from catalystwan.endpoints.configuration.policy.list.sla import ConfigurationPolicySLAClassList, SLAClassListInfo
 from catalystwan.endpoints.configuration.policy.list.threat_grid_api_key import ConfigurationPolicyThreatGridApiKeyList
@@ -183,9 +185,11 @@ from catalystwan.models.policy.list.communities import (
 from catalystwan.models.policy.list.data_ipv6_prefix import DataIPv6PrefixListInfo
 from catalystwan.models.policy.list.data_prefix import DataPrefixListInfo
 from catalystwan.models.policy.list.geo_location import GeoLocationListInfo
+from catalystwan.models.policy.list.identity import IdentityList, IdentityListInfo
 from catalystwan.models.policy.list.ips_signature import IPSSignatureListInfo
 from catalystwan.models.policy.list.ipv6_prefix import IPv6PrefixListInfo
 from catalystwan.models.policy.list.local_domain import LocalDomainListInfo
+from catalystwan.models.policy.list.scalable_group_tag import ScalableGroupTagList, ScalableGroupTagListInfo
 from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList, ThreatGridApiKeyListInfo
 from catalystwan.models.policy.list.trunkgroup import TrunkGroupList, TrunkGroupListInfo
 from catalystwan.models.policy.list.umbrella_data import UmbrellaDataList, UmbrellaDataListInfo
@@ -233,6 +237,7 @@ POLICY_LIST_ENDPOINTS_MAP: Mapping[type, type] = {
     LocalDomainList: ConfigurationPolicyLocalDomainList,
     MirrorList: ConfigurationPolicyMirrorList,
     PolicerList: ConfigurationPolicyPolicerClassList,
+    ScalableGroupTagList: ConfigurationPolicyScalableGroupTagList,
     PortList: ConfigurationPolicyPortList,
     PreferredColorGroupList: ConfigurationPreferredColorGroupList,
     PrefixList: ConfigurationPolicyPrefixList,
@@ -248,6 +253,7 @@ POLICY_LIST_ENDPOINTS_MAP: Mapping[type, type] = {
     URLAllowList: ConfigurationPolicyURLAllowList,
     VPNList: ConfigurationPolicyVPNList,
     ZoneList: ConfigurationPolicyZoneList,
+    IdentityList: ConfigurationPolicyIdentityList,
 }
 
 POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
@@ -544,6 +550,14 @@ class PolicyListsAPI:
     def get(self, type: Type[ZoneList]) -> DataSequence[ZoneListInfo]:
         ...
 
+    @overload
+    def get(self, type: Type[ScalableGroupTagList]) -> DataSequence[ScalableGroupTagListInfo]:
+        ...
+
+    @overload
+    def get(self, type: Type[IdentityList]) -> DataSequence[IdentityListInfo]:
+        ...
+
     # get by id
 
     @overload
@@ -676,6 +690,14 @@ class PolicyListsAPI:
 
     @overload
     def get(self, type: Type[ZoneList], id: UUID) -> ZoneListInfo:
+        ...
+
+    @overload
+    def get(self, type: Type[ScalableGroupTagList], id: UUID) -> ScalableGroupTagListInfo:
+        ...
+
+    @overload
+    def get(self, type: Type[IdentityList], id: UUID) -> IdentityListInfo:
         ...
 
     def get(self, type: Type[AnyPolicyList], id: Optional[UUID] = None) -> Any:

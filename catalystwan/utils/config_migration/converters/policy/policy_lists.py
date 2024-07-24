@@ -20,6 +20,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
     FowardingClassParcel,
     FQDNDomainParcel,
     GeoLocationListParcel,
+    IdentityParcel,
     IPSSignatureParcel,
     IPv6DataPrefixParcel,
     IPv6PrefixListParcel,
@@ -29,6 +30,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
     PreferredColorGroupParcel,
     PrefixListParcel,
     ProtocolListParcel,
+    ScalableGroupTagParcel,
     SecurityPortParcel,
     SecurityZoneListParcel,
     SLAClassParcel,
@@ -70,8 +72,10 @@ from catalystwan.models.policy import (
     URLBlockList,
     ZoneList,
 )
+from catalystwan.models.policy.list.identity import IdentityList
 from catalystwan.models.policy.list.local_app import LocalAppList
 from catalystwan.models.policy.list.region import RegionList, RegionListInfo
+from catalystwan.models.policy.list.scalable_group_tag import ScalableGroupTagList
 from catalystwan.models.policy.list.site import SiteList, SiteListInfo
 from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList
 from catalystwan.models.policy.list.vpn import VPNList, VPNListInfo
@@ -430,6 +434,25 @@ def threat_grid_api(in_: ThreatGridApiKeyList, context: PolicyConvertContext) ->
     context.threat_grid_api = out
     return ConvertResult[None](status="complete")
 
+  
+def scalable_group_tag(
+    in_: ScalableGroupTagList, context: PolicyConvertContext
+) -> ConvertResult[ScalableGroupTagParcel]:
+    out = ScalableGroupTagParcel(**_get_parcel_name_desc(in_))
+    for e in in_.entries:
+        out.add_entry(sgt_name=e.stg_name, tag=e.tag)
+    return ConvertResult[ScalableGroupTagParcel](output=out)
+
+
+def identity_list(in_: IdentityList, context: PolicyConvertContext) -> ConvertResult[IdentityParcel]:
+    out = IdentityParcel(**_get_parcel_name_desc(in_))
+    for e in in_.entries:
+        out.add_entry(
+            user=e.user,
+            user_group=e.user_group,
+        )
+    return ConvertResult[IdentityParcel](output=out)
+
 
 OPL = TypeVar("OPL", AnyPolicyObjectParcel, None)
 Input = AnyPolicyList
@@ -437,9 +460,9 @@ Output = ConvertResult[OPL]
 
 
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
-    ASPathList: as_path,
     AppList: app_list,
     AppProbeClassList: app_probe,
+    ASPathList: as_path,
     ClassMapList: class_map,
     ColorList: color,
     CommunityList: community,
@@ -449,6 +472,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     ExtendedCommunityList: extended_community,
     FQDNList: fqdn,
     GeoLocationList: geo_location,
+    IdentityList: identity_list,
     IPSSignatureList: ips_signature,
     IPv6PrefixList: prefix_ipv6,
     LocalAppList: local_app_list,
@@ -460,6 +484,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     PrefixList: prefix,
     ProtocolNameList: protocol,
     RegionList: region,
+    ScalableGroupTagList: scalable_group_tag,
     SiteList: site,
     SLAClassList: sla_class,
     TLOCList: tloc,

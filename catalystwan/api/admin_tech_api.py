@@ -118,7 +118,9 @@ class AdminTechAPI:
             except ManagerHTTPError as http_error:
                 response = http_error.response  # type: ignore
             if response.status_code == 200:
-                return response.json()["fileName"]
+                filename = response.json()["fileName"]
+                self._get_token_id(filename=filename, timeout=request_timeout, interval=polling_interval)
+                return filename
             if response.status_code == 400 and create_admin_tech_error_msgs in response.json().get("error", {}).get(
                 "details", ""
             ):

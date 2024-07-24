@@ -179,6 +179,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self._state: ManagerSessionState = ManagerSessionState.OPERATIVE
         self.restart_timeout: int = 1200
         self.polling_requests_timeout: int = 10
+        self.request_timeout: Optional[int] = None
         self._validate_responses = validate_responses
         self._is_for_testing = False
 
@@ -335,8 +336,11 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
 
     def request(self, method, url, *args, **kwargs) -> ManagerResponse:
         full_url = self.get_full_url(url)
+        _kwargs = dict(kwargs)
+        if self.request_timeout is not None:  # do not modify user provided kwargs unless property is set
+            _kwargs.update(timeout=self.request_timeout)
         try:
-            response = super(ManagerSession, self).request(method, full_url, *args, **kwargs)
+            response = super(ManagerSession, self).request(method, full_url, *args, **_kwargs)
             self.logger.debug(self.response_trace(response, None))
             if self.state == ManagerSessionState.RESTART_IMMINENT and response.status_code == 503:
                 self.state = ManagerSessionState.WAIT_SERVER_READY_AFTER_RESTART
@@ -344,14 +348,14 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
             self.logger.debug(self.response_trace(exception.response, exception.request))
             if self.state == ManagerSessionState.RESTART_IMMINENT and isinstance(exception, ConnectionError):
                 self.state = ManagerSessionState.WAIT_SERVER_READY_AFTER_RESTART
-                return self.request(method, url, *args, **kwargs)
+                return self.request(method, url, *args, **_kwargs)
             self.logger.debug(exception)
             raise ManagerRequestException(*exception.args, request=exception.request, response=exception.response)
 
         if self.enable_relogin and response.jsessionid_expired and self.state == ManagerSessionState.OPERATIVE:
             self.logger.warning("Logging to session. Reason: expired JSESSIONID detected in response headers")
             self.state = ManagerSessionState.LOGIN
-            return self.request(method, url, *args, **kwargs)
+            return self.request(method, url, *args, **_kwargs)
 
         if response.request.url and "passwordReset.html" in response.request.url:
             raise DefaultPasswordError("Password must be changed to use this session.")
@@ -379,7 +383,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         scheme: str = url.scheme or "https"
         base_url = urlunparse((scheme, netloc, "", None, None, None))
         if self.port:
-            return f"{base_url}:{self.port}"
+            return f"{base_url}:{self.port}"  # noqa: E231
         return base_url
 
     def about(self) -> AboutInfo:
