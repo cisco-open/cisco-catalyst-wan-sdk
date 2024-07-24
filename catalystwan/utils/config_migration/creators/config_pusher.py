@@ -97,7 +97,21 @@ class UX2ConfigPusher:
         if cloud_credentials is None:
             return
         try:
-            self._session.endpoints.configuration_settings.create_cloud_credentials(cloud_credentials)
+            credentials = self._session.endpoints.configuration_settings.get_cloud_credentials().single_or_default()
+            if credentials is None:
+                self._session.endpoints.configuration_settings.create_cloud_credentials(cloud_credentials)
+                return
+            if credentials.umbrella_sig_auth_key is None and credentials.umbrella_sig_auth_secret is None:
+                credentials.umbrella_org_id = cloud_credentials.umbrella_org_id
+                credentials.umbrella_sig_auth_key = cloud_credentials.umbrella_sig_auth_key
+                credentials.umbrella_sig_auth_secret = cloud_credentials.umbrella_sig_auth_secret
+            if credentials.zscaler_organization is None:
+                credentials.zscaler_organization = cloud_credentials.zscaler_organization
+                credentials.zscaler_partner_base_uri = cloud_credentials.zscaler_partner_base_uri
+                credentials.zscaler_partner_key = cloud_credentials.zscaler_partner_key
+                credentials.zscaler_username = cloud_credentials.zscaler_username
+                credentials.zscaler_password = cloud_credentials.zscaler_password
+            self._session.endpoints.configuration_settings.create_cloud_credentials(credentials)
         except ManagerHTTPError as e:
             logger.error(f"Error occured during credentials migration: {e}")
 
