@@ -129,6 +129,15 @@ class UX1Templates(BaseModel):
                 lookup["security"][security_policy_id] = UUID(dt.template_id)
         return lookup
 
+    def pop_cloud_credential_templates(self) -> List[FeatureTemplateInformation]:
+        cloud_credential_templates = []
+        for template in self.feature_templates:
+            if template.name in ["Cisco-Zscaler-Global-Credentials", "Cisco-Umbrella-Global-Credentials"]:
+                cloud_credential_templates.append(template)
+        for t in cloud_credential_templates:
+            self.feature_templates.remove(t)
+        return cloud_credential_templates
+
 
 class UX1Config(BaseModel):
     # All UX1 Configuration items - Mega Model
@@ -255,6 +264,21 @@ class UX2Config(BaseModel):
                     head.localized_policy_subelements.add(subelement)
                 added = True
         return added
+
+    def set_cloud_credentials_from_merged(
+        self, source_template: Optional[CloudCredentials] = None, source_policy: Optional[CloudCredentials] = None
+    ) -> None:
+        if source_template is None and source_policy is None:
+            self.cloud_credentials = None
+        elif source_template and source_policy:
+            cloud_credentials = source_template.model_copy(deep=True)
+            cloud_credentials.umbrella_sig_auth_key = source_policy.umbrella_sig_auth_key
+            cloud_credentials.umbrella_sig_auth_secret = source_policy.umbrella_sig_auth_secret
+            self.cloud_credentials = cloud_credentials
+        elif source_template:
+            self.cloud_credentials = source_template
+        else:
+            self.cloud_credentials = source_policy
 
 
 class ConfigTransformResult(BaseModel):
@@ -562,6 +586,7 @@ class PolicyConvertContext:
     as_path_list_num_mapping: Dict[str, int] = field(default_factory=dict)
     threat_grid_api: Optional[ThreatGridApi] = None
     cflowd: Optional[CflowdParcel] = None
+    cloud_credentials: Optional[CloudCredentials] = None
 
     def get_vpn_id_to_vpn_name_map(self) -> Dict[Union[str, int], List[str]]:
         vpn_map: Dict[Union[str, int], List[str]] = {}

@@ -355,22 +355,16 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
         ux2.feature_profiles.append(transformed_fp_cli)
         ux2.config_groups.append(transformed_cg)
 
+    cloud_credential_templates = ux1.templates.pop_cloud_credential_templates()
     # Sort by vpn feature templates to avoid any confilics with subtemplates
     ux1.templates.feature_templates.sort(key=lambda ft: ft.template_type in VPN_TEMPLATE_TYPES, reverse=True)
     remove_unused_feature_templates(ux1, used_feature_templates)
 
-    cloud_credential_templates = []
     for ft in ux1.templates.feature_templates:
-        if ft.template_type in CLOUD_CREDENTIALS_FEATURE_TEMPLATES:
-            cloud_credential_templates.append(ft)
-        elif ft.template_type in MULTI_PARCEL_FEATURE_TEMPLATES:
+        if ft.template_type in MULTI_PARCEL_FEATURE_TEMPLATES:
             convert_multi_parcel_feature_template(ux2, transform_result, ft, subtemplates_mapping)
         else:
             convert_single_parcel_feature_template(ux2, transform_result, ft, subtemplates_mapping)
-
-    # Add Cloud Credentials to UX2
-    if cloud_credential_templates:
-        ux2.cloud_credentials = create_cloud_credentials_from_templates(cloud_credential_templates)
 
     # Prepare Context for Policy Conversion (VPN Parcels must be already transformed)
     policy_context = PolicyConvertContext.from_configs(ux1.network_hierarchy, ux2.profile_parcels)
@@ -549,6 +543,11 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
     # Add additional objects emmited by the conversion
     ux2.thread_grid_api = policy_context.threat_grid_api
     ux2.cflowd = policy_context.cflowd
+
+    # Cloud Credentials
+    cloud_credentials_from_templates = create_cloud_credentials_from_templates(cloud_credential_templates)
+    cloud_credentials_from_policy = policy_context.cloud_credentials
+    ux2.set_cloud_credentials_from_merged(cloud_credentials_from_templates, cloud_credentials_from_policy)
 
     ux2 = merge_parcels(ux2)
     transform_result.ux2_config = ux2
