@@ -23,6 +23,7 @@ from catalystwan.models.configuration.feature_profile.common import FeatureProfi
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import AnyPolicyObjectParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
+from catalystwan.models.configuration.network_hierarchy.cflowd import CflowdParcel
 from catalystwan.models.configuration.network_hierarchy.node import NodeInfo
 from catalystwan.models.configuration.topology_group import TopologyGroup
 from catalystwan.models.policy import AnyPolicyDefinitionInfo, AnyPolicyListInfo, URLAllowListInfo, URLBlockListInfo
@@ -215,6 +216,7 @@ class UX2Config(BaseModel):
     profile_parcels: List[TransformedParcel] = Field(default_factory=list)
     cloud_credentials: Optional[CloudCredentials] = Field(default=None)
     thread_grid_api: Optional[ThreatGridApi] = Field(default=None)
+    cflowd: Optional[CflowdParcel] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -543,6 +545,7 @@ class PolicyConvertContext:
     region_map: Dict[str, int] = field(default_factory=dict)
     site_map: Dict[str, int] = field(default_factory=dict)
     lan_vpn_map: Dict[str, Union[int, str]] = field(default_factory=dict)
+    activated_centralized_policy_item_ids: Set[UUID] = field(default_factory=set)
     # emited during conversion
     regions_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
     sites_by_list_id: Dict[UUID, List[str]] = field(default_factory=dict)
@@ -558,6 +561,7 @@ class PolicyConvertContext:
     qos_map_residues: Dict[UUID, List[QoSMapResidues]] = field(default_factory=dict)
     as_path_list_num_mapping: Dict[str, int] = field(default_factory=dict)
     threat_grid_api: Optional[ThreatGridApi] = None
+    cflowd: Optional[CflowdParcel] = None
 
     def get_vpn_id_to_vpn_name_map(self) -> Dict[Union[str, int], List[str]]:
         vpn_map: Dict[Union[str, int], List[str]] = {}
@@ -592,6 +596,14 @@ class PolicyConvertContext:
                     context.lan_vpn_map[parcel.parcel_name] = parcel.vpn_id.value
 
         return context
+
+    def populate_activated_centralized_policy_item_ids(self, centralized_policies: List[CentralizedPolicyInfo]) -> None:
+        active_policy = next((policy for policy in centralized_policies if policy.is_policy_activated), None)
+        if active_policy is None or isinstance(active_policy.policy_definition, str):
+            return
+        self.activated_centralized_policy_item_ids = set(
+            [a.definition_id for a in active_policy.policy_definition.assembly]
+        )
 
 
 @dataclass

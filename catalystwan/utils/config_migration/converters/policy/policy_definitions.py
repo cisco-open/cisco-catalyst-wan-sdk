@@ -756,7 +756,14 @@ def intrusion_prevention(
     return ConvertResult[IntrusionPreventionParcel](output=out)
 
 
-def cflowd(in_: CflowdPolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[CflowdParcel]:
+def cflowd(in_: CflowdPolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[None]:
+    """Only Cflowd from activated centralized policy is converted,
+    because it there is only one cflowd parcel in the Network Hierarchy global node."""
+    if uuid not in context.activated_centralized_policy_item_ids:
+        logger.debug(
+            f"Skipping CflowdPolicy: {uuid} conversion, because the parent centralized policy is not activated."
+        )
+        return ConvertResult[None]()
     out = CflowdParcel()
     definition = in_.definition
     customized = definition.customized_ipv4_record_fields
@@ -781,15 +788,8 @@ def cflowd(in_: CflowdPolicy, uuid: UUID, context: PolicyConvertContext) -> Conv
             export_interval=col.export_interval,
             # col.transport
         )
-    result = ConvertResult[CflowdParcel](output=out)
-    result.update_status(
-        "complete",
-        f"UX2 cflowd have one extra field 'collect_tloc_loopback' setting default: {out.collect_tloc_loopback}",
-    )
-    result.update_status(
-        "partial", "UX2 cflowd do not have 'transport [transport_udp, transport_tcp]' field in collectors"
-    )
-    return result
+    context.cflowd = out
+    return ConvertResult[None]()
 
 
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {

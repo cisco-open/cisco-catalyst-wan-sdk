@@ -374,6 +374,7 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
 
     # Prepare Context for Policy Conversion (VPN Parcels must be already transformed)
     policy_context = PolicyConvertContext.from_configs(ux1.network_hierarchy, ux2.profile_parcels)
+    policy_context.populate_activated_centralized_policy_item_ids(ux1.policies.centralized_policies)
 
     # Policy Lists
     for policy_list in ux1.policies.policy_lists:
@@ -547,6 +548,7 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
 
     # Add additional objects emmited by the conversion
     ux2.thread_grid_api = policy_context.threat_grid_api
+    ux2.cflowd = policy_context.cflowd
 
     ux2 = merge_parcels(ux2)
     transform_result.ux2_config = ux2
