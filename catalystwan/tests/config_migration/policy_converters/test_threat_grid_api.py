@@ -24,8 +24,5 @@ class TestThreatGridApiConverter(unittest.TestCase):
         convert(policy, context=self.context)
         threat = self.context.threat_grid_api
         # Assert
-        assert len(threat.entries) == 2
-        assert threat.entries[0].region == "nam"
-        assert threat.entries[0].apikey == "456"
-        assert threat.entries[1].region == "eur"
-        assert threat.entries[1].apikey == "123"
+        assert threat.get_region_api_key("eur") == "123"
+        assert threat.get_region_api_key("nam") == "456"

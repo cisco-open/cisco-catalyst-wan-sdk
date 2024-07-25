@@ -32,3 +32,9 @@ class ThreatGridApi(BaseModel):
                 entry.apikey = apikey
                 return
         raise ValueError(f"Region {region} not found in ThreatGridApi")
+    
+    def get_region_api_key(self, region: Region) -> str:
+        for entry in self.data[0].entries:
+            if entry.region == region:
+                return entry.apikey
+        raise ValueError(f"Region {region} not found in ThreatGridApi")
