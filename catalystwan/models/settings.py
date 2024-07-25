@@ -1,33 +1,34 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
-from typing import Any, Dict, List, Literal, Optional
+from typing import List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, SerializationInfo, SerializerFunctionWrapHandler, model_serializer
+from pydantic import BaseModel, ConfigDict, Field
 
 Region = Literal["nam", "eur"]
 
 
-class ThreadGridApiEntires(BaseModel):
+class ThreatGridApiEntires(BaseModel):
     model_config = ConfigDict(extra="forbid")
     region: Region
     apikey: Optional[str] = Field(default="")
 
 
-class ThreatGridApi(BaseModel):
+class ThreatGridApiData(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    entries: List[ThreadGridApiEntires] = Field(
+    entries: List[ThreatGridApiEntires] = Field(
         default_factory=lambda: [
-            ThreadGridApiEntires(region="nam"),
-            ThreadGridApiEntires(region="eur"),
-        ]
+            ThreatGridApiEntires(region="nam"),
+            ThreatGridApiEntires(region="eur"),
+        ],
     )
 
+
+class ThreatGridApi(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    data: List[ThreatGridApiData] = Field(default_factory=lambda: [ThreatGridApiData()])
+
     def set_region_api_key(self, region: Region, apikey: str) -> None:
-        for entry in self.entries:
+        for entry in self.data[0].entries:
             if entry.region == region:
                 entry.apikey = apikey
                 return
         raise ValueError(f"Region {region} not found in ThreatGridApi")
-
-    @model_serializer(mode="wrap")
-    def envelope_data(self, handler: SerializerFunctionWrapHandler, info: SerializationInfo) -> Dict[str, Any]:
-        return {"data": [handler(self)]}
