@@ -391,8 +391,8 @@ class AdministrationSettingsAPI:
 
     def update(self, payload: Union[Organization, Certificate, Password, Vbond, ThreatGridApi]) -> bool:
         if isinstance(payload, ThreatGridApi):
-            dataseq = self.__update_thread_grid_api(payload)
-            return len(dataseq) == 1
+            created_threat = self.__update_thread_grid_api(payload)
+            return created_threat is not None
         json_payload = asdict(payload)  # type: ignore
         if isinstance(payload, Organization):
             response = self.__update_organization(json_payload)
@@ -423,7 +423,7 @@ class AdministrationSettingsAPI:
         return self.session.post(endpoint, json=payload)
 
     def __update_thread_grid_api(self, payload: ThreatGridApi) -> DataSequence[ThreatGridApi]:
-        return self.session.endpoints.configuration_settings.create_threat_grid_api_key(payload)
+        return self.session.endpoints.configuration_settings.edit_threat_grid_api_key(payload)
 
     @deprecated(
         "Use .endpoints.configuration_settings.edit_organizations() instead", category=CatalystwanDeprecationWarning

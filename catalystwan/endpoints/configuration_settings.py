@@ -722,6 +722,10 @@ class ConfigurationSettings(APIEndpoints):
     def create_cloud_credentials(self, payload: CloudCredentials) -> DataSequence[CloudCredentials]:
         ...
 
-    @post("/settings/configuration/threatGridApiKey", "data")
-    def create_threat_grid_api_key(self, payload: ThreatGridApi) -> DataSequence[ThreatGridApi]:
+    @put("/settings/configuration/threatGridApiKey")
+    def edit_threat_grid_api_key(self, payload: ThreatGridApi) -> ThreatGridApi:
+        ...
+
+    @post("/settings/configuration/threatGridApiKey")
+    def create_threat_grid_api_key(self, payload: ThreatGridApi) -> ThreatGridApi:
         ...
