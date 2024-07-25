@@ -35,7 +35,7 @@ class SIGConverter(FTConverter):
             sig_provider=self.get_sig_provider(template_values.get("interface", [])),  # type: ignore
             interface=self.parse_interface(template_values.get("interface", [])),
             service=self.parse_service(template_values.get("service")),  # type: ignore
-            tracker_src_ip=self.get_tracker_src_ip(template_values),  # type: ignore
+            tracker_src_ip=self.get_tracker_src_ip(template_values),
             tracker=self.parse_tracker(template_values.get("tracker", [])),
         )
 
@@ -158,11 +158,12 @@ class SIGConverter(FTConverter):
 
         return None
 
-    def get_tracker_src_ip(self, template_values: dict) -> Optional[Global[IPv4Address]]:
+    def get_tracker_src_ip(self, template_values: dict) -> Optional[Union[Global[IPv4Address], Variable]]:
         tracker_src_ip = template_values.get("tracker_src_ip")
         if tracker_src_ip is None:
             return None
-
+        if isinstance(tracker_src_ip, Variable):
+            return tracker_src_ip
         tracker_src_ip = tracker_src_ip.value
         if isinstance(tracker_src_ip, IPv4Interface):
             return Global[IPv4Address](value=tracker_src_ip.ip)

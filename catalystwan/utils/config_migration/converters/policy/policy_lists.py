@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, List, Mapping, Type, TypeVar, cast
 from pydantic import ValidationError
 
 from catalystwan.api.configuration_groups.parcel import as_global
+from catalystwan.endpoints.configuration_settings import CloudCredentials
 from catalystwan.models.common import int_range_serializer, int_range_str_validator
 from catalystwan.models.configuration.config_migration import ConvertResult, PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import (
@@ -78,6 +79,7 @@ from catalystwan.models.policy.list.region import RegionList, RegionListInfo
 from catalystwan.models.policy.list.scalable_group_tag import ScalableGroupTagList
 from catalystwan.models.policy.list.site import SiteList, SiteListInfo
 from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList
+from catalystwan.models.policy.list.umbrella_data import UmbrellaDataList
 from catalystwan.models.policy.list.vpn import VPNList, VPNListInfo
 from catalystwan.models.settings import ThreatGridApi
 
@@ -454,6 +456,24 @@ def identity_list(in_: IdentityList, context: PolicyConvertContext) -> ConvertRe
     return ConvertResult[IdentityParcel](output=out)
 
 
+def umbrella_data(in_: UmbrellaDataList, context: PolicyConvertContext) -> ConvertResult[None]:
+    out = CloudCredentials()
+    if not len(in_.entries) == 1:
+        return ConvertResult[None](status="failed", info=["Expected exactly one entry in Umbrella Data List"])
+    entry = in_.entries[0]
+    out.umbrella_org_id = entry.umb_org_id
+    if entry.api_key and entry.secret:
+        out.umbrella_sig_auth_key = entry.api_key
+        out.umbrella_sig_auth_secret = entry.secret
+    elif entry.api_key_v2 and entry.secret_v2:
+        out.umbrella_sig_auth_key = entry.api_key_v2
+        out.umbrella_sig_auth_secret = entry.secret_v2
+    else:
+        return ConvertResult[None](status="failed", info=["Expected API Key and Secret or API Key V2 and Secret V2"])
+    context.cloud_credentials = out
+    return ConvertResult[None]()
+
+
 OPL = TypeVar("OPL", AnyPolicyObjectParcel, None)
 Input = AnyPolicyList
 Output = ConvertResult[OPL]
@@ -480,6 +500,7 @@ CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
     MirrorList: mirror,
     PolicerList: policer,
     PortList: port,
+    UmbrellaDataList: umbrella_data,
     PreferredColorGroupList: preferred_color_group,
     PrefixList: prefix,
     ProtocolNameList: protocol,

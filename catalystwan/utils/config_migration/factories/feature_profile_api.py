@@ -8,6 +8,7 @@ from catalystwan.api.feature_profile_api import (
     OtherFeatureProfileAPI,
     PolicyObjectFeatureProfileAPI,
     ServiceFeatureProfileAPI,
+    SIGSecurityAPI,
     SystemFeatureProfileAPI,
     TopologyFeatureProfileAPI,
     TransportFeatureProfileAPI,
@@ -26,6 +27,7 @@ FEATURE_PROFILE_API_MAPPING: Mapping[ProfileType, Callable] = {
     "dns-security": DnsSecurityFeatureProfileAPI,
     "embedded-security": EmbeddedSecurityFeatureProfileAPI,
     "application-priority": ApplicationPriorityFeatureProfileAPI,
+    "sig-security": SIGSecurityAPI,
 }
 
 FeatureProfile = Union[
@@ -35,6 +37,7 @@ FeatureProfile = Union[
     ServiceFeatureProfileAPI,
     TransportFeatureProfileAPI,
     CliFeatureProfileAPI,
+    SIGSecurityAPI,
 ]
 
 
