@@ -9,7 +9,7 @@ name: Run Integration Tests
 on:
   push:
     branches:
-      - dev-uxmt
+      - dev
 
 permissions: read-all
 
