@@ -34,15 +34,12 @@ def handle_build_report(func):
 class FailedRequestDetails(BaseModel):
     method: str
     url: str
-    headers: str
     body: str
 
     @staticmethod
     def from_response(response: Response):
         request = response.request
-        FailedRequestDetails(
-            method=str(request.method), url=str(request.url), headers=str(request.headers), body=str(request.body)
-        )
+        FailedRequestDetails(method=str(request.method), url=str(request.url), body=str(request.body))
 
 
 class FailedParcel(BaseModel):
@@ -80,7 +77,6 @@ class FeatureProfileBuildReport(BaseModel):
             request = FailedRequestDetails(
                 method=str(request.method),
                 url=str(request.url),
-                headers=str(request.headers),
                 body=str(request.body),
             )
 
