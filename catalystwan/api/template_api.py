@@ -118,11 +118,14 @@ class TemplatesAPI:
         return self.session.endpoints.configuration_template_master.get_device_template_list(params=feature.value)
 
     def attach(self, name: str, device: Device, timeout_seconds: int = 300, **kwargs):
-        template_type = self.get(DeviceTemplate).filter(name=name).single_or_default().config_type
-        if template_type == TemplateType.CLI:
+        template_info = self.get(DeviceTemplate).filter(name=name).single_or_default()
+        if not template_info:
+            raise TemplateNotFoundError(f"Template with name [{name}] does not exists.")
+
+        if template_info.config_type == TemplateType.CLI.value:
             return self._attach_cli(name, device, timeout_seconds=timeout_seconds, **kwargs)
 
-        if template_type == TemplateType.FEATURE:
+        if template_info.config_type == TemplateType.FEATURE.value:
             return self._attach_feature(name, device, timeout_seconds=timeout_seconds, **kwargs)
 
         raise NotImplementedError()
@@ -495,18 +498,18 @@ class TemplatesAPI:
                 .id
             )
             payload = json.loads(device_template.generate_payload())
-            response = self.session.put(f"/dataservice/template/device/{template_id}", json=payload)
+            response = self.session.endpoints.configuration_template_master.edit_template(
+                template_id=template_id, payload=payload
+            )
+            return response
         else:
-            # endpoint = "/dataservice/template/device/feature/"
-            # response = self.session.post(endpoint, json=payload)
             payload = json.loads(device_template.generate_payload())
             response = (
                 self.session.endpoints.configuration_template_master.create_device_template_from_feature_templates(
                     payload=payload
                 )
             )
-
-        return response.text
+            return response.template_id
 
     def is_created_by_generator(self, template: FeatureTemplate) -> bool:
         """Checks if template is created by generator
