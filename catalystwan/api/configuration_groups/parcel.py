@@ -1,7 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from enum import Enum
-from typing import Any, Dict, Generic, List, Literal, Optional, Tuple, TypeVar, get_origin
+from typing import Any, Dict, Generic, List, Literal, Optional, Tuple, TypeVar
 
 from pydantic import (
     AliasPath,
@@ -13,6 +13,7 @@ from pydantic import (
     SerializerFunctionWrapHandler,
     model_serializer,
 )
+from typing_extensions import get_origin
 
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.models.common import VersionedField
@@ -159,7 +160,9 @@ def as_global(value: Any, generic_alias: Any = None):
         return Global[type(value)](value=value)  # type: ignore
     elif get_origin(generic_alias) is Literal:
         return Global[generic_alias](value=value)  # type: ignore
-    raise TypeError("Inappropriate type for argument generic_alias")
+    raise TypeError(
+        f"Inappropriate type origin: {generic_alias} {get_origin(generic_alias)} for argument generic_alias"
+    )
 
 
 def as_variable(value: str):
@@ -196,4 +199,6 @@ def as_default(value: Any, generic_alias: Any = None):
         return Default[type(value)](value=value)  # type: ignore
     elif get_origin(generic_alias) is Literal:
         return Default[generic_alias](value=value)  # type: ignore
-    raise TypeError("Inappropriate type for argument generic_alias")
+    raise TypeError(
+        f"Inappropriate type origin: {generic_alias} {get_origin(generic_alias)} for argument generic_alias"
+    )

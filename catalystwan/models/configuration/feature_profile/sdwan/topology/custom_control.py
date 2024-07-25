@@ -1,11 +1,22 @@
 from ipaddress import IPv4Address
-from typing import List, Literal, Optional, overload
+from typing import Any, Dict, List, Literal, Optional, overload
 from uuid import UUID
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field, model_validator
+from pydantic import (
+    AliasPath,
+    BaseModel,
+    ConfigDict,
+    Field,
+    SerializationInfo,
+    SerializerFunctionWrapHandler,
+    model_serializer,
+    model_validator,
+)
+from typing_extensions import Annotated
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
 from catalystwan.models.common import (
+    AcceptRejectActionType,
     CarrierType,
     ControlPathType,
     EncapType,
@@ -16,6 +27,7 @@ from catalystwan.models.common import (
     ServiceType,
     TLOCActionType,
     TLOCColor,
+    VersionedField,
     check_fields_exclusive,
 )
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
@@ -26,12 +38,7 @@ Level = Literal[
     "SUB_REGION",
 ]
 
-BaseAction = Literal[
-    "accept",
-    "reject",
-]
-
-SequenceType = Literal[
+ControlSequenceType = Literal[
     "route",
     "tloc",
 ]
@@ -53,7 +60,7 @@ class Target(BaseModel):
     inbound_sites: Optional[Global[List[str]]] = Field(
         default=None, validation_alias="inboundSites", serialization_alias="inboundSites"
     )
-    level: Optional[Global[Level]] = Field(default=None)
+    level: Annotated[Optional[Global[Level]], VersionedField(versions="<20.15", forbidden=True)] = Field(default=None)
     outbound_regions: Optional[List[Region]] = Field(
         default=None, validation_alias="outboundRegions", serialization_alias="outboundRegions"
     )
@@ -61,6 +68,10 @@ class Target(BaseModel):
         default=None, validation_alias="outboundSites", serialization_alias="outboundSites"
     )
     vpn: Optional[Global[List[str]]] = Field(default=None)
+
+    @model_serializer(mode="wrap", when_used="json")
+    def serialize(self, handler: SerializerFunctionWrapHandler, info: SerializationInfo) -> Dict[str, Any]:
+        return VersionedField.dump(self.model_fields, handler(self), info)
 
 
 class Tloc(BaseModel):
@@ -170,7 +181,7 @@ class Actions(BaseModel):
 class Sequence(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     actions: Optional[List[Actions]] = Field(default_factory=list)
-    base_action: Optional[Global[BaseAction]] = Field(
+    base_action: Optional[Global[AcceptRejectActionType]] = Field(
         default=None, validation_alias="baseAction", serialization_alias="baseAction"
     )
     match: Optional[Match] = Field(default=None)
@@ -183,7 +194,7 @@ class Sequence(BaseModel):
     sequence_name: Optional[Global[str]] = Field(
         default=None, validation_alias="sequenceName", serialization_alias="sequenceName"
     )
-    sequence_type: Optional[Global[SequenceType]] = Field(
+    sequence_type: Optional[Global[ControlSequenceType]] = Field(
         default=None, validation_alias="sequenceType", serialization_alias="sequenceType"
     )
 
@@ -358,7 +369,7 @@ class Sequence(BaseModel):
 class CustomControlParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["custom-control"] = Field(default="custom-control", exclude=True)
-    default_action: Optional[Global[BaseAction]] = Field(
+    default_action: Optional[Global[AcceptRejectActionType]] = Field(
         default=None, validation_alias=AliasPath("data", "defaultAction")
     )
     sequences: Optional[List[Sequence]] = Field(
@@ -372,17 +383,19 @@ class CustomControlParcel(_ParcelBase):
         description="Target",
     )
 
-    def set_default_action(self, action: BaseAction = "reject"):
-        self.default_action = as_global(action, BaseAction)
+    def set_default_action(self, action: AcceptRejectActionType = "reject"):
+        self.default_action = as_global(action, AcceptRejectActionType)
 
     def assign_target_sites(
         self,
         inbound_sites: List[str],
         outbound_sites: List[str],
-        _dummy_vpns: List[str] = [";dummy-vpn"],
+        _dummy_vpns: Optional[
+            List[str]
+        ],  # mitigate a bug (vpn is not used but value needs to be provided for server to accept the message)
     ) -> Target:
         self.target = Target(
-            vpn=Global[List[str]](value=_dummy_vpns),
+            vpn=Global[List[str]](value=_dummy_vpns) if _dummy_vpns is not None else None,
             level=as_global("SITE", Level),
             inbound_sites=as_global(inbound_sites) if inbound_sites else None,
             outbound_sites=as_global(outbound_sites) if outbound_sites else None,
@@ -390,14 +403,19 @@ class CustomControlParcel(_ParcelBase):
         return self.target
 
     def add_sequence(
-        self, name: str, id_: int, type_: SequenceType, ip_type: SequenceIpType, base_action: BaseAction
+        self,
+        name: str,
+        id_: int,
+        type_: ControlSequenceType,
+        ip_type: SequenceIpType,
+        base_action: AcceptRejectActionType,
     ) -> Sequence:
         seq = Sequence(
-            base_action=as_global(base_action, BaseAction),
+            base_action=as_global(base_action, AcceptRejectActionType),
             sequence_id=as_global(id_),
             sequence_ip_type=as_global(ip_type, SequenceIpType),
             sequence_name=as_global(name),
-            sequence_type=as_global(type_, SequenceType),
+            sequence_type=as_global(type_, ControlSequenceType),
         )
         if self.sequences is None:
             self.sequences = [seq]
