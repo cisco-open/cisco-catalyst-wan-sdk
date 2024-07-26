@@ -8,7 +8,7 @@ from pydantic import Field, ValidationError
 from typing_extensions import Annotated
 
 from catalystwan.api.configuration_groups.parcel import as_global
-from catalystwan.models.common import DeviceAccessProtocolPort, int_range_str_validator
+from catalystwan.models.common import AcceptRejectActionType, DeviceAccessProtocolPort, int_range_str_validator
 from catalystwan.models.configuration.config_migration import (
     ConvertResult,
     PolicyConvertContext,
@@ -50,10 +50,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy
 )
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import DeviceAccessIPv4Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import DeviceAccessIPv6Parcel
-from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import (
-    BaseAction,
-    CustomControlParcel,
-)
+from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
 from catalystwan.models.configuration.network_hierarchy.cflowd import CflowdParcel
@@ -174,7 +171,7 @@ def advanced_malware_protection(
 def control(in_: ControlPolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[CustomControlParcel]:
     result = ConvertResult[CustomControlParcel](output=None)
     out = CustomControlParcel(
-        **_get_parcel_name_desc(in_), default_action=as_global(in_.default_action.type, BaseAction)
+        **_get_parcel_name_desc(in_), default_action=as_global(in_.default_action.type, AcceptRejectActionType)
     )
     for in_seq in in_.sequences:
         ip_type = in_seq.sequence_ip_type

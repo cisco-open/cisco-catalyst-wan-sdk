@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Set
 from uuid import UUID, uuid4
 
+from packaging.version import Version
 from pydantic import ValidationError
 
 from catalystwan.models.configuration.config_migration import (
@@ -65,7 +66,6 @@ class CentralizedPolicyConverter:
         self.ux1 = ux1
         self.context = context
         self.ux2 = ux2
-        self.unreferenced_topologies: List[TransformedParcel] = list()
         self.topology_lookup: Dict[UUID, List[TransformedParcel]] = dict()
         self._create_topology_by_policy_id_lookup()
         self.failed_items: List[FailedConversionItem] = list()
@@ -77,8 +77,6 @@ class CentralizedPolicyConverter:
                 transformed_topology_parcels = self.ux2.list_transformed_parcels_with_origin(
                     {policy_definition.definition_id}
                 )
-                if policy_definition.reference_count == 0:
-                    self.unreferenced_topologies.extend(transformed_topology_parcels)
                 for ref_id in set([ref.id for ref in policy_definition.references]):
                     if self.topology_lookup.get(ref_id) is not None:
                         self.topology_lookup[ref_id].extend(transformed_topology_parcels)
@@ -101,6 +99,10 @@ class CentralizedPolicyConverter:
                             parcel = src_transformed_parcel.parcel.model_copy(deep=True)
                             header = src_transformed_parcel.header.model_copy(deep=True)
                             if parcel.type_ == "custom-control":
+                                if self.context.platform_version < Version("20.15"):
+                                    _dummy_vpns = self.context.find_any_service_vpn()
+                                else:
+                                    _dummy_vpns = [";dummy-vpn"]
                                 assembly = find_control_assembly(centralized_policy, header.origin)
                                 application = convert_control_policy_application(
                                     assembly=assembly, context=self.context
@@ -108,6 +110,7 @@ class CentralizedPolicyConverter:
                                 parcel.assign_target_sites(
                                     inbound_sites=application.inbound_sites,
                                     outbound_sites=application.outbound_sites,
+                                    _dummy_vpns=_dummy_vpns,
                                 )
                             header.origin = uuid4()
                             dst_transformed_parcel = TransformedParcel(header=header, parcel=parcel)
@@ -145,40 +148,10 @@ class CentralizedPolicyConverter:
                             ),
                         )
                     )
+            else:
+                problems.append("cli policy definition not supported")
             if problems:
                 self.failed_items.append(
                     FailedConversionItem(policy=centralized_policy, exception_message="\n".join(problems))
                 )
-        self.export_standalone_topology_parcels()
         self.ux2.remove_transformed_parcels_with_origin(parcel_remove_ids)
-
-    def export_standalone_topology_parcels(self):
-        # Topology Group and Profile
-        if self.unreferenced_topologies:
-            topology_name = "Unreferenced-Topologies"
-            topology_description = (
-                "Created by config migration tool, "
-                "contains topologies which were not attached to any Centralized Policy"
-            )
-            self.ux2.feature_profiles.append(
-                TransformedFeatureProfile(
-                    header=TransformHeader(
-                        type="topology",
-                        origin=UUID(int=0),
-                        subelements=set([p.header.origin for p in self.unreferenced_topologies]),
-                        origname=topology_name,
-                    ),
-                    feature_profile=FeatureProfileCreationPayload(
-                        name=topology_name,
-                        description=topology_description,
-                    ),
-                )
-            )
-            self.ux2.topology_groups.append(
-                TransformedTopologyGroup(
-                    header=TransformHeader(type="", origin=UUID(int=0), origname=topology_name, subelements=set()),
-                    topology_group=TopologyGroup(
-                        name=topology_name, description=topology_description, solution="sdwan"
-                    ),
-                )
-            )

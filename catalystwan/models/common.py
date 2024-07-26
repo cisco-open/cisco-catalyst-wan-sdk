@@ -31,12 +31,13 @@ class VersionedField:
     >>>
     >>> @model_serializer(mode="wrap", when_used="json")
     >>>     def serialize(self, handler: SerializerFunctionWrapHandler, info: SerializationInfo) -> Dict[str, Any]:
-    >>>         return VersionedField.update_model_fields(self.model_fields, handler(self), info)
+    >>>         return VersionedField.dump(self.model_fields, handler(self), info)
     """
 
     versions: InitVar[str]
     versions_set: SpecifierSet = field(init=False)
-    serialization_alias: str
+    serialization_alias: Optional[str] = None
+    forbidden: bool = False
 
     def __post_init__(self, versions):
         self.versions_set = SpecifierSet(versions)
@@ -82,8 +83,11 @@ class VersionedField:
             current_field_name = field_info.serialization_alias or field_info.alias or field_name
             new_field_name = versioned_field.serialization_alias
             if current_field_name in model_dict:
-                model_dict[new_field_name] = model_dict[current_field_name]
-                del model_dict[current_field_name]
+                if versioned_field.forbidden:
+                    del model_dict[current_field_name]
+                elif new_field_name is not None and new_field_name != current_field_name:
+                    model_dict[new_field_name] = model_dict[current_field_name]
+                    del model_dict[current_field_name]
             elif replaced_keys is not None:
                 if current_field_path := replaced_keys.get(current_field_name):
                     path, name = current_field_path

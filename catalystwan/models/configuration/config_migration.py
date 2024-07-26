@@ -635,6 +635,12 @@ class PolicyConvertContext:
             [a.definition_id for a in active_policy.policy_definition.assembly]
         )
 
+    def find_any_service_vpn(self) -> List[str]:
+        vpns: List[str] = list()
+        for vpn_list in self.lan_vpns_by_list_id.values():
+            vpns.extend(vpn_list)  # all of these could be empty
+        return vpns[:1]
+
 
 @dataclass
 class PushContext:
