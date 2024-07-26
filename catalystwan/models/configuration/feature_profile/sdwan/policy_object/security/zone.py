@@ -5,12 +5,12 @@ from typing import List, Literal, Optional
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
-from catalystwan.models.common import InterfaceType, check_fields_exclusive
+from catalystwan.models.common import InterfaceStr, check_fields_exclusive
 
 
 class SecurityZoneListEntry(BaseModel):
     vpn: Optional[Global[str]] = Field(default=None, description="0-65530 single number")
-    interface: Optional[Global[InterfaceType]] = None
+    interface: Optional[Global[InterfaceStr]] = None
 
     @field_validator("vpn")
     @classmethod
@@ -29,10 +29,10 @@ class SecurityZoneListParcel(_ParcelBase):
     type_: Literal["security-zone"] = Field(default="security-zone", exclude=True)
     entries: List[SecurityZoneListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
 
-    def add_interface(self, interface: InterfaceType):
+    def add_interface(self, interface: InterfaceStr):
         self.entries.append(
             SecurityZoneListEntry(
-                interface=as_global(interface, InterfaceType),
+                interface=Global[InterfaceStr](value=interface),
             )
         )
 

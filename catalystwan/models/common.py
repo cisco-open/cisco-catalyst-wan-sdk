@@ -1,13 +1,14 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
+import re
 from dataclasses import InitVar, dataclass, field
-from typing import Any, Dict, Iterator, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Dict, Iterator, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union, get_args
 from uuid import UUID
 
 from annotated_types import Ge, Le
 from packaging.specifiers import SpecifierSet  # type: ignore
 from packaging.version import Version  # type: ignore
-from pydantic import NonNegativeInt, PlainSerializer, PositiveInt, SerializationInfo, ValidationInfo
+from pydantic import Field, NonNegativeInt, PlainSerializer, PositiveInt, SerializationInfo, ValidationInfo
 from pydantic.fields import FieldInfo
 from pydantic.functional_validators import BeforeValidator
 from typing_extensions import Annotated
@@ -256,6 +257,12 @@ InterfaceType = Literal[
     "TwoGigabitEthernet",
     "VirtualPortGroup",
     "Vlan",
+]
+InterfaceTypePattern = re.compile(r"^(?:" + "|".join(map(re.escape, get_args(InterfaceType))) + r")\d+$")
+
+InterfaceStr = Annotated[
+    str,
+    Field(pattern=InterfaceTypePattern),
 ]
 
 StaticNatDirection = Literal["inside", "outside"]
