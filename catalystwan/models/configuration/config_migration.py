@@ -14,7 +14,7 @@ from catalystwan.api.builders.feature_profiles.report import (
     FailedRequestDetails,
     FeatureProfileBuildReport,
 )
-from catalystwan.api.templates.device_template.device_template import DeviceTemplate, GeneralTemplate
+from catalystwan.api.templates.device_template.device_template import DeviceTemplate, GeneralTemplate, str_to_uuid
 from catalystwan.endpoints.configuration_group import ConfigGroupCreationPayload
 from catalystwan.endpoints.configuration_settings import CloudCredentials
 from catalystwan.exceptions import ManagerHTTPError
@@ -25,6 +25,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
 from catalystwan.models.configuration.network_hierarchy.cflowd import CflowdParcel
 from catalystwan.models.configuration.network_hierarchy.node import NodeInfo
+from catalystwan.models.configuration.policy_group import PolicyGroup
 from catalystwan.models.configuration.topology_group import TopologyGroup
 from catalystwan.models.policy import AnyPolicyDefinitionInfo, AnyPolicyListInfo, URLAllowListInfo, URLBlockListInfo
 from catalystwan.models.policy.centralized import CentralizedPolicyInfo
@@ -82,6 +83,22 @@ class DeviceTemplateWithInfo(DeviceTemplate):
             **info_dict,
         )
 
+    def get_sig_template_uuid(self) -> Optional[UUID]:
+        """SIG template is part of a PolicyGroup in UX2.0"""
+
+        def __traverse_general_templates(general_templates: List[GeneralTemplate]) -> Optional[UUID]:
+            """Traverse the general templates to find the SIG template uuid"""
+            for general_template in general_templates:
+                if general_template.template_type == "cisco_secure_internet_gateway":
+                    return general_template.template_id
+                if general_template.sub_templates:
+                    if result := __traverse_general_templates(general_template.sub_templates):
+                        return result
+            return None
+
+        result = __traverse_general_templates(self.general_templates)
+        return str_to_uuid(result) if result else None
+
     def get_flattened_general_templates(self) -> List[GeneralTemplate]:
         """
         Flatten the representation but leave cisco vpn templates and
@@ -111,6 +128,15 @@ class UX1Policies(BaseModel):
     security_policies: List[AnySecurityPolicyInfo] = Field(default_factory=list)
     policy_definitions: List[AnyPolicyDefinitionInfo] = Field(default_factory=list)
     policy_lists: List[AnyPolicyListInfo] = Field(default_factory=list)
+
+    def get_centralized_policy_by_id(self, policy_id: UUID) -> Optional[CentralizedPolicyInfo]:
+        return next((p for p in self.centralized_policies if p.policy_id == policy_id), None)
+
+    def get_localized_policy_by_id(self, policy_id: UUID) -> Optional[LocalizedPolicyInfo]:
+        return next((p for p in self.localized_policies if p.policy_id == policy_id), None)
+
+    def get_security_policy_by_id(self, policy_id: UUID) -> Optional[AnySecurityPolicyInfo]:
+        return next((p for p in self.security_policies if p.policy_id == policy_id), None)
 
 
 class UX1Templates(BaseModel):
@@ -180,6 +206,12 @@ class TransformedConfigGroup(BaseModel):
     config_group: ConfigGroupCreationPayload
 
 
+class TransformedPolicyGroup(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
+    header: TransformHeader
+    policy_group: PolicyGroup
+
+
 class TransformedFeatureProfile(BaseModel):
     model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
     header: TransformHeader
@@ -220,7 +252,7 @@ class UX2Config(BaseModel):
     version: VersionInfo = VersionInfo()
     topology_groups: List[TransformedTopologyGroup] = Field(default_factory=list)
     config_groups: List[TransformedConfigGroup] = Field(default_factory=list)
-    policy_groups: List[TransformedConfigGroup] = Field(default_factory=list)
+    policy_groups: List[TransformedPolicyGroup] = Field(default_factory=list)
     feature_profiles: List[TransformedFeatureProfile] = Field(default_factory=list)
     profile_parcels: List[TransformedParcel] = Field(default_factory=list)
     cloud_credentials: Optional[CloudCredentials] = Field(default=None)

@@ -21,8 +21,10 @@ class FromPolicyGroup(BaseModel):
 
 class PolicyGroup(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    description: str = Field()
-    name: str = Field(pattern='^[^&<>! "]+$')
+    description: str = Field(
+        description="description of the policy group. Max length is ulimited. (>500 000 for 20.12)"
+    )
+    name: str = Field(pattern='^[^&<>! "]+$', max_length=128)
     from_policy_group: Optional[FromPolicyGroup] = Field(
         default=None, validation_alias="fromPolicyGroup", serialization_alias="fromPolicyGroup"
     )

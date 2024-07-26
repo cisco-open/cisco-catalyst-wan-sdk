@@ -26,6 +26,8 @@ from catalystwan.tests.config_migration.test_data import (
     vpn_service,
     vpn_transport,
 )
+from catalystwan.tests.config_migration.test_data.device_template import create_device_template
+from catalystwan.tests.config_migration.test_data.security_policy import create_security_policy
 from catalystwan.workflows.config_migration import transform
 
 T = TypeVar("T", FeatureTemplateInformation, _ParcelBase)
@@ -565,3 +567,34 @@ def test_when_localized_policy_with_qos_expect_application_priority_feature_prof
     assert qos_map_2_parcel is not None
     # Settings should be in the list of parcels
     assert settings is not None
+
+
+def test_policy_profile_merge():
+    """Assumptions:
+
+    - dt_a uses sp_1 and sig_1
+    - dt_b uses sp_1 and sig_1
+    - dt_c uses sp_2 and sig_1
+    - dt_d uses sp_2 and sig_1
+    - dt_e uses sp_3
+
+    Expected result:
+    - dt_a, dt_b are merged to one policy group
+    - dt_c, dt_d are merged to another policy group
+    - dt_e is a separate policy group
+
+    """
+    ux1 = UX1Config()
+
+    sig_1_uuid = uuid4()
+
+    dt_A = create_device_template("DT-A")
+    dt_B = create_device_template("DT-B")
+    dt_C = create_device_template("DT-C")
+    dt_D = create_device_template("DT-D")
+    dt_E = create_device_template("DT-E")
+
+    sp_1 = create_security_policy("SP-1")
+    sp_2 = create_security_policy("SP-2")
+
+    dt_A.security_policy_id = sp_1

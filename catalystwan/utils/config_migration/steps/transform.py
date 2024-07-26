@@ -1,14 +1,16 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import json
 import logging
-from typing import List, Optional, Set, Tuple, cast
+from typing import Dict, List, Optional, Set, Tuple, cast
 from uuid import UUID, uuid4
 
 from catalystwan.api.templates.device_template.device_template import GeneralTemplate
 from catalystwan.models.configuration.config_migration import (
     ConfigTransformResult,
     ConvertResult,
+    DeviceTemplateWithInfo,
     TransformedParcel,
+    TransformedPolicyGroup,
     TransformHeader,
     UX1Config,
     UX2Config,
@@ -17,6 +19,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.multicast im
     MulticastBasicAttributes,
     MulticastParcel,
 )
+from catalystwan.models.configuration.policy_group import PolicyGroup
 from catalystwan.models.templates import FeatureTemplateInformation
 from catalystwan.utils.config_migration.converters.feature_template.ospfv3 import (
     Ospfv3Ipv4Converter,
@@ -109,7 +112,7 @@ def merge_parcels(ux2: UX2Config) -> UX2Config:
 
 
 def get_vpn_id_or_none(template: FeatureTemplateInformation) -> Optional[int]:
-    """Applies only to cisco_vpn tempalte type. Get VPN Id safely from the template definition."""
+    """Applies only to cisco_vpn template type. Get VPN Id safely from the template definition."""
     if template.template_definition is None:
         return None
     definition = json.loads(template.template_definition)
@@ -331,3 +334,87 @@ def remove_unused_feature_templates(ux1: UX1Config, used_feature_templates: Set[
 
     # Remove duplicates based on template IDs
     ux1.templates.feature_templates = [t for t in ux1.templates.feature_templates if t.id in used_feature_templates]
+
+
+class PolicyGroupMetadata:
+    def __init__(self, transformed_policy_group: TransformedPolicyGroup, policy_group_subelements: Set[UUID]):
+        self.transformed_policy_group = transformed_policy_group
+        self.policy_group_subelements = policy_group_subelements
+
+
+class PolicyGroupMetadataCreator:
+    def __init__(self, ux1: UX1Config):
+        self.ux1 = ux1
+        self.policies: List[PolicyGroupMetadata] = list()
+
+    def get_policies_metadata(self) -> List[PolicyGroupMetadata]:
+        return self.policies
+
+    def create(self, dt: DeviceTemplateWithInfo) -> PolicyGroupMetadata:
+        policy_elements_uuids = self._get_policy_elements(dt.get_policy_uuid())
+        security_elements_uuids = self._get_security_elements(dt.get_security_policy_uuid())
+        sig_uuid = dt.get_sig_template_uuid()
+        sig_uuid_set = set(sig_uuid) if sig_uuid else set()
+        policy_group_subelements = set().union(policy_elements_uuids, security_elements_uuids, sig_uuid_set)
+        transformed_policy_group = TransformedPolicyGroup(
+            header=TransformHeader(
+                type="policy_group",
+                origin=dt.template_id,
+                origname=dt.template_name,
+                subelements=policy_group_subelements,
+                info=[f"Policy Group created from Device Template. Included elements: {policy_group_subelements}"],
+            ),
+            policy_group=PolicyGroup(
+                name=dt.template_name,
+                description="",  # Place for information about merged policy group
+                profiles=[],
+                solution="sdwan",
+            ),
+        )
+        return PolicyGroupMetadata(transformed_policy_group, policy_group_subelements)
+
+    def create_and_store(self, dt: DeviceTemplateWithInfo) -> None:
+        self.policies.append(self.create(dt))
+
+    def _get_policy_elements(self, policy_uuid: Optional[UUID]) -> Set[UUID]:
+        """From current knowledge all policy elements are not used in Policy Groups."""
+        # if not policy_uuid:
+        #     return set()
+
+        # policy_c = self.ux1.policies.get_centralized_policy_by_id(policy_uuid)
+        # policy_l = self.ux1.policies.get_localized_policy_by_id(policy_uuid)
+        # policy = policy_c or policy_l
+
+        # if not policy:
+        #     return set()
+        return set()
+
+    def _get_security_elements(self, security_uuid: Optional[UUID]) -> Set[UUID]:
+        if not security_uuid:
+            return set()
+
+        security = self.ux1.policies.get_security_policy_by_id(security_uuid)
+        if not security:
+            return set()
+
+        return security.get_assemby_item_uuids()
+
+
+class PolicyGroupMetadataMerger:
+    def __init__(self, policies_metadata: List[PolicyGroupMetadata]):
+        self.policy_groups = policies_metadata
+        self.policy_map: Dict[Set[UUID], PolicyGroupMetadata] = set()
+
+    def merge_by_subelements(self):
+        """Merge Policy Groups with the same subelements into one."""
+        for policy in self.policy_groups:
+            if policy.policy_group_subelements in self.policy_map:
+                existing = self.policy_map[policy.policy_group_subelements]
+                existing.transformed_policy_group.policy_group.description += (
+                    f" {policy.transformed_policy_group.policy_group.name}"
+                )
+            else:
+                self.policy_map[policy.policy_group_subelements] = policy
+
+    def get_merged_transformed_policy_groups(self) -> List[TransformedPolicyGroup]:
+        return [policy.transformed_policy_group for policy in self.policy_map.values()]

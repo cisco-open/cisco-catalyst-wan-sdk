@@ -1,4 +1,5 @@
 import unittest
+from uuid import uuid4
 
 from catalystwan.api.templates.device_template.device_template import GeneralTemplate
 from catalystwan.models.configuration.config_migration import DeviceTemplateWithInfo
@@ -6,6 +7,9 @@ from catalystwan.models.configuration.config_migration import DeviceTemplateWith
 
 class TestDeviceTemplate(unittest.TestCase):
     def setUp(self):
+        self.sig_uuid = (
+            uuid4()
+        )  # We need to generate a UUID for the SIG template to test the get_sig_template_uuid method
         self.device_template = DeviceTemplateWithInfo(
             template_id="1",
             factory_default=False,
@@ -51,6 +55,12 @@ class TestDeviceTemplate(unittest.TestCase):
                             template_type="cedge_multicast",
                             sub_templates=[],
                         ),
+                        GeneralTemplate(
+                            name="2level - SIG Temaplte",
+                            template_id=str(self.sig_uuid),
+                            template_type="cisco_secure_internet_gateway",
+                            sub_templates=[],
+                        ),
                     ],
                 ),
             ],
@@ -86,7 +96,24 @@ class TestDeviceTemplate(unittest.TestCase):
                             template_type="cedge_multicast",
                             sub_templates=[],
                         ),
+                        GeneralTemplate(
+                            name="2level - SIG Temaplte",
+                            template_id=str(self.sig_uuid),
+                            template_type="cisco_secure_internet_gateway",
+                            sub_templates=[],
+                        ),
                     ],
                 ),
             ],
         )
+
+    def test_when_sig_template_is_assigned_expect_correct_uuid(self):
+        # Act, Assert
+        self.assertEqual(self.device_template.get_sig_template_uuid(), self.sig_uuid)
+
+    def test_when_sig_template_is_not_assigned_expect_correct_none(self):
+        # Arrange
+        self.device_template.general_templates[2].sub_templates = []
+
+        # Act, Assert
+        self.assertIsNone(self.device_template.get_sig_template_uuid())
