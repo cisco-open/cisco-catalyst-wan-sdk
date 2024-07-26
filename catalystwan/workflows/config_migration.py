@@ -430,7 +430,7 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
                 origname=localized_policy.policy_name,
             ),
             feature_profile=FeatureProfileCreationPayload(
-                name=f"FROM_{localized_policy.policy_name}",
+                name=localized_policy.policy_name,
                 description=localized_policy.policy_description,
             ),
         )

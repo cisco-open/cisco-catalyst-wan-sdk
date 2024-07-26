@@ -14,6 +14,8 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
     SslDecryptionProfileParcel,
     UrlFilteringParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.policy.app_probe import AppProbeParcel
+from catalystwan.models.configuration.feature_profile.sdwan.policy_object.policy.sla_class import SLAClassParcel
 from catalystwan.session import ManagerSession
 from catalystwan.typed_list import DataSequence
 
@@ -25,7 +27,9 @@ POLICY_OBJECTS_PUSH_ORDER: Mapping[Type[AnyParcel], int] = {
     UrlFilteringParcel: 1,
     SslDecryptionProfileParcel: 1,
     IntrusionPreventionParcel: 1,
+    AppProbeParcel: 1,
     AdvancedInspectionProfileParcel: 2,
+    SLAClassParcel: 2,
 }
 
 
@@ -96,17 +100,17 @@ class GroupsOfInterestPusher:
                 continue
 
             try:
+                self._progress(
+                    f"Creating Policy Object Parcel: {parcel.parcel_name}",
+                    i + 1,
+                    len(transformed_parcels),
+                )
                 parcel = update_parcel_references(parcel, self.push_context.id_lookup)
                 parcel_id = self._policy_object_api.create_parcel(profile_id=profile_id, payload=parcel).id
                 profile_rollback.add_parcel(parcel.type_, parcel_id)
                 self._push_result.report.groups_of_interest.add_created(parcel.parcel_name, parcel_id)
                 self.push_context.id_lookup[transformed_parcel.header.origin] = parcel_id
 
-                self._progress(
-                    f"Creating Policy Object Parcel: {parcel.parcel_name}",
-                    i + 1,
-                    len(transformed_parcels),
-                )
             except ManagerHTTPError as e:
                 logger.error(f"Error occured during config group creation: {e.info}")
                 self._push_result.report.groups_of_interest.add_failed(parcel, e)

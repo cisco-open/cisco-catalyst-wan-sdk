@@ -102,7 +102,7 @@ class UX2ConfigPusher:
         for sig in sigs:
             self._ux2_config.profile_parcels.remove(sig)
             try:
-                profile_name = f"FROM_{sig.header.origname}"
+                profile_name = sig.header.origname
                 profile_uuid = api.create_profile(profile_name, "Feature Profile created from SIG Feature Template").id
                 parcel_uuid = api.create_parcel(profile_uuid, sig.parcel).id
                 created_parcel = (sig.parcel.parcel_name, parcel_uuid)

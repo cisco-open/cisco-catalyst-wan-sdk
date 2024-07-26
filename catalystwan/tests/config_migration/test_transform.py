@@ -544,8 +544,7 @@ def test_when_localized_policy_with_qos_expect_application_priority_feature_prof
         (
             p
             for p in ux2_config.feature_profiles
-            if p.feature_profile.name == f"FROM_{localized_policy.policy_name}"
-            and p.header.type == "application-priority"
+            if p.feature_profile.name == localized_policy.policy_name and p.header.type == "application-priority"
         ),
         None,
     )
