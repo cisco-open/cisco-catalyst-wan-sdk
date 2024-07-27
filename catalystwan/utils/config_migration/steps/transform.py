@@ -339,7 +339,7 @@ def remove_unused_feature_templates(ux1: UX1Config, used_feature_templates: Set[
 class PolicyGroupMetadata:
     def __init__(self, transformed_policy_group: TransformedPolicyGroup, policy_group_subelements: Set[UUID]):
         self.transformed_policy_group = transformed_policy_group
-        self.policy_group_subelements = policy_group_subelements
+        self.policy_group_subelements = frozenset(policy_group_subelements)
 
 
 class PolicyGroupMetadataCreator:
@@ -354,12 +354,12 @@ class PolicyGroupMetadataCreator:
         policy_elements_uuids = self._get_policy_elements(dt.get_policy_uuid())
         security_elements_uuids = self._get_security_elements(dt.get_security_policy_uuid())
         sig_uuid = dt.get_sig_template_uuid()
-        sig_uuid_set = set(sig_uuid) if sig_uuid else set()
+        sig_uuid_set = set([sig_uuid]) if sig_uuid else set()
         policy_group_subelements = set().union(policy_elements_uuids, security_elements_uuids, sig_uuid_set)
         transformed_policy_group = TransformedPolicyGroup(
             header=TransformHeader(
                 type="policy_group",
-                origin=dt.template_id,
+                origin=UUID(dt.template_id),
                 origname=dt.template_name,
                 subelements=policy_group_subelements,
                 info=[f"Policy Group created from Device Template. Included elements: {policy_group_subelements}"],
@@ -403,7 +403,7 @@ class PolicyGroupMetadataCreator:
 class PolicyGroupMetadataMerger:
     def __init__(self, policies_metadata: List[PolicyGroupMetadata]):
         self.policy_groups = policies_metadata
-        self.policy_map: Dict[Set[UUID], PolicyGroupMetadata] = set()
+        self.policy_map: Dict[Set[UUID], PolicyGroupMetadata] = dict()
 
     def merge_by_subelements(self):
         """Merge Policy Groups with the same subelements into one."""

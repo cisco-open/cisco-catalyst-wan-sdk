@@ -588,13 +588,35 @@ def test_policy_profile_merge():
 
     sig_1_uuid = uuid4()
 
-    dt_A = create_device_template("DT-A")
-    dt_B = create_device_template("DT-B")
-    dt_C = create_device_template("DT-C")
-    dt_D = create_device_template("DT-D")
-    dt_E = create_device_template("DT-E")
-
     sp_1 = create_security_policy("SP-1")
     sp_2 = create_security_policy("SP-2")
+    sp_3 = create_security_policy("SP-3")
 
-    dt_A.security_policy_id = sp_1
+    dt_A = create_device_template("DT-A", sig_uuid=sig_1_uuid, security_policy_uuid=sp_1.policy_id)
+    dt_B = create_device_template("DT-B", sig_uuid=sig_1_uuid, security_policy_uuid=sp_1.policy_id)
+    dt_C = create_device_template("DT-C", sig_uuid=sig_1_uuid, security_policy_uuid=sp_2.policy_id)
+    dt_D = create_device_template("DT-D", sig_uuid=sig_1_uuid, security_policy_uuid=sp_2.policy_id)
+    dt_E = create_device_template("DT-E", security_policy_uuid=sp_3.policy_id)
+
+    ux1.templates.device_templates = [dt_A, dt_B, dt_C, dt_D, dt_E]
+    ux1.policies.security_policies = [sp_1, sp_2, sp_3]
+
+    # Act
+    config = transform(ux1=ux1).ux2_config
+    # Assert
+    merged_A_B = None
+    merged_C_D = None
+    separate_E = None
+    for pg in config.policy_groups:
+        se = pg.header.subelements
+        if se == {sig_1_uuid}.union(sp_1.get_assemby_item_uuids()):
+            merged_A_B = pg
+        elif se == {sig_1_uuid}.union(sp_2.get_assemby_item_uuids()):
+            merged_C_D = pg
+        elif se == sp_3.get_assemby_item_uuids():
+            separate_E = pg
+
+    assert len(config.policy_groups) == 3
+    assert merged_A_B is not None
+    assert merged_C_D is not None
+    assert separate_E is not None

@@ -86,7 +86,7 @@ class DeviceTemplateWithInfo(DeviceTemplate):
     def get_sig_template_uuid(self) -> Optional[UUID]:
         """SIG template is part of a PolicyGroup in UX2.0"""
 
-        def __traverse_general_templates(general_templates: List[GeneralTemplate]) -> Optional[UUID]:
+        def __traverse_general_templates(general_templates: List[GeneralTemplate]) -> Optional[str]:
             """Traverse the general templates to find the SIG template uuid"""
             for general_template in general_templates:
                 if general_template.template_type == "cisco_secure_internet_gateway":
