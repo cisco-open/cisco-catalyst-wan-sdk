@@ -377,17 +377,15 @@ class PolicyGroupMetadataCreator:
         self.policies.append(self.create(dt))
 
     def _get_policy_elements(self, policy_uuid: Optional[UUID]) -> Set[UUID]:
-        """From current knowledge all policy elements are not used in Policy Groups."""
-        # if not policy_uuid:
-        #     return set()
+        """Localized policy creates application-priority profile"""
+        if not policy_uuid:
+            return set()
 
-        # policy_c = self.ux1.policies.get_centralized_policy_by_id(policy_uuid)
-        # policy_l = self.ux1.policies.get_localized_policy_by_id(policy_uuid)
-        # policy = policy_c or policy_l
-
-        # if not policy:
-        #     return set()
-        return set()
+        policy_c = self.ux1.policies.get_centralized_policy_by_id(policy_uuid)
+        policy_l = self.ux1.policies.get_localized_policy_by_id(policy_uuid)
+        if policy_c:
+            return set()
+        return policy_uuid
 
     def _get_security_elements(self, security_uuid: Optional[UUID]) -> Set[UUID]:
         if not security_uuid:
