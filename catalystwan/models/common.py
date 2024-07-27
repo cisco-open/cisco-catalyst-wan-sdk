@@ -258,7 +258,7 @@ InterfaceType = Literal[
     "VirtualPortGroup",
     "Vlan",
 ]
-InterfaceTypePattern = re.compile(r"^(?:" + "|".join(map(re.escape, get_args(InterfaceType))) + r")\d+$")
+InterfaceTypePattern = re.compile(r"^(?:" + "|".join(map(re.escape, get_args(InterfaceType))) + r")[\x00-\x7F]*$")
 
 InterfaceStr = Annotated[
     str,
