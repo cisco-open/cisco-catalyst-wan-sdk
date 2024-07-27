@@ -17,7 +17,7 @@ TrafficDirection = Literal[
     "BIDIR",
 ]
 
-ReachableInterfaceStr = Literal[
+ReachableInterfaceType = Literal[
     "ipv4",
     "ipv6",
     "tunnel",
@@ -28,7 +28,7 @@ TrackType = Literal[
     "ipv6-service-icmp",
 ]
 
-InterfaceStr = Literal[
+InterfaceType = Literal[
     "fromservice",
     "toservice",
 ]
@@ -90,8 +90,8 @@ class TrackingIP(BaseModel):
 class ReachableInterface(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    type: Global[ReachableInterfaceStr] = Field(
-        serialization_alias="reachableInterfaceStr", validation_alias="reachableInterfaceStr"
+    type: Global[ReachableInterfaceType] = Field(
+        serialization_alias="reachableInterfaceType", validation_alias="reachableInterfaceType"
     )
     name: Optional[Union[Global[str], Variable]] = Field(
         serialization_alias="reachableInterfaceName", validation_alias="reachableInterfaceName"
@@ -125,7 +125,7 @@ class InterfaceProperties(BaseModel):
     reachable_interface: Optional[ReachableInterface] = Field(
         serialization_alias="reachableInterface", validation_alias="reachableInterface", default=None
     )
-    interface_type: Optional[Union[Global[InterfaceStr], Variable]] = Field(
+    interface_type: Optional[Union[Global[InterfaceType], Variable]] = Field(
         serialization_alias="interfaceType", validation_alias="interfaceType", default=None
     )
     redundancy_type: Optional[Union[Global[RedundancyType], Variable]] = Field(
