@@ -113,6 +113,11 @@ class DeviceTemplate(BaseModel):
         resp = session.get(f"dataservice/template/device/object/{device_template.id}").json()
         return DeviceTemplate(**resp)
 
+    def associate_feature_template(self, template_type: str, template_uuid: UUID) -> None:
+        self.general_templates.append(
+            GeneralTemplate(name="", template_id=str(template_uuid), template_type=template_type)
+        )
+
     model_config = ConfigDict(populate_by_name=True, use_enum_values=True)
 
 

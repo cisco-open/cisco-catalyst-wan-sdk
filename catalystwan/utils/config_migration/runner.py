@@ -33,7 +33,7 @@ class ConfigMigrationRunner:
     push: bool = True
     rollback: bool = False
     dt_filter: str = ".*"
-    artifact_dir = Path(DEFAULT_ARTIFACT_DIR)
+    artifact_dir = Path(DEFAULT_ARTIFACT_DIR).absolute()
     progress: Callable[[str, int, int], None] = log_progress
 
     def __post_init__(self) -> None:
@@ -45,6 +45,14 @@ class ConfigMigrationRunner:
         self.transform_schema_dump: Path = self.artifact_dir / Path("transform-result-schema.json")
         self.push_schema_dump: Path = self.artifact_dir / Path("push-result-schema.json")
         self.dt_pattern: re.Pattern = re.compile(self.dt_filter)
+
+    def set_dump_prefix(self, prefix: str) -> None:
+        self.ux1_dump = self.artifact_dir / Path(f"{prefix}-ux1.json")
+        self.ux2_dump = self.artifact_dir / Path(f"{prefix}-ux2.json")
+        self.ux2_push_dump = self.artifact_dir / Path(f"{prefix}-ux2-push-result.json")
+        self.ux1_schema_dump = self.artifact_dir / Path(f"{prefix}-ux1-schema.json")
+        self.transform_schema_dump = self.artifact_dir / Path(f"{prefix}-transform-result-schema.json")
+        self.push_schema_dump = self.artifact_dir / Path(f"{prefix}-push-result-schema.json")
 
     @staticmethod
     def collect_only(session: ManagerSession, filter: str = ".*") -> "ConfigMigrationRunner":
@@ -165,6 +173,8 @@ class ConfigMigrationRunner:
             if self.collect:
                 ux1 = collect_ux1_config(session, self.progress)
                 # ux1.templates = UX1Templates()
+                logger.warning(self.ux1_dump)
+                print(self.ux1_dump)
                 with open(self.ux1_dump, "w") as f:
                     f.write(ux1.model_dump_json(exclude_none=True, by_alias=True, indent=4, warnings=False))
 

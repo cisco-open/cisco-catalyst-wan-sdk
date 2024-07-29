@@ -6,7 +6,11 @@ from catalystwan.models.configuration.config_migration import DeviceTemplateWith
 
 
 def create_device_template(
-    name, *, sig_uuid: Optional[UUID] = None, security_policy_uuid: Optional[UUID] = None
+    name,
+    *,
+    sig_uuid: Optional[UUID] = None,
+    security_policy_uuid: Optional[UUID] = None,
+    localized_policy_uuid: Optional[UUID] = None
 ) -> DeviceTemplateWithInfo:
     dt = DeviceTemplateWithInfo(
         template_id=str(uuid4()),
@@ -31,5 +35,7 @@ def create_device_template(
         ]
     if security_policy_uuid:
         dt.security_policy_id = str(security_policy_uuid)
+    if localized_policy_uuid:
+        dt.policy_id = str(localized_policy_uuid)
 
     return dt

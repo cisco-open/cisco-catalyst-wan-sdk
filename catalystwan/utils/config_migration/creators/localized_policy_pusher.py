@@ -241,6 +241,9 @@ class LocalizedPolicyPusher:
                 report = app_prio_builder.build()
                 self._push_result.rollback.add_feature_profile(report.profile_uuid, app_prio_profile.header.type)
                 app_prio_reports.append(report)
+                self._push_context.policy_group_feature_profiles_id_lookup[
+                    app_prio_profile.header.origin
+                ] = report.profile_uuid
             except ManagerHTTPError as e:
                 logger.error(f"Error occured during Application Priority profile creation: {e.info}")
         self._push_result.report.add_standalone_feature_profiles(app_prio_reports)

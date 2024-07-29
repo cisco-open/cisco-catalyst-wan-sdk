@@ -680,6 +680,7 @@ class PushContext:
     id_lookup: Dict[UUID, UUID] = field(
         default_factory=dict
     )  # universal lookup for finding pushed item id by origin id
+    policy_group_feature_profiles_id_lookup: Dict[UUID, UUID] = field(default_factory=dict)
 
 
 @dataclass

@@ -40,12 +40,23 @@ class ProfileInfo(BaseModel):
     profile_type: Optional[Literal["global"]] = Field(
         default=None, validation_alias="profileType", serialization_alias="profileType"
     )
+    name: str
 
 
 class PolicyGroupId(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: UUID
+    name: str
     profiles: Optional[List[ProfileInfo]] = Field(
         default=None,
         description="(Optional - only applicable for AON) List of profile ids that belongs to the policy group",
     )
+
+    def get_profile_by_name(self, name: str) -> Optional[ProfileInfo]:
+        if self.profiles is None:
+            return None
+
+        for profile in self.profiles:
+            if profile.name == name:
+                return profile
+        return None

@@ -78,6 +78,7 @@ class SecurityPolicyPusher:
             security_policy_parcel_id = self._embedded_security_api.create_parcel(profile_id, parcel).id
             report.add_created_parcel(parcel.parcel_name, security_policy_parcel_id)
             self.push_context.id_lookup[policy.header.origin] = security_policy_parcel_id
+            self.push_context.policy_group_feature_profiles_id_lookup[policy.header.origin] = profile_id
         except ManagerHTTPError as e:
             logger.error(f"Error occured during creating PolicyParcel in embedded security profile: {e.info}")
             report.add_failed_parcel(parcel_name=parcel.parcel_name, parcel_type=parcel.type_, error_info=e.info)
@@ -145,6 +146,9 @@ class SecurityPolicyPusher:
             try:
                 parcel_id = self._dns_security_api.create_parcel(profile_id, parcel).id
                 self.push_context.id_lookup[dns_security_policy.header.origin] = parcel_id
+                self.push_context.policy_group_feature_profiles_id_lookup[
+                    dns_security_policy.header.origin
+                ] = profile_id
                 feature_profile_report.add_created_parcel(dns_security_policy.parcel.parcel_name, parcel_id)
             except ManagerHTTPError as e:
                 logger.error(f"Error occured during DNS Security policy creation: {e.info}")

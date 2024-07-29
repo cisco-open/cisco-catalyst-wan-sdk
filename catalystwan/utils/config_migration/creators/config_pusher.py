@@ -112,6 +112,7 @@ class UX2ConfigPusher:
                     )
                 )
                 self._push_result.rollback.add_feature_profile(profile_uuid, "sig-security")
+                self._push_context.policy_group_feature_profiles_id_lookup[sig.header.origin] = profile_uuid
             except ManagerHTTPError as e:
                 logger.error(f"Error occured during sig creation: {e}")
         self._push_result.report.add_standalone_feature_profiles(profiles)
