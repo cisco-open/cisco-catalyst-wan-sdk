@@ -167,6 +167,10 @@ class TestPolicyGroupAggregation(TestCaseBase):
         # --------------------------------------
         cls.runner = ConfigMigrationRunner.collect_and_push(cls.session, filter=cls.device_template_name)
         cls.runner.set_dump_prefix("aggregation")
+        cls.runner.set_filters(
+            device_template_name=cls.device_template_name,
+            feature_template_name=cls.sig_name,
+        )
         cls.runner.run()
 
     def test_sss(self):

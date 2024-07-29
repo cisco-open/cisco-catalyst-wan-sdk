@@ -33,7 +33,11 @@ class ConfigMigrationRunner:
     push: bool = True
     rollback: bool = False
     dt_filter: str = ".*"
-    artifact_dir = Path(DEFAULT_ARTIFACT_DIR).absolute()
+    ft_filter: str = ".*"
+    localized_filter: str = ".*"
+    centralized_filter: str = ".*"
+    security_filter: str = ".*"
+    artifact_dir = Path(DEFAULT_ARTIFACT_DIR)
     progress: Callable[[str, int, int], None] = log_progress
 
     def __post_init__(self) -> None:
@@ -53,6 +57,21 @@ class ConfigMigrationRunner:
         self.ux1_schema_dump = self.artifact_dir / Path(f"{prefix}-ux1-schema.json")
         self.transform_schema_dump = self.artifact_dir / Path(f"{prefix}-transform-result-schema.json")
         self.push_schema_dump = self.artifact_dir / Path(f"{prefix}-push-result-schema.json")
+
+    def set_filters(
+        self,
+        dt_filter: str = ".*",
+        ft_filter: str = ".*",
+        localized_filter: str = ".*",
+        centralized_filter: str = ".*",
+        security_filter: str = ".*",
+    ) -> None:
+        self.dt_filter = dt_filter
+        self.ft_filter = ft_filter
+        self.localized_filter = localized_filter
+        self.centralized_filter = centralized_filter
+        self.security_filter = security_filter
+        self.dt_pattern = re.compile(self.dt_filter)
 
     @staticmethod
     def collect_only(session: ManagerSession, filter: str = ".*") -> "ConfigMigrationRunner":
@@ -167,23 +186,42 @@ class ConfigMigrationRunner:
                             parcel_uuid = UUID(str(parcel.parcel_id))
                             fp_api.policy_object.delete(po_profile.profile_id, type(parcel.payload), parcel_uuid)
 
+    def filter_ux1(self, ux1: UX1Config) -> None:
+        """Filter out the templates and policies based on the filters"""
+        _filtered_dts = [
+            dt for dt in ux1.templates.device_templates if re.search(self.dt_pattern, dt.template_name) is not None
+        ]
+        ux1.templates.device_templates = _filtered_dts
+        _filtered_fts = [
+            ft for ft in ux1.templates.feature_templates if re.search(self.ft_filter, ft.name) is not None
+        ]
+        ux1.templates.feature_templates = _filtered_fts
+        _filtered_localized = [
+            p for p in ux1.policies.localized_policies if re.search(self.localized_filter, p.policy_name) is not None
+        ]
+        ux1.policies.localized_policies = _filtered_localized
+        _filtered_centralized = [
+            p for p in ux1.policies.centralized_policies if re.search(self.centralized_filter, p.policy_name) is not None
+        ]
+        ux1.policies.centralized_policies = _filtered_centralized
+        _filtered_security = [
+            p for p in ux1.policies.security_policies if re.search(self.security_filter, p.policy_name) is not None
+        ]
+        ux1.policies.security_policies = _filtered_security
+
+
     def run(self):
         with self.session.login() as session:
             # collext and dump ux1 to json file
             if self.collect:
                 ux1 = collect_ux1_config(session, self.progress)
                 # ux1.templates = UX1Templates()
-                logger.warning(self.ux1_dump)
-                print(self.ux1_dump)
                 with open(self.ux1_dump, "w") as f:
                     f.write(ux1.model_dump_json(exclude_none=True, by_alias=True, indent=4, warnings=False))
 
             # transform to ux2 and dump to json file
             _ux1 = self.load_collected_config()
-            _filtered_dts = [
-                dt for dt in _ux1.templates.device_templates if re.search(self.dt_pattern, dt.template_name) is not None
-            ]
-            _ux1.templates.device_templates = _filtered_dts
+            self.filter_ux1(_ux1)
             _transform_result = transform(_ux1, True)
             with open(self.ux2_dump, "w") as f:
                 f.write(_transform_result.model_dump_json(exclude_none=True, by_alias=True, indent=4, warnings=False))
