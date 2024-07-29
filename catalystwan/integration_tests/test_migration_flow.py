@@ -2,6 +2,7 @@
 
 
 from ipaddress import IPv4Address, IPv4Interface
+from typing import Dict, List
 from uuid import UUID
 
 from catalystwan.api.templates.device_template.device_template import DeviceTemplate
@@ -14,6 +15,9 @@ from catalystwan.api.templates.models.cisco_secure_internet_gateway import (
     Tracker,
 )
 from catalystwan.integration_tests.base import TestCaseBase, create_name_with_run_id
+from catalystwan.models.policy.definition.qos_map import QoSMapPolicy
+from catalystwan.models.policy.list.class_map import ClassMapList
+from catalystwan.models.policy.localized import LocalizedPolicy, LocalizedPolicySettings
 from catalystwan.utils.config_migration.runner import ConfigMigrationRunner
 
 
@@ -56,17 +60,65 @@ class TestPolicyGroupAggregation(TestCaseBase):
     sig_uuid: str
     device_template_name: str
     device_template_uuid: str
+    pol_dict: Dict[str, UUID]
+    localized_policy_name: str
+    queue_names: List[str]
+    qos_map_name: str
 
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        # --------------------------------------
-        # Create SIG Feature Template
-        # --------------------------------------
-        templates = cls.session.api.templates
+        cls.pol_dict = {}
+        cls.queue_names = ["VOICE", "CRITICAL_DATA", "BULK", "DEFAULT", "INTERACTIVE_VIDEO", "CONTROL_SIGNALING"]
         cls.sig_name = create_name_with_run_id("SIG")
+        cls.localized_policy_name = create_name_with_run_id("LocalizedPolicy")
+        cls.qos_map_name = create_name_with_run_id("QosMapPolicy")
+        cls.device_template_name = create_name_with_run_id("DeviceTemplate_to_PolicyGroup")
+        cls.runner = ConfigMigrationRunner.collect_and_push(cls.session)
+        cls.runner.set_dump_prefix("aggregation")
+        cls.runner.set_filters(
+            dt_filter=cls.device_template_name,
+            lp_filter=cls.localized_policy_name,
+        )
+
+    def test_policy_groups_aggregation(self):
+        """Test Policy Group Aggregation
+
+        When:
+        UX1.0: Device Template has associated a SIG Feature Template, Security Policy and Localized Policy
+
+        Expect:
+        UX2.0: Policy Group with associated SIG, Application Priority & SLA, Security, DNS Security Feature Profiles
+        """
+        # Arrange
+        self._create_sig_feature_template()
+        self._create_localized_policy()
+        self._create_device_template()
+        # Act
+        self.runner.run()
+        # Assert
+        policy_group = (
+            self.session.endpoints.configuration.policy_group.get_all()
+            .filter(name=self.device_template_name)
+            .single_or_default()
+        )
+        assert policy_group is not None
+        assert policy_group.get_profile_by_name(self.sig_name) is not None
+        assert policy_group.get_profile_by_name(self.localized_policy_name) is not None
+
+    def _create_device_template(self) -> None:
+        templates = self.session.api.templates
+        dt = DeviceTemplate.get("Factory_Default_C8000V_V01", self.session)
+        dt.template_name = self.device_template_name
+        dt.factory_default = False
+        dt.associate_feature_template(CiscoSecureInternetGatewayModel.type, UUID(self.sig_uuid))
+        dt.associate_policy(self.pol_dict["Localized-Policy"])
+        self.device_template_uuid = templates.create(dt)
+
+    def _create_sig_feature_template(self) -> None:
+        templates = self.session.api.templates
         cisco_sig = CiscoSecureInternetGatewayModel(
-            template_name=cls.sig_name,
+            template_name=self.sig_name,
             template_description="Comprehensive CiscoSecureInternetGateway Configuration",
             vpn_id=10,
             child_org_id="example_org",
@@ -149,52 +201,49 @@ class TestPolicyGroupAggregation(TestCaseBase):
                 )
             ],
         )
-        cls.sig_uuid = templates.create(cisco_sig)
-        # --------------------------------------
-        # Create Device Template
-        # --------------------------------------
-        dt = DeviceTemplate.get(
-            "Factory_Default_C8000V_V01",
-            cls.session,
-        )
-        cls.device_template_name = create_name_with_run_id("DeviceTemplate_to_PolicyGroup")
-        dt.template_name = cls.device_template_name
-        dt.factory_default = False
-        dt.associate_feature_template(cisco_sig.type, UUID(cls.sig_uuid))
-        cls.device_template_uuid = templates.create(dt)
-        # --------------------------------------
-        # Run Migration
-        # --------------------------------------
-        cls.runner = ConfigMigrationRunner.collect_and_push(cls.session, filter=cls.device_template_name)
-        cls.runner.set_dump_prefix("aggregation")
-        cls.runner.set_filters(
-            device_template_name=cls.device_template_name,
-            feature_template_name=cls.sig_name,
-        )
-        cls.runner.run()
+        self.sig_uuid = templates.create(cisco_sig)
 
-    def test_sss(self):
-        """Test Policy Group Aggregation
-
-        When:
-        UX1.0: Device Template has associated a SIG Feature Template, Security Policy and Localized Policy
-
-        Expect:
-        UX2.0: Policy Group with associated SIG, Application Priority & SLA, Security, DNS Security Feature Profiles
-        """
-        # Act
-        policy_group = (
-            self.session.endpoints.configuration.policy_group.get_all()
-            .filter(name=self.device_template_name)
-            .single_or_default()
+    def _create_localized_policy(self) -> None:
+        api = self.session.api.policy
+        for i, name in enumerate(self.queue_names):
+            class_map = ClassMapList(name=create_name_with_run_id(name))
+            class_map.assign_queue(i)
+            self.pol_dict[name] = api.lists.create(class_map)
+        qos_map = QoSMapPolicy(name=self.qos_map_name, description="QoS Map Policy")
+        qos_map.add_scheduler(queue=1, class_map_ref=self.pol_dict["CRITICAL_DATA"], bandwidth=30, buffer=30)
+        qos_map.add_scheduler(queue=2, class_map_ref=self.pol_dict["BULK"], bandwidth=10, buffer=10)
+        qos_map.add_scheduler(queue=3, class_map_ref=self.pol_dict["DEFAULT"], bandwidth=20, buffer=20)
+        qos_map.add_scheduler(queue=4, class_map_ref=self.pol_dict["INTERACTIVE_VIDEO"], bandwidth=20, buffer=20)
+        qos_map.add_scheduler(
+            queue=5, class_map_ref=self.pol_dict["CONTROL_SIGNALING"], bandwidth=10, buffer=10, drops="tail-drop"
         )
-        # Assert
-        assert policy_group is not None
-        assert policy_group.get_profile_by_name(self.sig_name) is not None
+        self.pol_dict["QosMap-Policy"] = api.definitions.create(qos_map)
+        loc_pol = LocalizedPolicy(policy_name=self.localized_policy_name, policy_description="desc text")
+        loc_pol.set_definition(
+            [],
+            LocalizedPolicySettings(
+                cloud_qos=True,
+                cloud_qos_service_side=True,
+            ),
+        )
+        loc_pol.add_qos_map(self.pol_dict["QosMap-Policy"])
+        self.pol_dict["Localized-Policy"] = api.localized.create(loc_pol)
 
     @classmethod
     def tearDownClass(cls) -> None:
-        cls.session.api.templates.delete(DeviceTemplate, cls.device_template_name)
-        cls.session.api.templates.delete(FeatureTemplate, cls.sig_name)  # type: ignore
+        templates = cls.session.api.templates
+        templates.delete(DeviceTemplate, cls.device_template_name)
+        templates.delete(FeatureTemplate, cls.sig_name)  # type: ignore
+
+        policy = cls.session.api.policy
+        policy.localized.delete(cls.pol_dict["Localized-Policy"])
+        policy.definitions.delete(QoSMapPolicy, cls.pol_dict["QosMap-Policy"])
+        policy.lists.delete(ClassMapList, cls.pol_dict["VOICE"])
+        policy.lists.delete(ClassMapList, cls.pol_dict["CRITICAL_DATA"])
+        policy.lists.delete(ClassMapList, cls.pol_dict["BULK"])
+        policy.lists.delete(ClassMapList, cls.pol_dict["DEFAULT"])
+        policy.lists.delete(ClassMapList, cls.pol_dict["INTERACTIVE_VIDEO"])
+        policy.lists.delete(ClassMapList, cls.pol_dict["CONTROL_SIGNALING"])
+
         cls.runner.clear_ux2()
         return super().tearDownClass()

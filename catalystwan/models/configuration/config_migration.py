@@ -492,9 +492,15 @@ class UX2ConfigPushReport(BaseModel):
     def add_report(self, name: str, uuid: UUID, feature_profiles: List[FeatureProfileBuildReport]) -> None:
         self.config_groups.append(ConfigGroupReport(name=name, uuid=uuid, feature_profiles=feature_profiles))
 
+    def add_pg_report(self, name: str, uuid: UUID, feature_profiles: List[FeatureProfileBuildReport]) -> None:
+        self.policy_groups.append(PolicyGroupReport(name=name, uuid=uuid, feature_profiles=feature_profiles))
+
     def add_standalone_feature_profiles(self, feature_profiles: List[FeatureProfileBuildReport]) -> None:
         """This happends when parent config group failes to create or profile don't have config group"""
         self.standalone_feature_profiles.extend(feature_profiles)
+
+    def get_standalone_feature_profiles_by_ids(self, uuids: Set[UUID]) -> List[FeatureProfileBuildReport]:
+        return [f for f in self.standalone_feature_profiles if f.profile_uuid in uuids]
 
     def set_failed_push_parcels_flat_list(self):
         for group in self.groups:

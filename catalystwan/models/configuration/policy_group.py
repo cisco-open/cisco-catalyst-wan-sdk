@@ -33,6 +33,11 @@ class PolicyGroup(BaseModel):
     )
     solution: Optional[Solution] = Field(default=None)
 
+    def add_profile(self, profile_uuid: UUID) -> None:
+        if self.profiles is None:
+            self.profiles = []
+        self.profiles.append(Profile(id=profile_uuid))
+
 
 class ProfileInfo(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -46,7 +51,6 @@ class ProfileInfo(BaseModel):
 class PolicyGroupId(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: UUID
-    name: str
     profiles: Optional[List[ProfileInfo]] = Field(
         default=None,
         description="(Optional - only applicable for AON) List of profile ids that belongs to the policy group",
@@ -60,3 +64,7 @@ class PolicyGroupId(BaseModel):
             if profile.name == name:
                 return profile
         return None
+
+
+class PolicyGroupInfo(PolicyGroupId):
+    name: str

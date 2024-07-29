@@ -118,6 +118,12 @@ class DeviceTemplate(BaseModel):
             GeneralTemplate(name="", template_id=str(template_uuid), template_type=template_type)
         )
 
+    def associate_security_policy(self, security_policy_uuid: UUID) -> None:
+        self.security_policy_id = str(security_policy_uuid)
+
+    def associate_policy(self, policy_uuid: UUID) -> None:
+        self.policy_id = str(policy_uuid)
+
     model_config = ConfigDict(populate_by_name=True, use_enum_values=True)
 
 

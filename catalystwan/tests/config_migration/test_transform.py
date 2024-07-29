@@ -633,3 +633,15 @@ def test_policy_profile_merge():
     assert merged_A_B is not None
     assert merged_C_D is not None
     assert separate_E is not None
+
+
+def test_when_no_data_to_push_in_policy_groups_expect_no_policy_groups():
+    """When there is no data to push, there should be no policy groups."""
+    # Arrange
+    ux1 = UX1Config()
+    dt = create_device_template("DT-A")
+    ux1.templates.device_templates = [dt]
+    # Act
+    config = transform(ux1=ux1).ux2_config
+    # Assert
+    assert len(config.policy_groups) == 0

@@ -34,9 +34,9 @@ class ConfigMigrationRunner:
     rollback: bool = False
     dt_filter: str = ".*"
     ft_filter: str = ".*"
-    localized_filter: str = ".*"
-    centralized_filter: str = ".*"
-    security_filter: str = ".*"
+    lp_filter: str = ".*"
+    cp_filter: str = ".*"
+    sp_filter: str = ".*"
     artifact_dir = Path(DEFAULT_ARTIFACT_DIR)
     progress: Callable[[str, int, int], None] = log_progress
 
@@ -48,7 +48,6 @@ class ConfigMigrationRunner:
         self.ux1_schema_dump: Path = self.artifact_dir / Path("ux1-schema.json")
         self.transform_schema_dump: Path = self.artifact_dir / Path("transform-result-schema.json")
         self.push_schema_dump: Path = self.artifact_dir / Path("push-result-schema.json")
-        self.dt_pattern: re.Pattern = re.compile(self.dt_filter)
 
     def set_dump_prefix(self, prefix: str) -> None:
         self.ux1_dump = self.artifact_dir / Path(f"{prefix}-ux1.json")
@@ -62,16 +61,25 @@ class ConfigMigrationRunner:
         self,
         dt_filter: str = ".*",
         ft_filter: str = ".*",
-        localized_filter: str = ".*",
-        centralized_filter: str = ".*",
-        security_filter: str = ".*",
+        lp_filter: str = ".*",
+        cp_filter: str = ".*",
+        sp_filter: str = ".*",
     ) -> None:
+        """Set the filters for the device templates, feature templates,
+        localized policies, centralized policies, and security policies
+
+        Args:
+            dt_filter (str, optional): Device Template filter. Defaults to ".*".
+            ft_filter (str, optional): Feature Template filter. Defaults to ".*".
+            lp_filter (str, optional): Localized Policy filter. Defaults to ".*".
+            cp_filter (str, optional): Centralized Policy filter. Defaults to ".*".
+            sp_filter (str, optional): Security Policy filter. Defaults to ".*".
+        """
         self.dt_filter = dt_filter
         self.ft_filter = ft_filter
-        self.localized_filter = localized_filter
-        self.centralized_filter = centralized_filter
-        self.security_filter = security_filter
-        self.dt_pattern = re.compile(self.dt_filter)
+        self.lp_filter = lp_filter
+        self.cp_filter = cp_filter
+        self.sp_filter = sp_filter
 
     @staticmethod
     def collect_only(session: ManagerSession, filter: str = ".*") -> "ConfigMigrationRunner":
@@ -189,26 +197,23 @@ class ConfigMigrationRunner:
     def filter_ux1(self, ux1: UX1Config) -> None:
         """Filter out the templates and policies based on the filters"""
         _filtered_dts = [
-            dt for dt in ux1.templates.device_templates if re.search(self.dt_pattern, dt.template_name) is not None
+            dt for dt in ux1.templates.device_templates if re.search(self.dt_filter, dt.template_name) is not None
         ]
         ux1.templates.device_templates = _filtered_dts
-        _filtered_fts = [
-            ft for ft in ux1.templates.feature_templates if re.search(self.ft_filter, ft.name) is not None
-        ]
+        _filtered_fts = [ft for ft in ux1.templates.feature_templates if re.search(self.ft_filter, ft.name) is not None]
         ux1.templates.feature_templates = _filtered_fts
         _filtered_localized = [
-            p for p in ux1.policies.localized_policies if re.search(self.localized_filter, p.policy_name) is not None
+            p for p in ux1.policies.localized_policies if re.search(self.lp_filter, p.policy_name) is not None
         ]
         ux1.policies.localized_policies = _filtered_localized
         _filtered_centralized = [
-            p for p in ux1.policies.centralized_policies if re.search(self.centralized_filter, p.policy_name) is not None
+            p for p in ux1.policies.centralized_policies if re.search(self.cp_filter, p.policy_name) is not None
         ]
         ux1.policies.centralized_policies = _filtered_centralized
         _filtered_security = [
-            p for p in ux1.policies.security_policies if re.search(self.security_filter, p.policy_name) is not None
+            p for p in ux1.policies.security_policies if re.search(self.sp_filter, p.policy_name) is not None
         ]
         ux1.policies.security_policies = _filtered_security
-
 
     def run(self):
         with self.session.login() as session:

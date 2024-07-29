@@ -403,6 +403,10 @@ class PolicyGroupMetadataMerger:
         self.policy_groups = policies_metadata
         self.policy_map: Dict[Set[UUID], PolicyGroupMetadata] = dict()
 
+    def remove_policies_with_no_subelements(self):
+        """The policy groups with no subelements, no need to create empty groups."""
+        self.policy_groups = [policy for policy in self.policy_groups if policy.policy_group_subelements]
+
     def merge_by_subelements(self):
         """Merge Policy Groups with the same subelements into one."""
         for policy in self.policy_groups:

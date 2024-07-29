@@ -360,6 +360,7 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
     # Add Policy Groups
     policies_metadata = policy_group_creator.get_policies_metadata()
     policy_merger = PolicyGroupMetadataMerger(policies_metadata=policies_metadata)
+    policy_merger.remove_policies_with_no_subelements()
     policy_merger.merge_by_subelements()
     ux2.policy_groups = policy_merger.get_merged_transformed_policy_groups()
 
