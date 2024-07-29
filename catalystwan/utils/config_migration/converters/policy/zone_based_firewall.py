@@ -48,6 +48,7 @@ from catalystwan.models.policy.definition.zone_based_firewall import (
 from catalystwan.models.policy.definition.zone_based_firewall import LogAction as LogActionV1
 from catalystwan.models.policy.definition.zone_based_firewall import ZoneBasedFWPolicy
 from catalystwan.models.policy.policy_definition import ActionEntry, MatchEntry
+from catalystwan.utils.config_migration.converters.utils import convert_varname
 
 
 def split_value(match_entry) -> List[str]:
@@ -85,14 +86,14 @@ def convert_sequence_match_entry(
         if match_entry.value is not None:
             return SourceIp.from_ip_networks(list(map(IPv4Network, split_value(match_entry))))
         elif match_entry.vip_variable_name is not None:
-            return SourceIp.from_variable(match_entry.vip_variable_name)
+            return SourceIp.from_variable(convert_varname(match_entry.vip_variable_name))
         convert_result.update_status("partial", "SrcIP match entry does not contain value/vipVariableName")
         return None
     elif match_entry.field == "destinationIp":
         if match_entry.value is not None:
             return DestinationIp.from_ip_networks(list(map(IPv4Network, split_value(match_entry))))
         elif match_entry.vip_variable_name is not None:
-            return DestinationIp.from_variable(match_entry.vip_variable_name)
+            return DestinationIp.from_variable(convert_varname(match_entry.vip_variable_name))
         convert_result.update_status("partial", "DstIP match entry does not contain value/vipVariableName")
         return None
     elif match_entry.field == "destinationFqdn":

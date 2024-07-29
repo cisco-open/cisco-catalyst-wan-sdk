@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, ValidationError, model_validator
 from typing_extensions import Self
 
-from catalystwan.api.configuration_groups.parcel import Global, Variable, _ParcelBase, as_global
+from catalystwan.api.configuration_groups.parcel import Global, Variable, _ParcelBase, as_global, as_variable
 from catalystwan.models.configuration.feature_profile.common import RefIdItem, RefIdList
 
 DefaultAction = Literal["pass", "drop"]
@@ -456,7 +456,7 @@ class Ipv4Match(BaseModel):
 
     @classmethod
     def create_with_variable(cls, variable_name: str) -> Self:
-        return cls(ipv4_value=Variable(value=variable_name))
+        return cls(ipv4_value=as_variable(variable_name))
 
 
 class FqdnMatch(BaseModel):
