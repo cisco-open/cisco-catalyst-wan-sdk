@@ -106,6 +106,7 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     sequence_type: Literal["applicationFirewall", "qos", "serviceChaining", "trafficEngineering", "data"] = Field(
         default="data", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
+    base_action: AcceptDropActionType = Field(serialization_alias="baseAction", validation_alias="baseAction")
     match: TrafficDataPolicySequenceMatch = TrafficDataPolicySequenceMatch()
     actions: List[TrafficDataPolicySequenceActions] = []
     model_config = ConfigDict(populate_by_name=True)

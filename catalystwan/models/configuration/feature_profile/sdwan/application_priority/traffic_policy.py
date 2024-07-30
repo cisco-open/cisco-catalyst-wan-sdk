@@ -6,7 +6,14 @@ from uuid import UUID
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
-from catalystwan.models.common import EncapType, SequenceIpType, ServiceChainNumber, ServiceType, TLOCColor
+from catalystwan.models.common import (
+    AcceptDropActionType,
+    EncapType,
+    SequenceIpType,
+    ServiceChainNumber,
+    ServiceType,
+    TLOCColor,
+)
 from catalystwan.models.configuration.feature_profile.common import Icmp6Msg, IcmpMsg, RefIdItem
 from catalystwan.models.policy.centralized import TrafficDataDirection
 from catalystwan.models.policy.policy_definition import (
@@ -16,11 +23,6 @@ from catalystwan.models.policy.policy_definition import (
     LossProtectionType,
     TrafficTargetType,
 )
-
-BaseAction = Literal[
-    "accept",
-    "drop",
-]
 
 
 class TrafficPolicyTarget(BaseModel):
@@ -603,10 +605,10 @@ Actions = Union[
 ]
 
 
-class Sequences(BaseModel):
+class Sequence(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     actions: Optional[List[Actions]] = Field(default=None)
-    base_action: Optional[Global[BaseAction]] = Field(
+    base_action: Optional[Global[AcceptDropActionType]] = Field(
         default=None, validation_alias="baseAction", serialization_alias="baseAction"
     )
     match: Optional[Match] = Field(default=None)
@@ -807,10 +809,20 @@ class Sequences(BaseModel):
 
 class TrafficPolicyParcel(_ParcelBase):
     type_: Literal["traffic-policy"] = Field(default="traffic-policy", exclude=True)
-    data_default_action: Optional[Global[BaseAction]] = Field(
+    data_default_action: Optional[Global[AcceptDropActionType]] = Field(
         default=None, validation_alias=AliasPath("data", "dataDefaultAction")
     )
     has_cor_via_sig: Optional[Global[bool]] = Field(default=None, validation_alias=AliasPath("data", "hasCorViaSig"))
-    sequences: List[Sequences] = Field(default=[], validation_alias=AliasPath("data", "sequences"))
+    sequences: List[Sequence] = Field(default=[], validation_alias=AliasPath("data", "sequences"))
     simple_flow: Optional[Global[bool]] = Field(default=None, validation_alias=AliasPath("data", "simpleFlow"))
     target: TrafficPolicyTarget = Field(validation_alias=AliasPath("data", "target"))
+
+    def add_sequence(self, name: str, id_: int, ip_type: SequenceIpType, base_action: AcceptDropActionType) -> Sequence:
+        seq = Sequence(
+            sequence_name=as_global(name),
+            sequence_id=as_global(id_),
+            sequence_ip_type=as_global(ip_type, SequenceIpType),
+            base_action=as_global(base_action, AcceptDropActionType),
+        )
+        self.sequences.append(seq)
+        return seq

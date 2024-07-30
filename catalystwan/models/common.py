@@ -2,6 +2,7 @@
 
 import re
 from dataclasses import InitVar, dataclass, field
+from ipaddress import IPv4Interface, IPv6Interface
 from typing import Any, Dict, Iterator, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union, get_args
 from uuid import UUID
 
@@ -155,6 +156,18 @@ def str_as_positive_int_list(val: Union[str, Sequence[PositiveInt]]) -> Sequence
     return val
 
 
+def str_as_ipv4_list(val: Union[str, Sequence[IPv4Interface]]) -> Sequence[IPv4Interface]:
+    if isinstance(val, str):
+        return [IPv4Interface(element) for element in val.split()]
+    return val
+
+
+def str_as_ipv6_list(val: Union[str, Sequence[IPv6Interface]]) -> Sequence[IPv6Interface]:
+    if isinstance(val, str):
+        return [IPv6Interface(element) for element in val.split()]
+    return val
+
+
 def str_as_str_list(val: Union[str, Sequence[str]]) -> Sequence[str]:
     if isinstance(val, str):
         return val.split()
@@ -173,6 +186,7 @@ SpaceSeparatedUUIDList = Annotated[
     List[UUID],
     PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
     BeforeValidator(str_as_uuid_list),
+    Field(min_length=1),
 ]
 
 
@@ -180,6 +194,21 @@ SpaceSeparatedNonNegativeIntList = Annotated[
     List[NonNegativeInt],
     PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
     BeforeValidator(str_as_positive_int_list),
+    Field(min_length=1),
+]
+
+SpaceSeparatedIPv4 = Annotated[
+    List[IPv4Interface],
+    PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
+    BeforeValidator(str_as_ipv4_list),
+    Field(min_length=1),
+]
+
+SpaceSeparatedIPv6 = Annotated[
+    List[IPv6Interface],
+    PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
+    BeforeValidator(str_as_ipv6_list),
+    Field(min_length=1),
 ]
 
 

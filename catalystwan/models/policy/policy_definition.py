@@ -2,7 +2,7 @@
 
 import datetime
 from functools import wraps
-from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
+from ipaddress import IPv4Address, IPv4Interface, IPv4Network, IPv6Address, IPv6Network
 from typing import Any, Dict, List, MutableSequence, Optional, Sequence, Set, Tuple, Union
 from uuid import UUID
 
@@ -22,6 +22,7 @@ from catalystwan.models.common import (
     SequenceIpType,
     ServiceChainNumber,
     ServiceType,
+    SpaceSeparatedIPv4,
     SpaceSeparatedNonNegativeIntList,
     SpaceSeparatedUUIDList,
     TLOCActionType,
@@ -192,14 +193,17 @@ class SourceIPEntry(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     field: Literal["sourceIp"] = "sourceIp"
-    value: Optional[str] = Field(default=None, description="IP network specifiers separate by space")
+    value: Optional[SpaceSeparatedIPv4] = Field(default=None, description="IP network specifiers separate by space")
     vip_variable_name: Optional[str] = Field(
         default=None, serialization_alias="vipVariableName", validation_alias="vipVariableName"
     )
 
     @staticmethod
     def from_ipv4_networks(networks: List[IPv4Network]) -> "SourceIPEntry":
-        return SourceIPEntry(value=networks_to_str(networks))
+        return SourceIPEntry(value=[IPv4Interface(ip) for ip in networks])
+
+    def as_ipv4_networks(self) -> List[IPv4Network]:
+        return [] if not self.value else [IPv4Network(val) for val in self.value]
 
 
 class SourceIPv6Entry(BaseModel):
@@ -229,14 +233,17 @@ class DestinationIPEntry(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     field: Literal["destinationIp"] = "destinationIp"
-    value: Optional[str] = Field(default=None)
+    value: Optional[SpaceSeparatedIPv4] = Field(default=None)
     vip_variable_name: Optional[str] = Field(
         default=None, serialization_alias="vipVariableName", validation_alias="vipVariableName"
     )
 
     @staticmethod
     def from_ipv4_networks(networks: List[IPv4Network]) -> "DestinationIPEntry":
-        return DestinationIPEntry(value=networks_to_str(networks))
+        return DestinationIPEntry(value=[IPv4Interface(ip) for ip in networks])
+
+    def as_ipv4_networks(self) -> List[IPv4Network]:
+        return [] if not self.value else [IPv4Network(val) for val in self.value]
 
 
 class DestinationIPv6Entry(BaseModel):
@@ -572,22 +579,30 @@ class ICMPMessageEntry(BaseModel):
 
 class SourceDataPrefixListEntry(BaseModel):
     field: Literal["sourceDataPrefixList"] = "sourceDataPrefixList"
-    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
+    ref: SpaceSeparatedUUIDList = Field(
+        description="usually single id but zone based firewall can use multiple ids separated by space"
+    )
 
 
 class SourceDataIPv6PrefixListEntry(BaseModel):
     field: Literal["sourceDataIpv6PrefixList"] = "sourceDataIpv6PrefixList"
-    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
+    ref: SpaceSeparatedUUIDList = Field(
+        description="usually single id but zone based firewall can use multiple ids separated by space"
+    )
 
 
 class DestinationDataPrefixListEntry(BaseModel):
     field: Literal["destinationDataPrefixList"] = "destinationDataPrefixList"
-    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
+    ref: SpaceSeparatedUUIDList = Field(
+        description="usually single id but zone based firewall can use multiple ids separated by space"
+    )
 
 
 class DestinationDataIPv6PrefixListEntry(BaseModel):
     field: Literal["destinationDataIpv6PrefixList"] = "destinationDataIpv6PrefixList"
-    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
+    ref: SpaceSeparatedUUIDList = Field(
+        description="usually single id but zone based firewall can use multiple ids separated by space"
+    )
 
 
 class DNSAppListEntry(BaseModel):
@@ -642,7 +657,9 @@ class SourceScalableGroupTagListEntry(BaseModel):
 
 class DestinationPortListEntry(BaseModel):
     field: Literal["destinationPortList"] = "destinationPortList"
-    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
+    ref: SpaceSeparatedUUIDList = Field(
+        description="usually single id but zone based firewall can use multiple ids separated by space"
+    )
 
 
 class DestinationScalableGroupTagListEntry(BaseModel):

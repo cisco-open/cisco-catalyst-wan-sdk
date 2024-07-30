@@ -63,7 +63,7 @@ from catalystwan.models.policy.policy_definition import (
 from catalystwan.utils.config_migration.converters.policy.zone_based_firewall import (
     convert_sequence_actions,
     convert_sequence_match_entry,
-    convert_zone_based_fw,
+    zone_based_fw,
 )
 
 
@@ -174,10 +174,11 @@ class TestSequenceMatchConverters(unittest.TestCase):
         assert not self._convert_result.info
 
     def test_convert_source_ip_with_ip_networks(self) -> None:
-        in_ = SourceIPEntry(value="10.0.0.0/24 192.168.0.0/16")
+        value = [IPv4Network("10.0.0.0/24"), IPv4Network("192.168.0.0/16")]
+        in_ = SourceIPEntry.from_ipv4_networks(value)
         out_ = convert_sequence_match_entry(in_, self._convert_result)
         assert type(out_) is SourceIp
-        assert out_.source_ip.ipv4_value.value == [IPv4Network("10.0.0.0/24"), IPv4Network("192.168.0.0/16")]
+        assert out_.source_ip.ipv4_value.value == value
         assert self._convert_result.status == "complete"
         assert not self._convert_result.info
 
@@ -190,10 +191,11 @@ class TestSequenceMatchConverters(unittest.TestCase):
         assert not self._convert_result.info
 
     def test_convert_dst_ip_with_ip_networks(self) -> None:
-        in_ = DestinationIPEntry(value="10.0.0.0/24 192.168.0.0/16")
+        value = [IPv4Network("10.0.0.0/24"), IPv4Network("192.168.0.0/16")]
+        in_ = DestinationIPEntry.from_ipv4_networks(value)
         out_ = convert_sequence_match_entry(in_, self._convert_result)
         assert type(out_) is DestinationIp
-        assert out_.destination_ip.ipv4_value.value == [IPv4Network("10.0.0.0/24"), IPv4Network("192.168.0.0/16")]
+        assert out_.destination_ip.ipv4_value.value == value
         assert self._convert_result.status == "complete"
         assert not self._convert_result.info
 
@@ -300,7 +302,7 @@ class TestConvertZoneBasedFirewall(unittest.TestCase):
         rule.match_destination_port_list([uuid4(), uuid4()])
         fw.add_ipv4_rule("rule2", "pass", log=True)
 
-        out = convert_zone_based_fw(fw, uuid4(), self.context)
+        out = zone_based_fw(fw, uuid4(), self.context)
 
         assert type(out) is ConvertResult
         assert out.status == "complete"
