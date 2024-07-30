@@ -1,11 +1,12 @@
 from ipaddress import IPv4Address, IPv4Interface
 from typing import Any, List, Optional, Union
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, Variable
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
 from catalystwan.models.configuration.feature_profile.sdwan.sig_security.sig_security import (
     Interface,
     InterfacePair,
     IpsecCiphersuite,
+    IpsecReplayWindow,
     Service,
     SIGParcel,
     SigProvider,
@@ -46,6 +47,9 @@ class SIGConverter(FTConverter):
         service_value = service[0]
         flattened_values = flatten_datapaths(service_value)
         normalized_values = normalize_to_model_definition(flattened_values, Service.model_fields)
+        location_name = normalized_values.get("location_name")
+        if isinstance(location_name, Global) or isinstance(location_name, Default):
+            location_name = None  # UX2.0 dont have Global field and if there is Default we can as well set None
         return Service(
             interface_pair=self.parse_interface_pair(normalized_values.get("interface_pair", [])),  # type: ignore
             auth_required=normalized_values.get("auth_required"),
@@ -65,7 +69,7 @@ class SIGConverter(FTConverter):
             block_internet_until_accepted=normalized_values.get("block_internet_until_accepted"),
             force_ssl_inspection=normalized_values.get("force_ssl_inspection"),
             timeout=normalized_values.get("timeout"),
-            location_name=normalized_values.get("location_name"),
+            location_name=location_name,
             data_center_primary=normalized_values.get("data_center_primary"),
             data_center_secondary=normalized_values.get("data_center_secondary"),
         )
@@ -109,6 +113,12 @@ class SIGConverter(FTConverter):
         for interface_value in interface_values:
             flattened_values = flatten_datapaths(interface_value)
             normalized_values = normalize_to_model_definition(flattened_values, Interface.model_fields)
+            ipsec_replay_window = normalized_values.get("ipsec_replay_window")
+            if isinstance(ipsec_replay_window, Global):
+                if ipsec_replay_window.value == 32:
+                    ipsec_replay_window.value = 64  # UX1.0 has minimum value of 32 and UX2.0 has minimum value of 64
+                ipsec_replay_window = as_global(ipsec_replay_window.value, IpsecReplayWindow)
+
             interface_list.append(
                 Interface(
                     if_name=normalized_values.get("if_name"),  # type: ignore
@@ -137,7 +147,7 @@ class SIGConverter(FTConverter):
                     ike_local_id=normalized_values.get("ike_local_id"),
                     ike_remote_id=normalized_values.get("ike_remote_id"),
                     ipsec_rekey_interval=normalized_values.get("ipsec_rekey_interval"),
-                    ipsec_replay_window=normalized_values.get("ipsec_replay_window"),
+                    ipsec_replay_window=ipsec_replay_window,
                     ipsec_ciphersuite=self.get_ipsec_ciphersuite(normalized_values),
                     perfect_forward_secrecy=normalized_values.get("perfect_forward_secrecy"),
                     tracker=normalized_values.get("tracker"),

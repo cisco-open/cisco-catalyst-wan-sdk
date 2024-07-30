@@ -666,6 +666,7 @@ class PolicyConvertContext:
         return context
 
     def populate_activated_centralized_policy_item_ids(self, centralized_policies: List[CentralizedPolicyInfo]) -> None:
+        """For Cflowd - only convert and push the active policy"""
         active_policy = next((policy for policy in centralized_policies if policy.is_policy_activated), None)
         if active_policy is None or isinstance(active_policy.policy_definition, str):
             return
