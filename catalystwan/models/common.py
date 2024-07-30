@@ -189,7 +189,6 @@ SpaceSeparatedUUIDList = Annotated[
     Field(min_length=1),
 ]
 
-
 SpaceSeparatedNonNegativeIntList = Annotated[
     List[NonNegativeInt],
     PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
@@ -246,6 +245,17 @@ IntRangeStr = Annotated[
 AcceptDropActionType = Literal["accept", "drop"]
 AcceptRejectActionType = Literal["accept", "reject"]
 DeviceAccessProtocolPort = Literal[161, 22]
+
+DestinationRegion = Literal[
+    "primary-region",
+    "secondary-region",
+    "other-region",
+]
+
+DNSEntryType = Literal[
+    "request",
+    "response",
+]
 
 CarrierType = Literal[
     "default",
@@ -407,8 +417,105 @@ TLOCActionType = Literal[
     "ecmp",
 ]
 
-ICMPMessageType = Literal[
-    "echo", "echo-reply", "unreachable", "net-unreachable", "host-unreachable", "protocol-unreachable"
+IcmpMsgType = Literal[
+    "administratively-prohibited",
+    "dod-host-prohibited",
+    "dod-net-prohibited",
+    "echo",
+    "echo-reply",
+    "echo-reply-no-error",
+    "extended-echo",
+    "extended-echo-reply",
+    "general-parameter-problem",
+    "host-isolated",
+    "host-precedence-unreachable",
+    "host-redirect",
+    "host-tos-redirect",
+    "host-tos-unreachable",
+    "host-unknown",
+    "host-unreachable",
+    "interface-error",
+    "malformed-query",
+    "multiple-interface-match",
+    "net-redirect",
+    "net-tos-redirect",
+    "net-tos-unreachable",
+    "net-unreachable",
+    "network-unknown",
+    "no-room-for-option",
+    "option-missing",
+    "packet-too-big",
+    "parameter-problem",
+    "photuris",
+    "port-unreachable",
+    "precedence-unreachable",
+    "protocol-unreachable",
+    "reassembly-timeout",
+    "redirect",
+    "router-advertisement",
+    "router-solicitation",
+    "source-route-failed",
+    "table-entry-error",
+    "time-exceeded",
+    "timestamp-reply",
+    "timestamp-request",
+    "ttl-exceeded",
+    "unreachable",
+]
+
+Icmp6MsgType = Literal[
+    "beyond-scope",
+    "cp-advertisement",
+    "cp-solicitation",
+    "destination-unreachable",
+    "dhaad-reply",
+    "dhaad-request",
+    "echo-reply",
+    "echo-request",
+    "header",
+    "hop-limit",
+    "ind-advertisement",
+    "ind-solicitation",
+    "mld-query",
+    "mld-reduction",
+    "mld-report",
+    "mldv2-report",
+    "mpd-advertisement",
+    "mpd-solicitation",
+    "mr-advertisement",
+    "mr-solicitation",
+    "mr-termination",
+    "nd-na",
+    "nd-ns",
+    "next-header-type",
+    "ni-query",
+    "ni-query-name",
+    "ni-query-v4-address",
+    "ni-query-v6-address",
+    "ni-response",
+    "ni-response-qtype-unknown",
+    "ni-response-refuse",
+    "ni-response-success",
+    "no-admin",
+    "no-route",
+    "packet-too-big",
+    "parameter-option",
+    "parameter-problem",
+    "port-unreachable",
+    "reassembly-timeout",
+    "redirect",
+    "reject-route",
+    "renum-command",
+    "renum-result",
+    "renum-seq-number",
+    "router-advertisement",
+    "router-renumbering",
+    "router-solicitation",
+    "rpl-control",
+    "source-policy",
+    "source-route-header",
+    "time-exceeded",
+    "unreachable",
 ]
 
 MetricType = Literal["type1", "type2"]
@@ -1137,6 +1244,12 @@ Timezone = Literal[
     "Africa/Lusaka",
     "Africa/Harare",
     "UTC",
+]
+
+TrafficTargetType = Literal[
+    "access",
+    "core",
+    "service",
 ]
 
 DeviceModel = Literal[

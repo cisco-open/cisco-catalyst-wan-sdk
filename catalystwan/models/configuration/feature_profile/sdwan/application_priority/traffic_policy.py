@@ -8,21 +8,18 @@ from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
 from catalystwan.models.common import (
     AcceptDropActionType,
+    DestinationRegion,
+    DNSEntryType,
     EncapType,
     SequenceIpType,
     ServiceChainNumber,
     ServiceType,
     TLOCColor,
+    TrafficTargetType,
 )
 from catalystwan.models.configuration.feature_profile.common import Icmp6Msg, IcmpMsg, RefIdItem
 from catalystwan.models.policy.centralized import TrafficDataDirection
-from catalystwan.models.policy.policy_definition import (
-    DestinationRegion,
-    DNSEntryType,
-    DNSTypeEntryType,
-    LossProtectionType,
-    TrafficTargetType,
-)
+from catalystwan.models.policy.policy_definition import DNSTypeEntryType, LossProtectionType
 
 
 class TrafficPolicyTarget(BaseModel):
@@ -98,7 +95,7 @@ class TrafficClassMatch(BaseModel):
 
 class DscpMatch(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    dscp: Global[int] = Field(default=None, ge=0, le=63)
+    dscp: Global[List[int]] = Field(default=None, ge=0, le=63)
 
 
 class PacketLengthMatch(BaseModel):
@@ -713,7 +710,7 @@ class Sequence(BaseModel):
         entry = TrafficClassMatch(traffic_class=as_global(traffic_class, TrafficClass))
         self._match(entry)
 
-    def match_dscp(self, dscp: int):
+    def match_dscp(self, dscp: List[int]):
         entry = DscpMatch(dscp=as_global(dscp))
         self._match(entry)
 

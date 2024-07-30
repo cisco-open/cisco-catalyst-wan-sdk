@@ -7,7 +7,7 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 from typing_extensions import Annotated
 
-from catalystwan.models.common import AcceptDropActionType, EncapType, ICMPMessageType, ServiceChainNumber, TLOCColor
+from catalystwan.models.common import AcceptDropActionType, EncapType, IcmpMsgType, ServiceChainNumber, TLOCColor
 from catalystwan.models.policy.policy_definition import (
     AppListEntry,
     CFlowDAction,
@@ -126,7 +126,7 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     def match_dscp(self, dscp: List[int]) -> None:
         self._insert_match(DSCPEntry(value=dscp))
 
-    def match_icmp(self, icmp_message_types: List[ICMPMessageType]) -> None:
+    def match_icmp(self, icmp_message_types: List[IcmpMsgType]) -> None:
         self._insert_match(ICMPMessageEntry(value=icmp_message_types))
 
     def match_packet_length(self, packet_lengths: Tuple[int, int]) -> None:

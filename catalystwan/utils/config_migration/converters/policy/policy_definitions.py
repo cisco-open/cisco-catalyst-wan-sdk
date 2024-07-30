@@ -303,7 +303,7 @@ def traffic_data(
         **_get_parcel_name_desc(in_),
         data_default_action=as_global(in_.default_action.type, AcceptDropActionType),
         target=TrafficPolicyTarget(direction=as_global("tunnel", TrafficDataDirection), vpn=as_global([";dummy-vpn"])),
-    )  # centralized policy converter will update target and make copies when neccessary
+    )  # centralized policy converter will replace target and make copies when neccessary
     result.output = out
     for in_seq in in_.sequences:
         ip_type = in_seq.sequence_ip_type if in_seq.sequence_ip_type is not None else "ipv4"
@@ -322,7 +322,69 @@ def traffic_data(
                 out_seq.match_destination_data_prefix_list(list_id=in_match.ref[0])
             elif in_match.field == "destinationIp":
                 if in_match.value is not None:
-                    out_seq.match_destination_ip
+                    out_seq.match_destination_ip(ipv4_network=in_match.as_ipv4_networks()[0])
+                    if len(in_match.value) > 1:
+                        result.update_status(
+                            "partial",
+                            f"sequence[{in_seq.sequence_id}] contains multiple ip prefixes "
+                            f"{in_match.field} = {in_match.value} only first is converted",
+                        )
+                elif in_match.vip_variable_name is not None:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] variable name as ip prefix is not supported "
+                        f"{in_match.field} = {in_match.value}",
+                    )
+            elif in_match.field == "destinationPort":
+                out_seq.match_destination_port(in_match.value)
+            elif in_match.field == "destinationRegion":
+                out_seq.match_destination_region(in_match.value)
+            elif in_match.field == "dns":
+                out_seq.match_dns(in_match.value)
+            elif in_match.field == "dnsAppList":
+                out_seq.match_dns_app_list(in_match.ref)
+            elif in_match.field == "dscp":
+                out_seq.match_dscp(in_match.value)
+            elif in_match.field == "icmpMessage":
+                for icmp_msg in in_match.value:
+                    out_seq.match_icmp_message(icmp_msg)
+            elif in_match.field == "packetLength":
+                out_seq.match_packet_length(in_match.value)
+            elif in_match.field == "plp":
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains entry "
+                    f"{in_match.field} = {in_match.value} which cannot be converted",
+                )
+            elif in_match.field == "protocol":
+                _protocols = as_num_list(as_num_ranges_list(in_match.value))
+                for _protocol in _protocols:
+                    out_seq.match_protocol(str(_protocol))
+            elif in_match.field == "sourceDataIpv6PrefixList":
+                out_seq.match_source_data_ipv6_prefix_list(list_id=in_match.ref[0])
+            elif in_match.field == "sourceDataPrefixList":
+                out_seq.match_source_data_prefix_list(list_id=in_match.ref[0])
+            elif in_match.field == "sourceIp":
+                if in_match.value is not None:
+                    out_seq.match_source_ip(ipv4_network=in_match.as_ipv4_networks()[0])
+                    if len(in_match.value) > 1:
+                        result.update_status(
+                            "partial",
+                            f"sequence[{in_seq.sequence_id}] contains multiple ip prefixes "
+                            f"{in_match.field} = {in_match.value} only first is converted",
+                        )
+                elif in_match.vip_variable_name is not None:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] variable name as ip prefix is not supported "
+                        f"{in_match.field} = {in_match.value}",
+                    )
+            elif in_match.field == "sourcePort":
+                out_seq.match_destination_port(in_match.value)
+            elif in_match.field == "tcp":
+                out_seq.match_tcp()
+            elif in_match.field == "trafficTo":
+                out_seq.match_traffic_to(in_match.value)
     return result
 
 

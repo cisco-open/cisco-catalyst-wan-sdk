@@ -14,8 +14,10 @@ from catalystwan.models.common import (
     AcceptRejectActionType,
     CarrierType,
     ControlPathType,
+    DestinationRegion,
+    DNSEntryType,
     EncapType,
-    ICMPMessageType,
+    IcmpMsgType,
     IntStr,
     MultiRegionRole,
     OriginProtocol,
@@ -27,6 +29,7 @@ from catalystwan.models.common import (
     SpaceSeparatedUUIDList,
     TLOCActionType,
     TLOCColor,
+    TrafficTargetType,
     check_fields_exclusive,
     str_as_str_list,
 )
@@ -48,23 +51,6 @@ def networks_to_str(networks: Sequence[Union[IPv4Network, IPv6Network]]) -> str:
 PLPEntryType = Literal[
     "low",
     "high",
-]
-
-DNSEntryType = Literal[
-    "request",
-    "response",
-]
-
-TrafficTargetType = Literal[
-    "access",
-    "core",
-    "service",
-]
-
-DestinationRegion = Literal[
-    "primary-region",
-    "secondary-region",
-    "other-region",
 ]
 
 
@@ -572,7 +558,7 @@ class NATVPNEntry(RootModel):
 
 class ICMPMessageEntry(BaseModel):
     field: Literal["icmpMessage"] = "icmpMessage"
-    value: List[ICMPMessageType]
+    value: List[IcmpMsgType]
 
     _value = field_validator("value", mode="before")(str_as_str_list)
 
