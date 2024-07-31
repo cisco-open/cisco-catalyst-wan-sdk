@@ -423,7 +423,10 @@ class ConfigTransformResult(BaseModel):
         )
         self.unsupported_items.append(item)
 
+
 GroupTypes = Literal["config", "topology", "policy", "base"]
+
+
 class GroupReportBase(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid", alias_generator=camel)
     type_: GroupTypes = Field(default="base", exclude=True)
