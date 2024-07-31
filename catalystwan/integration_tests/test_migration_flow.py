@@ -1,7 +1,7 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 
-from ipaddress import IPv4Address, IPv4Interface
+from ipaddress import IPv4Interface
 from typing import Dict, List
 from uuid import UUID
 
@@ -15,9 +15,23 @@ from catalystwan.api.templates.models.cisco_secure_internet_gateway import (
     Tracker,
 )
 from catalystwan.integration_tests.base import TestCaseBase, create_name_with_run_id
+from catalystwan.models.policy.definition.aip import (
+    AdvancedInspectionProfileDefinition,
+    AdvancedInspectionProfilePolicy,
+)
+from catalystwan.models.policy.definition.dns_security import DnsSecurityDefinition, DnsSecurityPolicy
+from catalystwan.models.policy.definition.intrusion_prevention import (
+    IntrusionPreventionDefinition,
+    IntrusionPreventionPolicy,
+)
 from catalystwan.models.policy.definition.qos_map import QoSMapPolicy
+from catalystwan.models.policy.definition.zone_based_firewall import ZoneBasedFWPolicy
 from catalystwan.models.policy.list.class_map import ClassMapList
+from catalystwan.models.policy.list.local_domain import LocalDomainList
+from catalystwan.models.policy.list.umbrella_data import UmbrellaDataList
 from catalystwan.models.policy.localized import LocalizedPolicy, LocalizedPolicySettings
+from catalystwan.models.policy.policy_definition import Reference
+from catalystwan.models.policy.security import UnifiedSecurityPolicy
 from catalystwan.utils.config_migration.runner import ConfigMigrationRunner
 
 
@@ -62,6 +76,8 @@ class TestPolicyGroupAggregation(TestCaseBase):
     device_template_uuid: str
     pol_dict: Dict[str, UUID]
     localized_policy_name: str
+    security_policy_name: str
+    dns_security_name: str
     queue_names: List[str]
     qos_map_name: str
 
@@ -72,13 +88,16 @@ class TestPolicyGroupAggregation(TestCaseBase):
         cls.queue_names = ["VOICE", "CRITICAL_DATA", "BULK", "DEFAULT", "INTERACTIVE_VIDEO", "CONTROL_SIGNALING"]
         cls.sig_name = create_name_with_run_id("SIG")
         cls.localized_policy_name = create_name_with_run_id("LocalizedPolicy")
+        cls.security_policy_name = create_name_with_run_id("SecurityPolicy")
+        cls.dns_security_name = create_name_with_run_id("DnsSecurity")
         cls.qos_map_name = create_name_with_run_id("QosMapPolicy")
         cls.device_template_name = create_name_with_run_id("DeviceTemplate_to_PolicyGroup")
-        cls.runner = ConfigMigrationRunner.collect_and_push(cls.session)
+        cls.runner = ConfigMigrationRunner.collect_push_and_rollback(cls.session)
         cls.runner.set_dump_prefix("aggregation")
         cls.runner.set_filters(
             dt_filter=cls.device_template_name,
             lp_filter=cls.localized_policy_name,
+            sp_filter=cls.security_policy_name,
         )
 
     def test_policy_groups_aggregation(self):
@@ -93,18 +112,20 @@ class TestPolicyGroupAggregation(TestCaseBase):
         # Arrange
         self._create_sig_feature_template()
         self._create_localized_policy()
+        self._create_security_policy()
         self._create_device_template()
         # Act
         self.runner.run()
+        push_result = self.runner.load_push_result()
         # Assert
-        policy_group = (
-            self.session.endpoints.configuration.policy_group.get_all()
-            .filter(name=self.device_template_name)
-            .single_or_default()
-        )
-        assert policy_group is not None
-        assert policy_group.get_profile_by_name(self.sig_name) is not None
-        assert policy_group.get_profile_by_name(self.localized_policy_name) is not None
+        assert len(push_result.report.policy_groups) == 1
+        policy_group = push_result.report.policy_groups[0]
+        assert policy_group.name.startswith(self.device_template_name)
+        feature_profiles = policy_group.feature_profiles
+        assert len([fp for fp in feature_profiles if fp.profile_name.startswith(self.sig_name)]) == 1
+        assert len([fp for fp in feature_profiles if fp.profile_name.startswith(self.localized_policy_name)]) == 1
+        assert len([fp for fp in feature_profiles if fp.profile_name.startswith(self.security_policy_name)]) == 1
+        assert len([fp for fp in feature_profiles if fp.profile_name.startswith(self.security_policy_name)]) == 1
 
     def _create_device_template(self) -> None:
         templates = self.session.api.templates
@@ -113,6 +134,7 @@ class TestPolicyGroupAggregation(TestCaseBase):
         dt.factory_default = False
         dt.associate_feature_template(CiscoSecureInternetGatewayModel.type, UUID(self.sig_uuid))
         dt.associate_policy(self.pol_dict["Localized-Policy"])
+        dt.associate_security_policy(self.pol_dict["UnifiedSecurityPolicy"])
         self.device_template_uuid = templates.create(dt)
 
     def _create_sig_feature_template(self) -> None:
@@ -124,16 +146,15 @@ class TestPolicyGroupAggregation(TestCaseBase):
             child_org_id="example_org",
             interface=[
                 Interface(
-                    if_name="GigabitEthernet0/0",
+                    if_name="ipsec255",
                     auto=True,
                     shutdown=False,
                     description="Main interface for SIG",
                     unnumbered=False,
-                    address=IPv4Interface("192.168.1.1/24"),
-                    tunnel_source=IPv4Address("192.168.1.1"),
-                    tunnel_source_interface="Loopback0",
-                    tunnel_route_via="192.168.2.1",
-                    tunnel_destination="203.0.113.1",
+                    address=IPv4Interface("192.168.0.0/24"),
+                    tunnel_source_interface="GigabitEthernet3",
+                    tunnel_route_via="GigabitEthernet3",
+                    tunnel_destination="dynamic",
                     application="sig",
                     tunnel_set="secure-internet-gateway-umbrella",
                     tunnel_dc_preference="primary-dc",
@@ -162,9 +183,9 @@ class TestPolicyGroupAggregation(TestCaseBase):
                     svc_type="sig",
                     interface_pair=[
                         InterfacePair(
-                            active_interface="GigabitEthernet0/0",
+                            active_interface="ipsec255",
                             active_interface_weight=10,
-                            backup_interface="GigabitEthernet0/1",
+                            backup_interface="None",
                             backup_interface_weight=5,
                         )
                     ],
@@ -189,12 +210,12 @@ class TestPolicyGroupAggregation(TestCaseBase):
                     data_center_secondary="Auto",
                 )
             ],
-            tracker_src_ip=IPv4Interface("192.0.2.1/32"),
+            tracker_src_ip=IPv4Interface("192.168.0.0/32"),
             tracker=[
                 Tracker(
                     name="health-check-tracker",
-                    endpoint_api_url="https://api.example.com/health",
-                    threshold=5,
+                    endpoint_api_url="http://api.example.com/health",
+                    threshold=100,
                     interval=60,
                     multiplier=2,
                     tracker_type="SIG",
@@ -202,6 +223,59 @@ class TestPolicyGroupAggregation(TestCaseBase):
             ],
         )
         self.sig_uuid = templates.create(cisco_sig)
+
+    def _create_security_policy(self) -> None:
+        api = self.session.api.policy
+        # --------------------------
+        # DNS Security Policy
+        # --------------------------
+        ldl = LocalDomainList(name=create_name_with_run_id("LocalDomainList"))
+        ldl.add_domain(".*.cisco.com")
+        ldl.add_domain("cisco.com")
+        self.pol_dict["LocalDomainList"] = api.lists.create(ldl)
+        # Must be defined in vManage manually
+        umbrella_data = api.lists.get(UmbrellaDataList).single_or_default()
+        definition = DnsSecurityDefinition.create_match_all_vpns_config(
+            umbrella_default=True,
+            umbrella_data=Reference(ref=umbrella_data.list_id),
+            dns_crypt=True,
+            dns_server_ip="10.0.2.1",
+            local_domain_bypass_list=Reference(ref=self.pol_dict["LocalDomainList"]),
+            child_org_id=54020,
+        )
+        dsp = DnsSecurityPolicy(name=self.dns_security_name, definition=definition)
+        self.pol_dict["DnsSecurityPolicy"] = api.definitions.create(dsp)
+        # --------------------------
+        # Zone Based Firewall Policy
+        # --------------------------
+        ipp = IntrusionPreventionPolicy(
+            name=create_name_with_run_id("IntrusionPreventionPolicy"),
+            mode="unified",
+            definition=IntrusionPreventionDefinition(signature_set="balanced", inspection_mode="detection"),
+        )
+        self.pol_dict["IntrusionPreventionPolicy"] = api.definitions.create(ipp)
+        aip = AdvancedInspectionProfilePolicy(
+            name=create_name_with_run_id("AIP"),
+            definition=AdvancedInspectionProfileDefinition(
+                tls_decryption_action="decrypt",
+                intrusion_prevention=Reference(ref=self.pol_dict["IntrusionPreventionPolicy"]),
+            ),
+        )
+        self.pol_dict["AdvancedInspectionProfilePolicy"] = api.definitions.create(aip)
+        zbfwp = ZoneBasedFWPolicy(name=create_name_with_run_id("ZoneBasedFWPolicy"))
+        zbfwp.mode = "unified"
+        zbfwp_seq = zbfwp.add_ipv4_rule(name=create_name_with_run_id("IPv4Rule"), base_action="inspect")
+        zbfwp_seq.set_advanced_inspection_profile_action(profile_id=self.pol_dict["AdvancedInspectionProfilePolicy"])
+        zbfwp_seq.match_source_port(ports=set([34000, 34568]))
+        zbfwp_seq.match_destination_ports(ports=set([34775, 37732]))
+        self.pol_dict["ZoneBasedFWPolicy"] = api.definitions.create(zbfwp)
+        # --------------------------
+        # Unified Security Policy
+        # --------------------------
+        usp = UnifiedSecurityPolicy(policy_name=self.security_policy_name)
+        usp.add_dns_security(self.pol_dict["DnsSecurityPolicy"])
+        usp.add_ng_firewall(self.pol_dict["ZoneBasedFWPolicy"])
+        self.pol_dict["UnifiedSecurityPolicy"] = api.security.create(usp)
 
     def _create_localized_policy(self) -> None:
         api = self.session.api.policy
@@ -236,6 +310,9 @@ class TestPolicyGroupAggregation(TestCaseBase):
         templates.delete(FeatureTemplate, cls.sig_name)  # type: ignore
 
         policy = cls.session.api.policy
+        # ----------------------------
+        # Delete Localized Policy
+        # ----------------------------
         policy.localized.delete(cls.pol_dict["Localized-Policy"])
         policy.definitions.delete(QoSMapPolicy, cls.pol_dict["QosMap-Policy"])
         policy.lists.delete(ClassMapList, cls.pol_dict["VOICE"])
@@ -244,6 +321,15 @@ class TestPolicyGroupAggregation(TestCaseBase):
         policy.lists.delete(ClassMapList, cls.pol_dict["DEFAULT"])
         policy.lists.delete(ClassMapList, cls.pol_dict["INTERACTIVE_VIDEO"])
         policy.lists.delete(ClassMapList, cls.pol_dict["CONTROL_SIGNALING"])
+        # ----------------------------
+        # Delete Security Policy
+        # ----------------------------
+        policy.security.delete(cls.pol_dict["UnifiedSecurityPolicy"])
+        policy.definitions.delete(ZoneBasedFWPolicy, cls.pol_dict["ZoneBasedFWPolicy"])
+        policy.definitions.delete(AdvancedInspectionProfilePolicy, cls.pol_dict["AdvancedInspectionProfilePolicy"])
+        policy.definitions.delete(IntrusionPreventionPolicy, cls.pol_dict["IntrusionPreventionPolicy"])
+        policy.definitions.delete(DnsSecurityPolicy, cls.pol_dict["DnsSecurityPolicy"])
+        policy.lists.delete(LocalDomainList, cls.pol_dict["LocalDomainList"])
 
         cls.runner.clear_ux2()
         return super().tearDownClass()

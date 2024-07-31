@@ -15,7 +15,7 @@ cisco_sig = CiscoSecureInternetGatewayModel(
     child_org_id="example_org",
     interface=[
         Interface(
-            if_name="GigabitEthernet0/0",
+            if_name="ipsec255",
             auto=True,
             shutdown=False,
             description="Main interface for SIG",
@@ -84,8 +84,8 @@ cisco_sig = CiscoSecureInternetGatewayModel(
     tracker=[
         Tracker(
             name="health-check-tracker",
-            endpoint_api_url="https://api.example.com/health",
-            threshold=5,
+            endpoint_api_url="http://api.example.com/health",
+            threshold=100,
             interval=60,
             multiplier=2,
             tracker_type="SIG",

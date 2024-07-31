@@ -577,15 +577,14 @@ def test_when_localized_policy_with_qos_expect_application_priority_feature_prof
 
 
 def test_policy_profile_merge():
-    """Assumptions:
-
+    """When:
     - dt_a uses sp_1, lp_1, sig_1,
     - dt_b uses sp_1, lp_1, sig_1
     - dt_c uses sp_2, lp_2, sig_1
     - dt_d uses sp_2, lp_2, sig_1
     - dt_e uses sp_3, lp_2
 
-    Expected result:
+    Expect:
     - dt_a, dt_b are merged to one policy group
     - dt_c, dt_d are merged to another policy group
     - dt_e is a separate policy group
@@ -595,8 +594,12 @@ def test_policy_profile_merge():
 
     sig_1_uuid = uuid4()
 
-    sp_1 = create_security_policy("SP-1")
-    sp_2 = create_security_policy("SP-2")
+    dns_uuid_1 = uuid4()
+    zbfw_uuid_1 = uuid4()
+    dns_uuid_2 = uuid4()
+    zbfw_uuid_2 = uuid4()
+    sp_1 = create_security_policy("SP-1", dns_uuid=dns_uuid_1, zbfw_uuid=zbfw_uuid_1)
+    sp_2 = create_security_policy("SP-2", dns_uuid=dns_uuid_2, zbfw_uuid=zbfw_uuid_2)
     sp_3 = create_security_policy("SP-3")
 
     lp_1 = create_localized_policy_info("LP-1")
@@ -620,9 +623,9 @@ def test_policy_profile_merge():
     ux1.policies.security_policies = [sp_1, sp_2, sp_3]
     ux1.policies.localized_policies = [lp_1, lp_2]
 
-    merged_A_B_subelements = set().union(sp_1.get_assemby_item_uuids(), {sig_1_uuid}, {lp_1.policy_id})
-    merged_C_D_subelements = set().union(sp_2.get_assemby_item_uuids(), {sig_1_uuid}, {lp_2.policy_id})
-    separate_E_subelements = set().union(sp_3.get_assemby_item_uuids(), {lp_2.policy_id})
+    merged_A_B_subelements = {sp_1.policy_id, dns_uuid_1, sig_1_uuid, lp_1.policy_id}
+    merged_C_D_subelements = {sp_2.policy_id, dns_uuid_2, sig_1_uuid, lp_2.policy_id}
+    separate_E_subelements = {sp_3.policy_id, lp_2.policy_id}
     # Act
     config = transform(ux1=ux1).ux2_config
     merged_A_B = _find_policy_group_by_subelements(config.policy_groups, merged_A_B_subelements)

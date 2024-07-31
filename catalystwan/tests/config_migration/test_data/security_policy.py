@@ -1,15 +1,14 @@
 from datetime import datetime
-from uuid import uuid4
+from typing import Optional
+from uuid import UUID, uuid4
 
-from catalystwan.models.policy.policy import DNSSecurityAssemblyItem, ZoneBasedFWAssemblyItem
-from catalystwan.models.policy.security import SecurityPolicyDefinition, SecurityPolicyInfo
+from catalystwan.models.policy.security import SecurityPolicyInfo
 
 
-def create_security_policy(name) -> SecurityPolicyInfo:
-    dns_uuid = uuid4()
-    zbfw_uuid = uuid4()
-
-    return SecurityPolicyInfo(
+def create_security_policy(
+    name, *, dns_uuid: Optional[UUID] = None, zbfw_uuid: Optional[UUID] = None
+) -> SecurityPolicyInfo:
+    spi = SecurityPolicyInfo(
         policy_id=uuid4(),
         policy_name=name,
         policy_version="",
@@ -19,9 +18,11 @@ def create_security_policy(name) -> SecurityPolicyInfo:
         created_on=datetime.now(),
         last_updated_by="tester",
         last_updated_on=datetime.now(),
-        policy_definition=SecurityPolicyDefinition(
-            assembly=[DNSSecurityAssemblyItem(definition_id=dns_uuid), ZoneBasedFWAssemblyItem(definition_id=zbfw_uuid)]
-        ),
         virtual_application_templates=[],
         supported_devices=[],
     )
+    if dns_uuid:
+        spi.add_dns_security(definition_id=dns_uuid)
+    if zbfw_uuid:
+        spi.add_zone_based_fw(definition_id=zbfw_uuid)
+    return spi

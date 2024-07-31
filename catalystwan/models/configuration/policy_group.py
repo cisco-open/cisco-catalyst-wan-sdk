@@ -20,6 +20,9 @@ class FromPolicyGroup(BaseModel):
 
 
 class PolicyGroup(BaseModel):
+    """Payload for creating a policy group.
+    Policy Object Profile is required to create a policy group."""
+
     model_config = ConfigDict(populate_by_name=True)
     description: str = Field(
         description="description of the policy group. Max length is ulimited. (>500 000 for 20.12)"

@@ -33,6 +33,10 @@ class PolicyGroupPusher(Pusher):
         policy_group: PolicyGroup,
     ) -> None:
         try:
+            # Policy Object Profile is required to create a policy group
+            if (policy_object_uuid := self._push_context.default_policy_object_profile_id) is None:
+                raise ValueError("Default Policy Object Profile ID is not set")
+            policy_group.add_profile(policy_object_uuid)
             uuid = self._session.endpoints.configuration.policy_group.create_policy_group(policy_group).id
             if policy_group.profiles:
                 associated_feature_profiles = self._push_result.report.get_standalone_feature_profiles_by_ids(
@@ -43,5 +47,5 @@ class PolicyGroupPusher(Pusher):
             self._push_result.report.add_pg_report(
                 policy_group.name, uuid, feature_profiles=associated_feature_profiles
             )
-        except ManagerHTTPError as e:
+        except (ManagerHTTPError, ValueError) as e:
             logger.error(f"Failed to push policy group {policy_group.name}: {e}")

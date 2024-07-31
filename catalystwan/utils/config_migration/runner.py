@@ -32,6 +32,7 @@ class ConfigMigrationRunner:
     collect: bool = True
     push: bool = True
     rollback: bool = False
+    add_suffix: bool = True
     dt_filter: str = ".*"
     ft_filter: str = ".*"
     lp_filter: str = ".*"
@@ -227,7 +228,7 @@ class ConfigMigrationRunner:
             # transform to ux2 and dump to json file
             _ux1 = self.load_collected_config()
             self.filter_ux1(_ux1)
-            _transform_result = transform(_ux1, True)
+            _transform_result = transform(_ux1, self.add_suffix)
             with open(self.ux2_dump, "w") as f:
                 f.write(_transform_result.model_dump_json(exclude_none=True, by_alias=True, indent=4, warnings=False))
 

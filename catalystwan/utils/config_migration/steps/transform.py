@@ -395,7 +395,13 @@ class PolicyGroupMetadataCreator:
         if not security:
             return set()
 
-        return security.get_assemby_item_uuids()
+        # Return self and dns security policy
+        # SecurityPolicy converts to PolicyParcel and creates feature profile
+        # DNSSecurity converts to DNSParcel and creates feature profile
+        dns_uuid = next((a for a in security.policy_definition.assembly if a.type == "DNSSecurity"), None)
+        if dns_uuid is None:
+            return set([security_uuid])
+        return set([security_uuid, dns_uuid.definition_id])
 
 
 class PolicyGroupMetadataMerger:

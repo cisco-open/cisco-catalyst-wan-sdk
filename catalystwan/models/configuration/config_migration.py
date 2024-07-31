@@ -500,7 +500,7 @@ class UX2ConfigPushReport(BaseModel):
         self.standalone_feature_profiles.extend(feature_profiles)
 
     def get_standalone_feature_profiles_by_ids(self, uuids: Set[UUID]) -> List[FeatureProfileBuildReport]:
-        return [f for f in self.standalone_feature_profiles if f.profile_uuid in uuids]
+        return [f for f in self.standalone_feature_profiles + self.security_policies if f.profile_uuid in uuids]
 
     def set_failed_push_parcels_flat_list(self):
         for group in self.groups:

@@ -4,7 +4,8 @@ import ipaddress
 from pathlib import Path
 from typing import ClassVar, List, Literal, Optional
 
-from pydantic import ConfigDict, Field
+from pydantic import BeforeValidator, ConfigDict, Field
+from typing_extensions import Annotated
 
 from catalystwan.api.templates.feature_template import FeatureTemplate, FeatureTemplateValidator
 
@@ -48,11 +49,24 @@ TrackerType = Literal["SIG"]
 SvcType = Literal["sig"]
 
 
+def is_private_ipv4_address(value: ipaddress.IPv4Interface) -> ipaddress.IPv4Interface:
+    # https://www.iana.org/assignments/iana-ipv4-special-registry/iana-ipv4-special-registry.xhtml
+    assert value.is_private, "IPv4 address is not private"
+    return value
+
+
+PrivateIPv4Address = Annotated[
+    ipaddress.IPv4Interface,
+    BeforeValidator(is_private_ipv4_address),
+]
+
+
 class Interface(FeatureTemplateValidator):
     if_name: str = Field(
         ...,  # Ellipsis indicates a required field
+        pattern="ipsec(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[1-9])",
         json_schema_extra={"vmanage_key": "if-name"},
-        description="Name of the interface.",
+        description="Name of the interface. Ipsec1..255 allowed.",
     )
     auto: bool = Field(..., description="Flag to indicate if the interface should be automatically configured.")
     shutdown: bool = Field(..., description="Flag to indicate if the interface is administratively down (shutdown).")
@@ -319,11 +333,14 @@ class Tracker(FeatureTemplateValidator):
     name: str = Field(..., description="Name of the tracker.")
     endpoint_api_url: str = Field(
         ...,
+        pattern=r"^http:\/\/[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,})(\/\S*)?$",
         json_schema_extra={"vmanage_key": "endpoint-api-url"},
         description="URL of the endpoint API used by the tracker for health checks.",
     )
     threshold: Optional[int] = Field(
-        default=DEFAULT_TRACKER_THRESHOLD, description="Threshold value for the tracker to trigger an alert or action."
+        ge=100,
+        default=DEFAULT_TRACKER_THRESHOLD,
+        description="Threshold value for the tracker to trigger an alert or action.",
     )
     interval: Optional[int] = Field(
         default=DEFAULT_TRACKER_INTERVAL, description="Interval at which the tracker performs health checks."
@@ -354,7 +371,7 @@ class CiscoSecureInternetGatewayModel(FeatureTemplate):
     )
     interface: List[Interface] = Field(description="List of interface configurations associated with the service.")
     service: List[Service] = Field(description="List of service configurations for the Cisco Secure Internet Gateway.")
-    tracker_src_ip: Optional[ipaddress.IPv4Interface] = Field(
+    tracker_src_ip: Optional[PrivateIPv4Address] = Field(
         default=None,
         json_schema_extra={"vmanage_key": "tracker-src-ip"},
         description="Source IP address used by the tracker for sending health check packets.",

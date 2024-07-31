@@ -168,9 +168,13 @@ class SecurityPolicy(PolicyCreationPayload):
 
 
 class UnifiedSecurityPolicy(PolicyCreationPayload):
-    policy_mode: Literal["unified"] = Field("unified", serialization_alias="policyMode", validation_alias="policyMode")
-    policy_type: str = Field("feature", serialization_alias="policyType", validation_alias="policyType")
-    policy_use_case: str = Field("custom", serialization_alias="policyUseCase", validation_alias="policyUseCase")
+    policy_mode: Literal["unified"] = Field(
+        default="unified", serialization_alias="policyMode", validation_alias="policyMode"
+    )
+    policy_type: str = Field(default="feature", serialization_alias="policyType", validation_alias="policyType")
+    policy_use_case: str = Field(
+        default="custom", serialization_alias="policyUseCase", validation_alias="policyUseCase"
+    )
     policy_definition: UnifiedSecurityPolicyDefinition = Field(
         default=UnifiedSecurityPolicyDefinition(),
         serialization_alias="policyDefinition",
