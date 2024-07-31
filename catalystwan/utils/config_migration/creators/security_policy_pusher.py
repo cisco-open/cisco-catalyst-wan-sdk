@@ -1,42 +1,30 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
-from typing import Callable, cast
+from typing import cast
 from uuid import UUID
 
 from catalystwan.api.builders.feature_profiles.report import FeatureProfileBuildReport
 from catalystwan.exceptions import ManagerHTTPError
-from catalystwan.models.configuration.config_migration import (
-    PushContext,
-    TransformedParcel,
-    UX2Config,
-    UX2ConfigPushResult,
-)
+from catalystwan.models.configuration.config_migration import TransformedParcel
 from catalystwan.models.configuration.feature_profile.parcel import AnyDnsSecurityParcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import NgfirewallParcel, PolicyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security.policy import NgFirewallContainer
-from catalystwan.session import ManagerSession
+from catalystwan.utils.config_migration.creators.pusher import Pusher, PusherConfig
 
 from .references_updater import update_parcel_references
 
 logger = logging.getLogger(__name__)
 
 
-class SecurityPolicyPusher:
+class SecurityPolicyPusher(Pusher):
     def __init__(
         self,
-        ux2_config: UX2Config,
-        session: ManagerSession,
-        push_result: UX2ConfigPushResult,
-        push_context: PushContext,
-        progress: Callable[[str, int, int], None],
+        config: PusherConfig,
     ) -> None:
-        self._ux2_config = ux2_config
-        self._dns_security_api = session.api.sdwan_feature_profiles.dns_security
-        self._embedded_security_api = session.api.sdwan_feature_profiles.embedded_security
-        self._app_profile_api = session.api.sdwan_feature_profiles.application_priority
-        self._push_result: UX2ConfigPushResult = push_result
-        self._progress: Callable[[str, int, int], None] = progress
-        self.push_context = push_context
+        self.load_config(config)
+        self._dns_security_api = self._session.api.sdwan_feature_profiles.dns_security
+        self._app_profile_api = self._session.api.sdwan_feature_profiles.application_priority
+        self._embedded_security_api = self._session.api.sdwan_feature_profiles.embedded_security
 
     def push(self) -> None:
         self.push_dns_security_policies()
@@ -58,12 +46,12 @@ class SecurityPolicyPusher:
         self, profile_id: UUID, firewall: TransformedParcel, report: FeatureProfileBuildReport
     ) -> None:
         parcel = cast(NgfirewallParcel, firewall.parcel)
-        parcel = update_parcel_references(parcel, self.push_context.id_lookup)
+        parcel = update_parcel_references(parcel, self._push_context.id_lookup)
 
         try:
             fw_id = self._embedded_security_api.create_parcel(profile_id, parcel).id
             report.add_created_parcel(parcel.parcel_name, fw_id)
-            self.push_context.id_lookup[firewall.header.origin] = fw_id
+            self._push_context.id_lookup[firewall.header.origin] = fw_id
         except ManagerHTTPError as e:
             logger.error(f"Error occured during creating NGFirewall in embedded security profile: {e.info}")
             report.add_failed_parcel(parcel_name=parcel.parcel_name, parcel_type=parcel.type_, error_info=e.info)
@@ -74,10 +62,11 @@ class SecurityPolicyPusher:
         parcel = cast(PolicyParcel, policy.parcel)
 
         try:
-            parcel = update_parcel_references(parcel, self.push_context.id_lookup)
+            parcel = update_parcel_references(parcel, self._push_context.id_lookup)
             security_policy_parcel_id = self._embedded_security_api.create_parcel(profile_id, parcel).id
             report.add_created_parcel(parcel.parcel_name, security_policy_parcel_id)
-            self.push_context.id_lookup[policy.header.origin] = security_policy_parcel_id
+            self._push_context.id_lookup[policy.header.origin] = security_policy_parcel_id
+            self._push_context.policy_group_feature_profiles_id_lookup[policy.header.origin] = profile_id
         except ManagerHTTPError as e:
             logger.error(f"Error occured during creating PolicyParcel in embedded security profile: {e.info}")
             report.add_failed_parcel(parcel_name=parcel.parcel_name, parcel_type=parcel.type_, error_info=e.info)
@@ -104,6 +93,7 @@ class SecurityPolicyPusher:
             profile_report = self._push_embedded_security_profile(parcel.parcel_name, parcel.parcel_description)
             if (profile_id := profile_report.profile_uuid) == UUID(int=0):
                 continue
+            self._push_context.policy_group_feature_profiles_id_lookup[security_policy.header.origin] = profile_id
 
             # 2.Find the referenced ngfirewall objects, update refs and push
             fw_ids = [asm.ng_firewall.ref_id.value for asm in parcel.assembly if type(asm) is NgFirewallContainer]
@@ -126,7 +116,7 @@ class SecurityPolicyPusher:
             self._progress(msg, i + 1, len(dns_security_policies))
 
             parcel = cast(AnyDnsSecurityParcel, dns_security_policy.parcel)
-            parcel = update_parcel_references(parcel, self.push_context.id_lookup)
+            parcel = update_parcel_references(parcel, self._push_context.id_lookup)
 
             try:
                 profile_id = self._dns_security_api.create_profile(parcel.parcel_name, parcel.parcel_description).id
@@ -135,6 +125,9 @@ class SecurityPolicyPusher:
                     profile_name=parcel.parcel_name, profile_uuid=profile_id
                 )
                 self._push_result.report.security_policies.append(feature_profile_report)
+                self._push_context.policy_group_feature_profiles_id_lookup[
+                    dns_security_policy.header.origin
+                ] = profile_id
             except ManagerHTTPError as e:
                 logger.error(f"Error occured during DNS Security policy creation: {e.info}")
                 self._push_result.report.security_policies.append(
@@ -144,7 +137,7 @@ class SecurityPolicyPusher:
 
             try:
                 parcel_id = self._dns_security_api.create_parcel(profile_id, parcel).id
-                self.push_context.id_lookup[dns_security_policy.header.origin] = parcel_id
+                self._push_context.id_lookup[dns_security_policy.header.origin] = parcel_id
                 feature_profile_report.add_created_parcel(dns_security_policy.parcel.parcel_name, parcel_id)
             except ManagerHTTPError as e:
                 logger.error(f"Error occured during DNS Security policy creation: {e.info}")

@@ -20,9 +20,14 @@ class FromPolicyGroup(BaseModel):
 
 
 class PolicyGroup(BaseModel):
+    """Payload for creating a policy group.
+    Policy Object Profile is required to create a policy group."""
+
     model_config = ConfigDict(populate_by_name=True)
-    description: str = Field()
-    name: str = Field(pattern='^[^&<>! "]+$')
+    description: str = Field(
+        description="description of the policy group. Max length is ulimited. (>500 000 for 20.12)"
+    )
+    name: str = Field(pattern='^[^&<>! "]+$', max_length=128)
     from_policy_group: Optional[FromPolicyGroup] = Field(
         default=None, validation_alias="fromPolicyGroup", serialization_alias="fromPolicyGroup"
     )
@@ -31,6 +36,11 @@ class PolicyGroup(BaseModel):
     )
     solution: Optional[Solution] = Field(default=None)
 
+    def add_profile(self, profile_uuid: UUID) -> None:
+        if self.profiles is None:
+            self.profiles = []
+        self.profiles.append(Profile(id=profile_uuid))
+
 
 class ProfileInfo(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -38,6 +48,7 @@ class ProfileInfo(BaseModel):
     profile_type: Optional[Literal["global"]] = Field(
         default=None, validation_alias="profileType", serialization_alias="profileType"
     )
+    name: str
 
 
 class PolicyGroupId(BaseModel):
@@ -47,3 +58,16 @@ class PolicyGroupId(BaseModel):
         default=None,
         description="(Optional - only applicable for AON) List of profile ids that belongs to the policy group",
     )
+
+    def get_profile_by_name(self, name: str) -> Optional[ProfileInfo]:
+        if self.profiles is None:
+            return None
+
+        for profile in self.profiles:
+            if profile.name == name:
+                return profile
+        return None
+
+
+class PolicyGroupInfo(PolicyGroupId):
+    name: str

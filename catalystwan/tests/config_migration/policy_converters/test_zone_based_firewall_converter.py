@@ -50,7 +50,7 @@ from catalystwan.models.policy.policy_definition import (
     ProtocolEntry,
     ProtocolNameEntry,
     ProtocolNameListEntry,
-    Reference,
+    ReferenceWithId,
     RuleSetListEntry,
     SourceDataPrefixListEntry,
     SourceGeoLocationEntry,
@@ -277,7 +277,7 @@ class TestSequenceActionsConverters(unittest.TestCase):
         in_actions = [
             LogAction(),
             ConnectionEventsAction(),
-            AdvancedInspectionProfileAction(parameter=Reference(ref=uuid4())),
+            AdvancedInspectionProfileAction(parameter=ReferenceWithId(ref=uuid4())),
         ]
 
         out = convert_sequence_actions(in_actions, self._convert_result)

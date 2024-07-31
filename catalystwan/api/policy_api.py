@@ -369,9 +369,9 @@ class SecurityPolicyAPI:
         # POST does not return anything! we need to list all after creation and find by name to get id
         self._endpoints.create_security_template(policy)
         policy_infos = [
-            info.root
-            for info in self._endpoints.generate_security_template_list()
-            if info.root.policy_name == policy.policy_name
+            info
+            for info in self._endpoints.generate_security_template_list().root
+            if info.policy_name == policy.policy_name
         ]
         assert len(policy_infos) == 1
         return policy_infos[0].policy_id

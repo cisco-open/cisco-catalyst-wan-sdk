@@ -57,6 +57,8 @@ from catalystwan.utils.config_migration.steps.constants import (
     WAN_VPN_MULTILINK,
 )
 from catalystwan.utils.config_migration.steps.transform import (
+    PolicyGroupMetadataCreator,
+    PolicyGroupMetadataMerger,
     convert_multi_parcel_feature_template,
     convert_single_parcel_feature_template,
     merge_parcels,
@@ -234,10 +236,12 @@ def get_version_info(session: ManagerSession) -> VersionInfo:
 def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult:
     transform_result = ConfigTransformResult()
     ux2 = UX2Config(version=ux1.version)
+    policy_group_creator = PolicyGroupMetadataCreator(ux1=ux1)
     subtemplates_mapping = defaultdict(set)
     used_feature_templates: Set[str] = set()
     # Create Feature Profiles and Config Group
     for dt in ux1.templates.device_templates:
+        policy_group_creator.create_and_store(dt)
         templates = dt.get_flattened_general_templates()
         # Create Feature Profiles
         fp_system_uuid = uuid4()
@@ -344,6 +348,7 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
                 profiles=[],
             ),
         )
+
         # Add to UX2
         ux2.feature_profiles.append(transformed_fp_system)
         ux2.feature_profiles.append(transformed_fp_other)
@@ -351,6 +356,13 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
         ux2.feature_profiles.append(transformed_fp_transport_and_management)
         ux2.feature_profiles.append(transformed_fp_cli)
         ux2.config_groups.append(transformed_cg)
+
+    # Add Policy Groups
+    policies_metadata = policy_group_creator.get_policies_metadata()
+    policy_merger = PolicyGroupMetadataMerger(policies_metadata=policies_metadata)
+    policy_merger.remove_policies_with_no_subelements()
+    policy_merger.merge_by_subelements()
+    ux2.policy_groups = policy_merger.get_merged_transformed_policy_groups()
 
     cloud_credential_templates = ux1.templates.pop_cloud_credential_templates()
     # Sort by vpn feature templates to avoid any confilics with subtemplates

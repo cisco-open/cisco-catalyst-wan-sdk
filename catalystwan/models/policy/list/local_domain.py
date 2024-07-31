@@ -24,6 +24,9 @@ class LocalDomainList(PolicyListBase):
     type: Literal["localDomain"] = "localDomain"
     entries: List[LocalDomainListEntry] = []
 
+    def add_domain(self, name_server: str) -> None:
+        self.entries.append(LocalDomainListEntry(name_server=name_server))
+
 
 class LocalDomainListEditPayload(LocalDomainList, PolicyListId):
     pass

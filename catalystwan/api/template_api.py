@@ -279,7 +279,7 @@ class TemplatesAPI:
     def delete(self, template: Type[CLITemplate], name: str) -> bool:  # type: ignore
         ...
 
-    def delete(self, template, name):
+    def delete(self, template, name) -> bool:
         status = False
 
         if template is FeatureTemplate:

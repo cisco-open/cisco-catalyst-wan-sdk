@@ -1,6 +1,6 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-from typing import List, Literal, Optional, Union
+from typing import List, Literal, Optional, Set, Union
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, IPvAnyAddress, RootModel, field_validator
@@ -135,6 +135,9 @@ class SecurityPolicy(PolicyCreationPayload):
         default=SecurityPolicyDefinition(), serialization_alias="policyDefinition", validation_alias="policyDefinition"
     )
 
+    def get_assemby_item_uuids(self) -> Set[UUID]:
+        return set((item.definition_id for item in self.policy_definition.assembly))
+
     def add_item(self, item: SecurityPolicyAssemblyItem) -> None:
         self.policy_definition.assembly.append(item)
 
@@ -165,14 +168,21 @@ class SecurityPolicy(PolicyCreationPayload):
 
 
 class UnifiedSecurityPolicy(PolicyCreationPayload):
-    policy_mode: Literal["unified"] = Field("unified", serialization_alias="policyMode", validation_alias="policyMode")
-    policy_type: str = Field("feature", serialization_alias="policyType", validation_alias="policyType")
-    policy_use_case: str = Field("custom", serialization_alias="policyUseCase", validation_alias="policyUseCase")
+    policy_mode: Literal["unified"] = Field(
+        default="unified", serialization_alias="policyMode", validation_alias="policyMode"
+    )
+    policy_type: str = Field(default="feature", serialization_alias="policyType", validation_alias="policyType")
+    policy_use_case: str = Field(
+        default="custom", serialization_alias="policyUseCase", validation_alias="policyUseCase"
+    )
     policy_definition: UnifiedSecurityPolicyDefinition = Field(
         default=UnifiedSecurityPolicyDefinition(),
         serialization_alias="policyDefinition",
         validation_alias="policyDefinition",
     )
+
+    def get_assemby_item_uuids(self) -> Set[UUID]:
+        return set((item.definition_id for item in self.policy_definition.assembly))
 
     def add_item(self, item: UnifiedSecurityPolicyAssemblyItem) -> None:
         self.policy_definition.assembly.append(item)

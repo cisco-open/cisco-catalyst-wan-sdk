@@ -1,6 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
-from typing import List, Optional, TypeVar
+from typing import List, Optional, Set, TypeVar
 from uuid import UUID, uuid4
 
 from catalystwan.api.configuration_groups.parcel import _ParcelBase
@@ -8,6 +8,7 @@ from catalystwan.api.templates.device_template.device_template import GeneralTem
 from catalystwan.models.configuration.config_migration import (
     DeviceTemplateWithInfo,
     TransformedParcel,
+    TransformedPolicyGroup,
     UX1Config,
     UX1Policies,
     UX1Templates,
@@ -26,6 +27,8 @@ from catalystwan.tests.config_migration.test_data import (
     vpn_service,
     vpn_transport,
 )
+from catalystwan.tests.config_migration.test_data.device_template import create_device_template
+from catalystwan.tests.config_migration.test_data.security_policy import create_security_policy
 from catalystwan.workflows.config_migration import transform
 
 T = TypeVar("T", FeatureTemplateInformation, _ParcelBase)
@@ -53,6 +56,12 @@ def find_subelement_parcel(
         None,
     )
     return subelement_parcel
+
+
+def _find_policy_group_by_subelements(
+    array: List[TransformedPolicyGroup], subelements: Set[UUID]
+) -> Optional[TransformedPolicyGroup]:
+    return next((pg for pg in array if pg.header.subelements == subelements), None)
 
 
 def test_when_many_cisco_vpn_feature_templates_expect_assign_to_correct_feature_profile():
@@ -565,3 +574,77 @@ def test_when_localized_policy_with_qos_expect_application_priority_feature_prof
     assert qos_map_2_parcel is not None
     # Settings should be in the list of parcels
     assert settings is not None
+
+
+def test_policy_profile_merge():
+    """When:
+    - dt_a uses sp_1, lp_1, sig_1,
+    - dt_b uses sp_1, lp_1, sig_1
+    - dt_c uses sp_2, lp_2, sig_1
+    - dt_d uses sp_2, lp_2, sig_1
+    - dt_e uses sp_3, lp_2
+
+    Expect:
+    - dt_a, dt_b are merged to one policy group
+    - dt_c, dt_d are merged to another policy group
+    - dt_e is a separate policy group
+
+    """
+    ux1 = UX1Config()
+
+    sig_1_uuid = uuid4()
+
+    dns_uuid_1 = uuid4()
+    zbfw_uuid_1 = uuid4()
+    dns_uuid_2 = uuid4()
+    zbfw_uuid_2 = uuid4()
+    sp_1 = create_security_policy("SP-1", dns_uuid=dns_uuid_1, zbfw_uuid=zbfw_uuid_1)
+    sp_2 = create_security_policy("SP-2", dns_uuid=dns_uuid_2, zbfw_uuid=zbfw_uuid_2)
+    sp_3 = create_security_policy("SP-3")
+
+    lp_1 = create_localized_policy_info("LP-1")
+    lp_2 = create_localized_policy_info("LP-2")
+
+    dt_A = create_device_template(
+        "DT-A", sig_uuid=sig_1_uuid, security_policy_uuid=sp_1.policy_id, localized_policy_uuid=lp_1.policy_id
+    )
+    dt_B = create_device_template(
+        "DT-B", sig_uuid=sig_1_uuid, security_policy_uuid=sp_1.policy_id, localized_policy_uuid=lp_1.policy_id
+    )
+    dt_C = create_device_template(
+        "DT-C", sig_uuid=sig_1_uuid, security_policy_uuid=sp_2.policy_id, localized_policy_uuid=lp_2.policy_id
+    )
+    dt_D = create_device_template(
+        "DT-D", sig_uuid=sig_1_uuid, security_policy_uuid=sp_2.policy_id, localized_policy_uuid=lp_2.policy_id
+    )
+    dt_E = create_device_template("DT-E", security_policy_uuid=sp_3.policy_id, localized_policy_uuid=lp_2.policy_id)
+
+    ux1.templates.device_templates = [dt_A, dt_B, dt_C, dt_D, dt_E]
+    ux1.policies.security_policies = [sp_1, sp_2, sp_3]
+    ux1.policies.localized_policies = [lp_1, lp_2]
+
+    merged_A_B_subelements = {sp_1.policy_id, dns_uuid_1, sig_1_uuid, lp_1.policy_id}
+    merged_C_D_subelements = {sp_2.policy_id, dns_uuid_2, sig_1_uuid, lp_2.policy_id}
+    separate_E_subelements = {sp_3.policy_id, lp_2.policy_id}
+    # Act
+    config = transform(ux1=ux1).ux2_config
+    merged_A_B = _find_policy_group_by_subelements(config.policy_groups, merged_A_B_subelements)
+    merged_C_D = _find_policy_group_by_subelements(config.policy_groups, merged_C_D_subelements)
+    separate_E = _find_policy_group_by_subelements(config.policy_groups, separate_E_subelements)
+    # Assert
+    assert len(config.policy_groups) == 3
+    assert merged_A_B is not None
+    assert merged_C_D is not None
+    assert separate_E is not None
+
+
+def test_when_no_data_to_push_in_policy_groups_expect_no_policy_groups():
+    """When there is no data to push, there should be no policy groups."""
+    # Arrange
+    ux1 = UX1Config()
+    dt = create_device_template("DT-A")
+    ux1.templates.device_templates = [dt]
+    # Act
+    config = transform(ux1=ux1).ux2_config
+    # Assert
+    assert len(config.policy_groups) == 0

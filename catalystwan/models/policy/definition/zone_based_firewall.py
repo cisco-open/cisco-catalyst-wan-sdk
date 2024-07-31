@@ -33,6 +33,7 @@ from catalystwan.models.policy.policy_definition import (
     ProtocolEntry,
     ProtocolNameEntry,
     ProtocolNameListEntry,
+    ReferenceWithId,
     RuleSetListEntry,
     SourceDataPrefixListEntry,
     SourceFQDNEntry,
@@ -74,6 +75,8 @@ ZoneBasedFWPolicySequenceEntry = Annotated[
     ],
     Field(discriminator="field"),
 ]
+
+ZonePair = Literal["self", "default"]
 
 ZoneBasedFWPolicySequenceEntryWithRuleSets = Annotated[
     Union[
@@ -129,6 +132,15 @@ class ZoneBasedFWPolicySequence(PolicyDefinitionSequenceBase):
     match: ZoneBasedFWPolicyMatches
     actions: List[Union[LogAction, AdvancedInspectionProfileAction, ConnectionEventsAction]] = []
     model_config = ConfigDict(populate_by_name=True)
+
+    def set_log_action(self):
+        self.actions.append(LogAction())
+
+    def set_advanced_inspection_profile_action(self, profile_id: UUID):
+        self.actions.append(AdvancedInspectionProfileAction(parameter=ReferenceWithId(ref=profile_id)))
+
+    def set_conection_events_action(self):
+        self.actions.append(ConnectionEventsAction())
 
     def match_app_list(self, app_list_id: List[UUID]) -> None:
         if self.base_action != "inspect":
@@ -199,10 +211,12 @@ class ZoneBasedFWPolicySequence(PolicyDefinitionSequenceBase):
 
 
 class ZoneBasedFWPolicyEntry(BaseModel):
-    source_zone_id: Union[UUID, Literal["self"]] = Field(
+    source_zone_id: Union[UUID, ZonePair] = Field(
         default="self", serialization_alias="sourceZone", validation_alias="sourceZone"
     )
-    destination_zone_id: UUID = Field(serialization_alias="destinationZone", validation_alias="destinationZone")
+    destination_zone_id: Union[UUID, ZonePair] = Field(
+        serialization_alias="destinationZone", validation_alias="destinationZone"
+    )
     model_config = ConfigDict(populate_by_name=True)
 
 
@@ -265,10 +279,10 @@ class ZoneBasedFWPolicy(ZoneBasedFWPolicyHeader):
         self.definition.add(sequence)
         return sequence
 
-    def add_zone_pair(self, source_zone_id: UUID, destination_zone_id: UUID) -> None:
+    def add_zone_pair(self, source_zone: Union[UUID, ZonePair], destination_zone: Union[UUID, ZonePair]) -> None:
         entry = ZoneBasedFWPolicyEntry(
-            source_zone_id=source_zone_id,
-            destination_zone_id=destination_zone_id,
+            source_zone_id=source_zone,
+            destination_zone_id=destination_zone,
         )
         self.definition.entries.append(entry)
 

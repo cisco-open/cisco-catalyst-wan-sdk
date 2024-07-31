@@ -1,6 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
-from typing import Callable, Dict, List, Literal, Tuple, Union, cast
+from typing import Dict, List, Literal, Tuple, Union, cast
 from uuid import UUID
 
 from pydantic import Field, ValidationError
@@ -10,13 +10,7 @@ from catalystwan.api.builders.feature_profiles.builder_factory import FeaturePro
 from catalystwan.api.builders.feature_profiles.report import FeatureProfileBuildReport
 from catalystwan.endpoints.configuration_group import ConfigGroup
 from catalystwan.exceptions import ManagerErrorInfo, ManagerHTTPError
-from catalystwan.models.configuration.config_migration import (
-    PushContext,
-    TransformedFeatureProfile,
-    TransformedParcel,
-    UX2Config,
-    UX2ConfigPushResult,
-)
+from catalystwan.models.configuration.config_migration import TransformedFeatureProfile, TransformedParcel
 from catalystwan.models.configuration.feature_profile.parcel import list_types
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
@@ -30,7 +24,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.application_priority
 from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access import DeviceAccessIPv4Parcel
 from catalystwan.models.configuration.feature_profile.sdwan.system.device_access_ipv6 import DeviceAccessIPv6Parcel
-from catalystwan.session import ManagerSession
+from catalystwan.utils.config_migration.creators.pusher import Pusher, PusherConfig
 from catalystwan.utils.config_migration.creators.references_updater import update_parcel_references
 
 _AnyApplicationPriorityPolicyParcel = Annotated[
@@ -67,7 +61,7 @@ _ProfileInfo = Tuple[_LocalizedPolicyProfileTypes, UUID, str, List[TransformedPa
 logger = logging.getLogger(__name__)
 
 
-class LocalizedPolicyPusher:
+class LocalizedPolicyPusher(Pusher):
     """
     1. Associate selected Config Group with Default_Policy_Object_Profile
     2. Update selected Feature Profiles by pushing Parcels originating from Localized Policy items (eg. acl, route)
@@ -75,22 +69,11 @@ class LocalizedPolicyPusher:
     and Default_Policy_Object_Profile is populated with Groups of Interest
     """
 
-    def __init__(
-        self,
-        ux2_config: UX2Config,
-        session: ManagerSession,
-        push_result: UX2ConfigPushResult,
-        push_context: PushContext,
-        progress: Callable[[str, int, int], None],
-    ) -> None:
-        self._ux2_config = ux2_config
-        self._session = session
-        self._cg_api = session.api.config_group
-        self._app_prio_api = session.api.sdwan_feature_profiles.application_priority
-        self._push_result: UX2ConfigPushResult = push_result
-        self._push_context = push_context
-        self._progress: Callable[[str, int, int], None] = progress
+    def __init__(self, config: PusherConfig) -> None:
+        self.load_config(config)
         self._parcel_by_id = self._create_parcel_by_id_lookup()
+        self._app_prio_api = self._session.api.sdwan_feature_profiles.application_priority
+        self._cg_api = self._session.api.config_group
 
     def _create_parcel_by_id_lookup(self) -> Dict[UUID, TransformedParcel]:
         lookup: Dict[UUID, TransformedParcel] = dict()
@@ -241,6 +224,9 @@ class LocalizedPolicyPusher:
                 report = app_prio_builder.build()
                 self._push_result.rollback.add_feature_profile(report.profile_uuid, app_prio_profile.header.type)
                 app_prio_reports.append(report)
+                self._push_context.policy_group_feature_profiles_id_lookup[
+                    app_prio_profile.header.origin
+                ] = report.profile_uuid
             except ManagerHTTPError as e:
                 logger.error(f"Error occured during Application Priority profile creation: {e.info}")
         self._push_result.report.add_standalone_feature_profiles(app_prio_reports)

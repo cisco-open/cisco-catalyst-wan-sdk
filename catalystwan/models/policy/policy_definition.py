@@ -117,6 +117,11 @@ class Reference(BaseModel):
     ref: UUID
 
 
+class ReferenceWithId(BaseModel):
+    field: Literal["id"] = "id"
+    ref: UUID
+
+
 class ReferenceList(BaseModel):
     ref: SpaceSeparatedUUIDList
 
@@ -858,7 +863,7 @@ class ConnectionEventsAction(BaseModel):
 
 class AdvancedInspectionProfileAction(BaseModel):
     type: Literal["advancedInspectionProfile"] = "advancedInspectionProfile"
-    parameter: Reference
+    parameter: ReferenceWithId
 
 
 ActionSetEntry = Annotated[

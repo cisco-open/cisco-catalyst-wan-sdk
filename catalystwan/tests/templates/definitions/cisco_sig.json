@@ -24,7 +24,7 @@
                     "if-name": {
                         "vipObjectType": "object",
                         "vipType": "constant",
-                        "vipValue": "GigabitEthernet0/0"
+                        "vipValue": "ipsec255"
                     },
                     "auto": {
                         "vipObjectType": "object",
@@ -372,12 +372,12 @@
                     "endpoint-api-url": {
                         "vipObjectType": "object",
                         "vipType": "constant",
-                        "vipValue": "https://api.example.com/health"
+                        "vipValue": "http://api.example.com/health"
                     },
                     "threshold": {
                         "vipObjectType": "object",
                         "vipType": "constant",
-                        "vipValue": 5
+                        "vipValue": 100
                     },
                     "interval": {
                         "vipObjectType": "object",

@@ -1,10 +1,8 @@
 import logging
-from typing import Callable, Dict, Mapping, Optional, Type, cast
+from typing import Dict, Mapping, Optional, Type, cast
 from uuid import UUID
 
-from catalystwan.api.feature_profile_api import PolicyObjectFeatureProfileAPI
 from catalystwan.exceptions import ManagerHTTPError
-from catalystwan.models.configuration.config_migration import PushContext, UX2Config, UX2ConfigPushResult
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.configuration.feature_profile.parcel import AnyParcel, Parcel, list_types
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import (
@@ -16,8 +14,8 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object import
 )
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.policy.app_probe import AppProbeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.policy.sla_class import SLAClassParcel
-from catalystwan.session import ManagerSession
 from catalystwan.typed_list import DataSequence
+from catalystwan.utils.config_migration.creators.pusher import Pusher, PusherConfig
 
 from .references_updater import update_parcel_references
 
@@ -37,28 +35,21 @@ def get_parcel_ordering_value(parcel: Type[AnyParcel]) -> int:
     return POLICY_OBJECTS_PUSH_ORDER.get(parcel, 0)
 
 
-class GroupsOfInterestPusher:
+class GroupsOfInterestPusher(Pusher):
     def __init__(
         self,
-        ux2_config: UX2Config,
-        session: ManagerSession,
-        push_result: UX2ConfigPushResult,
-        push_context: PushContext,
-        progress: Callable[[str, int, int], None],
+        config: PusherConfig,
     ) -> None:
-        self._ux2_config = ux2_config
-        self._policy_object_api: PolicyObjectFeatureProfileAPI = session.api.sdwan_feature_profiles.policy_object
-        self.dns = session.api.sdwan_feature_profiles.dns_security
-        self._push_result: UX2ConfigPushResult = push_result
-        self._progress: Callable[[str, int, int], None] = progress
-        self.push_context = push_context
+        self.load_config(config)
+        self.dns = self._session.api.sdwan_feature_profiles.dns_security
+        self._policy_object_api = self._session.api.sdwan_feature_profiles.policy_object
 
     def cast_(self, parcel: AnyParcel) -> AnyPolicyObjectParcel:
         return parcel  # type: ignore
 
     def push(self) -> None:
         profile_id = self.get_or_create_default_policy_object_profile()
-        self.push_context.default_policy_object_profile_id = profile_id
+        self._push_context.default_policy_object_profile_id = profile_id
 
         if profile_id is None:
             logger.error("Cannot create Groups of Interest without Default Policy Object Profile")
@@ -105,11 +96,11 @@ class GroupsOfInterestPusher:
                     i + 1,
                     len(transformed_parcels),
                 )
-                parcel = update_parcel_references(parcel, self.push_context.id_lookup)
+                parcel = update_parcel_references(parcel, self._push_context.id_lookup)
                 parcel_id = self._policy_object_api.create_parcel(profile_id=profile_id, payload=parcel).id
                 profile_rollback.add_parcel(parcel.type_, parcel_id)
                 self._push_result.report.groups_of_interest.add_created(parcel.parcel_name, parcel_id)
-                self.push_context.id_lookup[transformed_parcel.header.origin] = parcel_id
+                self._push_context.id_lookup[transformed_parcel.header.origin] = parcel_id
 
             except ManagerHTTPError as e:
                 logger.error(f"Error occured during config group creation: {e.info}")
