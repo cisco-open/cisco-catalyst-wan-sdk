@@ -1,7 +1,7 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 from ipaddress import IPv4Address, IPv4Network
-from typing import Any, List, Literal, Optional, Set, Tuple, Union, overload
+from typing import List, Literal, Optional, Set, Tuple, Union, overload
 from uuid import UUID
 
 from pydantic import ConfigDict, Field
@@ -9,6 +9,7 @@ from typing_extensions import Annotated
 
 from catalystwan.models.common import AcceptDropActionType, EncapType, IcmpMsgType, ServiceChainNumber, TLOCColor
 from catalystwan.models.policy.policy_definition import (
+    ActionSet,
     AppListEntry,
     CFlowDAction,
     CountAction,
@@ -91,7 +92,26 @@ TrafficDataPolicySequenceEntry = Annotated[
     Field(discriminator="field"),
 ]
 
-TrafficDataPolicySequenceActions = Any  # TODO
+TrafficDataPolicySequenceActionEntry = Annotated[
+    Union[
+        CountAction,
+        LogAction,
+        CFlowDAction,
+        NATAction,
+        RedirectDNSAction,
+        TCPOptimizationAction,
+        DREOptimizationAction,
+        ServiceNodeGroupAction,
+        LossProtectionAction,
+        LossProtectionFECAction,
+        LossProtectionPacketDuplicationAction,
+        SecureInternetGatewayAction,
+        FallBackToRoutingAction,
+    ],
+    Field(discriminator="type"),
+]
+
+TrafficDataPolicySequenceAction = Union[TrafficDataPolicySequenceActionEntry, ActionSet]
 
 
 class TrafficDataPolicyHeader(PolicyDefinitionBase):
@@ -108,7 +128,7 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     )
     base_action: AcceptDropActionType = Field(serialization_alias="baseAction", validation_alias="baseAction")
     match: TrafficDataPolicySequenceMatch = TrafficDataPolicySequenceMatch()
-    actions: List[TrafficDataPolicySequenceActions] = []
+    actions: List[TrafficDataPolicySequenceAction] = []
     model_config = ConfigDict(populate_by_name=True)
 
     def match_app_list(self, app_list_id: UUID) -> None:

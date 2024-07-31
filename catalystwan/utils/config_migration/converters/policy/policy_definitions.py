@@ -385,6 +385,8 @@ def traffic_data(
                 out_seq.match_tcp()
             elif in_match.field == "trafficTo":
                 out_seq.match_traffic_to(in_match.value)
+        for in_action in in_seq.actions:
+            pass
     return result
 
 
