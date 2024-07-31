@@ -406,10 +406,7 @@ class SetVpn(BaseModel):
 
 
 Set = Union[
-    SetVpn,
-    SetTlocList,
     SetDscp,
-    SetTloc,
     SetForwardingClass,
     SetLocalTlocList,
     SetNextHop,
@@ -420,6 +417,9 @@ Set = Union[
     SetPreferredRemoteColor,
     SetService,
     SetServiceChain,
+    SetTloc,
+    SetTlocList,
+    SetVpn,
 ]
 
 RedirectDnsType = Literal[
@@ -583,21 +583,21 @@ class SseAction(BaseModel):
 
 
 Actions = Union[
-    SlaClassAction,
-    BackupSlaPreferredColorAction,
-    SetAction,
-    RedirectDnsAction,
     AppqoeOptimizationAction,
-    LossCorrectionAction,
-    CountAction,
-    LogAction,
-    CloudSaasAction,
-    CloudProbeAction,
+    BackupSlaPreferredColorAction,
     CflowdAction,
-    NatPoolAction,
-    NatAction,
-    SigAction,
+    CloudProbeAction,
+    CloudSaasAction,
+    CountAction,
     FallbackToRoutingAction,
+    LogAction,
+    LossCorrectionAction,
+    NatAction,
+    NatPoolAction,
+    RedirectDnsAction,
+    SetAction,
+    SigAction,
+    SlaClassAction,
     SseAction,
 ]
 
@@ -802,6 +802,40 @@ class Sequence(BaseModel):
     def match_dns(self, dns: DNSEntryType):
         entry = DnsMatch(dns=as_global(dns, DNSEntryType))
         self._match(entry)
+
+    # --- TODO: associate Set Actions ---
+    # SetDscp
+    # SetForwardingClass
+    # SetLocalTlocList
+    # SetNextHop
+    # SetNextHopIpv6
+    # SetNextHopLoose
+    # SetPolicer
+    # SetPreferredColorGroup
+    # SetPreferredRemoteColor
+    # SetService
+    # SetServiceChain
+    # SetTloc
+    # SetTlocList
+    # SetVpn
+
+    # --- TODO: associate Actions ----
+    # AppqoeOptimizationAction
+    # BackupSlaPreferredColorAction
+    # CflowdAction
+    # CloudProbeAction
+    # CloudSaasAction
+    # CountAction
+    # FallbackToRoutingAction
+    # LogAction
+    # LossCorrectionAction
+    # NatAction
+    # NatPoolAction
+    # RedirectDnsAction
+    # SetAction
+    # SigAction
+    # SlaClassAction
+    # SseAction
 
 
 class TrafficPolicyParcel(_ParcelBase):

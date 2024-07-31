@@ -386,7 +386,57 @@ def traffic_data(
             elif in_match.field == "trafficTo":
                 out_seq.match_traffic_to(in_match.value)
         for in_action in in_seq.actions:
-            pass
+            # TODO: action entries conversion
+            if in_action.type == "set":
+                for in_param in in_action.parameter:
+                    if in_param.field == "dscp":
+                        pass
+                    elif in_param.field == "forwardingClass":
+                        pass
+                    elif in_param.field == "localTlocList":
+                        pass
+                    elif in_param.field == "preferredColorGroup":
+                        pass
+                    elif in_param.field == "nextHop":
+                        pass
+                    elif in_param.field == "nextHopLoose":
+                        pass
+                    elif in_param.field == "policer":
+                        pass
+                    elif in_param.field == "serviceChain":
+                        pass
+                    elif in_param.field == "vpn":
+                        pass
+                    elif in_param.field == "tloc":
+                        pass
+                    elif in_param.field == "tlocList":
+                        pass
+            elif in_action.type == "count":
+                pass
+            elif in_action.type == "log":
+                pass
+            elif in_action.type == "cflowd":
+                pass
+            elif in_action.type == "nat":
+                pass
+            elif in_action.type == "redirectDns":
+                pass
+            elif in_action.type == "tcpOptimization":
+                pass
+            elif in_action.type == "dreOptimization":
+                pass
+            elif in_action.type == "serviceNodeGroup":
+                pass
+            elif in_action.type == "lossProtect":
+                pass
+            elif in_action.type == "lossProtectFec":
+                pass
+            elif in_action.type == "lossProtectPktDup":
+                pass
+            elif in_action.type == "fallbackToRouting":
+                pass
+            elif in_action.type == "sig":
+                pass
     return result
 
 
