@@ -60,6 +60,7 @@ class UX2ConfigPusher:
         self._topology_groups_pusher.push()
         self._policy_group_pusher.push()
         self._push_result.report.set_failed_push_parcels_flat_list()
+        self._push_result.set_groups_rollback()
         logger.debug(f"Configuration push completed. Rollback configuration {self._push_result}")
         return self._push_result
 

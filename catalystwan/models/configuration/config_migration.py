@@ -423,9 +423,10 @@ class ConfigTransformResult(BaseModel):
         )
         self.unsupported_items.append(item)
 
-
+GroupTypes = Literal["config", "topology", "policy", "base"]
 class GroupReportBase(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid", alias_generator=camel)
+    type_: GroupTypes = Field(default="base", exclude=True)
     name: str
     uuid: UUID
     feature_profiles: List[FeatureProfileBuildReport] = Field(default_factory=list)
@@ -433,14 +434,17 @@ class GroupReportBase(BaseModel):
 
 class ConfigGroupReport(GroupReportBase):
     model_config = ConfigDict(populate_by_name=True, extra="forbid", alias_generator=camel)
+    type_: GroupTypes = Field(default="config", exclude=True)
 
 
 class TopologyGroupReport(GroupReportBase):
     model_config = ConfigDict(populate_by_name=True, extra="forbid", alias_generator=camel)
+    type_: GroupTypes = Field(default="topology", exclude=True)
 
 
 class PolicyGroupReport(GroupReportBase):
     model_config = ConfigDict(populate_by_name=True, extra="forbid", alias_generator=camel)
+    type_: GroupTypes = Field(default="policy", exclude=True)
 
 
 class DefaultPolicyObjectProfileReport(BaseModel):
@@ -575,6 +579,15 @@ class UX2ConfigPushResult(BaseModel):
     model_config = ConfigDict(populate_by_name=True, alias_generator=camel)
     rollback: UX2RollbackInfo = UX2RollbackInfo()
     report: UX2ConfigPushReport = UX2ConfigPushReport()
+
+    def set_groups_rollback(self):
+        for group in self.report.groups:
+            if group.type_ == "config":
+                self.rollback.add_config_group(group.uuid)
+            elif group.type_ == "policy":
+                self.rollback.add_policy_group(group.uuid)
+            elif group.type_ == "topology":
+                self.rollback.add_topology_group(group.uuid)
 
 
 @dataclass

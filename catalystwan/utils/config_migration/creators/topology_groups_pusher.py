@@ -75,7 +75,6 @@ class TopologyGroupsPusher(Pusher):
             group.add_profiles([profile_id, self._push_context.default_policy_object_profile_id])
             try:
                 group_id = group_api.create(group).id
-                self._push_result.rollback.add_topology_group(group_id)
                 group_report = TopologyGroupReport(name=group.name, uuid=group_id, feature_profiles=[profile_report])
                 self._push_result.report.topology_groups.append(group_report)
                 self._push_context.id_lookup[ttg.header.origin] = group_id

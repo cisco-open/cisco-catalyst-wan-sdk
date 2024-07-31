@@ -68,6 +68,9 @@ class TestMigrationFlow(TestCaseBase):
         super().tearDownClass()
 
 
+COPY_DEVICE_TEMPLATE_FROM = "Factory_Default_C8000V_V01"
+
+
 class TestPolicyGroupAggregation(TestCaseBase):
     runner: ConfigMigrationRunner
     sig_name: str
@@ -125,11 +128,11 @@ class TestPolicyGroupAggregation(TestCaseBase):
         assert len([fp for fp in feature_profiles if fp.profile_name.startswith(self.sig_name)]) == 1
         assert len([fp for fp in feature_profiles if fp.profile_name.startswith(self.localized_policy_name)]) == 1
         assert len([fp for fp in feature_profiles if fp.profile_name.startswith(self.security_policy_name)]) == 1
-        assert len([fp for fp in feature_profiles if fp.profile_name.startswith(self.security_policy_name)]) == 1
+        assert len([fp for fp in feature_profiles if fp.profile_name.startswith(self.dns_security_name)]) == 1
 
     def _create_device_template(self) -> None:
         templates = self.session.api.templates
-        dt = DeviceTemplate.get("Factory_Default_C8000V_V01", self.session)
+        dt = DeviceTemplate.get(COPY_DEVICE_TEMPLATE_FROM, self.session)
         dt.template_name = self.device_template_name
         dt.factory_default = False
         dt.associate_feature_template(CiscoSecureInternetGatewayModel.type, UUID(self.sig_uuid))
@@ -264,6 +267,7 @@ class TestPolicyGroupAggregation(TestCaseBase):
         self.pol_dict["AdvancedInspectionProfilePolicy"] = api.definitions.create(aip)
         zbfwp = ZoneBasedFWPolicy(name=create_name_with_run_id("ZoneBasedFWPolicy"))
         zbfwp.mode = "unified"
+        zbfwp.add_zone_pair("self", "default")
         zbfwp_seq = zbfwp.add_ipv4_rule(name=create_name_with_run_id("IPv4Rule"), base_action="inspect")
         zbfwp_seq.set_advanced_inspection_profile_action(profile_id=self.pol_dict["AdvancedInspectionProfilePolicy"])
         zbfwp_seq.match_source_port(ports=set([34000, 34568]))

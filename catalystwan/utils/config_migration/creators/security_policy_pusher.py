@@ -93,6 +93,7 @@ class SecurityPolicyPusher(Pusher):
             profile_report = self._push_embedded_security_profile(parcel.parcel_name, parcel.parcel_description)
             if (profile_id := profile_report.profile_uuid) == UUID(int=0):
                 continue
+            self._push_context.policy_group_feature_profiles_id_lookup[security_policy.header.origin] = profile_id
 
             # 2.Find the referenced ngfirewall objects, update refs and push
             fw_ids = [asm.ng_firewall.ref_id.value for asm in parcel.assembly if type(asm) is NgFirewallContainer]
@@ -124,6 +125,9 @@ class SecurityPolicyPusher(Pusher):
                     profile_name=parcel.parcel_name, profile_uuid=profile_id
                 )
                 self._push_result.report.security_policies.append(feature_profile_report)
+                self._push_context.policy_group_feature_profiles_id_lookup[
+                    dns_security_policy.header.origin
+                ] = profile_id
             except ManagerHTTPError as e:
                 logger.error(f"Error occured during DNS Security policy creation: {e.info}")
                 self._push_result.report.security_policies.append(
@@ -134,9 +138,6 @@ class SecurityPolicyPusher(Pusher):
             try:
                 parcel_id = self._dns_security_api.create_parcel(profile_id, parcel).id
                 self._push_context.id_lookup[dns_security_policy.header.origin] = parcel_id
-                self._push_context.policy_group_feature_profiles_id_lookup[
-                    dns_security_policy.header.origin
-                ] = profile_id
                 feature_profile_report.add_created_parcel(dns_security_policy.parcel.parcel_name, parcel_id)
             except ManagerHTTPError as e:
                 logger.error(f"Error occured during DNS Security policy creation: {e.info}")

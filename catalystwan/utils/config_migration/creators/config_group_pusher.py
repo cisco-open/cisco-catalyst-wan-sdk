@@ -59,7 +59,6 @@ class ConfigGroupPusher(Pusher):
                 logger.error(f"Error occured during config group creation: {e}")
                 self._push_result.report.add_standalone_feature_profiles(feature_profiles=created_profiles)
             else:
-                self._push_result.rollback.add_config_group(cg_id)
                 self._push_result.report.add_report(
                     name=transformed_config_group.config_group.name,
                     uuid=cg_id,
