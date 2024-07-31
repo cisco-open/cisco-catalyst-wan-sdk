@@ -804,38 +804,96 @@ class Sequence(BaseModel):
         self._match(entry)
 
     # --- TODO: associate Set Actions ---
-    # SetDscp
-    # SetForwardingClass
-    # SetLocalTlocList
-    # SetNextHop
-    # SetNextHopIpv6
-    # SetNextHopLoose
-    # SetPolicer
-    # SetPreferredColorGroup
-    # SetPreferredRemoteColor
-    # SetService
-    # SetServiceChain
-    # SetTloc
-    # SetTlocList
-    # SetVpn
+    def associate_dscp_action(self) -> None:
+        pass
+
+    def associate_forwarding_class_action(self) -> None:
+        pass
+
+    def associate_local_tloc_list_action(self) -> None:
+        pass
+
+    def associate_next_hop_action(self) -> None:
+        pass
+
+    def associate_next_hop_ipv6_action(self) -> None:
+        pass
+
+    def associate_next_hop_loose_action(self) -> None:
+        pass
+
+    def associate_policer_action(self) -> None:
+        pass
+
+    def associate_preferred_color_group_action(self) -> None:
+        pass
+
+    def associate_preferred_remote_color_action(self) -> None:
+        pass
+
+    def associate_service_action(self) -> None:
+        pass
+
+    def associate_service_chain_action(self) -> None:
+        pass
+
+    def associate_tloc_action(self) -> None:
+        pass
+
+    def associate_tloc_list_action(self) -> None:
+        pass
+
+    def associate_vpn_action(self) -> None:
+        pass
 
     # --- TODO: associate Actions ----
-    # AppqoeOptimizationAction
-    # BackupSlaPreferredColorAction
-    # CflowdAction
-    # CloudProbeAction
-    # CloudSaasAction
-    # CountAction
-    # FallbackToRoutingAction
-    # LogAction
-    # LossCorrectionAction
-    # NatAction
-    # NatPoolAction
-    # RedirectDnsAction
-    # SetAction
-    # SigAction
-    # SlaClassAction
-    # SseAction
+    def associate_appqoe_optimization_action(self) -> None:
+        pass
+
+    def associate_backup_sla_preferred_color_action(self) -> None:
+        pass
+
+    def associate_cflowd_action(self) -> None:
+        pass
+
+    def associate_cloud_probe_action(self) -> None:
+        pass
+
+    def associate_cloud_saas_action(self) -> None:
+        pass
+
+    def associate_count_action(self) -> None:
+        pass
+
+    def associate_fallback_to_routing_action(self) -> None:
+        pass
+
+    def associate_log_action(self) -> None:
+        pass
+
+    def associate_loss_correction_action(self) -> None:
+        pass
+
+    def associate_nat_action(self) -> None:
+        pass
+
+    def associate_nat_pool_action(self) -> None:
+        pass
+
+    def associate_redirect_dns_action(self) -> None:
+        pass
+
+    def associate_set_action(self) -> None:
+        pass
+
+    def associate_sig_action(self) -> None:
+        pass
+
+    def associate_sla_class_action(self) -> None:
+        pass
+
+    def associate_sse_action(self) -> None:
+        pass
 
 
 class TrafficPolicyParcel(_ParcelBase):
