@@ -27,6 +27,12 @@ class ApiGwLogin(BaseModel):
 
 
 class ApiGwAuth(AuthBase):
+    """Attaches ApiGateway Authentication to the given Requests object.
+
+    1. Get a bearer token by sending a POST request to the /apigw/login endpoint.
+    2. Use the token in the Authorization header for subsequent requests.
+    """
+
     def __init__(self, base_url: str, login: ApiGwLogin, verify: bool = False):
         self.base_url = base_url
         self.verify = verify
@@ -59,8 +65,12 @@ class ApiGwAuth(AuthBase):
             "Authorization": f"Bearer {self.token}",
         }
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"ApiGatewayAuth(base_url={self.base_url}, mode={self.login.mode})"
 
     def logout(self, session: "ManagerSession") -> Optional[ManagerResponse]:
         return None
+
+    def clear_tokens_and_cookies(self) -> None:
+        self.token = ""
+        self.set_cookie.clear()

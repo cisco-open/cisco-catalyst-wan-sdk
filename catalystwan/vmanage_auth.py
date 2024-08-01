@@ -130,11 +130,9 @@ class vManageAuth(AuthBase):
         return token
 
     def __call__(self, prepared_request: PreparedRequest) -> PreparedRequest:
-        if self.expiration_time is None:
-            if self.token == "":
-                self.set_cookie = self.get_cookie()
-                self.token = self.fetch_token(self.set_cookie)
-
+        if self.expiration_time is None or self.token == "":
+            self.set_cookie = self.get_cookie()
+            self.token = self.fetch_token(self.set_cookie)
         prepared_request.prepare_cookies(self.set_cookie)
         prepared_request.headers.update({"x-xsrf-token": self.token})
         return prepared_request
@@ -169,3 +167,7 @@ class vManageAuth(AuthBase):
 
     def __str__(self) -> str:
         return f"vManageAuth(base_url={self.base_url}, username={self.username})"
+
+    def clear_tokens_and_cookies(self) -> None:
+        self.token = ""
+        self.set_cookie.clear()

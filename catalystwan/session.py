@@ -86,9 +86,9 @@ def __create_base_url(url: str, port: Optional[int] = None) -> str:
     Returns:
         str: Base url shared for every request.
     """
-    url = urlparse(url)
-    netloc: str = url.netloc or url.path
-    scheme: str = url.scheme or "https"
+    parsed_url = urlparse(url)
+    netloc: str = parsed_url.netloc or parsed_url.path
+    scheme: str = parsed_url.scheme or "https"
     base_url = urlunparse((scheme, netloc, "", None, None, None))
     if port:
         return f"{base_url}:{port}"  # noqa: E231
@@ -109,6 +109,26 @@ def create_apigw_session(
     token_duration: int = 10,
     logger: Optional[logging.Logger] = None,
 ) -> ManagerSession:
+    """Factory method that creates session object and performs login according to parameters
+
+    Args:
+        url (str): IP address or domain name
+        client_id (str): client id
+        client_secret (str): client secret
+        org_name (str): organization name
+        subdomain: subdomain specifying to which view switch when creating provider as a tenant session,
+            works only on provider user mode
+        port (int): port
+        mode (LoginMode): login mode
+        username (str): username
+        session (str): session
+        tenant_user (bool): tenant user
+        token_duration (int): token duration
+        logger: override default module logger
+
+    Returns:
+        ManagerSession: logged-in and operative session to perform tasks on SDWAN Manager.
+    """
     base_url = __create_base_url(url, port)
     auth = ApiGwAuth(
         base_url=base_url,
@@ -123,9 +143,9 @@ def create_apigw_session(
             token_duration=token_duration,
         ),
     )
-    session = ManagerSession(base_url=base_url, auth=auth, subdomain=subdomain, logger=logger)
-    session.state = ManagerSessionState.LOGIN
-    return session
+    session_ = ManagerSession(base_url=base_url, auth=auth, subdomain=subdomain, logger=logger)
+    session_.state = ManagerSessionState.LOGIN
+    return session_
 
 
 def create_manager_session(
@@ -185,14 +205,26 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
     Defines methods and handles session connectivity available for provider, provider as tenant, and tenant.
 
     Args:
-        url: IP address or domain name, i.e. '10.0.1.200' or 'example.com'
-        port: port
-        username: username
-        password: password
+        base_url: IP address or domain name, i.e. '10.0.1.200' or 'example.com'
+        auth: authentication object - vManage or API Gateway
+        subdomain: subdomain specifying to which view switch when creating provider as a tenant session,
+            works only on provider user mode
+        logger: override default module logger
 
     Attributes:
         enable_relogin (bool): defaults to True, in case that session is not properly logged-in, session will try to
             relogin and try the same request again
+        api: APIContainer: container for API methods
+        endpoints: APIEndpointContainter: container for API endpoints
+        state: ManagerSessionState: current state of the session can be used to control session flow
+        response_trace: Callable: function that logs response and request details
+        server_name: str: server name
+        platform_version: str: platform version
+        api_version: Version: API version
+        restart_timeout: int: restart timeout in seconds
+        session_type: SessionType: type of session
+        verify: bool: verify SSL certificate
+
     """
 
     def __init__(
@@ -202,8 +234,6 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         subdomain: Optional[str] = None,
         logger: Optional[logging.Logger] = None,
     ) -> None:
-        # self.url = url
-        # self.port = port
         self.base_url = base_url
         self.subdomain = subdomain
         self._session_type = SessionType.NOT_DEFINED
@@ -286,6 +316,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
             ManagerSession: (self)
         """
         self.cookies.clear_session_cookies()
+        self._auth.clear_tokens_and_cookies()
         self.auth = self._auth
         self.auth.logger = self.logger
         if self.subdomain:
@@ -394,6 +425,11 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
 
         if self.enable_relogin and response.jsessionid_expired and self.state == ManagerSessionState.OPERATIVE:
             self.logger.warning("Logging to session. Reason: expired JSESSIONID detected in response headers")
+            self.state = ManagerSessionState.LOGIN
+            return self.request(method, url, *args, **_kwargs)
+
+        if self.enable_relogin and response.api_gw_unauthorized and self.state == ManagerSessionState.OPERATIVE:
+            self.logger.warning("Logging to API GW session. Reason: unauthorized detected in response headers")
             self.state = ManagerSessionState.LOGIN
             return self.request(method, url, *args, **_kwargs)
 
