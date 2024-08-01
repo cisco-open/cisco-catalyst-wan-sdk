@@ -7,7 +7,17 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 from typing_extensions import Annotated
 
-from catalystwan.models.common import AcceptDropActionType, EncapType, IcmpMsgType, ServiceChainNumber, TLOCColor
+from catalystwan.models.common import (
+    AcceptDropActionType,
+    DestinationRegion,
+    DNSEntryType,
+    EncapType,
+    IcmpMsgType,
+    SequenceIpType,
+    ServiceChainNumber,
+    TLOCColor,
+    TrafficTargetType,
+)
 from catalystwan.models.policy.policy_definition import (
     ActionSet,
     AppListEntry,
@@ -40,6 +50,7 @@ from catalystwan.models.policy.policy_definition import (
     NextHopLooseEntry,
     PacketLengthEntry,
     PLPEntry,
+    PLPEntryType,
     PolicerListEntry,
     PolicyAcceptDropAction,
     PolicyDefinitionBase,
@@ -137,11 +148,8 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     def match_dns_app_list(self, dns_app_list_id: UUID) -> None:
         self._insert_match(DNSAppListEntry(ref=dns_app_list_id))
 
-    def match_dns_request(self) -> None:
-        self._insert_match(DNSEntry(value="request"))
-
-    def match_dns_response(self) -> None:
-        self._insert_match(DNSEntry(value="response"))
+    def match_dns(self, dns: DNSEntryType) -> None:
+        self._insert_match(DNSEntry(value=dns))
 
     def match_dscp(self, dscp: List[int]) -> None:
         self._insert_match(DSCPEntry(value=dscp))
@@ -152,17 +160,14 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     def match_packet_length(self, packet_lengths: Tuple[int, int]) -> None:
         self._insert_match(PacketLengthEntry.from_range(packet_lengths))
 
-    def match_low_plp(self) -> None:
-        self._insert_match(PLPEntry(value="low"))
-
-    def match_high_plp(self) -> None:
-        self._insert_match(PLPEntry(value="high"))
+    def match_plp(self, plp: PLPEntryType) -> None:
+        self._insert_match(PLPEntry(value=plp))
 
     def match_protocols(self, protocols: Set[int]) -> None:
         self._insert_match(ProtocolEntry.from_protocol_set(protocols))
 
-    def match_source_data_prefix_list(self, data_prefix_lists: List[UUID]) -> None:
-        self._insert_match(SourceDataPrefixListEntry(ref=data_prefix_lists))
+    def match_source_data_prefix_list(self, data_prefix_list_id: UUID) -> None:
+        self._insert_match(SourceDataPrefixListEntry(ref=[data_prefix_list_id]))
 
     def match_source_ip(self, networks: List[IPv4Network]) -> None:
         self._insert_match(SourceIPEntry.from_ipv4_networks(networks))
@@ -176,14 +181,8 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     def match_destination_ip(self, networks: List[IPv4Network]) -> None:
         self._insert_match(DestinationIPEntry.from_ipv4_networks(networks))
 
-    def match_primary_destination_region(self) -> None:
-        self._insert_match(DestinationRegionEntry(value="primary-region"))
-
-    def match_secondary_destination_region(self) -> None:
-        self._insert_match(DestinationRegionEntry(value="secondary-region"))
-
-    def match_other_destination_region(self) -> None:
-        self._insert_match(DestinationRegionEntry(value="other-region"))
+    def match_destination_region(self, region: DestinationRegion) -> None:
+        self._insert_match(DestinationRegionEntry(value=region))
 
     def match_destination_port(self, ports: Set[int] = set(), port_ranges: List[Tuple[int, int]] = []) -> None:
         self._insert_match(DestinationPortEntry.from_port_set_and_ranges(ports, port_ranges))
@@ -191,14 +190,8 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     def match_tcp(self) -> None:
         self._insert_match(TCPEntry())
 
-    def match_traffic_to_access(self) -> None:
-        self._insert_match(TrafficToEntry(value="access"))
-
-    def match_traffic_to_core(self) -> None:
-        self._insert_match(TrafficToEntry(value="core"))
-
-    def match_traffic_to_service(self) -> None:
-        self._insert_match(TrafficToEntry(value="service"))
+    def match_traffic_to(self, traffic_to: TrafficTargetType) -> None:
+        self._insert_match(TrafficToEntry(value=traffic_to))
 
     def associate_count_action(self, counter_name: str) -> None:
         self._insert_action(CountAction(parameter=counter_name))
@@ -393,13 +386,17 @@ class TrafficDataPolicy(TrafficDataPolicyHeader, DefinitionWithSequencesCommonBa
     )
     model_config = ConfigDict(populate_by_name=True)
 
-    def add_ipv4_sequence(
-        self, name: str = "Custom", base_action: AcceptDropActionType = "drop", log: bool = False
+    def add_sequence(
+        self,
+        name: str = "Custom",
+        base_action: AcceptDropActionType = "drop",
+        log: bool = False,
+        sequence_ip_type: SequenceIpType = "ipv4",
     ) -> TrafficDataPolicySequence:
         seq = TrafficDataPolicySequence(
             sequence_name=name,
             base_action=base_action,
-            sequence_ip_type="ipv4",
+            sequence_ip_type=sequence_ip_type,
         )
         self.add(seq)
         return seq

@@ -336,7 +336,7 @@ def traffic_data(
                         f"{in_match.field} = {in_match.value}",
                     )
             elif in_match.field == "destinationPort":
-                out_seq.match_destination_port(in_match.value)
+                out_seq.match_destination_ports(in_match.value.split())
             elif in_match.field == "destinationRegion":
                 out_seq.match_destination_region(in_match.value)
             elif in_match.field == "dns":
@@ -346,8 +346,7 @@ def traffic_data(
             elif in_match.field == "dscp":
                 out_seq.match_dscp(in_match.value)
             elif in_match.field == "icmpMessage":
-                for icmp_msg in in_match.value:
-                    out_seq.match_icmp_message(icmp_msg)
+                out_seq.match_icmp_messages(in_match.value)
             elif in_match.field == "packetLength":
                 out_seq.match_packet_length(in_match.value)
             elif in_match.field == "plp":
@@ -357,9 +356,8 @@ def traffic_data(
                     f"{in_match.field} = {in_match.value} which cannot be converted",
                 )
             elif in_match.field == "protocol":
-                _protocols = as_num_list(as_num_ranges_list(in_match.value))
-                for _protocol in _protocols:
-                    out_seq.match_protocol(str(_protocol))
+                _protocols = [str(n) for n in as_num_list(as_num_ranges_list(in_match.value))]
+                out_seq.match_protocols(_protocols)
             elif in_match.field == "sourceDataIpv6PrefixList":
                 out_seq.match_source_data_ipv6_prefix_list(list_id=in_match.ref[0])
             elif in_match.field == "sourceDataPrefixList":
@@ -380,13 +378,19 @@ def traffic_data(
                         f"{in_match.field} = {in_match.value}",
                     )
             elif in_match.field == "sourcePort":
-                out_seq.match_destination_port(in_match.value)
+                out_seq.match_source_ports(in_match.value.split())
             elif in_match.field == "tcp":
                 out_seq.match_tcp()
             elif in_match.field == "trafficTo":
                 out_seq.match_traffic_to(in_match.value)
+
+        appqoe_dre = False
+        appqoe_tcp = False
+        appqoe_sv_grp = None
+
         for in_action in in_seq.actions:
             # TODO: action entries conversion
+
             if in_action.type == "set":
                 for in_param in in_action.parameter:
                     if in_param.field == "dscp":
@@ -422,11 +426,11 @@ def traffic_data(
             elif in_action.type == "redirectDns":
                 pass
             elif in_action.type == "tcpOptimization":
-                pass
+                appqoe_tcp = True
             elif in_action.type == "dreOptimization":
-                pass
+                appqoe_dre = True
             elif in_action.type == "serviceNodeGroup":
-                pass
+                appqoe_sv_grp = in_action.parameter
             elif in_action.type == "lossProtect":
                 pass
             elif in_action.type == "lossProtectFec":
@@ -437,6 +441,10 @@ def traffic_data(
                 pass
             elif in_action.type == "sig":
                 pass
+        if appqoe_sv_grp is not None:
+            out_seq.associate_appqoe_optimization_action(
+                dre_optimization=appqoe_dre, service_node_group=appqoe_sv_grp, tcp_optimization=appqoe_tcp
+            )
     return result
 
 

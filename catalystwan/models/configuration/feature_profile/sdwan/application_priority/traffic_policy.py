@@ -1,6 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
-from typing import List, Literal, Optional, Union
+from typing import List, Literal, Optional, Tuple, Type, TypeVar, Union
 from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
@@ -11,13 +11,15 @@ from catalystwan.models.common import (
     DestinationRegion,
     DNSEntryType,
     EncapType,
+    Icmp6MsgType,
+    IcmpMsgType,
     SequenceIpType,
     ServiceChainNumber,
     ServiceType,
     TLOCColor,
     TrafficTargetType,
 )
-from catalystwan.models.configuration.feature_profile.common import Icmp6Msg, IcmpMsg, RefIdItem
+from catalystwan.models.configuration.feature_profile.common import RefIdItem
 from catalystwan.models.policy.centralized import TrafficDataDirection
 from catalystwan.models.policy.policy_definition import DNSTypeEntryType, LossProtectionType
 
@@ -95,7 +97,7 @@ class TrafficClassMatch(BaseModel):
 
 class DscpMatch(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    dscp: Global[List[int]] = Field(default=None, ge=0, le=63)
+    dscp: Global[List[int]] = Field(default=None)
 
 
 class PacketLengthMatch(BaseModel):
@@ -112,14 +114,14 @@ class ProtocolMatch(BaseModel):
 
 class IcmpMessageMatch(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    icmp_message: Global[List[IcmpMsg]] = Field(
+    icmp_message: Global[List[IcmpMsgType]] = Field(
         default=None, validation_alias="icmpMessage", serialization_alias="icmpMessage"
     )
 
 
 class Icmp6MessageMatch(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    icmp6_message: Global[List[Icmp6Msg]] = Field(
+    icmp6_message: Global[List[Icmp6MsgType]] = Field(
         default=None, validation_alias="icmp6Message", serialization_alias="icmp6Message"
     )
 
@@ -218,7 +220,7 @@ class DnsMatch(BaseModel):
     dns: Global[DNSEntryType] = Field(default=None)
 
 
-Entries = Union[
+Entry = Union[
     AppListMatch,
     SaasAppListMatch,
     ServiceAreaMatch,
@@ -249,7 +251,7 @@ Entries = Union[
 
 class Match(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    entries: List[Entries]
+    entries: List[Entry]
 
 
 class SlaClass(BaseModel):
@@ -582,7 +584,7 @@ class SseAction(BaseModel):
     sse: Sse = Field(default=None)
 
 
-Actions = Union[
+Action = Union[
     AppqoeOptimizationAction,
     BackupSlaPreferredColorAction,
     CflowdAction,
@@ -601,10 +603,14 @@ Actions = Union[
     SseAction,
 ]
 
+TA = TypeVar("TA", bound=Action)
+TS = TypeVar("TS", bound=Set)
+TM = TypeVar("TM", bound=Entry)
+
 
 class Sequence(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    actions: Optional[List[Actions]] = Field(default=None)
+    actions: Optional[List[Action]] = Field(default=None)
     base_action: Optional[Global[AcceptDropActionType]] = Field(
         default=None, validation_alias="baseAction", serialization_alias="baseAction"
     )
@@ -619,69 +625,47 @@ class Sequence(BaseModel):
         default=None, validation_alias="sequenceName", serialization_alias="sequenceName"
     )
 
-    def _get_match(self) -> Match:
+    def _obtain_match(self) -> Match:
         if self.match is None:
             self.match = Match(entries=[])
         if self.match.entries is None:
             self.match.entries = []
         return self.match
 
-    def _match(self, entry: Entries):
-        self._get_match().entries.append(entry)
+    def _match(self, entry: Entry):
+        self._obtain_match().entries.append(entry)
 
-    def _get_service_area_entry(self):
-        entries = self._get_match().entries
+    def find_match_entry(self, entry_type: Type[TM]) -> Optional[TM]:
+        entries = self._obtain_match().entries
         for entry in entries:
-            if type(entry) is ServiceAreaMatch:
+            if isinstance(entry, type(entry_type)):
                 return entry
-        entry = ServiceAreaMatch()
-        entries.append(entry)
-        return entry
+        return None
 
-    def _get_protocol_entry(self):
-        entries = self._get_match().entries
-        for entry in entries:
-            if type(entry) is ProtocolMatch:
-                return entry
-        entry = ProtocolMatch()
-        entries.append(entry)
-        return entry
+    @property
+    def _actions(self) -> List[Action]:
+        if self.actions is None:
+            self.actions = []
+        return self.actions
 
-    def _get_icmp_message_entry(self):
-        entries = self._get_match().entries
-        for entry in entries:
-            if type(entry) is IcmpMessageMatch:
-                return entry
-        entry = IcmpMessageMatch()
-        entries.append(entry)
-        return entry
+    def _find_action_with_index(self, action_type: Type[TA]) -> Tuple[Optional[int], Optional[TA]]:
+        for i, action in enumerate(self._actions):
+            if isinstance(action, action_type):
+                return (i, action)
+        return (None, None)
 
-    def _get_icmp6_message_entry(self):
-        entries = self._get_match().entries
-        for entry in entries:
-            if type(entry) is Icmp6MessageMatch:
-                return entry
-        entry = Icmp6MessageMatch()
-        entries.append(entry)
-        return entry
+    def find_action(self, action_type: Type[TA]) -> Optional[TA]:
+        _, action = self._find_action_with_index(action_type)
+        if action is not None:
+            return action
+        return None
 
-    def _get_source_port_entry(self):
-        entries = self._get_match().entries
-        for entry in entries:
-            if type(entry) is SourcePortMatch:
-                return entry
-        entry = SourcePortMatch()
-        entries.append(entry)
-        return entry
-
-    def _get_destination_port_entry(self):
-        entries = self._get_match().entries
-        for entry in entries:
-            if type(entry) is DestinationPortMatch:
-                return entry
-        entry = DestinationPortMatch()
-        entries.append(entry)
-        return entry
+    def _insert_action(self, action: Action) -> None:
+        i, _ = self._find_action_with_index(type(action))
+        if i is not None:
+            self._actions[i] = action
+        else:
+            self._actions.append(action)
 
     def match_app_list(self, list_id: UUID):
         entry = AppListMatch(app_list=RefIdItem(ref_id=as_global(str(list_id))))
@@ -691,12 +675,9 @@ class Sequence(BaseModel):
         entry = SaasAppListMatch(saas_app_list=RefIdItem(ref_id=as_global(str(list_id))))
         self._match(entry)
 
-    def match_service_area(self, service_area: ServiceAreaValue):
-        entry = self._get_service_area_entry()
-        if entry.service_area:
-            entry.service_area.value.append(service_area)
-        else:
-            entry.service_area = Global[List[ServiceAreaValue]](value=[service_area])
+    def match_service_areas(self, service_areas: List[ServiceAreaValue]):
+        entry = ServiceAreaMatch(service_area=Global[List[ServiceAreaValue]](value=service_areas))
+        self._match(entry)
 
     def match_traffic_category(self, traffic_category: TrafficCategory):
         entry = TrafficCategoryMatch(traffic_category=as_global(traffic_category, TrafficCategory))
@@ -718,26 +699,17 @@ class Sequence(BaseModel):
         entry = PacketLengthMatch(packet_length=as_global(packet_length))
         self._match(entry)
 
-    def match_protocol(self, protocol: str):
-        entry = self._get_protocol_entry()
-        if entry.protocol:
-            entry.protocol.value.append(protocol)
-        else:
-            entry.protocol = Global[List[str]](value=[protocol])
+    def match_protocols(self, protocols: List[str]):
+        entry = ProtocolMatch(protocol=Global[List[str]](value=protocols))
+        self._match(entry)
 
-    def match_icmp_message(self, message: IcmpMsg):
-        entry = self._get_icmp_message_entry()
-        if entry.icmp_message:
-            entry.icmp_message.value.append(message)
-        else:
-            entry.icmp_message = Global[List[IcmpMsg]](value=[message])
+    def match_icmp_messages(self, messages: List[IcmpMsgType]):
+        entry = IcmpMessageMatch(icmp_message=Global[List[IcmpMsgType]](value=messages))
+        self._match(entry)
 
-    def match_icmp6_message(self, message: Icmp6Msg):
-        entry = self._get_icmp6_message_entry()
-        if entry.icmp_message:
-            entry.icmp_message.value.append(message)
-        else:
-            entry.icmp_message = Global[List[Icmp6Msg]](value=[message])
+    def match_icmp6_message(self, messages: List[Icmp6MsgType]):
+        entry = Icmp6MessageMatch(icmp6_message=Global[List[Icmp6MsgType]](value=messages))
+        self._match(entry)
 
     def match_source_data_prefix_list(self, list_id: UUID):
         entry = SourceDataPrefixListMatch(source_data_prefix_list=RefIdItem(ref_id=as_global(str(list_id))))
@@ -755,12 +727,9 @@ class Sequence(BaseModel):
         entry = SourceIpv6Match(source_ipv6=as_global(ipv6_network))
         self._match(entry)
 
-    def match_source_port(self, source_port: str):
-        entry = self._get_source_port_entry()
-        if entry.source_port:
-            entry.source_port.value.append(source_port)
-        else:
-            entry.source_port = Global[List[str]](value=[source_port])
+    def match_source_ports(self, source_ports: List[str]):
+        entry = SourcePortMatch(source_port=Global[List[str]](value=source_ports))
+        self._match(entry)
 
     def match_destination_data_prefix_list(self, list_id: UUID):
         entry = DestinationDataPrefixListMatch(destination_data_prefix_list=RefIdItem(ref_id=as_global(str(list_id))))
@@ -780,12 +749,9 @@ class Sequence(BaseModel):
         entry = DestinationIpv6Match(destination_ipv6=as_global(ipv6_network))
         self._match(entry)
 
-    def match_destination_port(self, destination_port: str):
-        entry = self._get_destination_port_entry()
-        if entry.destination_port:
-            entry.destination_port.value.append(destination_port)
-        else:
-            entry.destiantion_port = Global[List[str]](value=[destination_port])
+    def match_destination_ports(self, destination_ports: List[str]):
+        entry = DestinationPortMatch(destination_port=Global[List[str]](value=destination_ports))
+        self._match(entry)
 
     def match_tcp(self):
         entry = TcpMatch()
@@ -847,8 +813,16 @@ class Sequence(BaseModel):
         pass
 
     # --- TODO: associate Actions ----
-    def associate_appqoe_optimization_action(self) -> None:
-        pass
+    def associate_appqoe_optimization_action(
+        self, dre_optimization: bool, service_node_group: str, tcp_optimization: bool
+    ) -> None:
+        appqoe_optimization = AppqoeOptimization(
+            dre_optimization=as_global(dre_optimization),
+            service_node_group=as_global(service_node_group),
+            tcp_optimization=as_global(tcp_optimization),
+        )
+        action = AppqoeOptimizationAction(appqoe_optimization=appqoe_optimization)
+        self._insert_action(action)
 
     def associate_backup_sla_preferred_color_action(self) -> None:
         pass
