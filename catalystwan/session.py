@@ -7,15 +7,15 @@ from enum import Enum
 from functools import cached_property
 from pathlib import Path
 from time import monotonic, sleep
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 from urllib.parse import urljoin, urlparse, urlunparse
 
 from packaging.version import Version  # type: ignore
 from requests import PreparedRequest, Request, Response, Session, get, head
-from requests.auth import AuthBase
 from requests.exceptions import ConnectionError, HTTPError, RequestException
 
 from catalystwan import USER_AGENT
+from catalystwan.apigw_auth import ApiGwAuth, ApiGwLogin, LoginMode
 from catalystwan.endpoints import APIEndpointClient
 from catalystwan.endpoints.client import AboutInfo, ServerInfo
 from catalystwan.exceptions import (
@@ -80,6 +80,54 @@ def determine_session_type(
         return SessionType.NOT_DEFINED
 
 
+def __create_base_url(url: str, port: Optional[int] = None) -> str:
+    """Creates base url based on ip address or domain and port if provided.
+
+    Returns:
+        str: Base url shared for every request.
+    """
+    url = urlparse(url)
+    netloc: str = url.netloc or url.path
+    scheme: str = url.scheme or "https"
+    base_url = urlunparse((scheme, netloc, "", None, None, None))
+    if port:
+        return f"{base_url}:{port}"  # noqa: E231
+    return base_url
+
+
+def create_apigw_session(
+    url: str,
+    client_id: str,
+    client_secret: str,
+    org_name: str,
+    subdomain: Optional[str] = None,
+    port: Optional[int] = None,
+    mode: Optional[LoginMode] = None,
+    username: Optional[str] = None,
+    session: Optional[str] = None,
+    tenant_user: Optional[bool] = None,
+    token_duration: int = 10,
+    logger: Optional[logging.Logger] = None,
+) -> ManagerSession:
+    base_url = __create_base_url(url, port)
+    auth = ApiGwAuth(
+        base_url=base_url,
+        login=ApiGwLogin(
+            client_id=client_id,
+            client_secret=client_secret,
+            org_name=org_name,
+            mode=mode,
+            username=username,
+            session=session,
+            tenant_user=tenant_user,
+            token_duration=token_duration,
+        ),
+    )
+    session = ManagerSession(base_url=base_url, auth=auth, subdomain=subdomain, logger=logger)
+    session.state = ManagerSessionState.LOGIN
+    return session
+
+
 def create_manager_session(
     url: str,
     username: str,
@@ -102,13 +150,15 @@ def create_manager_session(
     Returns:
         ManagerSession: logged-in and operative session to perform tasks on SDWAN Manager.
     """
-    session = ManagerSession(url=url, username=username, password=password, port=port, subdomain=subdomain)
-
-    if logger:
-        session.logger = logger
-
+    base_url = __create_base_url(url, port)
+    auth = vManageAuth(base_url, username, password)
+    session = ManagerSession(
+        base_url=base_url,
+        auth=auth,
+        subdomain=subdomain,
+        logger=logger,
+    )
     session.state = ManagerSessionState.LOGIN
-    session.on_session_create_hook()
     return session
 
 
@@ -145,43 +195,35 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
             relogin and try the same request again
     """
 
-    on_session_create_hook: ClassVar[Callable[[ManagerSession], Any]] = lambda *args: None
-
     def __init__(
         self,
-        url: str,
-        username: str,
-        password: str,
-        verify: bool = False,
-        port: Optional[int] = None,
+        base_url: str,
+        auth: Union[vManageAuth, ApiGwAuth],
         subdomain: Optional[str] = None,
-        auth: Optional[AuthBase] = None,
-        validate_responses: bool = True,
-    ):
-        self.url = url
-        self.port = port
-        self.base_url = self.__create_base_url()
-        self.username = username
-        self.password = password
+        logger: Optional[logging.Logger] = None,
+    ) -> None:
+        # self.url = url
+        # self.port = port
+        self.base_url = base_url
         self.subdomain = subdomain
         self._session_type = SessionType.NOT_DEFINED
         self.server_name: Optional[str] = None
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger or logging.getLogger(__name__)
         self.enable_relogin: bool = True
         self.response_trace: Callable[
             [Optional[Response], Union[Request, PreparedRequest, None]], str
         ] = response_history_debug
         super(ManagerSession, self).__init__()
+        self.verify = False
         self.headers.update({"User-Agent": USER_AGENT})
-        self.__prepare_session(verify, auth)
+        self._auth = auth
         self._platform_version: str = ""
         self._api_version: Version = NullVersion  # type: ignore
-        self._state: ManagerSessionState = ManagerSessionState.OPERATIVE
         self.restart_timeout: int = 1200
         self.polling_requests_timeout: int = 10
         self.request_timeout: Optional[int] = None
-        self._validate_responses = validate_responses
-        self._is_for_testing = False
+        self._validate_responses = True
+        self._state: ManagerSessionState = ManagerSessionState.OPERATIVE
 
     @cached_property
     def api(self) -> APIContainer:
@@ -243,11 +285,9 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         Returns:
             ManagerSession: (self)
         """
-
         self.cookies.clear_session_cookies()
-        self.auth = vManageAuth(self.base_url, self.username, self.password, verify=False)
+        self.auth = self._auth
         self.auth.logger = self.logger
-
         if self.subdomain:
             tenant_id = self.get_tenant_id()
             vsession_id = self.get_virtual_session_id(tenant_id)
@@ -276,7 +316,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
             )
 
         self.logger.info(
-            f"Logged to vManage({self.platform_version}) as {self.username}. The session type is {self.session_type}"
+            f"Logged to vManage({self.platform_version}) as {self.auth}. The session type is {self.session_type}"
         )
         if jsessionid := self.auth.set_cookie.get("JSESSIONID"):
             self.cookies.set("JSESSIONID", jsessionid)
@@ -372,20 +412,6 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         """Returns base API url plus given url path."""
         return urljoin(self.base_url, url_path)
 
-    def __create_base_url(self) -> str:
-        """Creates base url based on ip address or domain and port if provided.
-
-        Returns:
-            str: Base url shared for every request.
-        """
-        url = urlparse(self.url)
-        netloc: str = url.netloc or url.path
-        scheme: str = url.scheme or "https"
-        base_url = urlunparse((scheme, netloc, "", None, None, None))
-        if self.port:
-            return f"{base_url}:{self.port}"  # noqa: E231
-        return base_url
-
     def about(self) -> AboutInfo:
         return self.endpoints.client.about()
 
@@ -449,23 +475,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         return response.json()["VSessionId"]
 
     def logout(self) -> Optional[ManagerResponse]:
-        response = None
-        if isinstance((version := self.api_version), NullVersion):
-            self.logger.warning("Cannot perform logout operation without known api_version.")
-            return response
-        else:
-            # disable automatic relogin before performing logout request
-            _relogin = self.enable_relogin
-            try:
-                self.enable_relogin = False
-                if version >= Version("20.12"):
-                    response = self.post("/logout")
-                else:
-                    response = self.get("/logout")
-            finally:
-                # restore original setting after performing logout request
-                self.enable_relogin = _relogin
-        return response
+        return self._auth.logout(self)
 
     def close(self) -> None:
         """Closes the ManagerSession.
@@ -480,10 +490,6 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         """
         self.logout()
         super().close()
-
-    def __prepare_session(self, verify: bool, auth: Optional[AuthBase]) -> None:
-        self.auth = auth
-        self.verify = verify
 
     @property
     def session_type(self) -> SessionType:
@@ -509,34 +515,3 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
     @validate_responses.setter
     def validate_responses(self, value: bool):
         self._validate_responses = value
-
-    @property
-    def is_for_testing(self) -> bool:
-        return self._is_for_testing
-
-    @is_for_testing.setter
-    def is_for_testing(self, value: bool):
-        self._is_for_testing = value
-
-    def __str__(self) -> str:
-        return f"{self.username}@{self.base_url}"
-
-    def __repr__(self):
-        if self._is_for_testing:
-            return f"{self.__class__.__name__}('TEST_SESSION')"
-        return (
-            f"{self.__class__.__name__}('{self.url}', '{self.username}', '{self.password}', port={self.port}, "
-            f"subdomain='{self.subdomain}')"
-        )
-
-    def __eq__(self, other):
-        if isinstance(other, ManagerSession):
-            comparison_list = [
-                self.url == other.url,
-                self.username == other.username,
-                self.password == other.password,
-                self.port == other.port,
-                str(self.subdomain) == str(other.subdomain),
-            ]
-            return True if all(comparison_list) else False
-        return False

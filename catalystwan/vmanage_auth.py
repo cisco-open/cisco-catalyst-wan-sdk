@@ -1,16 +1,22 @@
 # Copyright 2022 Cisco Systems, Inc. and its affiliates
 
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 from urllib.parse import urljoin
 
 import requests
+from packaging.version import Version
 from requests import PreparedRequest, Response
 from requests.auth import AuthBase
 from requests.cookies import RequestsCookieJar
 
 from catalystwan import USER_AGENT, with_proc_info_header
 from catalystwan.exceptions import CatalystwanException
+from catalystwan.response import ManagerResponse
+from catalystwan.version import NullVersion
+
+if TYPE_CHECKING:
+    from catalystwan.session import ManagerSession
 
 
 class UnauthorizedAccessError(CatalystwanException):
@@ -141,3 +147,25 @@ class vManageAuth(AuthBase):
         if include_reponse_text and response.text:
             msg += f" response.text: {response.text}"
         return msg
+
+    def logout(self, session: "ManagerSession") -> Optional[ManagerResponse]:
+        response = None
+        if isinstance((version := session.api_version), NullVersion):
+            session.logger.warning("Cannot perform logout operation without known api_version.")
+            return response
+        else:
+            # disable automatic relogin before performing logout request
+            _relogin = session.enable_relogin
+            try:
+                session.enable_relogin = False
+                if version >= Version("20.12"):
+                    response = session.post("/logout")
+                else:
+                    response = session.get("/logout")
+            finally:
+                # restore original setting after performing logout request
+                session.enable_relogin = _relogin
+        return response
+
+    def __str__(self) -> str:
+        return f"vManageAuth(base_url={self.base_url}, username={self.username})"
