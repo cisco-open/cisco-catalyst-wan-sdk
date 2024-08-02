@@ -184,7 +184,7 @@ class DestinationIpMatch(BaseModel):
 
 class DestinationIpv6Match(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    destination_ipv6: Global[str] = Field(
+    destination_ipv6: Global[IPv6Network] = Field(
         default=None, validation_alias="destinationIpv6", serialization_alias="destinationIpv6"
     )
 
@@ -827,8 +827,8 @@ class Sequence(BaseModel):
     def associate_backup_sla_preferred_color_action(self) -> None:
         pass
 
-    def associate_cflowd_action(self) -> None:
-        pass
+    def associate_cflowd_action(self, cflowd: bool) -> None:
+        self._insert_action(CflowdAction(cflowd=as_global(cflowd)))
 
     def associate_cloud_probe_action(self) -> None:
         pass
@@ -836,25 +836,37 @@ class Sequence(BaseModel):
     def associate_cloud_saas_action(self) -> None:
         pass
 
-    def associate_count_action(self) -> None:
-        pass
+    def associate_count_action(self, count: str) -> None:
+        self._insert_action(CountAction(count=as_global(count)))
 
     def associate_fallback_to_routing_action(self) -> None:
         pass
 
-    def associate_log_action(self) -> None:
-        pass
+    def associate_log_action(self, log: bool) -> None:
+        self._insert_action(LogAction(log=as_global(log)))
 
     def associate_loss_correction_action(self) -> None:
         pass
 
-    def associate_nat_action(self) -> None:
-        pass
+    def associate_nat_action(
+        self, bypass: bool, dia_interface: List[str], dia_pool: List[int], fallback: bool, use_vpn: bool
+    ) -> None:
+        nat = Nat(
+            bypass=as_global(bypass),
+            dia_interface=as_global(dia_interface) if dia_interface else None,
+            dia_pool=as_global(dia_pool) if dia_pool else None,
+            fallback=as_global(fallback),
+            use_vpn=as_global(use_vpn),
+        )
+        self._insert_action(NatAction(nat=nat))
 
-    def associate_nat_pool_action(self) -> None:
-        pass
+    def associate_nat_pool_action(self, nat_pool: int) -> None:
+        self._insert_action(NatPoolAction(nat_pool=as_global(nat_pool)))
 
-    def associate_redirect_dns_action(self) -> None:
+    def associate_redirect_dns_action(
+        self,
+        type: RedirectDnsType,
+    ) -> None:
         pass
 
     def associate_set_action(self) -> None:

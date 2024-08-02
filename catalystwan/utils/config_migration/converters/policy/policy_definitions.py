@@ -1,6 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
-from ipaddress import IPv4Address, IPv6Address, IPv6Interface
+from ipaddress import IPv4Address, IPv6Address
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, TypeVar, Union, cast
 from uuid import UUID
 
@@ -315,14 +315,14 @@ def traffic_data(
         )
         for in_match in in_seq.match.entries:
             if in_match.field == "appList":
-                out_seq.match_app_list(list_id=in_match.ref[0])
+                out_seq.match_app_list(in_match.ref[0])
             elif in_match.field == "destinationDataIpv6PrefixList":
-                out_seq.match_destination_data_ipv6_prefix_list(list_id=in_match.ref[0])
+                out_seq.match_destination_data_ipv6_prefix_list(in_match.ref[0])
             elif in_match.field == "destinationDataPrefixList":
-                out_seq.match_destination_data_prefix_list(list_id=in_match.ref[0])
+                out_seq.match_destination_data_prefix_list(in_match.ref[0])
             elif in_match.field == "destinationIp":
                 if in_match.value is not None:
-                    out_seq.match_destination_ip(ipv4_network=in_match.as_ipv4_networks()[0])
+                    out_seq.match_destination_ip(in_match.as_ipv4_networks()[0])
                     if len(in_match.value) > 1:
                         result.update_status(
                             "partial",
@@ -334,6 +334,14 @@ def traffic_data(
                         "partial",
                         f"sequence[{in_seq.sequence_id}] variable name as ip prefix is not supported "
                         f"{in_match.field} = {in_match.value}",
+                    )
+            elif in_match.field == "destinationIpv6":
+                out_seq.match_destination_ipv6(in_match.as_ipv6_networks()[0])
+                if len(in_match.value) > 1:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] contains multiple ipv6 prefixes "
+                        f"{in_match.field} = {in_match.value} only first is converted",
                     )
             elif in_match.field == "destinationPort":
                 out_seq.match_destination_ports(in_match.value.split())
@@ -359,12 +367,12 @@ def traffic_data(
                 _protocols = [str(n) for n in as_num_list(as_num_ranges_list(in_match.value))]
                 out_seq.match_protocols(_protocols)
             elif in_match.field == "sourceDataIpv6PrefixList":
-                out_seq.match_source_data_ipv6_prefix_list(list_id=in_match.ref[0])
+                out_seq.match_source_data_ipv6_prefix_list(in_match.ref[0])
             elif in_match.field == "sourceDataPrefixList":
-                out_seq.match_source_data_prefix_list(list_id=in_match.ref[0])
+                out_seq.match_source_data_prefix_list(in_match.ref[0])
             elif in_match.field == "sourceIp":
                 if in_match.value is not None:
-                    out_seq.match_source_ip(ipv4_network=in_match.as_ipv4_networks()[0])
+                    out_seq.match_source_ip(in_match.as_ipv4_networks()[0])
                     if len(in_match.value) > 1:
                         result.update_status(
                             "partial",
@@ -376,6 +384,14 @@ def traffic_data(
                         "partial",
                         f"sequence[{in_seq.sequence_id}] variable name as ip prefix is not supported "
                         f"{in_match.field} = {in_match.value}",
+                    )
+            elif in_match.field == "sourceIpv6":
+                out_seq.match_source_ipv6(in_match.as_ipv6_networks()[0])
+                if len(in_match.value) > 1:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] contains multiple ipv6 prefixes "
+                        f"{in_match.field} = {in_match.value} only first is converted",
                     )
             elif in_match.field == "sourcePort":
                 out_seq.match_source_ports(in_match.value.split())
@@ -416,13 +432,23 @@ def traffic_data(
                     elif in_param.field == "tlocList":
                         pass
             elif in_action.type == "count":
-                pass
+                out_seq.associate_count_action(in_action.parameter)
             elif in_action.type == "log":
-                pass
+                out_seq.associate_log_action(True)
             elif in_action.type == "cflowd":
-                pass
+                out_seq.associate_cflowd_action(True)
             elif in_action.type == "nat":
-                pass
+                if in_action.nat_pool is not None:
+                    out_seq.associate_nat_pool_action(in_action.nat_pool)
+                elif in_action.nat_vpn is not None:
+                    _nat = in_action.nat_vpn
+                    out_seq.associate_nat_action(
+                        bypass=_nat.bypass,
+                        dia_interface=_nat.dia_interface,
+                        dia_pool=_nat.dia_pool,
+                        fallback=_nat.fallback,
+                        use_vpn=True if _nat.vpn is not None else False,
+                    )
             elif in_action.type == "redirectDns":
                 pass
             elif in_action.type == "tcpOptimization":
@@ -634,7 +660,13 @@ def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> Co
                 out_seq.match_destination_data_prefix_list(in_entry.ref[0])
 
             elif in_entry.field == "destinationIpv6":
-                out_seq.match_destination_data_prefix(IPv6Interface(in_entry.value))
+                out_seq.match_destination_data_prefix(in_entry.value[0])
+                if len(in_entry.value) > 1:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] contains multiple ipv6 prefixes "
+                        f"{in_entry.field} = {in_entry.value} only first is converted",
+                    )
 
             elif in_entry.field == "destinationPort":
                 portlist = as_num_ranges_list(in_entry.value)
@@ -665,7 +697,13 @@ def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> Co
                 out_seq.match_source_data_prefix_list(in_entry.ref[0])
 
             elif in_entry.field == "sourceIpv6":
-                out_seq.match_source_data_prefix(IPv6Interface(in_entry.value))
+                out_seq.match_source_data_prefix(in_entry.value[0])
+                if len(in_entry.value) > 1:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] contains multiple ipv6 prefixes "
+                        f"{in_entry.field} = {in_entry.value} only first is converted",
+                    )
 
             elif in_entry.field == "sourcePort":
                 portlist = as_num_ranges_list(in_entry.value)
@@ -721,8 +759,7 @@ def device_access_ipv6(
                 if in_entry.ref:
                     seq.match_destination_data_prefix_list(in_entry.ref[0])
             elif in_entry.field == "destinationIpv6":
-                networks = conditional_split(in_entry.value, [",", " "])
-                seq.match_destination_data_prefixes([IPv6Interface(v) for v in networks])
+                seq.match_destination_data_prefixes(in_entry.value)
             elif in_entry.field == "destinationPort":
                 destination_port = cast(DeviceAccessProtocolPort, int(in_entry.value))
                 seq.match_destination_port(destination_port)
@@ -730,8 +767,7 @@ def device_access_ipv6(
                 if in_entry.ref:
                     seq.match_source_data_prefix_list(in_entry.ref[0])
             elif in_entry.field == "sourceIpv6":
-                networks = conditional_split(in_entry.value, [",", " "])
-                seq.match_source_data_prefixes([IPv6Interface(v) for v in networks])
+                seq.match_source_data_prefixes(in_entry.value)
             elif in_entry.field == "sourcePort":
                 seq.match_source_ports(as_num_list(as_num_ranges_list(in_entry.value)))
     return ConvertResult[DeviceAccessIPv6Parcel](output=out)
@@ -1112,11 +1148,12 @@ def _find_converter(in_: Input) -> Callable[..., Output]:
 
 
 def convert(in_: Input, uuid: UUID, context: PolicyConvertContext) -> Output:
-    result = _find_converter(in_)(in_, uuid, context)
-    if result.output is not None:
-        try:
+    result = Output(status="unsupported", output=None)
+    try:
+        result = _find_converter(in_)(in_, uuid, context)
+        if result.output is not None:
             result.output.model_validate(result.output)
-        except ValidationError as e:
-            result.status = "failed"
-            result.info.append(str(e))
+    except ValidationError as e:
+        result.status = "failed"
+        result.info.append(str(e))
     return result

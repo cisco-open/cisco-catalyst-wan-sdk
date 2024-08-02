@@ -304,6 +304,19 @@ InterfaceStr = Annotated[
     Field(pattern=InterfaceTypePattern),
 ]
 
+
+def str_as_interface_list(val: Union[str, Sequence[InterfaceStr]]) -> Sequence[InterfaceStr]:
+    if isinstance(val, str):
+        return [InterfaceStr(element) for element in val.split()]
+    return val
+
+
+SpaceSeparatedInterfaceStr = Annotated[
+    List[InterfaceStr],
+    PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
+    BeforeValidator(str_as_interface_list),
+]
+
 StaticNatDirection = Literal["inside", "outside"]
 
 Protocol = Literal["tcp", "udp"]

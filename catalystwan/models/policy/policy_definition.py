@@ -1,8 +1,9 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 import datetime
+from dataclasses import dataclass, field
 from functools import wraps
-from ipaddress import IPv4Address, IPv4Interface, IPv4Network, IPv6Address, IPv6Network
+from ipaddress import IPv4Address, IPv4Interface, IPv4Network, IPv6Address, IPv6Interface, IPv6Network
 from typing import Any, Dict, List, MutableSequence, Optional, Sequence, Set, Tuple, Union
 from uuid import UUID
 
@@ -24,7 +25,9 @@ from catalystwan.models.common import (
     SequenceIpType,
     ServiceChainNumber,
     ServiceType,
+    SpaceSeparatedInterfaceStr,
     SpaceSeparatedIPv4,
+    SpaceSeparatedIPv6,
     SpaceSeparatedNonNegativeIntList,
     SpaceSeparatedUUIDList,
     TLOCActionType,
@@ -194,11 +197,14 @@ class SourceIPEntry(BaseModel):
 
 class SourceIPv6Entry(BaseModel):
     field: Literal["sourceIpv6"] = "sourceIpv6"
-    value: str = Field(description="IPv6 network specifiers separate by space")
+    value: SpaceSeparatedIPv6
 
     @staticmethod
     def from_ipv6_networks(networks: List[IPv6Network]) -> "SourceIPv6Entry":
-        return SourceIPv6Entry(value=networks_to_str(networks))
+        return SourceIPv6Entry(value=[IPv6Interface(ip) for ip in networks])
+
+    def as_ipv6_networks(self) -> List[IPv6Network]:
+        return [] if not self.value else [IPv6Network(val) for val in self.value]
 
 
 class IPAddressEntry(BaseModel):
@@ -234,11 +240,14 @@ class DestinationIPEntry(BaseModel):
 
 class DestinationIPv6Entry(BaseModel):
     field: Literal["destinationIpv6"] = "destinationIpv6"
-    value: str
+    value: SpaceSeparatedIPv6
 
     @staticmethod
     def from_ipv6_networks(networks: List[IPv6Network]) -> "DestinationIPv6Entry":
-        return DestinationIPv6Entry(value=networks_to_str(networks))
+        return DestinationIPv6Entry(value=[IPv6Interface(ip) for ip in networks])
+
+    def as_ipv6_networks(self) -> List[IPv6Network]:
+        return [] if not self.value else [IPv6Network(val) for val in self.value]
 
 
 class DestinationPortEntry(BaseModel):
@@ -346,7 +355,30 @@ class UseVPNEntry(BaseModel):
 
 class FallBackEntry(BaseModel):
     field: Literal["fallback"] = "fallback"
-    value: str = ""
+    value: Literal["", "true"]
+
+    @property
+    def as_bool(self) -> bool:
+        return True if self.value == "true" else False
+
+
+class DiaPoolEntry(BaseModel):
+    field: Literal["diaPool"] = "diaPool"
+    value: SpaceSeparatedNonNegativeIntList
+
+
+class DiaInterfaceEntry(BaseModel):
+    field: Literal["diaInterface"] = "diaInterface"
+    value: SpaceSeparatedInterfaceStr
+
+
+class BypassEntry(BaseModel):
+    field: Literal["bypass"] = "bypass"
+    value: Literal["", "true"]
+
+    @property
+    def as_bool(self) -> bool:
+        return True if self.value == "true" else False
 
 
 class NextHopActionEntry(BaseModel):
@@ -546,14 +578,62 @@ class ExtendedCommunityEntry(BaseModel):
     ref: UUID
 
 
+NATVPNEntries = Annotated[
+    Union[
+        BypassEntry,
+        DiaPoolEntry,
+        DiaInterfaceEntry,
+        FallBackEntry,
+        UseVPNEntry,
+    ],
+    Field(discriminator="field"),
+]
+
+
+@dataclass
+class NATVPNParams:
+    bypass: bool = False
+    dia_pool: List[int] = field(default_factory=list)
+    dia_interface: List[str] = field(default_factory=list)
+    fallback: bool = False
+    vpn: Optional[int] = None
+
+    def as_entry_list(self) -> List[NATVPNEntries]:
+        entries: List[NATVPNEntries] = []
+        if self.bypass:
+            entries.append(BypassEntry(value="true"))
+        if self.dia_pool:
+            entries.append(DiaPoolEntry(value=self.dia_pool))
+        if self.dia_interface:
+            entries.append(DiaInterfaceEntry(value=self.dia_interface))
+        if self.fallback:
+            entries.append(FallBackEntry(value="true"))
+        if self.vpn is not None:
+            entries.append(UseVPNEntry(value=str(self.vpn)))
+        return entries
+
+
 class NATVPNEntry(RootModel):
-    root: List[Union[UseVPNEntry, FallBackEntry]]
+    root: List[NATVPNEntries]
 
     @staticmethod
-    def from_nat_vpn(fallback: bool, vpn: int = 0) -> "NATVPNEntry":
-        if fallback:
-            return NATVPNEntry(root=[UseVPNEntry(value=str(vpn)), FallBackEntry()])
-        return NATVPNEntry(root=[UseVPNEntry(value=str(vpn))])
+    def from_params(params: NATVPNParams) -> "NATVPNEntry":
+        return NATVPNEntry(root=params.as_entry_list())
+
+    def get_params(self) -> NATVPNParams:
+        params = NATVPNParams()
+        for param in self.root:
+            if param.field == "bypass":
+                params.bypass = param.as_bool
+            elif param.field == "diaInterface":
+                params.dia_interface = param.value
+            elif param.field == "diaPool":
+                params.dia_pool = param.value
+            elif param.field == "fallback":
+                params.fallback = param.as_bool
+            elif param.field == "useVpn":
+                params.vpn = int(param.value)
+        return params
 
 
 class ICMPMessageEntry(BaseModel):
@@ -777,8 +857,34 @@ class NATAction(BaseModel):
         return NATAction(parameter=NATPoolEntry(value=str(nat_pool)))
 
     @staticmethod
-    def from_nat_vpn(fallback: bool, vpn: int = 0) -> "NATAction":
-        return NATAction(parameter=NATVPNEntry.from_nat_vpn(fallback=fallback, vpn=vpn))
+    def from_nat_vpn(
+        use_vpn: int = 0,
+        *,
+        fallback: bool = False,
+        bypass: bool = False,
+        dia_pool: List[int] = [],
+        dia_interface: List[str] = [],
+    ) -> "NATAction":
+        params = NATVPNParams(
+            bypass=bypass,
+            dia_pool=dia_pool,
+            dia_interface=dia_interface,
+            fallback=fallback,
+            vpn=use_vpn,
+        )
+        return NATAction(parameter=NATVPNEntry.from_params(params))
+
+    @property
+    def nat_pool(self) -> Optional[int]:
+        if isinstance(self.parameter, NATPoolEntry):
+            return int(self.parameter.value)
+        return None
+
+    @property
+    def nat_vpn(self) -> Optional[NATVPNParams]:
+        if isinstance(self.parameter, NATVPNEntry):
+            return self.parameter.get_params()
+        return None
 
 
 class CFlowDAction(BaseModel):
@@ -1035,8 +1141,8 @@ MUTUALLY_EXCLUSIVE_FIELDS = [
 def _generate_field_name_check_lookup(spec: Sequence[Set[str]]) -> Dict[str, List[str]]:
     lookup: Dict[str, List[str]] = {}
     for exclusive_set in spec:
-        for field in exclusive_set:
-            lookup[field] = list(exclusive_set - {field})
+        for fieldname in exclusive_set:
+            lookup[fieldname] = list(exclusive_set - {fieldname})
     return lookup
 
 

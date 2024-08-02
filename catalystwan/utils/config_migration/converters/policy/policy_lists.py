@@ -82,6 +82,7 @@ from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyL
 from catalystwan.models.policy.list.umbrella_data import UmbrellaDataList
 from catalystwan.models.policy.list.vpn import VPNList, VPNListInfo
 from catalystwan.models.settings import ThreatGridApi
+from catalystwan.utils.config_migration.converters.utils import convert_interface_name
 
 logger = getLogger(__name__)
 
@@ -414,7 +415,7 @@ def zone(in_: ZoneList, context) -> ConvertResult[SecurityZoneListParcel]:
     out = SecurityZoneListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         if entry.interface is not None:
-            out.add_interface(entry.interface)
+            out.add_interface(convert_interface_name(entry.interface))
         if entry.vpn is not None:
             out.add_vpn(int_range_serializer(entry.vpn))
     return ConvertResult[SecurityZoneListParcel](output=out, status="complete")
@@ -530,11 +531,12 @@ def _find_converter(in_: Input) -> Callable[..., Output]:
 
 
 def convert(in_: Input, context: PolicyConvertContext) -> Output:
-    result = _find_converter(in_)(in_, context)
-    if result.output is not None:
-        try:
+    result = Output(status="unsupported", output=None)
+    try:
+        result = _find_converter(in_)(in_, context)
+        if result.output is not None:
             result.output.model_validate(result.output)
-        except ValidationError as e:
-            result.status = "failed"
-            result.info.append(str(e))
+    except ValidationError as e:
+        result.status = "failed"
+        result.info.append(str(e))
     return result

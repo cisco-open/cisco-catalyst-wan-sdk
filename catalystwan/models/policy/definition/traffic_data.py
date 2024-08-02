@@ -1,6 +1,6 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-from ipaddress import IPv4Address, IPv4Network
+from ipaddress import IPv4Address, IPv4Network, IPv6Network
 from typing import List, Literal, Optional, Set, Tuple, Union, overload
 from uuid import UUID
 
@@ -27,6 +27,7 @@ from catalystwan.models.policy.policy_definition import (
     DestinationDataIPv6PrefixListEntry,
     DestinationDataPrefixListEntry,
     DestinationIPEntry,
+    DestinationIPv6Entry,
     DestinationPortEntry,
     DestinationRegionEntry,
     DNSAppListEntry,
@@ -67,6 +68,7 @@ from catalystwan.models.policy.policy_definition import (
     SourceDataIPv6PrefixListEntry,
     SourceDataPrefixListEntry,
     SourceIPEntry,
+    SourceIPv6Entry,
     SourcePortEntry,
     TCPEntry,
     TCPOptimizationAction,
@@ -84,6 +86,7 @@ TrafficDataPolicySequenceEntry = Annotated[
         DestinationDataIPv6PrefixListEntry,
         DestinationDataPrefixListEntry,
         DestinationIPEntry,
+        DestinationIPv6Entry,
         DestinationPortEntry,
         DestinationRegionEntry,
         DNSAppListEntry,
@@ -96,6 +99,7 @@ TrafficDataPolicySequenceEntry = Annotated[
         SourceDataIPv6PrefixListEntry,
         SourceDataPrefixListEntry,
         SourceIPEntry,
+        SourceIPv6Entry,
         SourcePortEntry,
         TCPEntry,
         TrafficToEntry,
@@ -172,6 +176,9 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     def match_source_ip(self, networks: List[IPv4Network]) -> None:
         self._insert_match(SourceIPEntry.from_ipv4_networks(networks))
 
+    def match_source_ipv6(self, networks: List[IPv6Network]) -> None:
+        self._insert_match(SourceIPv6Entry.from_ipv6_networks(networks))
+
     def match_source_port(self, ports: Set[int] = set(), port_ranges: List[Tuple[int, int]] = []) -> None:
         self._insert_match(SourcePortEntry.from_port_set_and_ranges(ports, port_ranges))
 
@@ -180,6 +187,9 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
 
     def match_destination_ip(self, networks: List[IPv4Network]) -> None:
         self._insert_match(DestinationIPEntry.from_ipv4_networks(networks))
+
+    def match_destination_ipv6(self, networks: List[IPv6Network]) -> None:
+        self._insert_match(DestinationIPv6Entry.from_ipv6_networks(networks))
 
     def match_destination_region(self, region: DestinationRegion) -> None:
         self._insert_match(DestinationRegionEntry(value=region))
@@ -231,15 +241,34 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
         ...
 
     @overload
-    def associate_nat_action(self, *, vpn_fallback: bool = False, vpn: int = 0) -> None:
+    def associate_nat_action(
+        self,
+        *,
+        use_vpn: int = 0,
+        fallback: bool = False,
+        bypass: bool = False,
+        dia_pool: List[int] = [],
+        dia_interface: List[str] = []
+    ) -> None:
         ...
 
     @accept_action
-    def associate_nat_action(self, *, nat_pool: Optional[int] = None, vpn_fallback: bool = False, vpn: int = 0) -> None:
+    def associate_nat_action(
+        self,
+        *,
+        nat_pool: Optional[int],
+        use_vpn: int = 0,
+        fallback: bool = False,
+        bypass: bool = False,
+        dia_pool: List[int] = [],
+        dia_interface: List[str] = []
+    ) -> None:
         if nat_pool:
             nat_action = NATAction.from_nat_pool(nat_pool=nat_pool)
         else:
-            nat_action = NATAction.from_nat_vpn(fallback=vpn_fallback, vpn=vpn)
+            nat_action = NATAction.from_nat_vpn(
+                use_vpn=use_vpn, fallback=fallback, bypass=bypass, dia_pool=dia_pool, dia_interface=dia_interface
+            )
         self._insert_action(nat_action)
 
     @accept_action
