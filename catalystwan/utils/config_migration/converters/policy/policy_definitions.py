@@ -410,8 +410,6 @@ def traffic_data(
         loss_prot_fec: Optional[int] = None
 
         for in_action in in_seq.actions:
-            # TODO: action entries conversion
-
             if in_action.type == "set":
                 for in_param in in_action.parameter:
                     if in_param.field == "dscp":
@@ -428,21 +426,21 @@ def traffic_data(
                             restrict=True if _ltloc.restrict is not None else False,
                         )
                     elif in_param.field == "preferredColorGroup":
-                        pass
+                        pass  # TODO
                     elif in_param.field == "nextHop":
-                        pass
+                        pass  # TODO
                     elif in_param.field == "nextHopLoose":
-                        pass
+                        pass  # TODO
                     elif in_param.field == "policer":
-                        pass
+                        pass  # TODO
                     elif in_param.field == "serviceChain":
-                        pass
+                        pass  # TODO
                     elif in_param.field == "vpn":
-                        pass
+                        pass  # TODO
                     elif in_param.field == "tloc":
-                        pass
+                        pass  # TODO
                     elif in_param.field == "tlocList":
-                        pass
+                        pass  # TODO
             elif in_action.type == "count":
                 out_seq.associate_count_action(in_action.parameter)
             elif in_action.type == "log":
