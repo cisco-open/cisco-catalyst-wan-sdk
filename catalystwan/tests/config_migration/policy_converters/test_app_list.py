@@ -1,4 +1,5 @@
 import unittest
+from uuid import uuid4
 
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.policy.application_list import (
@@ -24,7 +25,7 @@ class TestAppListConverter(unittest.TestCase):
         policy.add_app_family("TestFamily")
         policy.add_app_family("TestFamily2")
         # Act
-        parcel = convert(policy, self.context).output
+        parcel = convert(policy, uuid4(), self.context).output
         # Assert
         assert isinstance(parcel, ApplicationListParcel)
         assert parcel.parcel_name == "app_list"
@@ -46,7 +47,7 @@ class TestLocalAppListConverter(unittest.TestCase):
         policy.add_app_family("TestFamily")
         policy.add_app_family("TestFamily2")
         # Act
-        parcel = convert(policy, self.context).output
+        parcel = convert(policy, uuid4(), self.context).output
         # Assert
         assert isinstance(parcel, SecurityApplicationListParcel)
         assert parcel.parcel_name == "local_app_list"

@@ -7,6 +7,7 @@ from packaging.version import Version  # type: ignore
 
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority.traffic_policy import (
+    SetAction,
     TrafficPolicyParcel,
 )
 from catalystwan.models.policy.definition.traffic_data import TrafficDataPolicy
@@ -238,3 +239,30 @@ class TestTrafficDataConverter(unittest.TestCase):
         outa[6].appqoe_optimization.service_node_group.value == expected_appqoe_service_node_group
         outa[7].loss_correction.loss_correction_type.value == "fecAdaptive"
         outa[7].loss_correction.loss_correct_fec.value == expected_fec_threshold
+
+    def test_set_actions(self):
+        # Arrange
+        ins = self.input
+        seq = ins.add_sequence(name="seq-1", sequence_ip_type="ipv4", base_action="accept")
+
+        # Arrange: 0
+        expected_dscp = 28
+        seq.associate_dscp_action(expected_dscp)
+
+        # Arrange: 1
+        fwclass = "FW-Class-Name"
+        expected_fwclass_id = uuid4()
+        seq.associate_forwarding_class_action(fwclass)
+        self.context.fwclass_id_by_name[fwclass] = expected_fwclass_id
+
+        # Act
+        outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
+        # Assert
+        assert isinstance(outs, TrafficPolicyParcel)
+        assert len(outs.sequences) == 1
+        outa = outs.sequences[0].actions
+        assert len(outa) == 1
+        assert isinstance(outa[0], SetAction)
+        outas = outa[0].set
+        outas[0].dscp.value == expected_dscp
+        outas[1].forwarding_class.ref_id.value == str(expected_fwclass_id)

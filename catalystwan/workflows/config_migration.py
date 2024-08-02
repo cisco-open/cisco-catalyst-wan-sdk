@@ -383,7 +383,7 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
 
     # Policy Lists
     for policy_list in ux1.policies.policy_lists:
-        pl_result = convert_policy_list(policy_list, policy_context)
+        pl_result = convert_policy_list(policy_list, policy_list.list_id, policy_context)
         pl_parcel = pl_result.output
         pl_status = pl_result.status
         if pl_status == "unsupported":

@@ -516,9 +516,37 @@ class BackupSlaPreferredColorAction(BaseModel):
     )
 
 
+TS = TypeVar("TS", bound=Set)
+
+
 class SetAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     set: List[Set] = Field(default=None)
+
+    @property
+    def _set(self):
+        if self.set is None:
+            self.set = []
+        return self.set
+
+    def _find_action_with_index(self, action_type: Type[TS]) -> Tuple[Optional[int], Optional[TS]]:
+        for i, action in enumerate(self._set):
+            if isinstance(action, action_type):
+                return (i, action)
+        return (None, None)
+
+    def find_action(self, action_type: Type[TS]) -> Optional[TS]:
+        _, action = self._find_action_with_index(action_type)
+        if action is not None:
+            return action
+        return None
+
+    def _insert_action(self, action: Set) -> None:
+        i, _ = self._find_action_with_index(type(action))
+        if i is not None:
+            self._set[i] = action
+        else:
+            self._set.append(action)
 
 
 class RedirectDnsAction(BaseModel):
@@ -612,7 +640,6 @@ Action = Union[
 ]
 
 TA = TypeVar("TA", bound=Action)
-TS = TypeVar("TS", bound=Set)
 TM = TypeVar("TM", bound=Entry)
 
 
@@ -674,6 +701,17 @@ class Sequence(BaseModel):
             self._actions[i] = action
         else:
             self._actions.append(action)
+
+    @property
+    def _action_set(self) -> SetAction:
+        ac_set = self.find_action(SetAction)
+        if ac_set is None:
+            ac_set = SetAction()
+            self._actions.append(ac_set)
+        return ac_set
+
+    def _insert_action_in_set(self, action: Set) -> None:
+        self._action_set._insert_action(action)
 
     def match_app_list(self, list_id: UUID):
         entry = AppListMatch(app_list=RefIdItem(ref_id=as_global(str(list_id))))
@@ -777,12 +815,13 @@ class Sequence(BaseModel):
         entry = DnsMatch(dns=as_global(dns, DNSEntryType))
         self._match(entry)
 
-    # --- TODO: associate Set Actions ---
-    def associate_dscp_action(self) -> None:
-        pass
+    # --- Actions: Set ----
+    def associate_dscp_action(self, dscp: int) -> None:
+        self._insert_action_in_set(SetDscp(dscp=as_global(dscp)))
 
-    def associate_forwarding_class_action(self) -> None:
-        pass
+    def associate_forwarding_class_action(self, fwclass_id: UUID) -> None:
+        fwclass = SetForwardingClass(forwarding_class=RefIdItem.from_uuid(fwclass_id))
+        self._insert_action_in_set(fwclass)
 
     def associate_local_tloc_list_action(self) -> None:
         pass
@@ -820,7 +859,7 @@ class Sequence(BaseModel):
     def associate_vpn_action(self) -> None:
         pass
 
-    # --- TODO: associate Actions ----
+    # --- Actions ----
     def associate_appqoe_optimization_action(
         self, dre_optimization: bool, service_node_group: str, tcp_optimization: bool
     ) -> None:

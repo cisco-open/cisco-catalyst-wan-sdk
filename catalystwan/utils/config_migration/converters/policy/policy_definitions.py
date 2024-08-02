@@ -415,9 +415,11 @@ def traffic_data(
             if in_action.type == "set":
                 for in_param in in_action.parameter:
                     if in_param.field == "dscp":
-                        pass
+                        out_seq.associate_dscp_action(in_param.value[0])
                     elif in_param.field == "forwardingClass":
-                        pass
+                        _fwcid = context.fwclass_id_by_name.get(in_param.value)
+                        if _fwcid is not None:
+                            out_seq.associate_forwarding_class_action(_fwcid)
                     elif in_param.field == "localTlocList":
                         pass
                     elif in_param.field == "preferredColorGroup":

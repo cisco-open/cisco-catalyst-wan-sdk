@@ -1,11 +1,16 @@
 import unittest
+from uuid import uuid4
 
+from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object import MirrorParcel
 from catalystwan.models.policy.list.mirror import MirrorList, MirrorListEntry
 from catalystwan.utils.config_migration.converters.policy.policy_lists import mirror
 
 
 class TestMirrorConverter(unittest.TestCase):
+    def setUp(self) -> None:
+        self.context = PolicyConvertContext()
+
     def test_mirror_policy_list_conversion_1(self):
         mirror_v1 = MirrorList(
             name="mirror_list",
@@ -14,7 +19,7 @@ class TestMirrorConverter(unittest.TestCase):
             ],
         )
 
-        v2_parcel = mirror(mirror_v1, context=None).output
+        v2_parcel = mirror(mirror_v1, uuid4(), self.context).output
 
         assert type(v2_parcel) is MirrorParcel
 
@@ -26,6 +31,6 @@ class TestMirrorConverter(unittest.TestCase):
             ],
         )
 
-        v2_parcel = mirror(mirror_v1, context=None).output
+        v2_parcel = mirror(mirror_v1, uuid4(), self.context).output
 
         assert type(v2_parcel) is MirrorParcel
