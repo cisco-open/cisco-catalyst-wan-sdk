@@ -80,7 +80,7 @@ def determine_session_type(
         return SessionType.NOT_DEFINED
 
 
-def __create_base_url(url: str, port: Optional[int] = None) -> str:
+def create_base_url(url: str, port: Optional[int] = None) -> str:
     """Creates base url based on ip address or domain and port if provided.
 
     Returns:
@@ -129,7 +129,7 @@ def create_apigw_session(
     Returns:
         ManagerSession: logged-in and operative session to perform tasks on SDWAN Manager.
     """
-    base_url = __create_base_url(url, port)
+    base_url = create_base_url(url, port)
     auth = ApiGwAuth(
         base_url=base_url,
         login=ApiGwLogin(
@@ -170,7 +170,7 @@ def create_manager_session(
     Returns:
         ManagerSession: logged-in and operative session to perform tasks on SDWAN Manager.
     """
-    base_url = __create_base_url(url, port)
+    base_url = create_base_url(url, port)
     auth = vManageAuth(base_url, username, password)
     session = ManagerSession(
         base_url=base_url,
@@ -551,3 +551,6 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
     @validate_responses.setter
     def validate_responses(self, value: bool):
         self._validate_responses = value
+
+    def __str__(self) -> str:
+        return f"ManagerSession(session_type={self.session_type}, auth={self._auth})"

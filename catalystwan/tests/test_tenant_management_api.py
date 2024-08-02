@@ -104,8 +104,7 @@ class TenantManagementAPITest(unittest.TestCase):
 
     def test_delete_auto_password(self):
         tenant_id_list = ["1"]
-        self.session.password = "p4s$w0rD"  # pragma: allowlist secret
-        task = self.api.delete(tenant_id_list)
+        task = self.api.delete(tenant_id_list, password="test")
         self.assertIsInstance(task, Task)
 
     def test_get_statuses(self):
