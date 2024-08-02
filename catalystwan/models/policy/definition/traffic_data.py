@@ -218,7 +218,7 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
         self._insert_action_in_set(ForwardingClassEntry(value=fwclass))
 
     @accept_action
-    def associate_local_tloc_action(self, color: TLOCColor, encap: EncapType, restrict: bool = False) -> None:
+    def associate_local_tloc_action(self, color: List[TLOCColor], encap: EncapType, restrict: bool = False) -> None:
         tloc_entry = LocalTLOCListEntry(
             value=LocalTLOCListEntryValue(
                 color=color,
@@ -419,7 +419,6 @@ class TrafficDataPolicy(TrafficDataPolicyHeader, DefinitionWithSequencesCommonBa
         self,
         name: str = "Custom",
         base_action: AcceptDropActionType = "drop",
-        log: bool = False,
         sequence_ip_type: SequenceIpType = "ipv4",
     ) -> TrafficDataPolicySequence:
         seq = TrafficDataPolicySequence(

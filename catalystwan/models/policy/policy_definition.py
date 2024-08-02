@@ -31,6 +31,7 @@ from catalystwan.models.common import (
     SpaceSeparatedIPv4,
     SpaceSeparatedIPv6,
     SpaceSeparatedNonNegativeIntList,
+    SpaceSeparatedTLOCColorStr,
     SpaceSeparatedUUIDList,
     TLOCActionType,
     TLOCColor,
@@ -112,7 +113,7 @@ class VariableName(BaseModel):
 
 
 class LocalTLOCListEntryValue(BaseModel):
-    color: TLOCColor
+    color: SpaceSeparatedTLOCColorStr
     encap: EncapType
     restrict: Optional[str] = None
 

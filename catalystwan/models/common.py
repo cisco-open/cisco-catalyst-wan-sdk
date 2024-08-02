@@ -347,6 +347,13 @@ TLOCColor = Literal[
 ]
 
 
+SpaceSeparatedTLOCColorStr = Annotated[
+    List[TLOCColor],
+    PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
+    BeforeValidator(str_as_str_list),
+]
+
+
 WellKnownBGPCommunities = Literal[
     "internet",
     "local-AS",

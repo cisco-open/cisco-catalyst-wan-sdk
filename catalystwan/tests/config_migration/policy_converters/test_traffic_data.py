@@ -255,6 +255,14 @@ class TestTrafficDataConverter(unittest.TestCase):
         seq.associate_forwarding_class_action(fwclass)
         self.context.fwclass_id_by_name[fwclass] = expected_fwclass_id
 
+        # Arrange: 2
+        expected_local_tloc_color = ["gold", "blue"]
+        expected_local_tloc_encap = "ipsec"
+        expected_local_tloc_restrict = True
+        seq.associate_local_tloc_action(
+            color=expected_local_tloc_color, encap=expected_local_tloc_encap, restrict=expected_local_tloc_restrict
+        )
+
         # Act
         outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
         # Assert
@@ -266,3 +274,6 @@ class TestTrafficDataConverter(unittest.TestCase):
         outas = outa[0].set
         outas[0].dscp.value == expected_dscp
         outas[1].forwarding_class.ref_id.value == str(expected_fwclass_id)
+        outas[2].local_tloc_list.color.value == expected_local_tloc_color
+        outas[2].local_tloc_list.encap.value == expected_local_tloc_encap
+        outas[2].local_tloc_list.restrict == expected_local_tloc_restrict

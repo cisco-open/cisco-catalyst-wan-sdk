@@ -279,7 +279,7 @@ class LocalTlocList(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     color: Global[List[TLOCColor]] = Field(default=None)
     encap: Optional[Global[EncapType]] = Field(default=None)
-    restrict: Optional[Global[Global[bool]]] = Field(default=None)
+    restrict: Optional[Global[bool]] = Field(default=None)
 
 
 class PreferredRemoteColor(BaseModel):
@@ -823,8 +823,15 @@ class Sequence(BaseModel):
         fwclass = SetForwardingClass(forwarding_class=RefIdItem.from_uuid(fwclass_id))
         self._insert_action_in_set(fwclass)
 
-    def associate_local_tloc_list_action(self) -> None:
-        pass
+    def associate_local_tloc_list_action(
+        self, color: List[TLOCColor], encap: Optional[EncapType] = None, restrict: bool = False
+    ) -> None:
+        tloc_list = LocalTlocList(
+            color=Global[List[TLOCColor]](value=color),
+            encap=as_optional_global(encap, EncapType),
+            restrict=as_global(restrict),
+        )
+        self._insert_action_in_set(SetLocalTlocList(local_tloc_list=tloc_list))
 
     def associate_next_hop_action(self) -> None:
         pass

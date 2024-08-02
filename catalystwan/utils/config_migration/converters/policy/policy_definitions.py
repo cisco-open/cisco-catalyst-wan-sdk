@@ -421,7 +421,12 @@ def traffic_data(
                         if _fwcid is not None:
                             out_seq.associate_forwarding_class_action(_fwcid)
                     elif in_param.field == "localTlocList":
-                        pass
+                        _ltloc = in_param.value
+                        out_seq.associate_local_tloc_list_action(
+                            color=_ltloc.color,
+                            encap=_ltloc.encap,
+                            restrict=True if _ltloc.restrict is not None else False,
+                        )
                     elif in_param.field == "preferredColorGroup":
                         pass
                     elif in_param.field == "nextHop":
