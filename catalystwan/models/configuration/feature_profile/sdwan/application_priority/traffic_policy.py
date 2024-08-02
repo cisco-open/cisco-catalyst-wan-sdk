@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global, as_optional_global
 from catalystwan.models.common import (
     AcceptDropActionType,
     DestinationRegion,
@@ -433,7 +433,15 @@ RedirectDnsType = Literal[
 class RedirectDns(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     field: Optional[Global[RedirectDnsType]] = Field(default=None)
-    value: Optional[Global[Union[DNSTypeEntryType, str]]] = Field(default=None)
+    value: Optional[Union[Global[DNSTypeEntryType], Global[IPv4Address]]] = Field(default=None)
+
+    @staticmethod
+    def from_ip(ip: IPv4Address) -> "RedirectDns":
+        return RedirectDns(field=as_global("ipAddress", RedirectDnsType), value=as_global(ip))
+
+    @staticmethod
+    def from_dns_type(dns: DNSTypeEntryType) -> "RedirectDns":
+        return RedirectDns(field=as_global("dnsHost", RedirectDnsType), value=as_global(dns, DNSTypeEntryType))
 
 
 class AppqoeOptimization(BaseModel):
@@ -825,28 +833,31 @@ class Sequence(BaseModel):
         self._insert_action(action)
 
     def associate_backup_sla_preferred_color_action(self) -> None:
-        pass
+        pass  # TODO
 
     def associate_cflowd_action(self, cflowd: bool) -> None:
         self._insert_action(CflowdAction(cflowd=as_global(cflowd)))
 
     def associate_cloud_probe_action(self) -> None:
-        pass
+        pass  # TODO
 
     def associate_cloud_saas_action(self) -> None:
-        pass
+        pass  # TODO
 
     def associate_count_action(self, count: str) -> None:
         self._insert_action(CountAction(count=as_global(count)))
 
     def associate_fallback_to_routing_action(self) -> None:
-        pass
+        self._insert_action(FallbackToRoutingAction(fallback_to_routing=as_global(True)))
 
     def associate_log_action(self, log: bool) -> None:
         self._insert_action(LogAction(log=as_global(log)))
 
-    def associate_loss_correction_action(self) -> None:
-        pass
+    def associate_loss_correction_action(self, type: LossProtectionType, fec: Optional[int] = None) -> None:
+        loss_correction = LossCorrection(
+            loss_correct_fec=as_optional_global(fec), loss_correction_type=as_global(type, LossProtectionType)
+        )
+        self._insert_action(LossCorrectionAction(loss_correction=loss_correction))
 
     def associate_nat_action(
         self, bypass: bool, dia_interface: List[str], dia_pool: List[int], fallback: bool, use_vpn: bool
@@ -863,23 +874,23 @@ class Sequence(BaseModel):
     def associate_nat_pool_action(self, nat_pool: int) -> None:
         self._insert_action(NatPoolAction(nat_pool=as_global(nat_pool)))
 
-    def associate_redirect_dns_action(
-        self,
-        type: RedirectDnsType,
-    ) -> None:
-        pass
+    def associate_redirect_dns_action_with_ip(self, ip: IPv4Address) -> None:
+        self._insert_action(RedirectDnsAction(redirect_dns=RedirectDns.from_ip(ip)))
+
+    def associate_redirect_dns_action_with_dns_type(self, dns: DNSTypeEntryType) -> None:
+        self._insert_action(RedirectDnsAction(redirect_dns=RedirectDns.from_dns_type(dns)))
 
     def associate_set_action(self) -> None:
-        pass
+        pass  # TODO
 
     def associate_sig_action(self) -> None:
-        pass
+        self._insert_action(SigAction(sig=as_global(True)))
 
     def associate_sla_class_action(self) -> None:
-        pass
+        pass  # TODO
 
     def associate_sse_action(self) -> None:
-        pass
+        pass  # TODO
 
 
 class TrafficPolicyParcel(_ParcelBase):

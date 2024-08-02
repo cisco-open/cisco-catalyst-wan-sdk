@@ -1,7 +1,9 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import unittest
-from ipaddress import IPv4Network
+from ipaddress import IPv4Network, IPv6Network
 from uuid import uuid4
+
+from packaging.version import Version  # type: ignore
 
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority.traffic_policy import (
@@ -14,7 +16,7 @@ from catalystwan.utils.config_migration.converters.policy.policy_definitions imp
 
 class TestTrafficDataConverter(unittest.TestCase):
     def setUp(self) -> None:
-        self.context = PolicyConvertContext()
+        self.context = PolicyConvertContext(platform_version=Version("21"))
         self.name = "Test-Data-Policy-0"
         self.description = "This is data policy created for converter unittest"
         self.default_action = PolicyAcceptDropAction(type="accept")
@@ -51,46 +53,58 @@ class TestTrafficDataConverter(unittest.TestCase):
         ins = self.input
         seq = ins.add_sequence(name="seq-1", sequence_ip_type="ipv4")
 
+        # Arrange: 0
         expected_app_list = uuid4()
         seq.match_app_list(expected_app_list)
-        # seq.match_destination_data_prefix_list(uuid4())
 
+        # Arrange: 1
         expected_destination_ip = [IPv4Network("11.0.0.0/16"), IPv4Network("12.0.0.0/12")]
         seq.match_destination_ip(expected_destination_ip)
 
+        # Arrange: 2
         dst_port_range = (100, 110)
         dst_port_set = {30, 39}
         expected_destination_ports = [str(p) for p in dst_port_set] + [f"{dst_port_range[0]}-{dst_port_range[1]}"]
         seq.match_destination_port(ports=dst_port_set, port_ranges=[dst_port_range])
 
+        # Arrange: 3
         expected_destination_region = "primary-region"
         seq.match_destination_region(expected_destination_region)
 
+        # Arrange: 4
         expected_dns_app_list = uuid4()
         seq.match_dns_app_list(expected_dns_app_list)
 
+        # Arrange: 5
         expected_dns = "request"
         seq.match_dns(expected_dns)
 
+        # Arrange: 6
         expected_dscp = [10, 15]
         seq.match_dscp(expected_dscp)
 
+        # Arrange: 7
         expected_icmp = ["echo-reply", "port-unreachable"]
         seq.match_icmp(expected_icmp)
 
+        # Arrange: 8
         expected_packetlen = (32, 640)
         seq.match_packet_length(expected_packetlen)
 
+        # Arrange: 9
         expected_source_ip = [IPv4Network("13.0.0.0/16"), IPv4Network("14.0.0.0/12")]
         seq.match_source_ip(expected_source_ip)
 
+        # Arrange: 10
         src_port_range = (99, 109)
         src_port_set = {119}
         expected_source_ports = [str(p) for p in src_port_set] + [f"{src_port_range[0]}-{src_port_range[1]}"]
         seq.match_source_port(expected_source_ports)
 
+        # Arrange: 11
         seq.match_tcp()
 
+        # Arrange: 12
         expected_traffic_to = "access"
         seq.match_traffic_to(expected_traffic_to)
 
@@ -119,14 +133,18 @@ class TestTrafficDataConverter(unittest.TestCase):
         ins = self.input
         seq = ins.add_sequence(name="seq-1", sequence_ip_type="ipv4")
 
+        # Arrange: 0
         expected_destination_prefix_list = uuid4()
         seq.match_destination_data_prefix_list(expected_destination_prefix_list)
 
+        # Arrange: 1
         expected_protocols = {111, 101}
         seq.match_protocols(expected_protocols)
 
+        # Arrange: 2
         expected_source_prefix_list = uuid4()
         seq.match_source_data_prefix_list(expected_source_prefix_list)
+
         # Act
         outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
         # Assert
@@ -137,11 +155,56 @@ class TestTrafficDataConverter(unittest.TestCase):
         assert outm[1].protocol.value == [str(i) for i in expected_protocols]
         assert outm[2].source_data_prefix_list.ref_id.value == str(expected_source_prefix_list)
 
+    def test_match_complementary_ipv6(self):
+        # Arrange
+        ins = self.input
+        seq = ins.add_sequence(name="seq-1", sequence_ip_type="ipv6")
+
+        # Arrange: 0
+        expected_destination_ipv6_prefix = [IPv6Network(2**60), IPv6Network(2**61)]
+        seq.match_destination_ipv6(expected_destination_ipv6_prefix)
+
+        # Arrange: 1
+        expected_source_ipv6_prefix = [IPv6Network(2**62), IPv6Network(2**63)]
+        seq.match_source_ipv6(expected_source_ipv6_prefix)
+
+        # Act
+        outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
+        # Assert
+        assert isinstance(outs, TrafficPolicyParcel)
+        assert len(outs.sequences) == 1
+        outm = outs.sequences[0].match.entries
+        assert outm[0].destination_ipv6.value == expected_destination_ipv6_prefix[0]
+        assert outm[1].source_ipv6.value == expected_source_ipv6_prefix[0]
+
     def test_actions(self):
         # Arrange
         ins = self.input
         seq = ins.add_sequence(name="seq-1", sequence_ip_type="ipv4", base_action="accept")
 
+        # Arrange: 0
+        expected_counter_name = "Counter1"
+        seq.associate_count_action(expected_counter_name)
+
+        # Arrange: 1
+        seq.associate_log_action()
+
+        # Arrange: 2
+        seq.associate_cflowd_action()
+
+        # Arrange: 3
+        expected_nat_pool = [4, 7]
+        expected_nat_interface = ["Ethernet1", "GigabitEthernet2"]
+        seq.associate_nat_action(fallback=True, dia_pool=expected_nat_pool, dia_interface=expected_nat_interface)
+
+        # Arrange: 4
+        expected_dns_type = "umbrella"
+        seq.associate_redirect_dns_action(dns_type=expected_dns_type)
+
+        # Arrange: 5
+        seq.associate_secure_internet_gateway_action(fallback_to_routing=False)
+
+        # Arrange: 6 (not guaranteed to be in that specific index - relies on current implementation)
         expected_appqoe_tcp = True
         expected_appqoe_dre = True
         expected_appqoe_service_node_group = "SNG-APPQOE21"
@@ -149,12 +212,29 @@ class TestTrafficDataConverter(unittest.TestCase):
             tcp=expected_appqoe_tcp, dre=expected_appqoe_dre, service_node_group=expected_appqoe_service_node_group
         )
 
+        # Arrange: 7 (not guaranteed to be in that specific index - relies on current implementation)
+        expected_fec_threshold = 12
+        seq.associate_loss_correction_fec_action(adaptive=True, threshold=expected_fec_threshold)
+
         # Act
         outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
         # Assert
         assert isinstance(outs, TrafficPolicyParcel)
         assert len(outs.sequences) == 1
         outa = outs.sequences[0].actions
-        outa[0].appqoe_optimization.tcp_optimization.value == expected_appqoe_tcp
-        outa[0].appqoe_optimization.dre_optimization.value == expected_appqoe_dre
-        outa[0].appqoe_optimization.service_node_group.value == expected_appqoe_service_node_group
+        outa[0].count.value == expected_counter_name
+        outa[1].log.value is True
+        outa[2].cflowd.value is True
+        outa[3].nat.use_vpn.value is True
+        outa[3].nat.dia_interface.value == expected_nat_interface
+        outa[3].nat.dia_pool.value == expected_nat_pool
+        outa[3].nat.fallback.value is True
+        outa[3].nat.bypass.value is False
+        outa[4].redirect_dns.field.value == "dnsHost"
+        outa[4].redirect_dns.value.value == expected_dns_type
+        outa[5].sig.value is True
+        outa[6].appqoe_optimization.tcp_optimization.value == expected_appqoe_tcp
+        outa[6].appqoe_optimization.dre_optimization.value == expected_appqoe_dre
+        outa[6].appqoe_optimization.service_node_group.value == expected_appqoe_service_node_group
+        outa[7].loss_correction.loss_correction_type.value == "fecAdaptive"
+        outa[7].loss_correction.loss_correct_fec.value == expected_fec_threshold

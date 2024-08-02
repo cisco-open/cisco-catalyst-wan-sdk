@@ -237,7 +237,7 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
         self._insert_action(CFlowDAction())
 
     @overload
-    def associate_nat_action(self, *, nat_pool: int) -> None:
+    def associate_nat_action(self, *, nat_pool: int = 0) -> None:
         ...
 
     @overload
@@ -256,7 +256,7 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     def associate_nat_action(
         self,
         *,
-        nat_pool: Optional[int],
+        nat_pool: Optional[int] = None,
         use_vpn: int = 0,
         fallback: bool = False,
         bypass: bool = False,

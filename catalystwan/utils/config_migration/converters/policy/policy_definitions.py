@@ -4,6 +4,7 @@ from ipaddress import IPv4Address, IPv6Address
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, TypeVar, Union, cast
 from uuid import UUID
 
+from packaging.version import Version  # type: ignore
 from pydantic import Field, ValidationError
 from typing_extensions import Annotated
 
@@ -12,6 +13,7 @@ from catalystwan.models.common import (
     AcceptDropActionType,
     AcceptRejectActionType,
     DeviceAccessProtocolPort,
+    LossProtectionType,
     int_range_str_validator,
 )
 from catalystwan.models.configuration.config_migration import (
@@ -304,6 +306,7 @@ def traffic_data(
         data_default_action=as_global(in_.default_action.type, AcceptDropActionType),
         target=TrafficPolicyTarget(direction=as_global("tunnel", TrafficDataDirection), vpn=as_global([";dummy-vpn"])),
     )  # centralized policy converter will replace target and make copies when neccessary
+
     result.output = out
     for in_seq in in_.sequences:
         ip_type = in_seq.sequence_ip_type if in_seq.sequence_ip_type is not None else "ipv4"
@@ -403,6 +406,8 @@ def traffic_data(
         appqoe_dre = False
         appqoe_tcp = False
         appqoe_sv_grp = None
+        loss_prot: Optional[LossProtectionType] = None
+        loss_prot_fec: Optional[int] = None
 
         for in_action in in_seq.actions:
             # TODO: action entries conversion
@@ -450,7 +455,11 @@ def traffic_data(
                         use_vpn=True if _nat.vpn is not None else False,
                     )
             elif in_action.type == "redirectDns":
-                pass
+                _rdns = in_action.parameter
+                if _rdns.field == "ipAddress":
+                    out_seq.associate_redirect_dns_action_with_ip(_rdns.value)
+                elif _rdns.field == "dnsType":
+                    out_seq.associate_redirect_dns_action_with_dns_type(_rdns.value)
             elif in_action.type == "tcpOptimization":
                 appqoe_tcp = True
             elif in_action.type == "dreOptimization":
@@ -458,19 +467,44 @@ def traffic_data(
             elif in_action.type == "serviceNodeGroup":
                 appqoe_sv_grp = in_action.parameter
             elif in_action.type == "lossProtect":
-                pass
+                if context.platform_version < Version("20.14"):
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] "
+                        f"{in_action.type} = {in_action.parameter} cannot be converted",
+                    )
+                else:
+                    loss_prot = in_action.parameter
             elif in_action.type == "lossProtectFec":
-                pass
+                if context.platform_version < Version("20.14"):
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] "
+                        f"{in_action.type} = {in_action.parameter} cannot be converted",
+                    )
+                else:
+                    _fec = in_action.value
+                    loss_prot = in_action.parameter
+                    loss_prot_fec = int(_fec) if _fec else None
             elif in_action.type == "lossProtectPktDup":
-                pass
+                if context.platform_version < Version("20.14"):
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] "
+                        f"{in_action.type} = {in_action.parameter} cannot be converted",
+                    )
+                else:
+                    loss_prot = in_action.parameter
             elif in_action.type == "fallbackToRouting":
-                pass
+                out_seq.associate_fallback_to_routing_action()
             elif in_action.type == "sig":
-                pass
+                out_seq.associate_sig_action()
         if appqoe_sv_grp is not None:
             out_seq.associate_appqoe_optimization_action(
                 dre_optimization=appqoe_dre, service_node_group=appqoe_sv_grp, tcp_optimization=appqoe_tcp
             )
+        if loss_prot is not None:
+            out_seq.associate_loss_correction_action(type=loss_prot, fec=loss_prot_fec)
     return result
 
 

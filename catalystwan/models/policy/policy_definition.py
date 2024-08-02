@@ -17,9 +17,11 @@ from catalystwan.models.common import (
     ControlPathType,
     DestinationRegion,
     DNSEntryType,
+    DNSTypeEntryType,
     EncapType,
     IcmpMsgType,
     IntStr,
+    LossProtectionType,
     MultiRegionRole,
     OriginProtocol,
     SequenceIpType,
@@ -85,17 +87,6 @@ SequenceType = Literal[
 Optimized = Literal[
     "true",
     "false",
-]
-
-DNSTypeEntryType = Literal[
-    "host",
-    "umbrella",
-]
-
-LossProtectionType = Literal[
-    "fecAdaptive",
-    "fecAlways",
-    "packetDuplication",
 ]
 
 AdvancedCommunityMatchFlag = Literal["or", "and", "exact"]
@@ -902,6 +893,16 @@ class RedirectDNSAction(BaseModel):
     @staticmethod
     def from_dns_type(dns_type: DNSTypeEntryType = "host") -> "RedirectDNSAction":
         return RedirectDNSAction(parameter=DNSTypeEntry(value=dns_type))
+
+    def get_ip(self) -> Optional[IPv4Address]:
+        if self.parameter.field == "ipAddress":
+            return self.parameter.value
+        return None
+
+    def get_dns_type(self) -> Optional[DNSTypeEntryType]:
+        if self.parameter.field == "dnsType":
+            return self.parameter.value
+        return None
 
 
 class TCPOptimizationAction(BaseModel):

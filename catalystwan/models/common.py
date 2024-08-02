@@ -574,6 +574,11 @@ VpnId = Annotated[
     Le(65530),
 ]
 
+DNSTypeEntryType = Literal[
+    "host",
+    "umbrella",
+]
+
 PolicyModeType = Literal["security", "unified"]
 
 CoreRegion = Literal[
@@ -707,6 +712,12 @@ IpsecCiphersuite = Literal[
     "null-sha384",
     "null-sha256",
     "null-sha512",
+]
+
+LossProtectionType = Literal[
+    "fecAdaptive",
+    "fecAlways",
+    "packetDuplication",
 ]
 
 PfsGroup = Literal[

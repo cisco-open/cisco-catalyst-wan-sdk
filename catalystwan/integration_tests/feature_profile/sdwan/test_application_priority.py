@@ -8,7 +8,19 @@ import pytest
 from catalystwan.api.configuration_groups.parcel import Default, Global
 from catalystwan.exceptions import ManagerHTTPError
 from catalystwan.integration_tests.base import IS_API_20_12, TestCaseBase, create_name_with_run_id
-from catalystwan.models.common import AcceptDropActionType
+from catalystwan.models.common import (
+    AcceptDropActionType,
+    DestinationRegion,
+    DNSEntryType,
+    EncapType,
+    IcmpMsgType,
+    LossProtectionType,
+    SequenceIpType,
+    ServiceChainNumber,
+    ServiceType,
+    TLOCColor,
+    TrafficTargetType,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority import (
     PolicySettingsParcel,
     QosMap,
@@ -24,20 +36,15 @@ from catalystwan.models.configuration.feature_profile.sdwan.application_priority
     CountAction,
     DestinationIpMatch,
     DestinationPortMatch,
-    DestinationRegion,
     DestinationRegionMatch,
-    DNSEntryType,
     DnsMatch,
     DscpMatch,
-    EncapType,
     FallbackToRoutingAction,
     IcmpMessageMatch,
-    IcmpMsg,
     LocalTlocList,
     LogAction,
     LossCorrection,
     LossCorrectionAction,
-    LossProtectionType,
     Match,
     Nat,
     NatAction,
@@ -49,13 +56,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.application_priority
     RedirectDnsAction,
     SecureServiceEdgeInstance,
     Sequence,
-    SequenceIpType,
     ServiceAreaMatch,
     ServiceAreaValue,
     ServiceChain,
-    ServiceChainNumber,
     ServiceTloc,
-    ServiceType,
     SetAction,
     SetDscp,
     SetLocalTlocList,
@@ -74,17 +78,15 @@ from catalystwan.models.configuration.feature_profile.sdwan.application_priority
     SseAction,
     TcpMatch,
     Tloc,
-    TLOCColor,
     TrafficCategory,
     TrafficCategoryMatch,
     TrafficClass,
     TrafficClassMatch,
-    TrafficDataDirection,
     TrafficPolicyTarget,
-    TrafficTargetType,
     TrafficToMatch,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
+from catalystwan.models.policy.centralized import TrafficDataDirection
 
 
 @unittest.skipIf(IS_API_20_12, "PolicySettingsParcel is not supported in 20.12")
@@ -297,7 +299,7 @@ class TestTrafficPolicyParcel(TestCaseBase):
                     DscpMatch(dscp=Global[int](value=0)),
                     PacketLengthMatch(packet_length=Global[str](value="1000")),
                     ProtocolMatch(protocol=Global[List[str]](value=["1", "16"])),
-                    IcmpMessageMatch(icmp_message=Global[List[IcmpMsg]](value=["echo"])),
+                    IcmpMessageMatch(icmp_message=Global[List[IcmpMsgType]](value=["echo"])),
                     SourceIpMatch(source_ip=Global[IPv4Network](value=IPv4Network("192.168.1.1/32"))),
                     SourcePortMatch(source_port=Global[List[str]](value=["22"])),
                     DestinationIpMatch(destination_ip=Global[IPv4Network](value=IPv4Network("10.0.0.1/32"))),
