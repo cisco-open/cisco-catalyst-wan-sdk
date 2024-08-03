@@ -833,14 +833,14 @@ class Sequence(BaseModel):
         )
         self._insert_action_in_set(SetLocalTlocList(local_tloc_list=tloc_list))
 
-    def associate_next_hop_action(self) -> None:
-        pass
+    def associate_next_hop_action(self, ip: IPv4Address) -> None:
+        self._insert_action_in_set(SetNextHop(next_hop=as_global(ip)))
 
-    def associate_next_hop_ipv6_action(self) -> None:
-        pass
+    def associate_next_hop_ipv6_action(self, ip: IPv6Address) -> None:
+        self._insert_action_in_set(SetNextHopIpv6(next_hop_ipv6=as_global(ip)))
 
-    def associate_next_hop_loose_action(self) -> None:
-        pass
+    def associate_next_hop_loose_action(self, value: bool = True) -> None:
+        self._insert_action_in_set(SetNextHopLoose(next_hop_loose=as_global(value)))
 
     def associate_policer_action(self) -> None:
         pass

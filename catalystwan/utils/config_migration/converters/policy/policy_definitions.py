@@ -428,9 +428,12 @@ def traffic_data(
                     elif in_param.field == "preferredColorGroup":
                         out_seq.associate_preferred_color_group_action(in_param.ref)
                     elif in_param.field == "nextHop":
-                        pass  # TODO
+                        if isinstance(in_param.value, IPv4Address):
+                            out_seq.associate_next_hop_action(in_param.value)
+                        elif isinstance(in_param.value, IPv6Address):
+                            out_seq.associate_next_hop_ipv6_action(in_param.value)
                     elif in_param.field == "nextHopLoose":
-                        pass  # TODO
+                        out_seq.associate_next_hop_loose_action(in_param.value)
                     elif in_param.field == "policer":
                         pass  # TODO
                     elif in_param.field == "serviceChain":

@@ -7,7 +7,7 @@ from ipaddress import IPv4Address, IPv4Interface, IPv4Network, IPv6Address, IPv6
 from typing import Any, Dict, List, MutableSequence, Optional, Sequence, Set, Tuple, Union
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, RootModel, field_validator, model_validator
 from typing_extensions import Annotated, Literal
 
 from catalystwan.models.common import (
@@ -385,7 +385,7 @@ class NextHopMatchEntry(BaseModel):
 
 class NextHopLooseEntry(BaseModel):
     field: Literal["nextHopLoose"] = "nextHopLoose"
-    value: str
+    value: Annotated[bool, PlainSerializer(lambda x: str(x).lower(), return_type=str, when_used="json-unless-none")]
 
 
 class OMPTagEntry(BaseModel):

@@ -274,7 +274,7 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     @accept_action
     def associate_next_hop_action(self, next_hop: IPv4Address, loose: bool = False) -> None:
         self._insert_action_in_set(NextHopActionEntry(value=next_hop))
-        self._insert_action_in_set(NextHopLooseEntry(value="true" if loose else "false"))
+        self._insert_action_in_set(NextHopLooseEntry(value=loose))
 
     @accept_action
     def associate_policer_list_action(self, policer_list_id: UUID) -> None:

@@ -1,6 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import unittest
-from ipaddress import IPv4Network, IPv6Network
+from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 from uuid import uuid4
 
 from packaging.version import Version  # type: ignore
@@ -263,6 +263,11 @@ class TestTrafficDataConverter(unittest.TestCase):
             color=expected_local_tloc_color, encap=expected_local_tloc_encap, restrict=expected_local_tloc_restrict
         )
 
+        # Arrange: 3, 4
+        expected_next_hop = IPv4Address("15.1.0.1")
+        expected_next_hop_loose = True
+        seq.associate_next_hop_action(expected_next_hop, expected_next_hop_loose)
+
         # Act
         outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
         # Assert
@@ -277,6 +282,8 @@ class TestTrafficDataConverter(unittest.TestCase):
         outas[2].local_tloc_list.color.value == expected_local_tloc_color
         outas[2].local_tloc_list.encap.value == expected_local_tloc_encap
         outas[2].local_tloc_list.restrict == expected_local_tloc_restrict
+        outas[3].next_hop.value == expected_next_hop
+        outas[4].next_hop_loose == expected_next_hop_loose
 
     def test_set_actions_complementary(self):
         # Arrange
@@ -287,6 +294,11 @@ class TestTrafficDataConverter(unittest.TestCase):
         expected_pref_clr_grp = uuid4()
         seq.associate_preffered_color_group(expected_pref_clr_grp)
 
+        # Arrange: 1, 2
+        expected_next_hop = IPv6Address("2001:0000:130F:0000:0000:09C0:876A:130B")
+        expected_next_hop_loose = False
+        seq.associate_next_hop_action(expected_next_hop, expected_next_hop_loose)
+
         # Act
         outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
         # Assert
@@ -295,11 +307,7 @@ class TestTrafficDataConverter(unittest.TestCase):
         outa = outs.sequences[0].actions
         assert len(outa) == 1
         assert isinstance(outa[0], SetAction)
-        # Assert
-        assert isinstance(outs, TrafficPolicyParcel)
-        assert len(outs.sequences) == 1
-        outa = outs.sequences[0].actions
-        assert len(outa) == 1
-        assert isinstance(outa[0], SetAction)
         outas = outa[0].set
         outas[0].preferred_color_group.ref_id.value == str(expected_pref_clr_grp)
+        outas[1].next_hop_ipv6.value == expected_next_hop
+        outas[2].next_hop_loose == expected_next_hop_loose
