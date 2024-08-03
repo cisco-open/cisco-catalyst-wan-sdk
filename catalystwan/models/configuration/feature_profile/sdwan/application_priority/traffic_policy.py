@@ -845,8 +845,8 @@ class Sequence(BaseModel):
     def associate_policer_action(self) -> None:
         pass
 
-    def associate_preferred_color_group_action(self) -> None:
-        pass
+    def associate_preferred_color_group_action(self, group_id: UUID) -> None:
+        self._insert_action_in_set(SetPreferredColorGroup(preferred_color_group=RefIdItem.from_uuid(group_id)))
 
     def associate_preferred_remote_color_action(self) -> None:
         pass

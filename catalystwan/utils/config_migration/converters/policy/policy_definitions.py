@@ -426,7 +426,7 @@ def traffic_data(
                             restrict=True if _ltloc.restrict is not None else False,
                         )
                     elif in_param.field == "preferredColorGroup":
-                        pass  # TODO
+                        out_seq.associate_preferred_color_group_action(in_param.ref)
                     elif in_param.field == "nextHop":
                         pass  # TODO
                     elif in_param.field == "nextHopLoose":

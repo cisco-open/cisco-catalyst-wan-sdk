@@ -99,7 +99,9 @@ def _get_sorted_unique_list(in_list: List[str]) -> List[str]:
 def app_probe(in_: AppProbeClassList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[AppProbeParcel]:
     out = AppProbeParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
-        out.add_fowarding_class(entry.forwarding_class)
+        out.set_fowarding_class_name(entry.forwarding_class)
+        for map in entry.map:
+            out.add_map(map.color, map.dscp)
     return ConvertResult[AppProbeParcel](output=out, status="complete")
 
 

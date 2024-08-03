@@ -1,6 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -10,7 +10,7 @@ from catalystwan.models.policy.policy_list import PolicyListBase, PolicyListId, 
 
 class ColorDSCPMap(BaseModel):
     color: TLOCColor
-    dscp: int = Field(ge=0, le=63)
+    dscp: Optional[int] = Field(default=None, ge=0, le=63)
 
 
 class AppProbeClassListEntry(BaseModel):
@@ -19,7 +19,7 @@ class AppProbeClassListEntry(BaseModel):
     forwarding_class: str = Field(serialization_alias="forwardingClass", validation_alias="forwardingClass")
     map: List[ColorDSCPMap] = []
 
-    def add_color_mapping(self, color: TLOCColor, dscp: int) -> None:
+    def add_color_mapping(self, color: TLOCColor, dscp: Optional[int] = None) -> None:
         self.map.append(ColorDSCPMap(color=color, dscp=dscp))
 
 

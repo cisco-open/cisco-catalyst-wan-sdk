@@ -277,3 +277,29 @@ class TestTrafficDataConverter(unittest.TestCase):
         outas[2].local_tloc_list.color.value == expected_local_tloc_color
         outas[2].local_tloc_list.encap.value == expected_local_tloc_encap
         outas[2].local_tloc_list.restrict == expected_local_tloc_restrict
+
+    def test_set_actions_complementary(self):
+        # Arrange
+        ins = self.input
+        seq = ins.add_sequence(name="seq-1", sequence_ip_type="ipv4", base_action="accept")
+
+        # Arrange: 0
+        expected_pref_clr_grp = uuid4()
+        seq.associate_preffered_color_group(expected_pref_clr_grp)
+
+        # Act
+        outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
+        # Assert
+        assert isinstance(outs, TrafficPolicyParcel)
+        assert len(outs.sequences) == 1
+        outa = outs.sequences[0].actions
+        assert len(outa) == 1
+        assert isinstance(outa[0], SetAction)
+        # Assert
+        assert isinstance(outs, TrafficPolicyParcel)
+        assert len(outs.sequences) == 1
+        outa = outs.sequences[0].actions
+        assert len(outa) == 1
+        assert isinstance(outa[0], SetAction)
+        outas = outa[0].set
+        outas[0].preferred_color_group.ref_id.value == str(expected_pref_clr_grp)

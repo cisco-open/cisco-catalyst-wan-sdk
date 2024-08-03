@@ -2,7 +2,7 @@
 
 from typing import List, Literal, Optional
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field, model_validator
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
 from catalystwan.models.common import TLOCColor
@@ -41,6 +41,14 @@ class PreferredColorGroupEntry(BaseModel):
         if not self.secondary_preference and self.tertiary_preference:
             raise ValueError("Preference Entry has to have a secondary prefrence when assigning tertiary preference.")
         return self
+
+    @field_validator("secondary_preference", "tertiary_preference", mode="before")
+    @classmethod
+    def remove_empty_preferences(cls, value):
+        """handle a situation when server returns empty json object: '{}'"""
+        if not value:
+            return None
+        return value
 
 
 class PreferredColorGroupParcel(_ParcelBase):
