@@ -4,6 +4,7 @@ from typing import List, Literal, Optional, Tuple, Type, TypeVar, Union, overloa
 from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
+from typing_extensions import Annotated
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global, as_optional_global
 from catalystwan.models.common import (
@@ -18,6 +19,7 @@ from catalystwan.models.common import (
     ServiceType,
     TLOCColor,
     TrafficTargetType,
+    VersionedField,
 )
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
 from catalystwan.models.policy.centralized import TrafficDataDirection
@@ -387,7 +389,7 @@ class SetService(BaseModel):
 
 class SetServiceChain(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    service_chain: Optional[ServiceChain] = Field(
+    service_chain: Annotated[Optional[ServiceChain], VersionedField(versions="<20.15", forbidden=True)] = Field(
         default=None, validation_alias="serviceChain", serialization_alias="serviceChain"
     )
 

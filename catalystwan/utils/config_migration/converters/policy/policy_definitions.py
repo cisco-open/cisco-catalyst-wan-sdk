@@ -452,7 +452,11 @@ def traffic_data(
                                 encap=in_param.value.tloc.encap,
                             )
                     elif in_param.field == "serviceChain":
-                        pass  # TODO
+                        result.update_status(
+                            "partial",
+                            f"sequence[{in_seq.sequence_id}] contains unsupported entry "
+                            f"{in_param.field} = {in_param.value} which cannot be converted",
+                        )
                     elif in_param.field == "vpn":
                         pass  # TODO
                     elif in_param.field == "tloc":
