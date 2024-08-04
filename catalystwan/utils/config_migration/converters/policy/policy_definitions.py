@@ -456,13 +456,18 @@ def traffic_data(
                             "partial",
                             f"sequence[{in_seq.sequence_id}] contains unsupported entry "
                             f"{in_param.field} = {in_param.value} which cannot be converted",
-                        )
+                        )  # >=20.15
                     elif in_param.field == "vpn":
-                        pass  # TODO
+                        out_seq.associate_vpn_action(int(in_param.value))
                     elif in_param.field == "tloc":
-                        pass  # TODO
+                        out_seq.associate_tloc_action(
+                            ip=in_param.value.ip,
+                            color=[in_param.value.color],
+                            encap=in_param.value.encap,
+                        )
                     elif in_param.field == "tlocList":
-                        pass  # TODO
+                        out_seq.associate_tloc_list_action(in_param.ref)
+
             elif in_action.type == "count":
                 out_seq.associate_count_action(in_action.parameter)
             elif in_action.type == "log":

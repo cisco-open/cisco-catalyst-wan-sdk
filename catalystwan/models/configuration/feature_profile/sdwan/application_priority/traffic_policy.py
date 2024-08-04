@@ -891,16 +891,21 @@ class Sequence(BaseModel):
         self._insert_action_in_set(SetService(service=service))
 
     def associate_service_chain_action(self) -> None:
-        pass
+        pass  # TODO (>=20.15)
 
-    def associate_tloc_action(self) -> None:
-        pass
+    def associate_tloc_action(self, ip: IPv4Address, color: List[TLOCColor], encap: EncapType) -> None:
+        tloc = Tloc(
+            color=Global[List[TLOCColor]](value=color),
+            encap=as_global(encap, EncapType),
+            ip=as_global(ip),
+        )
+        self._insert_action_in_set(SetTloc(tloc=tloc))
 
-    def associate_tloc_list_action(self) -> None:
-        pass
+    def associate_tloc_list_action(self, tloc_list_id: UUID) -> None:
+        self._insert_action_in_set(SetTlocList(tloc_list=RefIdItem.from_uuid(tloc_list_id)))
 
-    def associate_vpn_action(self) -> None:
-        pass
+    def associate_vpn_action(self, vpn: int) -> None:
+        self._insert_action_in_set(SetVpn(vpn=as_global(vpn)))
 
     # --- Actions ----
     def associate_appqoe_optimization_action(

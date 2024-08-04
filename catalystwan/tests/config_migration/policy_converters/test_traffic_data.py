@@ -286,6 +286,10 @@ class TestTrafficDataConverter(unittest.TestCase):
             encap=expected_service_tloc_encap,
         )
 
+        # Arrange: 7
+        expected_vpn = 42
+        seq.associate_vpn_action(expected_vpn)
+
         # Act
         outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
         # Assert
@@ -308,6 +312,7 @@ class TestTrafficDataConverter(unittest.TestCase):
         outas[6].service.tloc.ip.value == expected_service_tloc_ip
         outas[6].service.tloc.color.value == [expected_service_tloc_color]
         outas[6].service.tloc.encap.value == expected_service_tloc_encap
+        outas[7].vpn.value == expected_vpn
 
     def test_set_actions_complementary(self):
         # Arrange
@@ -333,6 +338,12 @@ class TestTrafficDataConverter(unittest.TestCase):
             tloc_list_id=expected_service_tloc_list_id,
         )
 
+        # Arrange: 4
+        expected_tloc_ip = IPv4Address("10.9.8.7")
+        expected_tloc_color = "bronze"
+        expected_tloc_encap = "ipsec"
+        seq.associate_tloc_action(ip=expected_tloc_ip, color=expected_tloc_color, encap=expected_tloc_encap)
+
         # Act
         outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
         # Assert
@@ -348,3 +359,26 @@ class TestTrafficDataConverter(unittest.TestCase):
         outas[3].service.type.value == expected_service_type
         outas[3].service.vpn.value == expected_service_vpn
         outas[3].service.tloc_list.ref_id == str(expected_service_tloc_list_id)
+        outas[4].tloc.ip == expected_tloc_ip
+        outas[4].tloc.color == expected_tloc_color
+        outas[4].tloc.encap == expected_tloc_encap
+
+    def test_set_actions_complementary_2(self):
+        # Arrange
+        ins = self.input
+        seq = ins.add_sequence(name="seq-1", sequence_ip_type="ipv4", base_action="accept")
+
+        # Arrange: 0
+        expected_tloc_list_id = uuid4()
+        seq.associate_tloc_action(tloc_list_id=expected_tloc_list_id)
+
+        # Act
+        outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
+        # Assert
+        assert isinstance(outs, TrafficPolicyParcel)
+        assert len(outs.sequences) == 1
+        outa = outs.sequences[0].actions
+        assert len(outa) == 1
+        assert isinstance(outa[0], SetAction)
+        outas = outa[0].set
+        outas[0].tloc_list.ref_id.value == str(expected_tloc_list_id)
