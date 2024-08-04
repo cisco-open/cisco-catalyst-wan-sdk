@@ -800,7 +800,7 @@ class ClassMapListEntry(BaseModel):
 class ServiceEntryValue(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     type: ServiceType
-    vpn: IntStr
+    vpn: Optional[IntStr] = None
     tloc: Optional[TLOCEntryValue] = None
     tloc_list: Optional[TLOCListEntry] = Field(
         default=None, validation_alias="tlocList", serialization_alias="tlocList"
@@ -982,14 +982,23 @@ class AdvancedInspectionProfileAction(BaseModel):
 ActionSetEntry = Annotated[
     Union[
         AffinityEntry,
+        AggregatorActionEntry,
+        AsPathActionEntry,
+        AtomicAggregateActionEntry,
         CommunityAdditiveEntry,
         CommunityEntry,
         DSCPEntry,
         ForwardingClassEntry,
+        LocalPreferenceEntry,
         LocalTLOCListEntry,
+        MetricEntry,
+        MetricTypeEntry,
         NextHopActionEntry,
         NextHopLooseEntry,
         OMPTagEntry,
+        OriginatorEntry,
+        OriginEntry,
+        OspfTagEntry,
         PolicerListEntry,
         PreferenceEntry,
         PrefferedColorGroupListEntry,
@@ -1000,15 +1009,6 @@ ActionSetEntry = Annotated[
         TLOCListEntry,
         TrafficClassEntry,
         VPNEntry,
-        AggregatorActionEntry,
-        AsPathActionEntry,
-        AtomicAggregateActionEntry,
-        LocalPreferenceEntry,
-        MetricEntry,
-        MetricTypeEntry,
-        OriginEntry,
-        OriginatorEntry,
-        OspfTagEntry,
         WeightEntry,
     ],
     Field(discriminator="field"),
@@ -1029,6 +1029,7 @@ ActionEntry = Annotated[
         ConnectionEventsAction,
         CountAction,
         DREOptimizationAction,
+        ExportToAction,
         FallBackToRoutingAction,
         LogAction,
         LossProtectionAction,
@@ -1041,7 +1042,6 @@ ActionEntry = Annotated[
         SecureInternetGatewayAction,
         ServiceNodeGroupAction,
         TCPOptimizationAction,
-        ExportToAction,
     ],
     Field(discriminator="type"),
 ]

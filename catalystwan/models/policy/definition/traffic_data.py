@@ -112,24 +112,23 @@ TrafficDataPolicySequenceEntry = Annotated[
 
 TrafficDataPolicySequenceActionEntry = Annotated[
     Union[
-        CountAction,
-        LogAction,
+        ActionSet,
         CFlowDAction,
-        NATAction,
-        RedirectDNSAction,
-        TCPOptimizationAction,
+        CountAction,
         DREOptimizationAction,
-        ServiceNodeGroupAction,
+        FallBackToRoutingAction,
+        LogAction,
         LossProtectionAction,
         LossProtectionFECAction,
         LossProtectionPacketDuplicationAction,
+        NATAction,
+        RedirectDNSAction,
         SecureInternetGatewayAction,
-        FallBackToRoutingAction,
+        ServiceNodeGroupAction,
+        TCPOptimizationAction,
     ],
     Field(discriminator="type"),
 ]
-
-TrafficDataPolicySequenceAction = Union[TrafficDataPolicySequenceActionEntry, ActionSet]
 
 
 class TrafficDataPolicyHeader(PolicyDefinitionBase):
@@ -146,7 +145,7 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     )
     base_action: AcceptDropActionType = Field(serialization_alias="baseAction", validation_alias="baseAction")
     match: TrafficDataPolicySequenceMatch = TrafficDataPolicySequenceMatch()
-    actions: List[TrafficDataPolicySequenceAction] = []
+    actions: List[TrafficDataPolicySequenceActionEntry] = []
     model_config = ConfigDict(populate_by_name=True)
 
     def match_app_list(self, app_list_id: UUID) -> None:
@@ -412,7 +411,7 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     def associate_service_action(
         self,
         service_type: ServiceType,
-        vpn: Optional[int],
+        vpn: Optional[int] = None,
         *,
         tloc_list_id: UUID,
         local: bool = False,
@@ -424,7 +423,7 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     def associate_service_action(
         self,
         service_type: ServiceType,
-        vpn: Optional[int],
+        vpn: int,
         *,
         ip: IPv4Address,
         color: TLOCColor,
@@ -437,8 +436,8 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     @accept_action
     def associate_service_action(
         self,
-        service_type=ServiceType,
-        vpn=int,
+        service_type=None,
+        vpn=None,
         *,
         tloc_list_id=None,
         ip=None,

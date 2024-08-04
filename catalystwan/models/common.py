@@ -396,6 +396,7 @@ OriginProtocol = Literal[
 ]
 
 ServiceType = Literal[
+    "appqoe",
     "FW",
     "IDP",
     "IDS",
@@ -403,6 +404,7 @@ ServiceType = Literal[
     "netsvc2",
     "netsvc3",
     "netsvc4",
+    "netsvc5",
 ]
 
 ServiceChainNumber = Literal[

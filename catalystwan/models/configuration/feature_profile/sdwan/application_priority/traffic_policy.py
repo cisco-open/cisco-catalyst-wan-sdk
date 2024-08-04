@@ -854,23 +854,26 @@ class Sequence(BaseModel):
         pass
 
     @overload
-    def associate_service_action(self, service_type: ServiceType, vpn: Optional[int], *, tloc_list_id: UUID) -> None:
+    def associate_service_action(
+        self, service_type: ServiceType, vpn: Optional[int] = None, *, tloc_list_id: UUID
+    ) -> None:
         ...
 
     @overload
     def associate_service_action(
-        self,
-        service_type: ServiceType,
-        vpn: Optional[int],
-        *,
-        ip: IPv4Address,
-        color: List[TLOCColor],
-        encap: EncapType
+        self, service_type: ServiceType, vpn: int, *, ip: IPv4Address, color: List[TLOCColor], encap: EncapType
     ) -> None:
         ...
 
     def associate_service_action(
-        self, service_type=ServiceType, vpn=Optional[int], *, tloc_list_id=None, ip=None, color=None, encap=None
+        self,
+        service_type=None,
+        vpn=None,
+        *,
+        tloc_list_id=None,
+        ip=None,
+        color=None,
+        encap=None,
     ) -> None:
         _service_type = as_global(service_type, ServiceType)
         _vpn = as_optional_global(vpn)
