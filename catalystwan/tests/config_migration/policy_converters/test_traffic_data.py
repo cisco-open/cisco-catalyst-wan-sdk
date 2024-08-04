@@ -268,6 +268,24 @@ class TestTrafficDataConverter(unittest.TestCase):
         expected_next_hop_loose = True
         seq.associate_next_hop_action(expected_next_hop, expected_next_hop_loose)
 
+        # Arrange 5
+        expected_policer_list_id = uuid4()
+        seq.associate_policer_list_action(expected_policer_list_id)
+
+        # Arrange: 6
+        expected_service_type = "FW"
+        expected_service_vpn = 74
+        expected_service_tloc_ip = IPv4Address("10.3.4.5")
+        expected_service_tloc_color = "green"
+        expected_service_tloc_encap = "gre"
+        seq.associate_service_action(
+            service_type=expected_service_type,
+            vpn=expected_service_vpn,
+            ip=expected_service_tloc_ip,
+            color=expected_service_tloc_color,
+            encap=expected_service_tloc_encap,
+        )
+
         # Act
         outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
         # Assert
@@ -284,6 +302,12 @@ class TestTrafficDataConverter(unittest.TestCase):
         outas[2].local_tloc_list.restrict == expected_local_tloc_restrict
         outas[3].next_hop.value == expected_next_hop
         outas[4].next_hop_loose == expected_next_hop_loose
+        outas[5].policer.ref_id.value == str(expected_policer_list_id)
+        outas[6].service.type.value == expected_service_type
+        outas[6].service.vpn.value == expected_service_vpn
+        outas[6].service.tloc.ip.value == expected_service_tloc_ip
+        outas[6].service.tloc.color.value == [expected_service_tloc_color]
+        outas[6].service.tloc.encap.value == expected_service_tloc_encap
 
     def test_set_actions_complementary(self):
         # Arrange
@@ -299,6 +323,16 @@ class TestTrafficDataConverter(unittest.TestCase):
         expected_next_hop_loose = False
         seq.associate_next_hop_action(expected_next_hop, expected_next_hop_loose)
 
+        # Arrange: 3
+        expected_service_type = "IDP"
+        expected_service_vpn = 75
+        expected_service_tloc_list_id = uuid4()
+        seq.associate_service_action(
+            service_type=expected_service_type,
+            vpn=expected_service_vpn,
+            tloc_list_id=expected_service_tloc_list_id,
+        )
+
         # Act
         outs = convert(in_=ins, uuid=uuid4(), context=self.context).output
         # Assert
@@ -311,3 +345,6 @@ class TestTrafficDataConverter(unittest.TestCase):
         outas[0].preferred_color_group.ref_id.value == str(expected_pref_clr_grp)
         outas[1].next_hop_ipv6.value == expected_next_hop
         outas[2].next_hop_loose == expected_next_hop_loose
+        outas[3].service.type.value == expected_service_type
+        outas[3].service.vpn.value == expected_service_vpn
+        outas[3].service.tloc_list.ref_id == str(expected_service_tloc_list_id)

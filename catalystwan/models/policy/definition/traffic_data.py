@@ -15,6 +15,7 @@ from catalystwan.models.common import (
     IcmpMsgType,
     SequenceIpType,
     ServiceChainNumber,
+    ServiceType,
     TLOCColor,
     TrafficTargetType,
 )
@@ -64,6 +65,8 @@ from catalystwan.models.policy.policy_definition import (
     SecureInternetGatewayAction,
     ServiceChainEntry,
     ServiceChainEntryValue,
+    ServiceEntry,
+    ServiceEntryValue,
     ServiceNodeGroupAction,
     SourceDataIPv6PrefixListEntry,
     SourceDataPrefixListEntry,
@@ -404,6 +407,58 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
             self._insert_action(FallBackToRoutingAction())
         else:
             self._remove_action(FallBackToRoutingAction().type)
+
+    @overload
+    def associate_service_action(
+        self,
+        service_type: ServiceType,
+        vpn: Optional[int],
+        *,
+        tloc_list_id: UUID,
+        local: bool = False,
+        restrict: bool = False
+    ) -> None:
+        ...
+
+    @overload
+    def associate_service_action(
+        self,
+        service_type: ServiceType,
+        vpn: Optional[int],
+        *,
+        ip: IPv4Address,
+        color: TLOCColor,
+        encap: EncapType,
+        local: bool = False,
+        restrict: bool = False
+    ) -> None:
+        ...
+
+    @accept_action
+    def associate_service_action(
+        self,
+        service_type=ServiceType,
+        vpn=int,
+        *,
+        tloc_list_id=None,
+        ip=None,
+        color=None,
+        encap=None,
+        local=None,
+        restrict=None
+    ) -> None:
+        if tloc_list_id is None:
+            tloc_entry = TLOCEntryValue(ip=ip, color=color, encap=encap)
+            tloc_list_entry = None
+        else:
+            tloc_entry = None
+            tloc_list_entry = TLOCListEntry(ref=tloc_list_id)
+        _local = "" if local else None
+        _restrict = "" if restrict else None
+        service_value = ServiceEntryValue(
+            type=service_type, vpn=vpn, tloc=tloc_entry, tloc_list=tloc_list_entry, local=_local, restrict=_restrict
+        )
+        self._insert_action_in_set(ServiceEntry(value=service_value))
 
 
 class TrafficDataPolicy(TrafficDataPolicyHeader, DefinitionWithSequencesCommonBase):

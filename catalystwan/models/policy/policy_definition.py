@@ -805,6 +805,8 @@ class ServiceEntryValue(BaseModel):
     tloc_list: Optional[TLOCListEntry] = Field(
         default=None, validation_alias="tlocList", serialization_alias="tlocList"
     )
+    restrict: Optional[str] = None
+    local: Optional[str] = None
 
     @model_validator(mode="after")
     def tloc_xor_tloc_list(self):

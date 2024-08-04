@@ -1,6 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
-from typing import List, Literal, Optional, Tuple, Type, TypeVar, Union
+from typing import List, Literal, Optional, Tuple, Type, TypeVar, Union, overload
 from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
@@ -842,8 +842,8 @@ class Sequence(BaseModel):
     def associate_next_hop_loose_action(self, value: bool = True) -> None:
         self._insert_action_in_set(SetNextHopLoose(next_hop_loose=as_global(value)))
 
-    def associate_policer_action(self) -> None:
-        pass
+    def associate_policer_action(self, policer: UUID) -> None:
+        self._insert_action_in_set(SetPolicer(policer=RefIdItem.from_uuid(policer)))
 
     def associate_preferred_color_group_action(self, group_id: UUID) -> None:
         self._insert_action_in_set(SetPreferredColorGroup(preferred_color_group=RefIdItem.from_uuid(group_id)))
@@ -851,8 +851,42 @@ class Sequence(BaseModel):
     def associate_preferred_remote_color_action(self) -> None:
         pass
 
-    def associate_service_action(self) -> None:
-        pass
+    @overload
+    def associate_service_action(self, service_type: ServiceType, vpn: Optional[int], *, tloc_list_id: UUID) -> None:
+        ...
+
+    @overload
+    def associate_service_action(
+        self,
+        service_type: ServiceType,
+        vpn: Optional[int],
+        *,
+        ip: IPv4Address,
+        color: List[TLOCColor],
+        encap: EncapType
+    ) -> None:
+        ...
+
+    def associate_service_action(
+        self, service_type=ServiceType, vpn=Optional[int], *, tloc_list_id=None, ip=None, color=None, encap=None
+    ) -> None:
+        _service_type = as_global(service_type, ServiceType)
+        _vpn = as_optional_global(vpn)
+        service: Union[ServiceTloc, ServiceTlocList]
+        if tloc_list_id is None:
+            tloc = Tloc(
+                color=Global[List[TLOCColor]](value=color),
+                encap=as_global(encap, EncapType),
+                ip=as_global(ip),
+            )
+            service = ServiceTloc(
+                tloc=tloc,
+                type=_service_type,
+                vpn=_vpn,
+            )
+        else:
+            service = ServiceTlocList(tloc_list=RefIdItem.from_uuid(tloc_list_id), type=_service_type, vpn=_vpn)
+        self._insert_action_in_set(SetService(service=service))
 
     def associate_service_chain_action(self) -> None:
         pass

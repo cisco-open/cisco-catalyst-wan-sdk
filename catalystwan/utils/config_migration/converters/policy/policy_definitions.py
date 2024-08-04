@@ -435,7 +435,22 @@ def traffic_data(
                     elif in_param.field == "nextHopLoose":
                         out_seq.associate_next_hop_loose_action(in_param.value)
                     elif in_param.field == "policer":
-                        pass  # TODO
+                        out_seq.associate_policer_action(in_param.ref)
+                    elif in_param.field == "service":
+                        if in_param.value.tloc_list is not None:
+                            out_seq.associate_service_action(
+                                service_type=in_param.value.type,
+                                vpn=in_param.value.vpn,
+                                tloc_list_id=in_param.value.tloc_list.ref,
+                            )
+                        elif in_param.value.tloc is not None:
+                            out_seq.associate_service_action(
+                                service_type=in_param.value.type,
+                                vpn=in_param.value.vpn,
+                                ip=in_param.value.tloc.ip,
+                                color=[in_param.value.tloc.color],
+                                encap=in_param.value.tloc.encap,
+                            )
                     elif in_param.field == "serviceChain":
                         pass  # TODO
                     elif in_param.field == "vpn":
