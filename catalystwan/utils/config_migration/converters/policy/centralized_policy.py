@@ -135,7 +135,9 @@ class CentralizedPolicyConverter:
         )
 
     def update_app_prio_profiles(
-        self, centralized_policy: CentralizedPolicyInfo, transformed_app_prio_parcels: List[TransformedParcel]
+        self,
+        centralized_policy: CentralizedPolicyInfo,
+        transformed_app_prio_parcels: List[TransformedParcel],
     ) -> None:
         self.ux2.feature_profiles.append(
             TransformedFeatureProfile(
@@ -146,7 +148,7 @@ class CentralizedPolicyConverter:
                     origname=centralized_policy.policy_name,
                 ),
                 feature_profile=FeatureProfileCreationPayload(
-                    name=centralized_policy.policy_name,
+                    name=f"{centralized_policy.policy_name}_TRAFFIC",
                     description=centralized_policy.policy_description,
                 ),
             )
@@ -199,6 +201,8 @@ class CentralizedPolicyConverter:
                                         _parcel.target.vpn.value.extend(
                                             self.context.lan_vpns_by_list_id.get(vpn_list_id, [])
                                         )
+                                    if not _parcel.target.vpn.value:
+                                        continue
                                     dst_transformed_app_prio_parcel = TransformedParcel(header=_header, parcel=_parcel)
                                     dst_transformed_app_prio_parcels.append(dst_transformed_app_prio_parcel)
                                     self.ux2.profile_parcels.append(dst_transformed_app_prio_parcel)
@@ -212,7 +216,7 @@ class CentralizedPolicyConverter:
                 if dst_transformed_topology_parcels:
                     self.update_topology_groups_and_profiles(centralized_policy, dst_transformed_topology_parcels)
                 if dst_transformed_app_prio_parcels:
-                    self.update_app_prio_profiles(centralized_policy, dst_transformed_topology_parcels)
+                    self.update_app_prio_profiles(centralized_policy, dst_transformed_app_prio_parcels)
             else:
                 problems.append("cli policy definition not supported")
             if problems:
