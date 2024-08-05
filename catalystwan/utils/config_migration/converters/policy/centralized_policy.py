@@ -113,7 +113,7 @@ class CentralizedPolicyConverter:
                     origname=centralized_policy.policy_name,
                 ),
                 feature_profile=FeatureProfileCreationPayload(
-                    name=centralized_policy.policy_name,
+                    name=f"{centralized_policy.policy_name}_TOPOLOGY",
                     description=centralized_policy.policy_description,
                 ),
             )
@@ -148,7 +148,7 @@ class CentralizedPolicyConverter:
                     origname=centralized_policy.policy_name,
                 ),
                 feature_profile=FeatureProfileCreationPayload(
-                    name=f"{centralized_policy.policy_name}_TRAFFIC",
+                    name=centralized_policy.policy_name,
                     description=centralized_policy.policy_description,
                 ),
             )
