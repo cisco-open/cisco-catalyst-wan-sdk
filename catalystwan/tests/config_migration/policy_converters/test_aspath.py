@@ -1,4 +1,5 @@
 import unittest
+from uuid import uuid4
 
 from catalystwan.models.configuration.config_migration import PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.policy.as_path import AsPathParcel
@@ -24,7 +25,7 @@ class TestAsPathConverter(unittest.TestCase):
         for entry in [entry_1, entry_2, entry_3]:
             aspath._add_entry(ASPathListEntry(as_path=entry))
         # Act
-        parcel = convert(aspath, self.context).output
+        parcel = convert(aspath, uuid4(), self.context).output
         # Assert
         assert isinstance(parcel, AsPathParcel)
         assert parcel.parcel_name == name
@@ -44,7 +45,7 @@ class TestAsPathConverter(unittest.TestCase):
             description=description,
         )
         # Act
-        parcel = convert(aspath, self.context).output
+        parcel = convert(aspath, uuid4(), self.context).output
         # Assert
         assert isinstance(parcel, AsPathParcel)
         assert parcel.parcel_name == name

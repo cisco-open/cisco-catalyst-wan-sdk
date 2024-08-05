@@ -2,6 +2,7 @@
 
 import re
 from dataclasses import InitVar, dataclass, field
+from ipaddress import IPv4Interface, IPv6Interface
 from typing import Any, Dict, Iterator, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union, get_args
 from uuid import UUID
 
@@ -155,6 +156,18 @@ def str_as_positive_int_list(val: Union[str, Sequence[PositiveInt]]) -> Sequence
     return val
 
 
+def str_as_ipv4_list(val: Union[str, Sequence[IPv4Interface]]) -> Sequence[IPv4Interface]:
+    if isinstance(val, str):
+        return [IPv4Interface(element) for element in val.split()]
+    return val
+
+
+def str_as_ipv6_list(val: Union[str, Sequence[IPv6Interface]]) -> Sequence[IPv6Interface]:
+    if isinstance(val, str):
+        return [IPv6Interface(element) for element in val.split()]
+    return val
+
+
 def str_as_str_list(val: Union[str, Sequence[str]]) -> Sequence[str]:
     if isinstance(val, str):
         return val.split()
@@ -173,13 +186,28 @@ SpaceSeparatedUUIDList = Annotated[
     List[UUID],
     PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
     BeforeValidator(str_as_uuid_list),
+    Field(min_length=1),
 ]
-
 
 SpaceSeparatedNonNegativeIntList = Annotated[
     List[NonNegativeInt],
     PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
     BeforeValidator(str_as_positive_int_list),
+    Field(min_length=1),
+]
+
+SpaceSeparatedIPv4 = Annotated[
+    List[IPv4Interface],
+    PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
+    BeforeValidator(str_as_ipv4_list),
+    Field(min_length=1),
+]
+
+SpaceSeparatedIPv6 = Annotated[
+    List[IPv6Interface],
+    PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
+    BeforeValidator(str_as_ipv6_list),
+    Field(min_length=1),
 ]
 
 
@@ -217,6 +245,17 @@ IntRangeStr = Annotated[
 AcceptDropActionType = Literal["accept", "drop"]
 AcceptRejectActionType = Literal["accept", "reject"]
 DeviceAccessProtocolPort = Literal[161, 22]
+
+DestinationRegion = Literal[
+    "primary-region",
+    "secondary-region",
+    "other-region",
+]
+
+DNSEntryType = Literal[
+    "request",
+    "response",
+]
 
 CarrierType = Literal[
     "default",
@@ -265,6 +304,19 @@ InterfaceStr = Annotated[
     Field(pattern=InterfaceTypePattern),
 ]
 
+
+def str_as_interface_list(val: Union[str, Sequence[InterfaceStr]]) -> Sequence[InterfaceStr]:
+    if isinstance(val, str):
+        return [InterfaceStr(element) for element in val.split()]
+    return val
+
+
+SpaceSeparatedInterfaceStr = Annotated[
+    List[InterfaceStr],
+    PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
+    BeforeValidator(str_as_interface_list),
+]
+
 StaticNatDirection = Literal["inside", "outside"]
 
 Protocol = Literal["tcp", "udp"]
@@ -292,6 +344,13 @@ TLOCColor = Literal[
     "private4",
     "private5",
     "private6",
+]
+
+
+SpaceSeparatedTLOCColorStr = Annotated[
+    List[TLOCColor],
+    PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
+    BeforeValidator(str_as_str_list),
 ]
 
 
@@ -337,6 +396,7 @@ OriginProtocol = Literal[
 ]
 
 ServiceType = Literal[
+    "appqoe",
     "FW",
     "IDP",
     "IDS",
@@ -344,6 +404,7 @@ ServiceType = Literal[
     "netsvc2",
     "netsvc3",
     "netsvc4",
+    "netsvc5",
 ]
 
 ServiceChainNumber = Literal[
@@ -378,8 +439,105 @@ TLOCActionType = Literal[
     "ecmp",
 ]
 
-ICMPMessageType = Literal[
-    "echo", "echo-reply", "unreachable", "net-unreachable", "host-unreachable", "protocol-unreachable"
+IcmpMsgType = Literal[
+    "administratively-prohibited",
+    "dod-host-prohibited",
+    "dod-net-prohibited",
+    "echo",
+    "echo-reply",
+    "echo-reply-no-error",
+    "extended-echo",
+    "extended-echo-reply",
+    "general-parameter-problem",
+    "host-isolated",
+    "host-precedence-unreachable",
+    "host-redirect",
+    "host-tos-redirect",
+    "host-tos-unreachable",
+    "host-unknown",
+    "host-unreachable",
+    "interface-error",
+    "malformed-query",
+    "multiple-interface-match",
+    "net-redirect",
+    "net-tos-redirect",
+    "net-tos-unreachable",
+    "net-unreachable",
+    "network-unknown",
+    "no-room-for-option",
+    "option-missing",
+    "packet-too-big",
+    "parameter-problem",
+    "photuris",
+    "port-unreachable",
+    "precedence-unreachable",
+    "protocol-unreachable",
+    "reassembly-timeout",
+    "redirect",
+    "router-advertisement",
+    "router-solicitation",
+    "source-route-failed",
+    "table-entry-error",
+    "time-exceeded",
+    "timestamp-reply",
+    "timestamp-request",
+    "ttl-exceeded",
+    "unreachable",
+]
+
+Icmp6MsgType = Literal[
+    "beyond-scope",
+    "cp-advertisement",
+    "cp-solicitation",
+    "destination-unreachable",
+    "dhaad-reply",
+    "dhaad-request",
+    "echo-reply",
+    "echo-request",
+    "header",
+    "hop-limit",
+    "ind-advertisement",
+    "ind-solicitation",
+    "mld-query",
+    "mld-reduction",
+    "mld-report",
+    "mldv2-report",
+    "mpd-advertisement",
+    "mpd-solicitation",
+    "mr-advertisement",
+    "mr-solicitation",
+    "mr-termination",
+    "nd-na",
+    "nd-ns",
+    "next-header-type",
+    "ni-query",
+    "ni-query-name",
+    "ni-query-v4-address",
+    "ni-query-v6-address",
+    "ni-response",
+    "ni-response-qtype-unknown",
+    "ni-response-refuse",
+    "ni-response-success",
+    "no-admin",
+    "no-route",
+    "packet-too-big",
+    "parameter-option",
+    "parameter-problem",
+    "port-unreachable",
+    "reassembly-timeout",
+    "redirect",
+    "reject-route",
+    "renum-command",
+    "renum-result",
+    "renum-seq-number",
+    "router-advertisement",
+    "router-renumbering",
+    "router-solicitation",
+    "rpl-control",
+    "source-policy",
+    "source-route-header",
+    "time-exceeded",
+    "unreachable",
 ]
 
 MetricType = Literal["type1", "type2"]
@@ -423,6 +581,11 @@ VpnId = Annotated[
     IntStr,
     Ge(0),
     Le(65530),
+]
+
+DNSTypeEntryType = Literal[
+    "host",
+    "umbrella",
 ]
 
 PolicyModeType = Literal["security", "unified"]
@@ -558,6 +721,12 @@ IpsecCiphersuite = Literal[
     "null-sha384",
     "null-sha256",
     "null-sha512",
+]
+
+LossProtectionType = Literal[
+    "fecAdaptive",
+    "fecAlways",
+    "packetDuplication",
 ]
 
 PfsGroup = Literal[
@@ -1108,6 +1277,12 @@ Timezone = Literal[
     "Africa/Lusaka",
     "Africa/Harare",
     "UTC",
+]
+
+TrafficTargetType = Literal[
+    "access",
+    "core",
+    "service",
 ]
 
 DeviceModel = Literal[

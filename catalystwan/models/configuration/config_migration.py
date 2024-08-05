@@ -645,6 +645,7 @@ class PolicyConvertContext:
     threat_grid_api: Optional[ThreatGridApi] = None
     cflowd: Optional[CflowdParcel] = None
     cloud_credentials: Optional[CloudCredentials] = None
+    fwclass_id_by_name: Dict[str, UUID] = field(default_factory=dict)
 
     def get_vpn_id_to_vpn_name_map(self) -> Dict[Union[str, int], List[str]]:
         vpn_map: Dict[Union[str, int], List[str]] = {}

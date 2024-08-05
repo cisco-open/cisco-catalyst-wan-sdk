@@ -1,14 +1,21 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 import logging
-from ipaddress import IPv4Address, IPv4Interface, IPv6Address, IPv6Interface
+from ipaddress import IPv4Address, IPv6Address
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, TypeVar, Union, cast
 from uuid import UUID
 
+from packaging.version import Version  # type: ignore
 from pydantic import Field, ValidationError
 from typing_extensions import Annotated
 
 from catalystwan.api.configuration_groups.parcel import as_global
-from catalystwan.models.common import AcceptRejectActionType, DeviceAccessProtocolPort, int_range_str_validator
+from catalystwan.models.common import (
+    AcceptDropActionType,
+    AcceptRejectActionType,
+    DeviceAccessProtocolPort,
+    LossProtectionType,
+    int_range_str_validator,
+)
 from catalystwan.models.configuration.config_migration import (
     ConvertResult,
     PolicyConvertContext,
@@ -20,6 +27,10 @@ from catalystwan.models.configuration.feature_profile.common import RefIdItem
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority.qos_policy import QosPolicyParcel
+from catalystwan.models.configuration.feature_profile.sdwan.application_priority.traffic_policy import (
+    TrafficPolicyParcel,
+    TrafficPolicyTarget,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.dns_security.dns import DnsParcel, TargetVpns
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import AnyEmbeddedSecurityParcel
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.aip import (
@@ -55,6 +66,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke im
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
 from catalystwan.models.configuration.network_hierarchy.cflowd import CflowdParcel
 from catalystwan.models.policy import AnyPolicyDefinition
+from catalystwan.models.policy.centralized import TrafficDataDirection
 from catalystwan.models.policy.definition.access_control_list import AclPolicy
 from catalystwan.models.policy.definition.access_control_list_ipv6 import AclIPv6Policy
 from catalystwan.models.policy.definition.aip import AdvancedInspectionProfilePolicy
@@ -71,11 +83,12 @@ from catalystwan.models.policy.definition.qos_map import QoSMapPolicy
 from catalystwan.models.policy.definition.route_policy import RoutePolicy
 from catalystwan.models.policy.definition.ssl_decryption import SslDecryptionPolicy
 from catalystwan.models.policy.definition.ssl_decryption_utd_profile import SslDecryptionUtdProfilePolicy
+from catalystwan.models.policy.definition.traffic_data import TrafficDataPolicy
 from catalystwan.models.policy.definition.url_filtering import UrlFilteringPolicy
 from catalystwan.models.policy.definition.zone_based_firewall import ZoneBasedFWPolicy
 from catalystwan.utils.config_migration.converters.utils import convert_varname
 
-from .zone_based_firewall import convert_zone_based_fw
+from .zone_based_firewall import zone_based_fw
 
 logger = logging.getLogger(__name__)
 
@@ -284,6 +297,252 @@ def control(in_: ControlPolicy, uuid: UUID, context: PolicyConvertContext) -> Co
     return result
 
 
+def traffic_data(
+    in_: TrafficDataPolicy, uuid: UUID, context: PolicyConvertContext
+) -> ConvertResult[TrafficPolicyParcel]:
+    result = ConvertResult[TrafficPolicyParcel](output=None)
+    out = TrafficPolicyParcel(
+        **_get_parcel_name_desc(in_),
+        data_default_action=as_global(in_.default_action.type, AcceptDropActionType),
+        target=TrafficPolicyTarget(direction=as_global("tunnel", TrafficDataDirection), vpn=as_global([";dummy-vpn"])),
+    )  # centralized policy converter will replace target and make copies when neccessary
+
+    result.output = out
+    for in_seq in in_.sequences:
+        ip_type = in_seq.sequence_ip_type if in_seq.sequence_ip_type is not None else "ipv4"
+        out_seq = out.add_sequence(
+            name=in_seq.sequence_name,
+            id_=in_seq.sequence_id,
+            ip_type=ip_type,
+            base_action=in_seq.base_action,
+        )
+        for in_match in in_seq.match.entries:
+            if in_match.field == "appList":
+                out_seq.match_app_list(in_match.ref[0])
+            elif in_match.field == "destinationDataIpv6PrefixList":
+                out_seq.match_destination_data_ipv6_prefix_list(in_match.ref[0])
+            elif in_match.field == "destinationDataPrefixList":
+                out_seq.match_destination_data_prefix_list(in_match.ref[0])
+            elif in_match.field == "destinationIp":
+                if in_match.value is not None:
+                    out_seq.match_destination_ip(in_match.as_ipv4_networks()[0])
+                    if len(in_match.value) > 1:
+                        result.update_status(
+                            "partial",
+                            f"sequence[{in_seq.sequence_id}] contains multiple ip prefixes "
+                            f"{in_match.field} = {in_match.value} only first is converted",
+                        )
+                elif in_match.vip_variable_name is not None:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] variable name as ip prefix is not supported "
+                        f"{in_match.field} = {in_match.value}",
+                    )
+            elif in_match.field == "destinationIpv6":
+                out_seq.match_destination_ipv6(in_match.as_ipv6_networks()[0])
+                if len(in_match.value) > 1:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] contains multiple ipv6 prefixes "
+                        f"{in_match.field} = {in_match.value} only first is converted",
+                    )
+            elif in_match.field == "destinationPort":
+                out_seq.match_destination_ports(in_match.value.split())
+            elif in_match.field == "destinationRegion":
+                out_seq.match_destination_region(in_match.value)
+            elif in_match.field == "dns":
+                out_seq.match_dns(in_match.value)
+            elif in_match.field == "dnsAppList":
+                out_seq.match_dns_app_list(in_match.ref)
+            elif in_match.field == "dscp":
+                out_seq.match_dscp(in_match.value)
+            elif in_match.field == "icmpMessage":
+                out_seq.match_icmp_messages(in_match.value)
+            elif in_match.field == "packetLength":
+                out_seq.match_packet_length(in_match.value)
+            elif in_match.field == "plp":
+                result.update_status(
+                    "partial",
+                    f"sequence[{in_seq.sequence_id}] contains entry "
+                    f"{in_match.field} = {in_match.value} which cannot be converted",
+                )
+            elif in_match.field == "protocol":
+                _protocols = [str(n) for n in as_num_list(as_num_ranges_list(in_match.value))]
+                out_seq.match_protocols(_protocols)
+            elif in_match.field == "sourceDataIpv6PrefixList":
+                out_seq.match_source_data_ipv6_prefix_list(in_match.ref[0])
+            elif in_match.field == "sourceDataPrefixList":
+                out_seq.match_source_data_prefix_list(in_match.ref[0])
+            elif in_match.field == "sourceIp":
+                if in_match.value is not None:
+                    out_seq.match_source_ip(in_match.as_ipv4_networks()[0])
+                    if len(in_match.value) > 1:
+                        result.update_status(
+                            "partial",
+                            f"sequence[{in_seq.sequence_id}] contains multiple ip prefixes "
+                            f"{in_match.field} = {in_match.value} only first is converted",
+                        )
+                elif in_match.vip_variable_name is not None:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] variable name as ip prefix is not supported "
+                        f"{in_match.field} = {in_match.value}",
+                    )
+            elif in_match.field == "sourceIpv6":
+                out_seq.match_source_ipv6(in_match.as_ipv6_networks()[0])
+                if len(in_match.value) > 1:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] contains multiple ipv6 prefixes "
+                        f"{in_match.field} = {in_match.value} only first is converted",
+                    )
+            elif in_match.field == "sourcePort":
+                out_seq.match_source_ports(in_match.value.split())
+            elif in_match.field == "tcp":
+                out_seq.match_tcp()
+            elif in_match.field == "trafficTo":
+                out_seq.match_traffic_to(in_match.value)
+
+        appqoe_dre = False
+        appqoe_tcp = False
+        appqoe_sv_grp = None
+        loss_prot: Optional[LossProtectionType] = None
+        loss_prot_fec: Optional[int] = None
+
+        for in_action in in_seq.actions:
+            if in_action.type == "set":
+                for in_param in in_action.parameter:
+                    if in_param.field == "dscp":
+                        out_seq.associate_dscp_action(in_param.value[0])
+                    elif in_param.field == "forwardingClass":
+                        _fwcid = context.fwclass_id_by_name.get(in_param.value)
+                        if _fwcid is not None:
+                            out_seq.associate_forwarding_class_action(_fwcid)
+                    elif in_param.field == "localTlocList":
+                        _ltloc = in_param.value
+                        out_seq.associate_local_tloc_list_action(
+                            color=_ltloc.color,
+                            encap=_ltloc.encap,
+                            restrict=True if _ltloc.restrict is not None else False,
+                        )
+                    elif in_param.field == "preferredColorGroup":
+                        out_seq.associate_preferred_color_group_action(in_param.ref)
+                    elif in_param.field == "nextHop":
+                        if isinstance(in_param.value, IPv4Address):
+                            out_seq.associate_next_hop_action(in_param.value)
+                        elif isinstance(in_param.value, IPv6Address):
+                            out_seq.associate_next_hop_ipv6_action(in_param.value)
+                    elif in_param.field == "nextHopLoose":
+                        out_seq.associate_next_hop_loose_action(in_param.value)
+                    elif in_param.field == "policer":
+                        out_seq.associate_policer_action(in_param.ref)
+                    elif in_param.field == "service":
+                        _vpn = in_param.value.vpn
+                        if _vpn is None:
+                            _vpn = 65530  # insert dummy vpn (vpn in parcel is required)
+                        if in_param.value.tloc_list is not None:
+                            out_seq.associate_service_action(
+                                service_type=in_param.value.type,
+                                vpn=_vpn,
+                                tloc_list_id=in_param.value.tloc_list.ref,
+                            )
+                        elif in_param.value.tloc is not None:
+                            out_seq.associate_service_action(
+                                service_type=in_param.value.type,
+                                vpn=_vpn,
+                                ip=in_param.value.tloc.ip,
+                                color=[in_param.value.tloc.color],
+                                encap=in_param.value.tloc.encap,
+                            )
+                    elif in_param.field == "serviceChain":
+                        result.update_status(
+                            "partial",
+                            f"sequence[{in_seq.sequence_id}] contains unsupported entry "
+                            f"{in_param.field} = {in_param.value} which cannot be converted",
+                        )  # >=20.15
+                    elif in_param.field == "vpn":
+                        out_seq.associate_vpn_action(int(in_param.value))
+                    elif in_param.field == "tloc":
+                        out_seq.associate_tloc_action(
+                            ip=in_param.value.ip,
+                            color=[in_param.value.color],
+                            encap=in_param.value.encap,
+                        )
+                    elif in_param.field == "tlocList":
+                        out_seq.associate_tloc_list_action(in_param.ref)
+
+            elif in_action.type == "count":
+                out_seq.associate_count_action(in_action.parameter)
+            elif in_action.type == "log":
+                out_seq.associate_log_action(True)
+            elif in_action.type == "cflowd":
+                out_seq.associate_cflowd_action(True)
+            elif in_action.type == "nat":
+                if in_action.nat_pool is not None:
+                    out_seq.associate_nat_pool_action(in_action.nat_pool)
+                elif in_action.nat_vpn is not None:
+                    _nat = in_action.nat_vpn
+                    out_seq.associate_nat_action(
+                        bypass=_nat.bypass,
+                        dia_interface=_nat.dia_interface,
+                        dia_pool=_nat.dia_pool,
+                        fallback=_nat.fallback,
+                        use_vpn=True if _nat.vpn is not None else False,
+                    )
+            elif in_action.type == "redirectDns":
+                _rdns = in_action.parameter
+                if _rdns.field == "ipAddress":
+                    out_seq.associate_redirect_dns_action_with_ip(_rdns.value)
+                elif _rdns.field == "dnsType":
+                    out_seq.associate_redirect_dns_action_with_dns_type(_rdns.value)
+            elif in_action.type == "tcpOptimization":
+                appqoe_tcp = True
+            elif in_action.type == "dreOptimization":
+                appqoe_dre = True
+            elif in_action.type == "serviceNodeGroup":
+                appqoe_sv_grp = in_action.parameter
+            elif in_action.type == "lossProtect":
+                if context.platform_version < Version("20.14"):
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] "
+                        f"{in_action.type} = {in_action.parameter} cannot be converted",
+                    )
+                else:
+                    loss_prot = in_action.parameter
+            elif in_action.type == "lossProtectFec":
+                if context.platform_version < Version("20.14"):
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] "
+                        f"{in_action.type} = {in_action.parameter} cannot be converted",
+                    )
+                else:
+                    _fec = in_action.value
+                    loss_prot = in_action.parameter
+                    loss_prot_fec = int(_fec) if _fec else None
+            elif in_action.type == "lossProtectPktDup":
+                if context.platform_version < Version("20.14"):
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] "
+                        f"{in_action.type} = {in_action.parameter} cannot be converted",
+                    )
+                else:
+                    loss_prot = in_action.parameter
+            elif in_action.type == "fallbackToRouting":
+                out_seq.associate_fallback_to_routing_action()
+            elif in_action.type == "sig":
+                out_seq.associate_sig_action()
+        if appqoe_sv_grp is not None:
+            out_seq.associate_appqoe_optimization_action(
+                dre_optimization=appqoe_dre, service_node_group=appqoe_sv_grp, tcp_optimization=appqoe_tcp
+            )
+        if loss_prot is not None:
+            out_seq.associate_loss_correction_action(type=loss_prot, fec=loss_prot_fec)
+    return result
+
+
 def dns_security(in_: DnsSecurityPolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[DnsParcel]:
     errors: List[str] = []
 
@@ -365,7 +624,13 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> ConvertResult[Ipv4AclParcel]
                     varname = convert_varname(in_entry.vip_variable_name)
                     out_seq.match_destination_data_prefix_variable(varname)
                 elif in_entry.value is not None:
-                    out_seq.match_destination_data_prefix(IPv4Interface(in_entry.value))
+                    out_seq.match_destination_data_prefix(prefix=in_entry.value[0])
+                    if len(in_entry.value) > 1:
+                        result.update_status(
+                            "partial",
+                            f"sequence[{in_seq.sequence_id}] contains multiple ip prefixes "
+                            f"{in_entry.field} = {in_entry.value} only first is converted",
+                        )
 
             elif in_entry.field == "destinationPort":
                 portlist = as_num_ranges_list(in_entry.value)
@@ -406,7 +671,13 @@ def ipv4acl(in_: AclPolicy, uuid: UUID, context) -> ConvertResult[Ipv4AclParcel]
                     varname = convert_varname(in_entry.vip_variable_name)
                     out_seq.match_source_data_prefix_variable(varname)
                 elif in_entry.value is not None:
-                    out_seq.match_source_data_prefix(IPv4Interface(in_entry.value))
+                    out_seq.match_source_data_prefix(in_entry.value[0])
+                    if len(in_entry.value) > 1:
+                        result.update_status(
+                            "partial",
+                            f"sequence[{in_seq.sequence_id}] contains multiple ip prefixes "
+                            f"{in_entry.field} = {in_entry.value} only first is converted",
+                        )
 
             elif in_entry.field == "sourcePort":
                 portlist = as_num_ranges_list(in_entry.value)
@@ -458,7 +729,13 @@ def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> Co
                 out_seq.match_destination_data_prefix_list(in_entry.ref[0])
 
             elif in_entry.field == "destinationIpv6":
-                out_seq.match_destination_data_prefix(IPv6Interface(in_entry.value))
+                out_seq.match_destination_data_prefix(in_entry.value[0])
+                if len(in_entry.value) > 1:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] contains multiple ipv6 prefixes "
+                        f"{in_entry.field} = {in_entry.value} only first is converted",
+                    )
 
             elif in_entry.field == "destinationPort":
                 portlist = as_num_ranges_list(in_entry.value)
@@ -489,7 +766,13 @@ def ipv6acl(in_: AclIPv6Policy, uuid: UUID, context: PolicyConvertContext) -> Co
                 out_seq.match_source_data_prefix_list(in_entry.ref[0])
 
             elif in_entry.field == "sourceIpv6":
-                out_seq.match_source_data_prefix(IPv6Interface(in_entry.value))
+                out_seq.match_source_data_prefix(in_entry.value[0])
+                if len(in_entry.value) > 1:
+                    result.update_status(
+                        "partial",
+                        f"sequence[{in_seq.sequence_id}] contains multiple ipv6 prefixes "
+                        f"{in_entry.field} = {in_entry.value} only first is converted",
+                    )
 
             elif in_entry.field == "sourcePort":
                 portlist = as_num_ranges_list(in_entry.value)
@@ -545,8 +828,7 @@ def device_access_ipv6(
                 if in_entry.ref:
                     seq.match_destination_data_prefix_list(in_entry.ref[0])
             elif in_entry.field == "destinationIpv6":
-                networks = conditional_split(in_entry.value, [",", " "])
-                seq.match_destination_data_prefixes([IPv6Interface(v) for v in networks])
+                seq.match_destination_data_prefixes(in_entry.value)
             elif in_entry.field == "destinationPort":
                 destination_port = cast(DeviceAccessProtocolPort, int(in_entry.value))
                 seq.match_destination_port(destination_port)
@@ -554,8 +836,7 @@ def device_access_ipv6(
                 if in_entry.ref:
                     seq.match_source_data_prefix_list(in_entry.ref[0])
             elif in_entry.field == "sourceIpv6":
-                networks = conditional_split(in_entry.value, [",", " "])
-                seq.match_source_data_prefixes([IPv6Interface(v) for v in networks])
+                seq.match_source_data_prefixes(in_entry.value)
             elif in_entry.field == "sourcePort":
                 seq.match_source_ports(as_num_list(as_num_ranges_list(in_entry.value)))
     return ConvertResult[DeviceAccessIPv6Parcel](output=out)
@@ -581,8 +862,7 @@ def device_access_ipv4(
                     seq.match_destination_data_prefix_list(in_entry.ref[0])
             elif in_entry.field == "destinationIp":
                 if in_entry.value is not None:
-                    networks = conditional_split(in_entry.value, [",", " "])
-                    seq.match_destination_data_prefixes([IPv4Interface(v) for v in networks])
+                    seq.match_destination_data_prefixes(prefixes=in_entry.value)
                 elif in_entry.vip_variable_name is not None:
                     seq.match_destination_data_prefix_variable(convert_varname(in_entry.vip_variable_name))
             elif in_entry.field == "sourceDataPrefixList":
@@ -590,8 +870,7 @@ def device_access_ipv4(
                     seq.match_source_data_prefix_list(in_entry.ref[0])
             elif in_entry.field == "sourceIp":
                 if in_entry.value is not None:
-                    networks = conditional_split(in_entry.value, [",", " "])
-                    seq.match_source_data_prefixes([IPv4Interface(v) for v in networks])
+                    seq.match_source_data_prefixes(prefixes=in_entry.value)
                 elif in_entry.vip_variable_name is not None:
                     seq.match_source_data_prefix_variable(convert_varname(in_entry.vip_variable_name))
             elif in_entry.field == "sourcePort":
@@ -903,24 +1182,25 @@ def cflowd(in_: CflowdPolicy, uuid: UUID, context: PolicyConvertContext) -> Conv
 
 
 CONVERTERS: Mapping[Type[Input], Callable[..., Output]] = {
-    AclPolicy: ipv4acl,
     AclIPv6Policy: ipv6acl,
-    CflowdPolicy: cflowd,
-    ControlPolicy: control,
-    HubAndSpokePolicy: hubspoke,
-    MeshPolicy: mesh,
+    AclPolicy: ipv4acl,
     AdvancedInspectionProfilePolicy: advanced_inspection_profile,
     AdvancedMalwareProtectionPolicy: advanced_malware_protection,
-    IntrusionPreventionPolicy: intrusion_prevention,
-    SslDecryptionPolicy: ssl_decryption,
-    SslDecryptionUtdProfilePolicy: ssl_profile,
-    UrlFilteringPolicy: url_filtering,
-    DnsSecurityPolicy: dns_security,
+    CflowdPolicy: cflowd,
+    ControlPolicy: control,
     DeviceAccessIPv6Policy: device_access_ipv6,
     DeviceAccessPolicy: device_access_ipv4,
-    RoutePolicy: route,
-    ZoneBasedFWPolicy: convert_zone_based_fw,
+    DnsSecurityPolicy: dns_security,
+    HubAndSpokePolicy: hubspoke,
+    IntrusionPreventionPolicy: intrusion_prevention,
+    MeshPolicy: mesh,
     QoSMapPolicy: qos_map,
+    RoutePolicy: route,
+    SslDecryptionPolicy: ssl_decryption,
+    SslDecryptionUtdProfilePolicy: ssl_profile,
+    TrafficDataPolicy: traffic_data,
+    UrlFilteringPolicy: url_filtering,
+    ZoneBasedFWPolicy: zone_based_fw,
 }
 
 
@@ -937,11 +1217,12 @@ def _find_converter(in_: Input) -> Callable[..., Output]:
 
 
 def convert(in_: Input, uuid: UUID, context: PolicyConvertContext) -> Output:
-    result = _find_converter(in_)(in_, uuid, context)
-    if result.output is not None:
-        try:
+    result = Output(status="unsupported", output=None)
+    try:
+        result = _find_converter(in_)(in_, uuid, context)
+        if result.output is not None:
             result.output.model_validate(result.output)
-        except ValidationError as e:
-            result.status = "failed"
-            result.info.append(str(e))
+    except ValidationError as e:
+        result.status = "failed"
+        result.info.append(str(e))
     return result

@@ -1,5 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
+from ipaddress import IPv4Network
 from typing import List, Literal, Optional
 from uuid import UUID
 
@@ -93,11 +94,11 @@ class NetworkDecryptionRuleSequence(PolicyDefinitionSequenceBase):
     def match_destination_networks_by_ref(self, destination_network_ref: UUID):
         self._insert_match(DestinationDataPrefixListEntry(ref=[destination_network_ref]))
 
-    def match_source_networks_by_ip_prefix(self, source_ip_entry: str):
-        self._insert_match(SourceIPEntry(value=source_ip_entry))
+    def match_source_networks_by_ip_prefix(self, source_ip: List[IPv4Network]):
+        self._insert_match(SourceIPEntry.from_ipv4_networks(source_ip))
 
-    def match_destination_networks_by_ip_prefix(self, destination_ip_entry: str):
-        self._insert_match(DestinationIPEntry(value=destination_ip_entry))
+    def match_destination_networks_by_ip_prefix(self, destination_ip: List[IPv4Network]):
+        self._insert_match(DestinationIPEntry.from_ipv4_networks(destination_ip))
 
     def match_source_networks_by_variable(self, variable_name: str):
         self._insert_match(SourceIPEntry(vip_variable_name=variable_name))

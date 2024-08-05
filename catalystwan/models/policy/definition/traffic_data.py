@@ -1,14 +1,26 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
-from ipaddress import IPv4Address, IPv4Network
-from typing import Any, List, Literal, Optional, Set, Tuple, Union, overload
+from ipaddress import IPv4Address, IPv4Network, IPv6Network
+from typing import List, Literal, Optional, Set, Tuple, Union, overload
 from uuid import UUID
 
 from pydantic import ConfigDict, Field
 from typing_extensions import Annotated
 
-from catalystwan.models.common import AcceptDropActionType, EncapType, ICMPMessageType, ServiceChainNumber, TLOCColor
+from catalystwan.models.common import (
+    AcceptDropActionType,
+    DestinationRegion,
+    DNSEntryType,
+    EncapType,
+    IcmpMsgType,
+    SequenceIpType,
+    ServiceChainNumber,
+    ServiceType,
+    TLOCColor,
+    TrafficTargetType,
+)
 from catalystwan.models.policy.policy_definition import (
+    ActionSet,
     AppListEntry,
     CFlowDAction,
     CountAction,
@@ -16,6 +28,7 @@ from catalystwan.models.policy.policy_definition import (
     DestinationDataIPv6PrefixListEntry,
     DestinationDataPrefixListEntry,
     DestinationIPEntry,
+    DestinationIPv6Entry,
     DestinationPortEntry,
     DestinationRegionEntry,
     DNSAppListEntry,
@@ -39,6 +52,7 @@ from catalystwan.models.policy.policy_definition import (
     NextHopLooseEntry,
     PacketLengthEntry,
     PLPEntry,
+    PLPEntryType,
     PolicerListEntry,
     PolicyAcceptDropAction,
     PolicyDefinitionBase,
@@ -51,10 +65,13 @@ from catalystwan.models.policy.policy_definition import (
     SecureInternetGatewayAction,
     ServiceChainEntry,
     ServiceChainEntryValue,
+    ServiceEntry,
+    ServiceEntryValue,
     ServiceNodeGroupAction,
     SourceDataIPv6PrefixListEntry,
     SourceDataPrefixListEntry,
     SourceIPEntry,
+    SourceIPv6Entry,
     SourcePortEntry,
     TCPEntry,
     TCPOptimizationAction,
@@ -72,6 +89,7 @@ TrafficDataPolicySequenceEntry = Annotated[
         DestinationDataIPv6PrefixListEntry,
         DestinationDataPrefixListEntry,
         DestinationIPEntry,
+        DestinationIPv6Entry,
         DestinationPortEntry,
         DestinationRegionEntry,
         DNSAppListEntry,
@@ -84,6 +102,7 @@ TrafficDataPolicySequenceEntry = Annotated[
         SourceDataIPv6PrefixListEntry,
         SourceDataPrefixListEntry,
         SourceIPEntry,
+        SourceIPv6Entry,
         SourcePortEntry,
         TCPEntry,
         TrafficToEntry,
@@ -91,7 +110,25 @@ TrafficDataPolicySequenceEntry = Annotated[
     Field(discriminator="field"),
 ]
 
-TrafficDataPolicySequenceActions = Any  # TODO
+TrafficDataPolicySequenceActionEntry = Annotated[
+    Union[
+        ActionSet,
+        CFlowDAction,
+        CountAction,
+        DREOptimizationAction,
+        FallBackToRoutingAction,
+        LogAction,
+        LossProtectionAction,
+        LossProtectionFECAction,
+        LossProtectionPacketDuplicationAction,
+        NATAction,
+        RedirectDNSAction,
+        SecureInternetGatewayAction,
+        ServiceNodeGroupAction,
+        TCPOptimizationAction,
+    ],
+    Field(discriminator="type"),
+]
 
 
 class TrafficDataPolicyHeader(PolicyDefinitionBase):
@@ -106,8 +143,9 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     sequence_type: Literal["applicationFirewall", "qos", "serviceChaining", "trafficEngineering", "data"] = Field(
         default="data", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
+    base_action: AcceptDropActionType = Field(serialization_alias="baseAction", validation_alias="baseAction")
     match: TrafficDataPolicySequenceMatch = TrafficDataPolicySequenceMatch()
-    actions: List[TrafficDataPolicySequenceActions] = []
+    actions: List[TrafficDataPolicySequenceActionEntry] = []
     model_config = ConfigDict(populate_by_name=True)
 
     def match_app_list(self, app_list_id: UUID) -> None:
@@ -116,35 +154,32 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     def match_dns_app_list(self, dns_app_list_id: UUID) -> None:
         self._insert_match(DNSAppListEntry(ref=dns_app_list_id))
 
-    def match_dns_request(self) -> None:
-        self._insert_match(DNSEntry(value="request"))
-
-    def match_dns_response(self) -> None:
-        self._insert_match(DNSEntry(value="response"))
+    def match_dns(self, dns: DNSEntryType) -> None:
+        self._insert_match(DNSEntry(value=dns))
 
     def match_dscp(self, dscp: List[int]) -> None:
         self._insert_match(DSCPEntry(value=dscp))
 
-    def match_icmp(self, icmp_message_types: List[ICMPMessageType]) -> None:
+    def match_icmp(self, icmp_message_types: List[IcmpMsgType]) -> None:
         self._insert_match(ICMPMessageEntry(value=icmp_message_types))
 
     def match_packet_length(self, packet_lengths: Tuple[int, int]) -> None:
         self._insert_match(PacketLengthEntry.from_range(packet_lengths))
 
-    def match_low_plp(self) -> None:
-        self._insert_match(PLPEntry(value="low"))
-
-    def match_high_plp(self) -> None:
-        self._insert_match(PLPEntry(value="high"))
+    def match_plp(self, plp: PLPEntryType) -> None:
+        self._insert_match(PLPEntry(value=plp))
 
     def match_protocols(self, protocols: Set[int]) -> None:
         self._insert_match(ProtocolEntry.from_protocol_set(protocols))
 
-    def match_source_data_prefix_list(self, data_prefix_lists: List[UUID]) -> None:
-        self._insert_match(SourceDataPrefixListEntry(ref=data_prefix_lists))
+    def match_source_data_prefix_list(self, data_prefix_list_id: UUID) -> None:
+        self._insert_match(SourceDataPrefixListEntry(ref=[data_prefix_list_id]))
 
     def match_source_ip(self, networks: List[IPv4Network]) -> None:
         self._insert_match(SourceIPEntry.from_ipv4_networks(networks))
+
+    def match_source_ipv6(self, networks: List[IPv6Network]) -> None:
+        self._insert_match(SourceIPv6Entry.from_ipv6_networks(networks))
 
     def match_source_port(self, ports: Set[int] = set(), port_ranges: List[Tuple[int, int]] = []) -> None:
         self._insert_match(SourcePortEntry.from_port_set_and_ranges(ports, port_ranges))
@@ -155,14 +190,11 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     def match_destination_ip(self, networks: List[IPv4Network]) -> None:
         self._insert_match(DestinationIPEntry.from_ipv4_networks(networks))
 
-    def match_primary_destination_region(self) -> None:
-        self._insert_match(DestinationRegionEntry(value="primary-region"))
+    def match_destination_ipv6(self, networks: List[IPv6Network]) -> None:
+        self._insert_match(DestinationIPv6Entry.from_ipv6_networks(networks))
 
-    def match_secondary_destination_region(self) -> None:
-        self._insert_match(DestinationRegionEntry(value="secondary-region"))
-
-    def match_other_destination_region(self) -> None:
-        self._insert_match(DestinationRegionEntry(value="other-region"))
+    def match_destination_region(self, region: DestinationRegion) -> None:
+        self._insert_match(DestinationRegionEntry(value=region))
 
     def match_destination_port(self, ports: Set[int] = set(), port_ranges: List[Tuple[int, int]] = []) -> None:
         self._insert_match(DestinationPortEntry.from_port_set_and_ranges(ports, port_ranges))
@@ -170,14 +202,8 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
     def match_tcp(self) -> None:
         self._insert_match(TCPEntry())
 
-    def match_traffic_to_access(self) -> None:
-        self._insert_match(TrafficToEntry(value="access"))
-
-    def match_traffic_to_core(self) -> None:
-        self._insert_match(TrafficToEntry(value="core"))
-
-    def match_traffic_to_service(self) -> None:
-        self._insert_match(TrafficToEntry(value="service"))
+    def match_traffic_to(self, traffic_to: TrafficTargetType) -> None:
+        self._insert_match(TrafficToEntry(value=traffic_to))
 
     def associate_count_action(self, counter_name: str) -> None:
         self._insert_action(CountAction(parameter=counter_name))
@@ -194,7 +220,7 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
         self._insert_action_in_set(ForwardingClassEntry(value=fwclass))
 
     @accept_action
-    def associate_local_tloc_action(self, color: TLOCColor, encap: EncapType, restrict: bool = False) -> None:
+    def associate_local_tloc_action(self, color: List[TLOCColor], encap: EncapType, restrict: bool = False) -> None:
         tloc_entry = LocalTLOCListEntry(
             value=LocalTLOCListEntryValue(
                 color=color,
@@ -213,25 +239,44 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
         self._insert_action(CFlowDAction())
 
     @overload
-    def associate_nat_action(self, *, nat_pool: int) -> None:
+    def associate_nat_action(self, *, nat_pool: int = 0) -> None:
         ...
 
     @overload
-    def associate_nat_action(self, *, vpn_fallback: bool = False, vpn: int = 0) -> None:
+    def associate_nat_action(
+        self,
+        *,
+        use_vpn: int = 0,
+        fallback: bool = False,
+        bypass: bool = False,
+        dia_pool: List[int] = [],
+        dia_interface: List[str] = []
+    ) -> None:
         ...
 
     @accept_action
-    def associate_nat_action(self, *, nat_pool: Optional[int] = None, vpn_fallback: bool = False, vpn: int = 0) -> None:
+    def associate_nat_action(
+        self,
+        *,
+        nat_pool: Optional[int] = None,
+        use_vpn: int = 0,
+        fallback: bool = False,
+        bypass: bool = False,
+        dia_pool: List[int] = [],
+        dia_interface: List[str] = []
+    ) -> None:
         if nat_pool:
             nat_action = NATAction.from_nat_pool(nat_pool=nat_pool)
         else:
-            nat_action = NATAction.from_nat_vpn(fallback=vpn_fallback, vpn=vpn)
+            nat_action = NATAction.from_nat_vpn(
+                use_vpn=use_vpn, fallback=fallback, bypass=bypass, dia_pool=dia_pool, dia_interface=dia_interface
+            )
         self._insert_action(nat_action)
 
     @accept_action
     def associate_next_hop_action(self, next_hop: IPv4Address, loose: bool = False) -> None:
         self._insert_action_in_set(NextHopActionEntry(value=next_hop))
-        self._insert_action_in_set(NextHopLooseEntry(value="true" if loose else "false"))
+        self._insert_action_in_set(NextHopLooseEntry(value=loose))
 
     @accept_action
     def associate_policer_list_action(self, policer_list_id: UUID) -> None:
@@ -362,6 +407,58 @@ class TrafficDataPolicySequence(PolicyDefinitionSequenceBase):
         else:
             self._remove_action(FallBackToRoutingAction().type)
 
+    @overload
+    def associate_service_action(
+        self,
+        service_type: ServiceType,
+        vpn: Optional[int] = None,
+        *,
+        tloc_list_id: UUID,
+        local: bool = False,
+        restrict: bool = False
+    ) -> None:
+        ...
+
+    @overload
+    def associate_service_action(
+        self,
+        service_type: ServiceType,
+        vpn: int,
+        *,
+        ip: IPv4Address,
+        color: TLOCColor,
+        encap: EncapType,
+        local: bool = False,
+        restrict: bool = False
+    ) -> None:
+        ...
+
+    @accept_action
+    def associate_service_action(
+        self,
+        service_type=None,
+        vpn=None,
+        *,
+        tloc_list_id=None,
+        ip=None,
+        color=None,
+        encap=None,
+        local=None,
+        restrict=None
+    ) -> None:
+        if tloc_list_id is None:
+            tloc_entry = TLOCEntryValue(ip=ip, color=color, encap=encap)
+            tloc_list_entry = None
+        else:
+            tloc_entry = None
+            tloc_list_entry = TLOCListEntry(ref=tloc_list_id)
+        _local = "" if local else None
+        _restrict = "" if restrict else None
+        service_value = ServiceEntryValue(
+            type=service_type, vpn=vpn, tloc=tloc_entry, tloc_list=tloc_list_entry, local=_local, restrict=_restrict
+        )
+        self._insert_action_in_set(ServiceEntry(value=service_value))
+
 
 class TrafficDataPolicy(TrafficDataPolicyHeader, DefinitionWithSequencesCommonBase):
     sequences: List[TrafficDataPolicySequence] = []
@@ -372,13 +469,16 @@ class TrafficDataPolicy(TrafficDataPolicyHeader, DefinitionWithSequencesCommonBa
     )
     model_config = ConfigDict(populate_by_name=True)
 
-    def add_ipv4_sequence(
-        self, name: str = "Custom", base_action: AcceptDropActionType = "drop", log: bool = False
+    def add_sequence(
+        self,
+        name: str = "Custom",
+        base_action: AcceptDropActionType = "drop",
+        sequence_ip_type: SequenceIpType = "ipv4",
     ) -> TrafficDataPolicySequence:
         seq = TrafficDataPolicySequence(
             sequence_name=name,
             base_action=base_action,
-            sequence_ip_type="ipv4",
+            sequence_ip_type=sequence_ip_type,
         )
         self.add(seq)
         return seq

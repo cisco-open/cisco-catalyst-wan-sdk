@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 from packaging.version import Version
 from pydantic import ValidationError
 
+from catalystwan.api.configuration_groups.parcel import as_global
 from catalystwan.models.configuration.config_migration import (
     FailedConversionItem,
     PolicyConvertContext,
@@ -18,16 +19,27 @@ from catalystwan.models.configuration.config_migration import (
     UX2Config,
 )
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
+from catalystwan.models.configuration.feature_profile.sdwan.application_priority.traffic_policy import (
+    TrafficPolicyParcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.hubspoke import HubSpokeParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.mesh import MeshParcel
 from catalystwan.models.configuration.topology_group import TopologyGroup
-from catalystwan.models.policy.centralized import CentralizedPolicy, CentralizedPolicyDefinition, ControlPolicyItem
+from catalystwan.models.policy.centralized import (
+    CentralizedPolicy,
+    CentralizedPolicyDefinition,
+    CentralizedPolicyInfo,
+    ControlPolicyItem,
+    TrafficDataDirection,
+    TrafficDataPolicyItem,
+)
 from catalystwan.models.policy.definition.control import ControlPolicy
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy
 from catalystwan.models.policy.definition.mesh import MeshPolicy
+from catalystwan.models.policy.definition.traffic_data import TrafficDataPolicy
 
-TOPOLOGY_POLICIES = ["control", "hubAndSpoke", "mesh"]
+POLICY_TYPES = ["control", "hubAndSpoke", "mesh", "data"]
 
 
 @dataclass
@@ -41,6 +53,14 @@ def find_control_assembly(policy: CentralizedPolicy, control_definition_id: UUID
     assert isinstance(definition, CentralizedPolicyDefinition)
     assembly = definition.find_assembly_item_by_definition_id(control_definition_id)
     assert isinstance(assembly, ControlPolicyItem)
+    return assembly
+
+
+def find_traffic_data_assembly(policy: CentralizedPolicy, traffic_data_definition_id: UUID) -> TrafficDataPolicyItem:
+    definition = policy.policy_definition
+    assert isinstance(definition, CentralizedPolicyDefinition)
+    assembly = definition.find_assembly_item_by_definition_id(traffic_data_definition_id)
+    assert isinstance(assembly, TrafficDataPolicyItem)
     return assembly
 
 
@@ -66,34 +86,87 @@ class CentralizedPolicyConverter:
         self.ux1 = ux1
         self.context = context
         self.ux2 = ux2
-        self.topology_lookup: Dict[UUID, List[TransformedParcel]] = dict()
-        self._create_topology_by_policy_id_lookup()
+        self.parcel_lookup: Dict[UUID, List[TransformedParcel]] = dict()
+        self._create_parcel_by_policy_id_lookup()
         self.failed_items: List[FailedConversionItem] = list()
 
-    def _create_topology_by_policy_id_lookup(self) -> None:
+    def _create_parcel_by_policy_id_lookup(self) -> None:
         for policy_definition in self.ux1.policies.policy_definitions:
-            if policy_definition.type in TOPOLOGY_POLICIES:
-                assert isinstance(policy_definition, (ControlPolicy, HubAndSpokePolicy, MeshPolicy))
-                transformed_topology_parcels = self.ux2.list_transformed_parcels_with_origin(
-                    {policy_definition.definition_id}
-                )
+            if policy_definition.type in POLICY_TYPES:
+                assert isinstance(policy_definition, (ControlPolicy, HubAndSpokePolicy, MeshPolicy, TrafficDataPolicy))
+                transformed_parcels = self.ux2.list_transformed_parcels_with_origin({policy_definition.definition_id})
                 for ref_id in set([ref.id for ref in policy_definition.references]):
-                    if self.topology_lookup.get(ref_id) is not None:
-                        self.topology_lookup[ref_id].extend(transformed_topology_parcels)
+                    if self.parcel_lookup.get(ref_id) is not None:
+                        self.parcel_lookup[ref_id].extend(transformed_parcels)
                     else:
-                        self.topology_lookup[ref_id] = list(transformed_topology_parcels)
+                        self.parcel_lookup[ref_id] = list(transformed_parcels)
 
-    def update_topology_groups_and_profiles(self) -> None:
+    def update_topology_groups_and_profiles(
+        self, centralized_policy: CentralizedPolicyInfo, transformed_topology_parcels: List[TransformedParcel]
+    ) -> None:
+        self.ux2.feature_profiles.append(
+            TransformedFeatureProfile(
+                header=TransformHeader(
+                    type="topology",
+                    origin=centralized_policy.policy_id,
+                    subelements=set([p.header.origin for p in transformed_topology_parcels]),
+                    origname=centralized_policy.policy_name,
+                ),
+                feature_profile=FeatureProfileCreationPayload(
+                    name=f"{centralized_policy.policy_name}_TOPOLOGY",
+                    description=centralized_policy.policy_description,
+                ),
+            )
+        )
+        self.ux2.topology_groups.append(
+            TransformedTopologyGroup(
+                header=TransformHeader(
+                    type="",
+                    origin=centralized_policy.policy_id,
+                    origname=centralized_policy.policy_name,
+                    subelements={centralized_policy.policy_id},
+                ),
+                topology_group=TopologyGroup(
+                    name=centralized_policy.policy_name,
+                    description=centralized_policy.policy_description,
+                    solution="sdwan",
+                ),
+            )
+        )
+
+    def update_app_prio_profiles(
+        self,
+        centralized_policy: CentralizedPolicyInfo,
+        transformed_app_prio_parcels: List[TransformedParcel],
+    ) -> None:
+        self.ux2.feature_profiles.append(
+            TransformedFeatureProfile(
+                header=TransformHeader(
+                    type="application-priority",
+                    origin=centralized_policy.policy_id,
+                    subelements=set([p.header.origin for p in transformed_app_prio_parcels]),
+                    origname=centralized_policy.policy_name,
+                ),
+                feature_profile=FeatureProfileCreationPayload(
+                    name=centralized_policy.policy_name,
+                    description=centralized_policy.policy_description,
+                ),
+            )
+        )
+
+    def update_groups_and_profiles(self) -> None:
         parcel_remove_ids: Set[UUID] = set()
         for centralized_policy in self.ux1.policies.centralized_policies:
             problems: List[str] = list()
             if centralized_policy.policy_type == "feature":
-                dst_transformed_parcels: List[TransformedParcel] = list()
-                if src_transformed_parcels := self.topology_lookup.get(centralized_policy.policy_id):
+                dst_transformed_topology_parcels: List[TransformedParcel] = list()
+                dst_transformed_app_prio_parcels: List[TransformedParcel] = list()
+                if src_transformed_parcels := self.parcel_lookup.get(centralized_policy.policy_id):
                     for src_transformed_parcel in src_transformed_parcels:
                         try:
                             assert isinstance(
-                                src_transformed_parcel.parcel, (MeshParcel, HubSpokeParcel, CustomControlParcel)
+                                src_transformed_parcel.parcel,
+                                (MeshParcel, HubSpokeParcel, CustomControlParcel, TrafficPolicyParcel),
                             )
                             parcel_remove_ids.add(src_transformed_parcel.header.origin)
                             parcel = src_transformed_parcel.parcel.model_copy(deep=True)
@@ -103,51 +176,47 @@ class CentralizedPolicyConverter:
                                     _dummy_vpns = self.context.find_any_service_vpn()
                                 else:
                                     _dummy_vpns = [";dummy-vpn"]
-                                assembly = find_control_assembly(centralized_policy, header.origin)
-                                application = convert_control_policy_application(
-                                    assembly=assembly, context=self.context
+                                ctrl_assembly = find_control_assembly(centralized_policy, header.origin)
+                                ctrl_application = convert_control_policy_application(
+                                    assembly=ctrl_assembly, context=self.context
                                 )
                                 parcel.assign_target_sites(
-                                    inbound_sites=application.inbound_sites,
-                                    outbound_sites=application.outbound_sites,
+                                    inbound_sites=ctrl_application.inbound_sites,
+                                    outbound_sites=ctrl_application.outbound_sites,
                                     _dummy_vpns=_dummy_vpns,
                                 )
+                            elif parcel.type_ == "traffic-policy":
+                                data_assembly = find_traffic_data_assembly(centralized_policy, header.origin)
+                                for i, data_application in enumerate(data_assembly.entries):
+                                    _parcel = parcel.model_copy(deep=True)
+                                    _header = header.model_copy(deep=True)
+                                    _suffix = f"_{i+1}" if i > 0 else ""
+                                    _parcel.parcel_name += _suffix
+                                    _header.origin = uuid4()
+                                    _parcel.target.direction = as_global(
+                                        data_application.direction, TrafficDataDirection
+                                    )
+                                    _parcel.target.vpn.value = []
+                                    for vpn_list_id in data_application.vpn_lists:
+                                        _parcel.target.vpn.value.extend(
+                                            self.context.lan_vpns_by_list_id.get(vpn_list_id, [])
+                                        )
+                                    if not _parcel.target.vpn.value:
+                                        continue
+                                    dst_transformed_app_prio_parcel = TransformedParcel(header=_header, parcel=_parcel)
+                                    dst_transformed_app_prio_parcels.append(dst_transformed_app_prio_parcel)
+                                    self.ux2.profile_parcels.append(dst_transformed_app_prio_parcel)
+                                continue
                             header.origin = uuid4()
-                            dst_transformed_parcel = TransformedParcel(header=header, parcel=parcel)
-                            dst_transformed_parcels.append(dst_transformed_parcel)
-                            self.ux2.profile_parcels.append(dst_transformed_parcel)
+                            dst_transformed_topology_parcel = TransformedParcel(header=header, parcel=parcel)
+                            dst_transformed_topology_parcels.append(dst_transformed_topology_parcel)
+                            self.ux2.profile_parcels.append(dst_transformed_topology_parcel)
                         except (ValidationError, AssertionError) as e:
                             problems.append(str(e))
-                if dst_transformed_parcels:
-                    self.ux2.feature_profiles.append(
-                        TransformedFeatureProfile(
-                            header=TransformHeader(
-                                type="topology",
-                                origin=centralized_policy.policy_id,
-                                subelements=set([p.header.origin for p in dst_transformed_parcels]),
-                                origname=centralized_policy.policy_name,
-                            ),
-                            feature_profile=FeatureProfileCreationPayload(
-                                name=centralized_policy.policy_name,
-                                description=centralized_policy.policy_description,
-                            ),
-                        )
-                    )
-                    self.ux2.topology_groups.append(
-                        TransformedTopologyGroup(
-                            header=TransformHeader(
-                                type="",
-                                origin=centralized_policy.policy_id,
-                                origname=centralized_policy.policy_name,
-                                subelements={centralized_policy.policy_id},
-                            ),
-                            topology_group=TopologyGroup(
-                                name=centralized_policy.policy_name,
-                                description=centralized_policy.policy_description,
-                                solution="sdwan",
-                            ),
-                        )
-                    )
+                if dst_transformed_topology_parcels:
+                    self.update_topology_groups_and_profiles(centralized_policy, dst_transformed_topology_parcels)
+                if dst_transformed_app_prio_parcels:
+                    self.update_app_prio_profiles(centralized_policy, dst_transformed_app_prio_parcels)
             else:
                 problems.append("cli policy definition not supported")
             if problems:

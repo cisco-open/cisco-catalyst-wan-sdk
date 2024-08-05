@@ -221,7 +221,7 @@ def configure_groups_of_interest(profile_id: UUID, api: PolicyObjectFeatureProfi
 
     # Create App Probe Parcel and add app probes
     app_probe = AppProbeParcel(parcel_name="AppProbeParcelExample")
-    app_probe.add_fowarding_class("FowardingClassParcelExmaple")
+    app_probe.set_fowarding_class_name("FowardingClassParcelExmaple")
     app_probe.add_map(color="custom1", dscp=33)
     app_probe.add_map(color="blue", dscp=40)
     app_probe.add_map(color="public-internet", dscp=43)

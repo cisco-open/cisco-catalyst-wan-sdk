@@ -1,12 +1,13 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 import datetime
+from dataclasses import dataclass, field
 from functools import wraps
-from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
+from ipaddress import IPv4Address, IPv4Interface, IPv4Network, IPv6Address, IPv6Interface, IPv6Network
 from typing import Any, Dict, List, MutableSequence, Optional, Sequence, Set, Tuple, Union
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, RootModel, field_validator, model_validator
 from typing_extensions import Annotated, Literal
 
 from catalystwan.models.common import (
@@ -14,18 +15,27 @@ from catalystwan.models.common import (
     AcceptRejectActionType,
     CarrierType,
     ControlPathType,
+    DestinationRegion,
+    DNSEntryType,
+    DNSTypeEntryType,
     EncapType,
-    ICMPMessageType,
+    IcmpMsgType,
     IntStr,
+    LossProtectionType,
     MultiRegionRole,
     OriginProtocol,
     SequenceIpType,
     ServiceChainNumber,
     ServiceType,
+    SpaceSeparatedInterfaceStr,
+    SpaceSeparatedIPv4,
+    SpaceSeparatedIPv6,
     SpaceSeparatedNonNegativeIntList,
+    SpaceSeparatedTLOCColorStr,
     SpaceSeparatedUUIDList,
     TLOCActionType,
     TLOCColor,
+    TrafficTargetType,
     check_fields_exclusive,
     str_as_str_list,
 )
@@ -47,23 +57,6 @@ def networks_to_str(networks: Sequence[Union[IPv4Network, IPv6Network]]) -> str:
 PLPEntryType = Literal[
     "low",
     "high",
-]
-
-DNSEntryType = Literal[
-    "request",
-    "response",
-]
-
-TrafficTargetType = Literal[
-    "access",
-    "core",
-    "service",
-]
-
-DestinationRegion = Literal[
-    "primary-region",
-    "secondary-region",
-    "other-region",
 ]
 
 
@@ -97,17 +90,6 @@ Optimized = Literal[
     "false",
 ]
 
-DNSTypeEntryType = Literal[
-    "host",
-    "umbrella",
-]
-
-LossProtectionType = Literal[
-    "fecAdaptive",
-    "fecAlways",
-    "packetDuplication",
-]
-
 AdvancedCommunityMatchFlag = Literal["or", "and", "exact"]
 
 MetricType = Literal["type1", "type2"]
@@ -131,7 +113,7 @@ class VariableName(BaseModel):
 
 
 class LocalTLOCListEntryValue(BaseModel):
-    color: TLOCColor
+    color: SpaceSeparatedTLOCColorStr
     encap: EncapType
     restrict: Optional[str] = None
 
@@ -192,23 +174,29 @@ class SourceIPEntry(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     field: Literal["sourceIp"] = "sourceIp"
-    value: Optional[str] = Field(default=None, description="IP network specifiers separate by space")
+    value: Optional[SpaceSeparatedIPv4] = Field(default=None, description="IP network specifiers separate by space")
     vip_variable_name: Optional[str] = Field(
         default=None, serialization_alias="vipVariableName", validation_alias="vipVariableName"
     )
 
     @staticmethod
     def from_ipv4_networks(networks: List[IPv4Network]) -> "SourceIPEntry":
-        return SourceIPEntry(value=networks_to_str(networks))
+        return SourceIPEntry(value=[IPv4Interface(ip) for ip in networks])
+
+    def as_ipv4_networks(self) -> List[IPv4Network]:
+        return [] if not self.value else [IPv4Network(val) for val in self.value]
 
 
 class SourceIPv6Entry(BaseModel):
     field: Literal["sourceIpv6"] = "sourceIpv6"
-    value: str = Field(description="IPv6 network specifiers separate by space")
+    value: SpaceSeparatedIPv6
 
     @staticmethod
     def from_ipv6_networks(networks: List[IPv6Network]) -> "SourceIPv6Entry":
-        return SourceIPv6Entry(value=networks_to_str(networks))
+        return SourceIPv6Entry(value=[IPv6Interface(ip) for ip in networks])
+
+    def as_ipv6_networks(self) -> List[IPv6Network]:
+        return [] if not self.value else [IPv6Network(val) for val in self.value]
 
 
 class IPAddressEntry(BaseModel):
@@ -229,23 +217,29 @@ class DestinationIPEntry(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     field: Literal["destinationIp"] = "destinationIp"
-    value: Optional[str] = Field(default=None)
+    value: Optional[SpaceSeparatedIPv4] = Field(default=None)
     vip_variable_name: Optional[str] = Field(
         default=None, serialization_alias="vipVariableName", validation_alias="vipVariableName"
     )
 
     @staticmethod
     def from_ipv4_networks(networks: List[IPv4Network]) -> "DestinationIPEntry":
-        return DestinationIPEntry(value=networks_to_str(networks))
+        return DestinationIPEntry(value=[IPv4Interface(ip) for ip in networks])
+
+    def as_ipv4_networks(self) -> List[IPv4Network]:
+        return [] if not self.value else [IPv4Network(val) for val in self.value]
 
 
 class DestinationIPv6Entry(BaseModel):
     field: Literal["destinationIpv6"] = "destinationIpv6"
-    value: str
+    value: SpaceSeparatedIPv6
 
     @staticmethod
     def from_ipv6_networks(networks: List[IPv6Network]) -> "DestinationIPv6Entry":
-        return DestinationIPv6Entry(value=networks_to_str(networks))
+        return DestinationIPv6Entry(value=[IPv6Interface(ip) for ip in networks])
+
+    def as_ipv6_networks(self) -> List[IPv6Network]:
+        return [] if not self.value else [IPv6Network(val) for val in self.value]
 
 
 class DestinationPortEntry(BaseModel):
@@ -353,7 +347,30 @@ class UseVPNEntry(BaseModel):
 
 class FallBackEntry(BaseModel):
     field: Literal["fallback"] = "fallback"
-    value: str = ""
+    value: Literal["", "true"]
+
+    @property
+    def as_bool(self) -> bool:
+        return True if self.value == "true" else False
+
+
+class DiaPoolEntry(BaseModel):
+    field: Literal["diaPool"] = "diaPool"
+    value: SpaceSeparatedNonNegativeIntList
+
+
+class DiaInterfaceEntry(BaseModel):
+    field: Literal["diaInterface"] = "diaInterface"
+    value: SpaceSeparatedInterfaceStr
+
+
+class BypassEntry(BaseModel):
+    field: Literal["bypass"] = "bypass"
+    value: Literal["", "true"]
+
+    @property
+    def as_bool(self) -> bool:
+        return True if self.value == "true" else False
 
 
 class NextHopActionEntry(BaseModel):
@@ -368,7 +385,7 @@ class NextHopMatchEntry(BaseModel):
 
 class NextHopLooseEntry(BaseModel):
     field: Literal["nextHopLoose"] = "nextHopLoose"
-    value: str
+    value: Annotated[bool, PlainSerializer(lambda x: str(x).lower(), return_type=str, when_used="json-unless-none")]
 
 
 class OMPTagEntry(BaseModel):
@@ -553,41 +570,97 @@ class ExtendedCommunityEntry(BaseModel):
     ref: UUID
 
 
+NATVPNEntries = Annotated[
+    Union[
+        BypassEntry,
+        DiaPoolEntry,
+        DiaInterfaceEntry,
+        FallBackEntry,
+        UseVPNEntry,
+    ],
+    Field(discriminator="field"),
+]
+
+
+@dataclass
+class NATVPNParams:
+    bypass: bool = False
+    dia_pool: List[int] = field(default_factory=list)
+    dia_interface: List[str] = field(default_factory=list)
+    fallback: bool = False
+    vpn: Optional[int] = None
+
+    def as_entry_list(self) -> List[NATVPNEntries]:
+        entries: List[NATVPNEntries] = []
+        if self.bypass:
+            entries.append(BypassEntry(value="true"))
+        if self.dia_pool:
+            entries.append(DiaPoolEntry(value=self.dia_pool))
+        if self.dia_interface:
+            entries.append(DiaInterfaceEntry(value=self.dia_interface))
+        if self.fallback:
+            entries.append(FallBackEntry(value="true"))
+        if self.vpn is not None:
+            entries.append(UseVPNEntry(value=str(self.vpn)))
+        return entries
+
+
 class NATVPNEntry(RootModel):
-    root: List[Union[UseVPNEntry, FallBackEntry]]
+    root: List[NATVPNEntries]
 
     @staticmethod
-    def from_nat_vpn(fallback: bool, vpn: int = 0) -> "NATVPNEntry":
-        if fallback:
-            return NATVPNEntry(root=[UseVPNEntry(value=str(vpn)), FallBackEntry()])
-        return NATVPNEntry(root=[UseVPNEntry(value=str(vpn))])
+    def from_params(params: NATVPNParams) -> "NATVPNEntry":
+        return NATVPNEntry(root=params.as_entry_list())
+
+    def get_params(self) -> NATVPNParams:
+        params = NATVPNParams()
+        for param in self.root:
+            if param.field == "bypass":
+                params.bypass = param.as_bool
+            elif param.field == "diaInterface":
+                params.dia_interface = param.value
+            elif param.field == "diaPool":
+                params.dia_pool = param.value
+            elif param.field == "fallback":
+                params.fallback = param.as_bool
+            elif param.field == "useVpn":
+                params.vpn = int(param.value)
+        return params
 
 
 class ICMPMessageEntry(BaseModel):
     field: Literal["icmpMessage"] = "icmpMessage"
-    value: List[ICMPMessageType]
+    value: List[IcmpMsgType]
 
     _value = field_validator("value", mode="before")(str_as_str_list)
 
 
 class SourceDataPrefixListEntry(BaseModel):
     field: Literal["sourceDataPrefixList"] = "sourceDataPrefixList"
-    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
+    ref: SpaceSeparatedUUIDList = Field(
+        description="usually single id but zone based firewall can use multiple ids separated by space"
+    )
 
 
 class SourceDataIPv6PrefixListEntry(BaseModel):
     field: Literal["sourceDataIpv6PrefixList"] = "sourceDataIpv6PrefixList"
-    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
+    ref: SpaceSeparatedUUIDList = Field(
+        description="usually single id but zone based firewall can use multiple ids separated by space"
+    )
 
 
 class DestinationDataPrefixListEntry(BaseModel):
     field: Literal["destinationDataPrefixList"] = "destinationDataPrefixList"
-    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
+    ref: SpaceSeparatedUUIDList = Field(
+        description="usually single id but zone based firewall can use multiple ids separated by space"
+    )
 
 
 class DestinationDataIPv6PrefixListEntry(BaseModel):
     field: Literal["destinationDataIpv6PrefixList"] = "destinationDataIpv6PrefixList"
-    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
+    ref: SpaceSeparatedUUIDList = Field(
+        description="usually single id but zone based firewall can use multiple ids separated by space"
+    )
 
 
 class DNSAppListEntry(BaseModel):
@@ -642,7 +715,9 @@ class SourceScalableGroupTagListEntry(BaseModel):
 
 class DestinationPortListEntry(BaseModel):
     field: Literal["destinationPortList"] = "destinationPortList"
-    ref: SpaceSeparatedUUIDList  # usually single id but zone based firewall can use multiple ids separated by space
+    ref: SpaceSeparatedUUIDList = Field(
+        description="usually single id but zone based firewall can use multiple ids separated by space"
+    )
 
 
 class DestinationScalableGroupTagListEntry(BaseModel):
@@ -725,11 +800,13 @@ class ClassMapListEntry(BaseModel):
 class ServiceEntryValue(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     type: ServiceType
-    vpn: IntStr
+    vpn: Optional[IntStr] = None
     tloc: Optional[TLOCEntryValue] = None
     tloc_list: Optional[TLOCListEntry] = Field(
         default=None, validation_alias="tlocList", serialization_alias="tlocList"
     )
+    restrict: Optional[str] = None
+    local: Optional[str] = None
 
     @model_validator(mode="after")
     def tloc_xor_tloc_list(self):
@@ -774,8 +851,34 @@ class NATAction(BaseModel):
         return NATAction(parameter=NATPoolEntry(value=str(nat_pool)))
 
     @staticmethod
-    def from_nat_vpn(fallback: bool, vpn: int = 0) -> "NATAction":
-        return NATAction(parameter=NATVPNEntry.from_nat_vpn(fallback=fallback, vpn=vpn))
+    def from_nat_vpn(
+        use_vpn: int = 0,
+        *,
+        fallback: bool = False,
+        bypass: bool = False,
+        dia_pool: List[int] = [],
+        dia_interface: List[str] = [],
+    ) -> "NATAction":
+        params = NATVPNParams(
+            bypass=bypass,
+            dia_pool=dia_pool,
+            dia_interface=dia_interface,
+            fallback=fallback,
+            vpn=use_vpn,
+        )
+        return NATAction(parameter=NATVPNEntry.from_params(params))
+
+    @property
+    def nat_pool(self) -> Optional[int]:
+        if isinstance(self.parameter, NATPoolEntry):
+            return int(self.parameter.value)
+        return None
+
+    @property
+    def nat_vpn(self) -> Optional[NATVPNParams]:
+        if isinstance(self.parameter, NATVPNEntry):
+            return self.parameter.get_params()
+        return None
 
 
 class CFlowDAction(BaseModel):
@@ -793,6 +896,16 @@ class RedirectDNSAction(BaseModel):
     @staticmethod
     def from_dns_type(dns_type: DNSTypeEntryType = "host") -> "RedirectDNSAction":
         return RedirectDNSAction(parameter=DNSTypeEntry(value=dns_type))
+
+    def get_ip(self) -> Optional[IPv4Address]:
+        if self.parameter.field == "ipAddress":
+            return self.parameter.value
+        return None
+
+    def get_dns_type(self) -> Optional[DNSTypeEntryType]:
+        if self.parameter.field == "dnsType":
+            return self.parameter.value
+        return None
 
 
 class TCPOptimizationAction(BaseModel):
@@ -869,14 +982,23 @@ class AdvancedInspectionProfileAction(BaseModel):
 ActionSetEntry = Annotated[
     Union[
         AffinityEntry,
+        AggregatorActionEntry,
+        AsPathActionEntry,
+        AtomicAggregateActionEntry,
         CommunityAdditiveEntry,
         CommunityEntry,
         DSCPEntry,
         ForwardingClassEntry,
+        LocalPreferenceEntry,
         LocalTLOCListEntry,
+        MetricEntry,
+        MetricTypeEntry,
         NextHopActionEntry,
         NextHopLooseEntry,
         OMPTagEntry,
+        OriginatorEntry,
+        OriginEntry,
+        OspfTagEntry,
         PolicerListEntry,
         PreferenceEntry,
         PrefferedColorGroupListEntry,
@@ -887,15 +1009,6 @@ ActionSetEntry = Annotated[
         TLOCListEntry,
         TrafficClassEntry,
         VPNEntry,
-        AggregatorActionEntry,
-        AsPathActionEntry,
-        AtomicAggregateActionEntry,
-        LocalPreferenceEntry,
-        MetricEntry,
-        MetricTypeEntry,
-        OriginEntry,
-        OriginatorEntry,
-        OspfTagEntry,
         WeightEntry,
     ],
     Field(discriminator="field"),
@@ -916,6 +1029,7 @@ ActionEntry = Annotated[
         ConnectionEventsAction,
         CountAction,
         DREOptimizationAction,
+        ExportToAction,
         FallBackToRoutingAction,
         LogAction,
         LossProtectionAction,
@@ -928,7 +1042,6 @@ ActionEntry = Annotated[
         SecureInternetGatewayAction,
         ServiceNodeGroupAction,
         TCPOptimizationAction,
-        ExportToAction,
     ],
     Field(discriminator="type"),
 ]
@@ -1032,8 +1145,8 @@ MUTUALLY_EXCLUSIVE_FIELDS = [
 def _generate_field_name_check_lookup(spec: Sequence[Set[str]]) -> Dict[str, List[str]]:
     lookup: Dict[str, List[str]] = {}
     for exclusive_set in spec:
-        for field in exclusive_set:
-            lookup[field] = list(exclusive_set - {field})
+        for fieldname in exclusive_set:
+            lookup[fieldname] = list(exclusive_set - {fieldname})
     return lookup
 
 

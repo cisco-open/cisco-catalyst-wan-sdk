@@ -4,13 +4,13 @@ from typing import List, Literal, Optional, Set
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from catalystwan.models.common import InterfaceStr, IntRangeStr, check_fields_exclusive
+from catalystwan.models.common import IntRangeStr, check_fields_exclusive
 from catalystwan.models.policy.policy_list import PolicyListBase, PolicyListId, PolicyListInfo
 
 
 class ZoneListEntry(BaseModel):
     vpn: Optional[IntRangeStr] = Field(default=None, description="0-65530 single number")
-    interface: Optional[InterfaceStr] = None
+    interface: Optional[str] = None
 
     @field_validator("vpn")
     @classmethod
@@ -33,7 +33,7 @@ class ZoneList(PolicyListBase):
     def assign_vpns(self, vpns: Set[int]) -> None:
         self.entries = [ZoneListEntry(vpn=(vpn, None)) for vpn in vpns]
 
-    def assign_interfaces(self, ifs: Set[InterfaceStr]) -> None:
+    def assign_interfaces(self, ifs: Set[str]) -> None:
         self.entries = [ZoneListEntry(interface=interface) for interface in ifs]
 
 

@@ -383,7 +383,7 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
 
     # Policy Lists
     for policy_list in ux1.policies.policy_lists:
-        pl_result = convert_policy_list(policy_list, policy_context)
+        pl_result = convert_policy_list(policy_list, policy_list.list_id, policy_context)
         pl_parcel = pl_result.output
         pl_status = pl_result.status
         if pl_status == "unsupported":
@@ -528,7 +528,7 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
 
     # Centralized Policies
     centralized_policy_converter = CentralizedPolicyConverter(ux1=ux1, context=policy_context, ux2=ux2)
-    centralized_policy_converter.update_topology_groups_and_profiles()
+    centralized_policy_converter.update_groups_and_profiles()
     transform_result.failed_items.extend(centralized_policy_converter.failed_items)
 
     # Add additional objects emmited by the conversion

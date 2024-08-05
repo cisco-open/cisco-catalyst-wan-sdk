@@ -2,6 +2,7 @@
 from logging import getLogger
 from re import match
 from typing import Any, Callable, Dict, List, Mapping, Type, TypeVar, cast
+from uuid import UUID
 
 from pydantic import ValidationError
 
@@ -82,6 +83,7 @@ from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyL
 from catalystwan.models.policy.list.umbrella_data import UmbrellaDataList
 from catalystwan.models.policy.list.vpn import VPNList, VPNListInfo
 from catalystwan.models.settings import ThreatGridApi
+from catalystwan.utils.config_migration.converters.utils import convert_interface_name
 
 logger = getLogger(__name__)
 
@@ -94,14 +96,16 @@ def _get_sorted_unique_list(in_list: List[str]) -> List[str]:
     return sorted(list(set(in_list)))
 
 
-def app_probe(in_: AppProbeClassList, context) -> ConvertResult[AppProbeParcel]:
+def app_probe(in_: AppProbeClassList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[AppProbeParcel]:
     out = AppProbeParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
-        out.add_fowarding_class(entry.forwarding_class)
+        out.set_fowarding_class_name(entry.forwarding_class)
+        for map in entry.map:
+            out.add_map(map.color, map.dscp)
     return ConvertResult[AppProbeParcel](output=out, status="complete")
 
 
-def app_list(in_: AppList, context) -> ConvertResult[ApplicationListParcel]:
+def app_list(in_: AppList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[ApplicationListParcel]:
     out = ApplicationListParcel(**_get_parcel_name_desc(in_))
     for app in _get_sorted_unique_list(in_.list_all_app()):
         out.add_application(app)
@@ -110,7 +114,7 @@ def app_list(in_: AppList, context) -> ConvertResult[ApplicationListParcel]:
     return ConvertResult[ApplicationListParcel](output=out, status="complete")
 
 
-def as_path(in_: ASPathList, context: PolicyConvertContext) -> ConvertResult[AsPathParcel]:
+def as_path(in_: ASPathList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[AsPathParcel]:
     """There is a mismatch between UX1 and UX2 models:
     UX1:
     - AS Path List Name (Alphanumeric value for vEdge, or number from 1 to 500 for ISR Edge router)
@@ -139,49 +143,56 @@ def as_path(in_: ASPathList, context: PolicyConvertContext) -> ConvertResult[AsP
     return result
 
 
-def class_map(in_: ClassMapList, context) -> ConvertResult[FowardingClassParcel]:
+def class_map(in_: ClassMapList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[FowardingClassParcel]:
     out = FowardingClassParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_queue(entry.queue)
+    context.fwclass_id_by_name[in_.name] = uuid
     return ConvertResult[FowardingClassParcel](output=out, status="complete")
 
 
-def color(in_: ColorList, context) -> ConvertResult[ColorParcel]:
+def color(in_: ColorList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[ColorParcel]:
     out = ColorParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_color(entry.color)
     return ConvertResult[ColorParcel](output=out, status="complete")
 
 
-def community(in_: CommunityList, context) -> ConvertResult[StandardCommunityParcel]:
+def community(in_: CommunityList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[StandardCommunityParcel]:
     out = StandardCommunityParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out._add_community(entry.community)
     return ConvertResult[StandardCommunityParcel](output=out, status="complete")
 
 
-def data_prefix_ipv6(in_: DataIPv6PrefixList, context) -> ConvertResult[IPv6DataPrefixParcel]:
+def data_prefix_ipv6(
+    in_: DataIPv6PrefixList, uuid: UUID, context: PolicyConvertContext
+) -> ConvertResult[IPv6DataPrefixParcel]:
     out = IPv6DataPrefixParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_prefix(entry.ipv6_prefix)
     return ConvertResult[IPv6DataPrefixParcel](output=out, status="complete")
 
 
-def data_prefix(in_: DataPrefixList, context) -> ConvertResult[DataPrefixParcel]:
+def data_prefix(in_: DataPrefixList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[DataPrefixParcel]:
     out = DataPrefixParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_data_prefix(entry.ip_prefix)
     return ConvertResult[DataPrefixParcel](output=out, status="complete")
 
 
-def expanded_community(in_: ExpandedCommunityList, context) -> ConvertResult[ExpandedCommunityParcel]:
+def expanded_community(
+    in_: ExpandedCommunityList, uuid: UUID, context: PolicyConvertContext
+) -> ConvertResult[ExpandedCommunityParcel]:
     out = ExpandedCommunityParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_community(entry.community)
     return ConvertResult[ExpandedCommunityParcel](output=out, status="complete")
 
 
-def extended_community(in_: ExtendedCommunityList, context) -> ConvertResult[ExtendedCommunityParcel]:
+def extended_community(
+    in_: ExtendedCommunityList, uuid: UUID, context: PolicyConvertContext
+) -> ConvertResult[ExtendedCommunityParcel]:
     out = ExtendedCommunityParcel(**_get_parcel_name_desc(in_))
     result = ConvertResult[ExtendedCommunityParcel](output=out, status="complete")
 
@@ -206,13 +217,13 @@ def extended_community(in_: ExtendedCommunityList, context) -> ConvertResult[Ext
     return result
 
 
-def fqdn(in_: FQDNList, context) -> ConvertResult[FQDNDomainParcel]:
+def fqdn(in_: FQDNList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[FQDNDomainParcel]:
     out = FQDNDomainParcel(**_get_parcel_name_desc(in_))
     out.from_fqdns([entry.pattern for entry in in_.entries])
     return ConvertResult[FQDNDomainParcel](output=out, status="complete")
 
 
-def mirror(in_: MirrorList, context) -> ConvertResult[MirrorParcel]:
+def mirror(in_: MirrorList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[MirrorParcel]:
     result = ConvertResult[MirrorParcel](output=None)
     if len(in_.entries) == 0:
         result.status = "failed"
@@ -227,7 +238,9 @@ def mirror(in_: MirrorList, context) -> ConvertResult[MirrorParcel]:
     return result
 
 
-def geo_location(in_: GeoLocationList, context) -> ConvertResult[GeoLocationListParcel]:
+def geo_location(
+    in_: GeoLocationList, uuid: UUID, context: PolicyConvertContext
+) -> ConvertResult[GeoLocationListParcel]:
     out = GeoLocationListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         if entry.country is not None:
@@ -237,14 +250,16 @@ def geo_location(in_: GeoLocationList, context) -> ConvertResult[GeoLocationList
     return ConvertResult[GeoLocationListParcel](output=out, status="complete")
 
 
-def ips_signature(in_: IPSSignatureList, context) -> ConvertResult[IPSSignatureParcel]:
+def ips_signature(
+    in_: IPSSignatureList, uuid: UUID, context: PolicyConvertContext
+) -> ConvertResult[IPSSignatureParcel]:
     out = IPSSignatureParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_signature(f"{entry.generator_id}:{entry.signature_id}")
     return ConvertResult[IPSSignatureParcel](output=out, status="complete")
 
 
-def prefix_ipv6(in_: IPv6PrefixList, context) -> ConvertResult[IPv6PrefixListParcel]:
+def prefix_ipv6(in_: IPv6PrefixList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[IPv6PrefixListParcel]:
     out = IPv6PrefixListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_prefix(ipv6_network=entry.ipv6_prefix, ge=entry.ge, le=entry.le)
@@ -252,28 +267,30 @@ def prefix_ipv6(in_: IPv6PrefixList, context) -> ConvertResult[IPv6PrefixListPar
 
 
 # TODO: def local_app(in_: LocalAppList):
-def local_domain(in_: LocalDomainList, context) -> ConvertResult[LocalDomainParcel]:
+def local_domain(in_: LocalDomainList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[LocalDomainParcel]:
     out = LocalDomainParcel(**_get_parcel_name_desc(in_))
     out.from_local_domains([entry.name_server for entry in in_.entries])
     return ConvertResult[LocalDomainParcel](output=out, status="complete")
 
 
 # TODO: def mirror_list(in_: MirrorList):
-def policer(in_: PolicerList, context) -> ConvertResult[PolicerParcel]:
+def policer(in_: PolicerList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[PolicerParcel]:
     out = PolicerParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_entry(burst=entry.burst, exceed=entry.exceed, rate=entry.rate)
     return ConvertResult[PolicerParcel](output=out, status="complete")
 
 
-def port(in_: PortList, context) -> ConvertResult[SecurityPortParcel]:
+def port(in_: PortList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[SecurityPortParcel]:
     out = SecurityPortParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out._add_port(int_range_serializer(entry.port))
     return ConvertResult[SecurityPortParcel](output=out, status="complete")
 
 
-def preferred_color_group(in_: PreferredColorGroupList, context) -> ConvertResult[PreferredColorGroupParcel]:
+def preferred_color_group(
+    in_: PreferredColorGroupList, uuid: UUID, context: PolicyConvertContext
+) -> ConvertResult[PreferredColorGroupParcel]:
     out = PreferredColorGroupParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_primary(
@@ -293,21 +310,21 @@ def preferred_color_group(in_: PreferredColorGroupList, context) -> ConvertResul
     return ConvertResult[PreferredColorGroupParcel](output=out, status="complete")
 
 
-def prefix(in_: PrefixList, context) -> ConvertResult[PrefixListParcel]:
+def prefix(in_: PrefixList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[PrefixListParcel]:
     out = PrefixListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_prefix(entry.ip_prefix)
     return ConvertResult[PrefixListParcel](output=out, status="complete")
 
 
-def protocol(in_: ProtocolNameList, context) -> ConvertResult[ProtocolListParcel]:
+def protocol(in_: ProtocolNameList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[ProtocolListParcel]:
     out = ProtocolListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_protocol(entry.protocol_name)
     return ConvertResult[ProtocolListParcel](output=out, status="complete")
 
 
-def region(in_: RegionListInfo, context: PolicyConvertContext) -> ConvertResult[None]:
+def region(in_: RegionListInfo, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[None]:
     list_id = in_.list_id
     region_id_flatlist: List[int] = []
     context.regions_by_list_id[list_id] = []
@@ -324,7 +341,7 @@ def region(in_: RegionListInfo, context: PolicyConvertContext) -> ConvertResult[
     return ConvertResult[None](status="complete")
 
 
-def site(in_: SiteListInfo, context: PolicyConvertContext) -> ConvertResult[None]:
+def site(in_: SiteListInfo, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[None]:
     list_id = in_.list_id
     site_id_flatlist: List[int] = []
     context.sites_by_list_id[list_id] = []
@@ -341,7 +358,7 @@ def site(in_: SiteListInfo, context: PolicyConvertContext) -> ConvertResult[None
     return ConvertResult[None](status="complete")
 
 
-def sla_class(in_: SLAClassList, context) -> ConvertResult[SLAClassParcel]:
+def sla_class(in_: SLAClassList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[SLAClassParcel]:
     out = SLAClassParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         # TODO: modernize SLAClassList model (UX1)
@@ -371,7 +388,7 @@ def sla_class(in_: SLAClassList, context) -> ConvertResult[SLAClassParcel]:
     return ConvertResult[SLAClassParcel](output=out, status="complete")
 
 
-def tloc(in_: TLOCList, context) -> ConvertResult[TlocParcel]:
+def tloc(in_: TLOCList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[TlocParcel]:
     out = TlocParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         _preference = str(entry.preference) if entry.preference is not None else None
@@ -379,21 +396,21 @@ def tloc(in_: TLOCList, context) -> ConvertResult[TlocParcel]:
     return ConvertResult[TlocParcel](output=out, status="complete")
 
 
-def url_allow(in_: URLAllowList, context) -> ConvertResult[URLAllowParcel]:
+def url_allow(in_: URLAllowList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[URLAllowParcel]:
     out = URLAllowParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_url(entry.pattern)
     return ConvertResult[URLAllowParcel](output=out, status="complete")
 
 
-def url_block(in_: URLBlockList, context) -> ConvertResult[URLBlockParcel]:
+def url_block(in_: URLBlockList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[URLBlockParcel]:
     out = URLBlockParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         out.add_url(entry.pattern)
     return ConvertResult[URLBlockParcel](output=out, status="complete")
 
 
-def vpn(in_: VPNListInfo, context: PolicyConvertContext) -> ConvertResult[None]:
+def vpn(in_: VPNListInfo, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[None]:
     list_id = in_.list_id
     vpn_id_flatlist: List[int] = []
     context.lan_vpns_by_list_id[list_id] = []
@@ -410,17 +427,19 @@ def vpn(in_: VPNListInfo, context: PolicyConvertContext) -> ConvertResult[None]:
     return ConvertResult[None](status="complete")
 
 
-def zone(in_: ZoneList, context) -> ConvertResult[SecurityZoneListParcel]:
+def zone(in_: ZoneList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[SecurityZoneListParcel]:
     out = SecurityZoneListParcel(**_get_parcel_name_desc(in_))
     for entry in in_.entries:
         if entry.interface is not None:
-            out.add_interface(entry.interface)
+            out.add_interface(convert_interface_name(entry.interface))
         if entry.vpn is not None:
             out.add_vpn(int_range_serializer(entry.vpn))
     return ConvertResult[SecurityZoneListParcel](output=out, status="complete")
 
 
-def local_app_list(in_: LocalAppList, context: PolicyConvertContext) -> ConvertResult[SecurityApplicationListParcel]:
+def local_app_list(
+    in_: LocalAppList, uuid: UUID, context: PolicyConvertContext
+) -> ConvertResult[SecurityApplicationListParcel]:
     out = SecurityApplicationListParcel(**_get_parcel_name_desc(in_))
     for app in _get_sorted_unique_list(in_.list_all_app()):
         out.add_application(app)
@@ -429,7 +448,7 @@ def local_app_list(in_: LocalAppList, context: PolicyConvertContext) -> ConvertR
     return ConvertResult[SecurityApplicationListParcel](output=out, status="complete")
 
 
-def threat_grid_api(in_: ThreatGridApiKeyList, context: PolicyConvertContext) -> ConvertResult[None]:
+def threat_grid_api(in_: ThreatGridApiKeyList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[None]:
     out = ThreatGridApi()
     for entry in in_.entries:
         out.set_region_api_key(region=entry.region, apikey=entry.api_key)
@@ -438,7 +457,7 @@ def threat_grid_api(in_: ThreatGridApiKeyList, context: PolicyConvertContext) ->
 
 
 def scalable_group_tag(
-    in_: ScalableGroupTagList, context: PolicyConvertContext
+    in_: ScalableGroupTagList, uuid: UUID, context: PolicyConvertContext
 ) -> ConvertResult[ScalableGroupTagParcel]:
     out = ScalableGroupTagParcel(**_get_parcel_name_desc(in_))
     for e in in_.entries:
@@ -446,7 +465,7 @@ def scalable_group_tag(
     return ConvertResult[ScalableGroupTagParcel](output=out)
 
 
-def identity_list(in_: IdentityList, context: PolicyConvertContext) -> ConvertResult[IdentityParcel]:
+def identity_list(in_: IdentityList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[IdentityParcel]:
     out = IdentityParcel(**_get_parcel_name_desc(in_))
     for e in in_.entries:
         out.add_entry(
@@ -456,7 +475,7 @@ def identity_list(in_: IdentityList, context: PolicyConvertContext) -> ConvertRe
     return ConvertResult[IdentityParcel](output=out)
 
 
-def umbrella_data(in_: UmbrellaDataList, context: PolicyConvertContext) -> ConvertResult[None]:
+def umbrella_data(in_: UmbrellaDataList, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[None]:
     out = CloudCredentials()
     if not len(in_.entries) == 1:
         return ConvertResult[None](status="failed", info=["Expected exactly one entry in Umbrella Data List"])
@@ -529,12 +548,13 @@ def _find_converter(in_: Input) -> Callable[..., Output]:
     return _not_supported
 
 
-def convert(in_: Input, context: PolicyConvertContext) -> Output:
-    result = _find_converter(in_)(in_, context)
-    if result.output is not None:
-        try:
+def convert(in_: Input, uuid: UUID, context: PolicyConvertContext) -> Output:
+    result = Output(status="unsupported", output=None)
+    try:
+        result = _find_converter(in_)(in_, uuid, context)
+        if result.output is not None:
             result.output.model_validate(result.output)
-        except ValidationError as e:
-            result.status = "failed"
-            result.info.append(str(e))
+    except ValidationError as e:
+        result.status = "failed"
+        result.info.append(str(e))
     return result

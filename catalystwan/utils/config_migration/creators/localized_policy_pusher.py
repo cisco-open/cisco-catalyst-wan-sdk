@@ -206,7 +206,7 @@ class LocalizedPolicyPusher(Pusher):
                     report.add_failed_parcel(
                         parcel_name=error_parcel.parcel_name, parcel_type=error_parcel.type_, error_info=error_info
                     )
-        # ----- QoSMap, Settings, Traffic Policy -----
+        # ----- QoSMap, Settings, Traffic Policy-----
         profile_factory = FeatureProfileBuilderFactory(self._session)
         app_prio_profiles = self._get_all_application_priority_profiles_with_subelements()
         app_prio_reports: List[FeatureProfileBuildReport] = list()
@@ -216,9 +216,7 @@ class LocalizedPolicyPusher(Pusher):
             app_prio_builder.add_profile_name_and_description(app_prio_profile.feature_profile)
             transformed_parcels = self._get_parcels_to_push(list(app_prio_profile.header.subelements))
             for tp in transformed_parcels:
-                parcel = tp.parcel
-                if parcel._get_parcel_type() == "qos-policy":
-                    parcel = update_parcel_references(parcel, self._push_context.id_lookup)  # FowardingClassRef
+                parcel = update_parcel_references(tp.parcel, self._push_context.id_lookup)
                 app_prio_builder.add_parcel(parcel)
             try:
                 report = app_prio_builder.build()

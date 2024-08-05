@@ -1,5 +1,4 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
-from ipaddress import IPv4Network
 from typing import List, Optional, Union, cast
 from uuid import UUID
 
@@ -84,14 +83,14 @@ def convert_sequence_match_entry(
         return AppListFlat.create(match_entry.ref)
     elif match_entry.field == "sourceIp":
         if match_entry.value is not None:
-            return SourceIp.from_ip_networks(list(map(IPv4Network, split_value(match_entry))))
+            return SourceIp.from_ip_networks(ip_networks=match_entry.as_ipv4_networks())
         elif match_entry.vip_variable_name is not None:
             return SourceIp.from_variable(convert_varname(match_entry.vip_variable_name))
         convert_result.update_status("partial", "SrcIP match entry does not contain value/vipVariableName")
         return None
     elif match_entry.field == "destinationIp":
         if match_entry.value is not None:
-            return DestinationIp.from_ip_networks(list(map(IPv4Network, split_value(match_entry))))
+            return DestinationIp.from_ip_networks(ip_networks=match_entry.as_ipv4_networks())
         elif match_entry.vip_variable_name is not None:
             return DestinationIp.from_variable(convert_varname(match_entry.vip_variable_name))
         convert_result.update_status("partial", "DstIP match entry does not contain value/vipVariableName")
@@ -148,9 +147,7 @@ def convert_sequence_action_entry(
     return None
 
 
-def convert_zone_based_fw(
-    in_: ZoneBasedFWPolicy, uuid: UUID, context: PolicyConvertContext
-) -> ConvertResult[NgfirewallParcel]:
+def zone_based_fw(in_: ZoneBasedFWPolicy, uuid: UUID, context: PolicyConvertContext) -> ConvertResult[NgfirewallParcel]:
     convert_result = ConvertResult[NgfirewallParcel]()
 
     if in_.definition.entries:
