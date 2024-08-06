@@ -10,9 +10,6 @@ class OnBoardClient(BaseModel):
 
 
 class ApiGateway(APIEndpoints):
-    @delete("/certificate/{uuid}")
-    def delete_configuration(self, uuid: str) -> None:
-        ...
 
     @post("/apigw/config/reload")
     def configuration_reload(self) -> None:
@@ -24,12 +21,4 @@ class ApiGateway(APIEndpoints):
 
     @post("/apigw/client/registration")
     def on_board_client(self, payload: OnBoardClient) -> None:
-        ...
-
-    @post("/certificate/vedge/list?action={action}")
-    def send_to_controllers(self, action: str = "push") -> None:
-        ...
-
-    @post("/certificate/vsmart/list")
-    def send_to_vbond(self) -> None:
         ...
