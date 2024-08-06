@@ -129,9 +129,7 @@ def create_apigw_session(
     Returns:
         ManagerSession: logged-in and operative session to perform tasks on SDWAN Manager.
     """
-    base_url = create_base_url(url, port)
     auth = ApiGwAuth(
-        base_url=base_url,
         login=ApiGwLogin(
             client_id=client_id,
             client_secret=client_secret,
@@ -142,8 +140,9 @@ def create_apigw_session(
             tenant_user=tenant_user,
             token_duration=token_duration,
         ),
+        logger=logger,
     )
-    session_ = ManagerSession(base_url=base_url, auth=auth, subdomain=subdomain, logger=logger)
+    session_ = ManagerSession(base_url=create_base_url(url, port), auth=auth, subdomain=subdomain, logger=logger)
     session_.state = ManagerSessionState.LOGIN
     return session_
 
@@ -170,10 +169,9 @@ def create_manager_session(
     Returns:
         ManagerSession: logged-in and operative session to perform tasks on SDWAN Manager.
     """
-    base_url = create_base_url(url, port)
-    auth = vManageAuth(base_url, username, password)
+    auth = vManageAuth(username, password, logger=logger)
     session = ManagerSession(
-        base_url=base_url,
+        base_url=create_base_url(url, port),
         auth=auth,
         subdomain=subdomain,
         logger=logger,
@@ -318,7 +316,6 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self.cookies.clear_session_cookies()
         self._auth.clear_tokens_and_cookies()
         self.auth = self._auth
-        self.auth.logger = self.logger
         if self.subdomain:
             tenant_id = self.get_tenant_id()
             vsession_id = self.get_virtual_session_id(tenant_id)
@@ -349,9 +346,13 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self.logger.info(
             f"Logged to vManage({self.platform_version}) as {self.auth}. The session type is {self.session_type}"
         )
-        if jsessionid := self.auth.set_cookie.get("JSESSIONID"):
-            self.cookies.set("JSESSIONID", jsessionid)
+        self._set_jsessionid(self.auth)
         return self
+
+    def _set_jsessionid(self, auth: Union[vManageAuth, ApiGwAuth]) -> None:
+        if isinstance(auth, vManageAuth):
+            if jsessionid := auth.jsessionid:
+                self.cookies.set("JSESSIONID", jsessionid)
 
     def wait_server_ready(self, timeout: int, poll_period: int = 10) -> None:
         """Waits until server is ready for API requests with given timeout in seconds"""

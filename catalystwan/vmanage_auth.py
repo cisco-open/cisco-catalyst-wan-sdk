@@ -2,15 +2,14 @@
 
 import logging
 from typing import TYPE_CHECKING, Optional
-from urllib.parse import urljoin
+from urllib.parse import urlparse
 
-import requests
 from packaging.version import Version
-from requests import PreparedRequest, Response
+from requests import PreparedRequest, Response, get, post
 from requests.auth import AuthBase
 from requests.cookies import RequestsCookieJar
 
-from catalystwan import USER_AGENT, with_proc_info_header
+from catalystwan import USER_AGENT
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.response import ManagerResponse
 from catalystwan.version import NullVersion
@@ -50,101 +49,67 @@ class vManageAuth(AuthBase):
     The following are typical steps for a user to consume the API:
     1. Log in with a user name and password to establish a session.
     2. Get a cross-site request forgery prevention token, which is required for most POST operations.
-
-    Attributes:
-        base_url (str): url (with port if applicable) f.e. https://1.1.1.1:1111
-        username (str): vManage username
-        password (str): vManage user's password
-        verify (bool): Controls whether we verify the server's TLS certificate.
-                Defaults to True.
-        expiration_time (int): Expiration token time in seconds.
-                Defaults to None (unlimited).
-        token (str): Access token
-
     """
 
-    def __init__(self, base_url: str, username: str, password: str, verify: bool = False):
-        self.base_url = base_url
+    def __init__(self, username: str, password: str, logger: Optional[logging.Logger] = None):
         self.username = username
         self.password = password
-        self.verify = verify  # TODO Handle `True` parameter
-        self.expiration_time: Optional[int] = None  # Unlimited
-        self.set_cookie = RequestsCookieJar()
-        self.token: str = ""
-        self.logger = logging.getLogger(__name__)
+        self.jsessionid: str = ""
+        self.xsrftoken: str = ""
+        self.logger = logger or logging.getLogger(__name__)
+        self._cookie: RequestsCookieJar = RequestsCookieJar()
 
-    def get_cookie(self) -> RequestsCookieJar:
-        """Check whether a user is successfully authenticated.
+    def __call__(self, request: PreparedRequest) -> PreparedRequest:
+        self.handle_auth(request)
+        self.build_digest_header(request)
+        return request
 
-        If a user is successfully authenticated, the response body is empty and a valid session cookie is set.
-        The response has entry in headers named `set-cookie` equal to JESSIONID={session hash}.
-        If a user is un-authenticated, the response body contains a html login page with tag in it.
+    def handle_auth(self, request: PreparedRequest):
+        cookie = request.headers.get("Cookie")
+        wrong_cookie = cookie is None or (cookie is not None and "JSESSION" not in cookie)
+        if self.jsessionid is None or self.xsrftoken is None or wrong_cookie:
+            self.authenticate(request)
 
-        Raises:
-            UnauthorizedAccessError: _description_
-
-        Returns:
-            RequestsCookieJar: _description_
-        """
+    @staticmethod
+    def get_jsessionid(base_url: str, username: str, password: str) -> str:
         security_payload = {
-            "j_username": self.username,
-            "j_password": self.password,
+            "j_username": username,
+            "j_password": password,
         }
-        full_url = urljoin(self.base_url, "/j_security_check")
-        headers = {"Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT}
-        response = requests.post(
-            url=full_url,
-            data=security_payload,
-            verify=self.verify,
-            headers=headers,
-        )
-        self.logger.debug(self._auth_request_debug(response, include_reponse_text=True))
-        if response.text != "":
-            raise UnauthorizedAccessError(self.username, self.password)
-        return response.cookies
+        url = base_url + "/j_security_check"
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        response: Response = post(url=url, headers=headers, data=security_payload, verify=False)
+        jsessionid = response.cookies.get("JSESSIONID", "")
+        if response.text != "" or not isinstance(jsessionid, str) or jsessionid == "":
+            raise UnauthorizedAccessError(username, password)
+        return jsessionid
 
-    def fetch_token(self, cookies: RequestsCookieJar) -> str:
-        """If it is required, fetches vManage REST API token.
-
-        The XSRF token is in the response body.
-        XSRF token along with the JESSIONID cookie is used for ongoing API requests.
-
-        Args:
-            cookies (RequestsCookieJar): The JESSIONID={session hash} cookie is required to authenticate.
-
-        Returns:
-            str: Valid token.
-        """
-        full_url = urljoin(self.base_url, "/dataservice/client/token")
+    @staticmethod
+    def get_xsrftoken(base_url: str, jsessionid: str) -> str:
+        url = base_url + "/dataservice/client/token"
         headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT}
-        response = requests.get(
-            url=full_url,
-            cookies=cookies,
-            verify=self.verify,
+        cookie = RequestsCookieJar()
+        cookie.set("JSESSIONID", jsessionid)
+        response: Response = get(
+            url=url,
+            cookies=cookie,
             headers=headers,
+            verify=False,
         )
-        self.logger.debug(self._auth_request_debug(response))
-        token = response.text
-        if response.status_code != 200 or "<html>" in token:
+        if response.status_code != 200 or "<html>" in response.text:
             raise CatalystwanException("Failed to get XSRF token")
-        return token
+        return response.text
 
-    def __call__(self, prepared_request: PreparedRequest) -> PreparedRequest:
-        if self.expiration_time is None or self.token == "":
-            self.set_cookie = self.get_cookie()
-            self.token = self.fetch_token(self.set_cookie)
-        prepared_request.prepare_cookies(self.set_cookie)
-        prepared_request.headers.update({"x-xsrf-token": self.token})
-        return prepared_request
+    def authenticate(self, request: PreparedRequest):
+        base_url = f"{str(urlparse(request.url).scheme)}://{str(urlparse(request.url).netloc)}"
+        self.jsessionid = self.get_jsessionid(base_url, self.username, self.password)
+        self._cookie = RequestsCookieJar()
+        self._cookie.set("JSESSIONID", self.jsessionid)
+        self.xsrftoken = self.get_xsrftoken(base_url, self.jsessionid)
 
-    @with_proc_info_header
-    def _auth_request_debug(self, response: Response, include_reponse_text: bool = False) -> str:
-        msg = (
-            f"Authenticating: {self.username} {response.request.method} {response.request.url} <{response.status_code}>"
-        )
-        if include_reponse_text and response.text:
-            msg += f" response.text: {response.text}"
-        return msg
+    def build_digest_header(self, request: PreparedRequest) -> None:
+        request.headers["x-xsrf-token"] = self.xsrftoken
+        request.prepare_cookies(self._cookie)
 
     def logout(self, session: "ManagerSession") -> Optional[ManagerResponse]:
         response = None
@@ -166,8 +131,9 @@ class vManageAuth(AuthBase):
         return response
 
     def __str__(self) -> str:
-        return f"vManageAuth(base_url={self.base_url}, username={self.username})"
+        return f"vManageAuth(username={self.username})"
 
     def clear_tokens_and_cookies(self) -> None:
-        self.token = ""
-        self.set_cookie.clear()
+        self.jsessionid = ""
+        self.xsrftoken = ""
+        self._cookie = RequestsCookieJar()

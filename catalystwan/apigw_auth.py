@@ -1,10 +1,10 @@
 import logging
 from typing import TYPE_CHECKING, Literal, Optional
+from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, PositiveInt
 from requests import PreparedRequest, post
 from requests.auth import AuthBase
-from requests.cookies import RequestsCookieJar
 
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.response import ManagerResponse
@@ -33,25 +33,37 @@ class ApiGwAuth(AuthBase):
     2. Use the token in the Authorization header for subsequent requests.
     """
 
-    def __init__(self, base_url: str, login: ApiGwLogin, verify: bool = False):
-        self.base_url = base_url
-        self.verify = verify
+    def __init__(self, login: ApiGwLogin, logger: Optional[logging.Logger] = None):
         self.login = login
         self.token = ""
-        self.set_cookie = RequestsCookieJar()  # It is need for compatibility with ManagerSession::login method
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger or logging.getLogger(__name__)
 
-    def __call__(self, prepared_request: PreparedRequest) -> PreparedRequest:
+    def __call__(self, request: PreparedRequest) -> PreparedRequest:
+        self.handle_auth(request)
+        self.build_digest_header(request)
+        return request
+
+    def handle_auth(self, request: PreparedRequest) -> None:
         if self.token == "":
-            self.token = self._get_token()
-        prepared_request.headers.update(self._prepare_header())
-        return prepared_request
+            self.authenticate(request)
 
-    def _get_token(self) -> str:
+    def authenticate(self, request: PreparedRequest):
+        base_url = f"{str(urlparse(request.url).scheme)}://{str(urlparse(request.url).netloc)}"
+        self.token = self.get_token(base_url, self.login)
+
+    def build_digest_header(self, request: PreparedRequest) -> None:
+        header = {
+            "sdwan-org": self.login.org_name,
+            "Authorization": f"Bearer {self.token}",
+        }
+        request.headers.update(header)
+
+    @staticmethod
+    def get_token(base_url: str, apigw_login: ApiGwLogin) -> str:
         response = post(
-            url=f"{self.base_url}/apigw/login",
-            verify=self.verify,
-            json=self.login.model_dump(exclude_none=True),
+            url=f"{base_url}/apigw/login",
+            verify=False,
+            json=apigw_login.model_dump(exclude_none=True),
             timeout=10,
         )
         token = response.json().get("token", "")
@@ -59,18 +71,11 @@ class ApiGwAuth(AuthBase):
             raise CatalystwanException("Failed to get bearer token")
         return token
 
-    def _prepare_header(self) -> dict:
-        return {
-            "sdwan-org": self.login.org_name,
-            "Authorization": f"Bearer {self.token}",
-        }
-
     def __str__(self) -> str:
-        return f"ApiGatewayAuth(base_url={self.base_url}, mode={self.login.mode})"
+        return f"ApiGatewayAuth(mode={self.login.mode})"
 
     def logout(self, session: "ManagerSession") -> Optional[ManagerResponse]:
         return None
 
     def clear_tokens_and_cookies(self) -> None:
         self.token = ""
-        self.set_cookie.clear()
