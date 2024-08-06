@@ -20,13 +20,12 @@ class TestSession(unittest.TestCase):
 
     def test_session_str(self):
         # Arrange, Act
-        session = ManagerSession(self.url, auth=vManageAuth(self.url, self.username, self.password))
+        session = ManagerSession(self.url, auth=vManageAuth(self.username, self.password))
 
         # Assert
         self.assertEqual(
             str(session),
-            "ManagerSession(session_type=SessionType.NOT_DEFINED, "
-            "auth=vManageAuth(base_url=https://example.com:80, username=admin))",
+            "ManagerSession(session_type=SessionType.NOT_DEFINED, " "auth=vManageAuth(username=admin))",
         )
 
     @parameterized.expand(
@@ -66,7 +65,7 @@ class TestSessionExceptions(unittest.TestCase):
     def setUp(self):
         self.session = ManagerSession(
             base_url="https://domain.com:9443",
-            auth=vManageAuth(base_url="https://domain.com:9443", username="admin", password="admin"),
+            auth=vManageAuth(username="admin", password="admin"),
         )
         response = Response()
         response.json = lambda: {

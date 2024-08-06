@@ -77,7 +77,7 @@ class vManageAuth(AuthBase):
             "j_password": password,
         }
         url = base_url + "/j_security_check"
-        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT}
         response: Response = post(url=url, headers=headers, data=security_payload, verify=False)
         jsessionid = response.cookies.get("JSESSIONID", "")
         if response.text != "" or not isinstance(jsessionid, str) or jsessionid == "":
