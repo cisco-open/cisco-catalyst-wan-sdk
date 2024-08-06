@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from catalystwan.endpoints import APIEndpoints, delete, post
+from catalystwan.endpoints import APIEndpoints, post
 
 
 class OnBoardClient(BaseModel):
@@ -10,7 +10,6 @@ class OnBoardClient(BaseModel):
 
 
 class ApiGateway(APIEndpoints):
-
     @post("/apigw/config/reload")
     def configuration_reload(self) -> None:
         """After launching the API Gateway, SSP can use the API
