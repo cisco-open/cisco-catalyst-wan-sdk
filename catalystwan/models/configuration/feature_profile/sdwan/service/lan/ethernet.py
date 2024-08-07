@@ -1,13 +1,23 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from ipaddress import IPv4Address
-from typing import List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 from uuid import UUID
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic import (
+    AliasChoices,
+    AliasPath,
+    BaseModel,
+    ConfigDict,
+    Field,
+    SerializationInfo,
+    SerializerFunctionWrapHandler,
+    model_serializer,
+)
+from typing_extensions import Annotated
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.common import EthernetDuplexMode, MediaType
+from catalystwan.models.common import EthernetDuplexMode, MediaType, VersionedField
 from catalystwan.models.configuration.feature_profile.common import (
     Arp,
     DynamicDhcpDistance,
@@ -93,7 +103,10 @@ class VrrpIPv6(BaseModel):
 class VrrpIPv4(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    group_id: Union[Variable, Global[int]] = Field(serialization_alias="groupId", validation_alias="groupId")
+    group_id: Annotated[
+        Union[Variable, Global[int]],
+        VersionedField(versions="<=20.12", serialization_alias="group_id"),
+    ] = Field(serialization_alias="groupId", validation_alias=AliasChoices("groupId", "group_id"))
     priority: Union[Variable, Global[int], Default[int]] = Default[int](value=100)
     timer: Union[Variable, Global[int], Default[int]] = Default[int](value=1000)
     track_omp: Union[Global[bool], Default[bool]] = Field(
@@ -117,25 +130,42 @@ class VrrpIPv4(BaseModel):
         serialization_alias="trackingObject", validation_alias="trackingObject", default=None
     )
 
+    @model_serializer(mode="wrap", when_used="json")
+    def serialize(self, handler: SerializerFunctionWrapHandler, info: SerializationInfo) -> Dict[str, Any]:
+        return VersionedField.dump(self.model_fields, handler(self), info)
+
 
 class Trustsec(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    enable_sgt_propagation: Union[Global[bool], Default[bool]] = Field(
+    enable_sgt_propagation: Annotated[
+        Union[Global[bool], Default[bool]],
+        VersionedField(versions="<=20.12", serialization_alias="enableSGTPropogation"),
+    ] = Field(
         serialization_alias="enableSGTPropagation",
-        validation_alias="enableSGTPropagation",
+        validation_alias=AliasChoices("enableSGTPropagation", "enableSGTPropogation"),
         default=Default[bool](value=False),
     )
-    propagate: Optional[Union[Global[bool], Default[bool]]] = Default[bool](value=True)
+    propagate: Annotated[
+        Optional[Union[Global[bool], Default[bool]]], VersionedField(versions="<=20.12", forbidden=True)
+    ] = Default[bool](value=True)
     security_group_tag: Optional[Union[Global[int], Variable, Default[None]]] = Field(
         serialization_alias="securityGroupTag", validation_alias="securityGroupTag", default=None
     )
-    enable_enforced_propagation: Union[Global[bool], Default[None]] = Field(
-        serialization_alias="enableEnforcedPropagation", validation_alias="enableEnforcedPropagation"
+    enable_enforced_propagation: Annotated[
+        Union[Global[bool], Default[None]],
+        VersionedField(versions="<=20.12", serialization_alias="enableEnforcedPropogation"),
+    ] = Field(
+        serialization_alias="enableEnforcedPropagation",
+        validation_alias=AliasChoices("enableEnforcedPropagation", "enableEnforcedPropogation"),
     )
     enforced_security_group_tag: Union[Global[int], Variable, Default[None]] = Field(
         serialization_alias="enforcedSecurityGroupTag", validation_alias="enforcedSecurityGroupTag"
     )
+
+    @model_serializer(mode="wrap", when_used="json")
+    def serialize(self, handler: SerializerFunctionWrapHandler, info: SerializationInfo) -> Dict[str, Any]:
+        return VersionedField.dump(self.model_fields, handler(self), info)
 
 
 class AdvancedEthernetAttributes(BaseModel):

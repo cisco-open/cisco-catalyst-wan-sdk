@@ -26,12 +26,15 @@ VPN_ADDITIONAL_TEMPLATES = [
     "bgp",
     "cisco_ospfv3",
     "cisco_ospf",
-    "ospf"
+    "ospf",
 ]
 
 NO_SUBSTITUTE_ERROR = "NO_SUBSTITUTE_ERROR"
 NO_SUBSTITUTE_VPN_MANAGEMENT_SVI = (
     "NO_SUBSTITUTE_ERROR: UX1.0 -> We can attach SVI to vpn 512, UX2.0 -> There is no SVI parcel for vpn 512"
+)
+NO_SUBSTITUTE_VPN_TRANSPORT_SVI = (
+    "NO_SUBSTITUTE_ERROR: UX1.0 -> We can attach SVI to vpn 0, UX2.0 -> There is no SVI parcel for vpn 0"
 )
 
 MANAGEMENT_VPN_ETHERNET = "management/vpn/interface/ethernet"
@@ -75,7 +78,7 @@ VPN_TEMPLATE_MAPPINGS: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {
             "vpn-vedge-interface-gre": WAN_VPN_GRE,
             "cisco_vpn_interface_gre": WAN_VPN_GRE,
             "cisco_vpn_interface_ipsec": WAN_VPN_IPSEC,
-            "vpn-interface-svi": WAN_VPN_SVI,
+            "vpn-interface-svi": NO_SUBSTITUTE_VPN_TRANSPORT_SVI,
             "cisco_vpn_interface": WAN_VPN_ETHERNET,
             "vpn-vsmart-interface": WAN_VPN_ETHERNET,
             "vpn-vedge-interface": WAN_VPN_ETHERNET,

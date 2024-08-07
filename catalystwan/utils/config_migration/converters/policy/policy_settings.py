@@ -1,6 +1,8 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 from uuid import UUID
 
+from packaging.version import Version
+
 from catalystwan.api.configuration_groups.parcel import as_optional_global
 from catalystwan.models.configuration.config_migration import ConvertResult, PolicyConvertContext
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority.policy_settings import (
@@ -12,6 +14,14 @@ from catalystwan.models.policy.localized import LocalizedPolicyInfo
 def convert_localized_policy_settings(
     policy: LocalizedPolicyInfo, uuid: UUID, context: PolicyConvertContext
 ) -> ConvertResult[PolicySettingsParcel]:
+    if context.platform_version < Version("20.13"):
+        return ConvertResult(
+            status="unsupported",
+            info=[
+                f"Localized policy {policy.policy_name} is not supported on platform version {context.platform_version}"
+            ],
+        )
+
     if isinstance(policy.policy_definition, str):
         return ConvertResult(
             output=None,

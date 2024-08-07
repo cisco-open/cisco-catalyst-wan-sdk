@@ -23,6 +23,14 @@ class UX2ConfigReverter:
                 all_deleted = False
                 logger.error(f"Error occured during deleting config group {cg_id}: {e}")
 
+        for i, pg in enumerate(rollback_info.policy_group_ids):
+            try:
+                self._session.endpoints.configuration.policy_group.delete(pg)
+                progress("Removing Policy Groups", i + 1, len(rollback_info.policy_group_ids))
+            except CatalystwanException as e:
+                all_deleted = False
+                logger.error(f"Error occured during deleting policy group {pg}: {e}")
+
         for i, tg_id in enumerate(rollback_info.topology_group_ids):
             try:
                 self._session.endpoints.configuration.topology_group.delete(tg_id)

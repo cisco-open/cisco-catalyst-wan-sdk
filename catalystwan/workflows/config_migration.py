@@ -455,8 +455,8 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
         if settings_status == "unsupported":
             transform_result.add_unsupported_item(
                 name=f"{localized_policy.policy_name} Settings",
-                uuid=policy_definition.definition_id,
-                type=policy_definition.type,
+                uuid=localized_policy.policy_id,
+                type=localized_policy.policy_type,
             )
         elif settings_status == "failed":
             transform_result.add_failed_conversion_parcel(
@@ -530,6 +530,7 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
     centralized_policy_converter = CentralizedPolicyConverter(ux1=ux1, context=policy_context, ux2=ux2)
     centralized_policy_converter.update_groups_and_profiles()
     transform_result.failed_items.extend(centralized_policy_converter.failed_items)
+    transform_result.unsupported_items.extend(centralized_policy_converter.unsupported_items)
 
     # Add additional objects emmited by the conversion
     ux2.thread_grid_api = policy_context.threat_grid_api

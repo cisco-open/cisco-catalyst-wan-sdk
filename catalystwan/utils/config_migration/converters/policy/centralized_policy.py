@@ -15,6 +15,7 @@ from catalystwan.models.configuration.config_migration import (
     TransformedParcel,
     TransformedTopologyGroup,
     TransformHeader,
+    UnsupportedConversionItem,
     UX1Config,
     UX2Config,
 )
@@ -89,6 +90,7 @@ class CentralizedPolicyConverter:
         self.parcel_lookup: Dict[UUID, List[TransformedParcel]] = dict()
         self._create_parcel_by_policy_id_lookup()
         self.failed_items: List[FailedConversionItem] = list()
+        self.unsupported_items: List[UnsupportedConversionItem] = list()
 
     def _create_parcel_by_policy_id_lookup(self) -> None:
         for policy_definition in self.ux1.policies.policy_definitions:
@@ -218,7 +220,13 @@ class CentralizedPolicyConverter:
                 if dst_transformed_app_prio_parcels:
                     self.update_app_prio_profiles(centralized_policy, dst_transformed_app_prio_parcels)
             else:
-                problems.append("cli policy definition not supported")
+                self.unsupported_items.append(
+                    UnsupportedConversionItem(
+                        name=centralized_policy.policy_name,
+                        uuid=centralized_policy.policy_id,
+                        type=centralized_policy.policy_type,
+                    )
+                )
             if problems:
                 self.failed_items.append(
                     FailedConversionItem(policy=centralized_policy, exception_message="\n".join(problems))
