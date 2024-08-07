@@ -455,8 +455,8 @@ def transform(ux1: UX1Config, add_suffix: bool = False) -> ConfigTransformResult
         if settings_status == "unsupported":
             transform_result.add_unsupported_item(
                 name=f"{localized_policy.policy_name} Settings",
-                uuid=policy_definition.definition_id,
-                type=policy_definition.type,
+                uuid=localized_policy.policy_id,
+                type=localized_policy.policy_type,
             )
         elif settings_status == "failed":
             transform_result.add_failed_conversion_parcel(

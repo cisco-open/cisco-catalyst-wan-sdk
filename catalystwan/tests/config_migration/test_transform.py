@@ -1,5 +1,4 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
-# Copyright 2023 Cisco Systems, Inc. and its affiliates
 from typing import List, Optional, Set, TypeVar
 from uuid import UUID, uuid4
 
@@ -12,6 +11,7 @@ from catalystwan.models.configuration.config_migration import (
     UX1Config,
     UX1Policies,
     UX1Templates,
+    VersionInfo,
 )
 from catalystwan.models.templates import FeatureTemplateInformation
 from catalystwan.tests.config_migration.test_data import (
@@ -546,6 +546,7 @@ def test_when_localized_policy_with_qos_expect_application_priority_feature_prof
             policy_definitions=[qos_map_1, qos_map_2],
         )
     )
+    ux1_config.version = VersionInfo(platform="20.15")  # To include all items in the output)
     # Act
     ux2_config = transform(ux1_config).ux2_config
     # Find application priority feature profile
@@ -591,6 +592,7 @@ def test_policy_profile_merge():
 
     """
     ux1 = UX1Config()
+    ux1.version = VersionInfo(platform="20.15")  # To include all items in the output)
 
     sig_1_uuid = uuid4()
 
