@@ -1,9 +1,18 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
-from typing import List, Literal, Optional, Tuple, Type, TypeVar, Union, overload
+from typing import Any, Dict, List, Literal, Optional, Tuple, Type, TypeVar, Union, overload
 from uuid import UUID
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
+from pydantic import (
+    AliasPath,
+    BaseModel,
+    ConfigDict,
+    Field,
+    SerializationInfo,
+    SerializerFunctionWrapHandler,
+    field_validator,
+    model_serializer,
+)
 from typing_extensions import Annotated
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global, as_optional_global
@@ -477,15 +486,19 @@ class LossCorrection(BaseModel):
 
 class Nat(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    bypass: Optional[Global[bool]] = Field(default=None)
-    dia_interface: Optional[Global[List[str]]] = Field(
+    bypass: Annotated[Optional[Global[bool]], VersionedField(versions="<20.14", forbidden=True)] = Field(default=None)
+    dia_interface: Annotated[Optional[Global[List[str]]], VersionedField(versions="<20.14", forbidden=True)] = Field(
         default=None, validation_alias="diaInterface", serialization_alias="diaInterface"
     )
-    dia_pool: Optional[Global[List[int]]] = Field(
+    dia_pool: Annotated[Optional[Global[List[int]]], VersionedField(versions="<20.14", forbidden=True)] = Field(
         default=None, validation_alias="diaPool", serialization_alias="diaPool"
     )
     fallback: Optional[Global[bool]] = Field(default=None)
     use_vpn: Global[bool] = Field(default=None, validation_alias="useVpn", serialization_alias="useVpn")
+
+    @model_serializer(mode="wrap", when_used="json")
+    def serialize(self, handler: SerializerFunctionWrapHandler, info: SerializationInfo) -> Dict[str, Any]:
+        return VersionedField.dump(self.model_fields, handler(self), info)
 
 
 SecureServiceEdgeInstance = Literal[
@@ -950,13 +963,13 @@ class Sequence(BaseModel):
         self._insert_action(LossCorrectionAction(loss_correction=loss_correction))
 
     def associate_nat_action(
-        self, bypass: bool, dia_interface: List[str], dia_pool: List[int], fallback: bool, use_vpn: bool
+        self, bypass: bool, dia_interface: List[str], dia_pool: List[int], fallback: Optional[bool], use_vpn: bool
     ) -> None:
         nat = Nat(
             bypass=as_global(bypass),
             dia_interface=as_global(dia_interface) if dia_interface else None,
             dia_pool=as_global(dia_pool) if dia_pool else None,
-            fallback=as_global(fallback),
+            fallback=as_optional_global(fallback),
             use_vpn=as_global(use_vpn),
         )
         self._insert_action(NatAction(nat=nat))
