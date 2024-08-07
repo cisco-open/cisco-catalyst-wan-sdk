@@ -185,6 +185,9 @@ class LocalizedPolicyPusher(Pusher):
             profile_type, profile_id, profile_name, transformed_parcels = profile_info
             self._progress(f"Updating {profile_name} profile with policy parcels", i + 1, len(profile_ids))
             for transformed_parcel in transformed_parcels:
+                if isinstance(transformed_parcel.parcel, RoutePolicyParcel):
+                    logger.warning("Route Policy is not supported in localized policy")
+                    continue
                 report = profile_reports[profile_id]
                 error_parcel = transformed_parcel.parcel
                 error_info: Union[ManagerErrorInfo, str, None] = None
