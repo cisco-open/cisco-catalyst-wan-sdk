@@ -45,7 +45,6 @@ def create_session() -> ManagerSession:
     """Try to create a session with the environment variables, if it fails, raise an exception"""
     try:
         session = create_manager_session(**load_config())
-        session.is_for_testing = True
         return session
     except Exception:
         raise CatalystwanException("Failed to create session")

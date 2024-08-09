@@ -24,6 +24,7 @@ class ResponseMock:
         self._json = json
         self.headers = headers
         self.cookies = cookies
+        self.status_code = 200
 
     def json(self):
         return self._json
@@ -117,20 +118,6 @@ class TestDevicesAPI(TestCase):
         self.system_ips_list = [device["local-system-ip"] for device in self.devices]
         self.ips_list = [device["deviceId"] for device in self.devices]
         self.list_all_devices_resp = DataSequence(DeviceData, [DeviceData.model_validate(dev) for dev in self.devices])
-
-    @patch.object(DevicesAPI, "get")
-    def test_controllers(self, mock_devices):
-        # # Arrange
-        # MockDevices = Mock()
-        # mock_devices.return_value = MockDevices
-        # session = Mock()
-        # test_object = DevicesAPI(session)
-        # test_object.devices = self.devices_dataclass
-        # # Act
-        # answer = test_object.get().filter(personality=[Personality.VMANAGE, Personality.VSMART])
-        # # Assert
-        # self.assertEqual(answer, self.controllers_dataclass)
-        pass  # TODO fix after updating .filter()
 
     @patch("catalystwan.response.ManagerResponse")
     @patch("catalystwan.session.ManagerSession")
@@ -635,12 +622,6 @@ class TestDevicesStateAPI(TestCase):
         # Assert
         self.assertEqual(answer, [])
 
-    def test_get_colors(self):
-        pass  # TODO fix method before test
-
-    def test_enable_data_stream(self):
-        pass  # TODO fix method before test
-
     @patch("catalystwan.session.ManagerSession")
     def test_get_bfd_sessions(self, mock_session):
         # Arrange
@@ -691,7 +672,3 @@ class TestDevicesStateAPI(TestCase):
         answer = DeviceStateAPI(mock_session).wait_for_device_state(device_id="1.1.1.1")
         # Assert
         self.assertTrue(answer)
-
-    @patch("catalystwan.session.ManagerSession")
-    def test_wait_for_device_state_unreachable(self, mock_session):
-        pass  # TODO fix method before test

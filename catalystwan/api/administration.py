@@ -101,7 +101,7 @@ class UsersAPI:
         """
         self._endpoints.update_user(user_update_request.username, user_update_request)
 
-    def update_password(self, username: str, new_password: str):
+    def update_password(self, username: str, new_password: str, current_user_password: str):
         """Updates exisiting user password
 
         Args:
@@ -109,8 +109,8 @@ class UsersAPI:
             new_password (str): New password for given user
         """
         update_password_request = UserUpdateRequest(
-            username=username, password=new_password, current_user_password=self.session.password
-        )  # type: ignore
+            username=username, password=new_password, current_user_password=current_user_password
+        )
         self._endpoints.update_password(username, update_password_request)
 
     def reset(self, username: str):

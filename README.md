@@ -38,6 +38,7 @@ with create_manager_session(url=url, username=username, password=password) as se
     devices = session.api.devices.get()
     print(devices)
 ```
+
 **ManagerSession** extends [requests.Session](https://requests.readthedocs.io/en/latest/user/advanced/#session-objects) so all functionality from [requests](https://requests.readthedocs.io/en/latest/) library is avaiable to user, it also implements python [contextmanager](https://docs.python.org/3.8/library/contextlib.html#contextlib.contextmanager) and automatically frees server resources on exit.
 
 <details>
@@ -47,13 +48,15 @@ It is possible to configure **ManagerSession** prior sending any request.
 
 ```python
 from catalystwan.session import ManagerSession
+from catalystwan.vmanage_auth import vManageAuth
 
 url = "example.com"
 username = "admin"
 password = "password123"
 
 # configure session using constructor - nothing will be sent to target server yet
-session = ManagerSession(url=url, username=username, password=password)
+auth = vManageAuth(username, password)
+session = ManagerSession(url=url, auth=auth)
 # login and send requests
 session.login()
 session.get("/dataservice/device")
@@ -102,6 +105,25 @@ with create_manager_session(url=url, username=username, password=password, subdo
 
 </details>
 
+<details>
+    <summary> <b>Login using Api Gateway</b> <i>(click to expand)</i></summary>
+
+```python
+from catalystwan.session import create_apigw_session
+
+with create_apigw_session(
+    url="example.com",
+    client_id="client_id",
+    client_secret="client_secret",
+    org_name="Org-Name",
+    username="user",
+    mode="user",
+    token_duration=10,
+) as session:
+    devices = session.api.devices.get()
+    print(devices)
+```
+</details>
 
 
 ## API usage examples
