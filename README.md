@@ -24,7 +24,7 @@ pip install catalystwan
 ```
 
 ## Manager Session
-In order to execute SDK APIs **ManagerSession** needs to be created. The fastest way to get started is to use `create_manager_session()` or `create_apigw_session()` method which configures session, performs authentication for given credentials and returns **ManagerSession** instance in operational state. **ManagerSession** provides a collection of supported APIs in `api` instance variable.
+In order to execute SDK APIs **ManagerSession** needs to be created. The fastest way to get started is to use `create_manager_session()` method which configures session, performs authentication for given credentials and returns **ManagerSession** instance in operational state. **ManagerSession** provides a collection of supported APIs in `api` instance variable.
 Please check example below:
 
 ```python
@@ -35,22 +35,6 @@ username = "admin"
 password = "password123"
 
 with create_manager_session(url=url, username=username, password=password) as session:
-    devices = session.api.devices.get()
-    print(devices)
-```
-
-```python
-from catalystwan.session import create_apigw_session
-
-with create_apigw_session(
-    url="example.com",
-    client_id="client_id",
-    client_secret="client_secret",
-    org_name="Org-Name",
-    username="user",
-    mode="user",
-    token_duration=10,
-) as session:
     devices = session.api.devices.get()
     print(devices)
 ```
@@ -121,6 +105,25 @@ with create_manager_session(url=url, username=username, password=password, subdo
 
 </details>
 
+<details>
+    <summary> <b>Login using Api Gateway</b> <i>(click to expand)</i></summary>
+
+```python
+from catalystwan.session import create_apigw_session
+
+with create_apigw_session(
+    url="example.com",
+    client_id="client_id",
+    client_secret="client_secret",
+    org_name="Org-Name",
+    username="user",
+    mode="user",
+    token_duration=10,
+) as session:
+    devices = session.api.devices.get()
+    print(devices)
+```
+</details>
 
 
 ## API usage examples
