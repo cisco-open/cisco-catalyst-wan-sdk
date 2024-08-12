@@ -122,13 +122,14 @@ class TestUsersAPI(unittest.TestCase):
         # Arrange
         username = "new_user"
         new_password = "PaSsWoRd"  # pragma: allowlist secret
+        current_password = "32313123213"  # pragma: allowlist secret
         self.api._endpoints.update_password = MagicMock()
         # Act
-        self.api.update_password(username, new_password)
+        self.api.update_password(username, new_password, current_password)
         # Assert
         self.api._endpoints.update_password.assert_called_once_with(
             username,
-            UserUpdateRequest(username=username, password=new_password, current_user_password=self.session.password),
+            UserUpdateRequest(username=username, password=new_password, current_user_password=current_password),
         )
 
     def test_reset(self):

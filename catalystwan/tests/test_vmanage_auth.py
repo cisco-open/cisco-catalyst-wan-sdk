@@ -5,6 +5,7 @@ from unittest import TestCase, mock
 from uuid import uuid4
 
 from requests import Request
+from requests.cookies import RequestsCookieJar
 
 from catalystwan import USER_AGENT
 from catalystwan.exceptions import CatalystwanException
@@ -12,13 +13,11 @@ from catalystwan.vmanage_auth import UnauthorizedAccessError, vManageAuth
 
 
 class MockResponse:
-    def __init__(self, status_code: int, text: str):
+    def __init__(self, status_code: int, text: str, cookies: dict):
         self._status_code = status_code
         self._text = text
+        self.cookies = cookies
         self.request = Request()
-
-    def cookies(self) -> str:  # TODO
-        return "JSESSIONID=xyz"
 
     @property
     def status_code(self) -> int:
@@ -32,8 +31,8 @@ class MockResponse:
 def mock_request_j_security_check(*args, **kwargs):
     url_response = {
         "https://1.1.1.1:1111/j_security_check": {
-            "admin": MockResponse(200, ""),
-            "invalid_username": MockResponse(200, "<html>error</html>"),
+            "admin": MockResponse(200, "", {"JSESSIONID": "xyz"}),
+            "invalid_username": MockResponse(200, "<html>error</html>", {}),
         }
     }
 
@@ -42,19 +41,19 @@ def mock_request_j_security_check(*args, **kwargs):
     if full_url in url_response:
         return url_response[full_url][data["j_username"]]
 
-    return MockResponse(404, "error")
+    return MockResponse(404, "error", {})
 
 
 def mock_valid_token(*args, **kw):
-    return MockResponse(200, "valid-token")
+    return MockResponse(200, "valid-token", {})
 
 
 def mock_invalid_token_status(*args, **kw):
-    return MockResponse(503, "invalid-token")
+    return MockResponse(503, "invalid-token", {})
 
 
 def mock_invalid_token_format(*args, **kw):
-    return MockResponse(200, "<html>error</html>")
+    return MockResponse(200, "<html>error</html>", {})
 
 
 class TestvManageAuth(TestCase):
@@ -62,7 +61,7 @@ class TestvManageAuth(TestCase):
         self.base_url = "https://1.1.1.1:1111"
         self.password = str(uuid4())
 
-    @mock.patch("requests.post", side_effect=mock_request_j_security_check)
+    @mock.patch("catalystwan.vmanage_auth.post", side_effect=mock_request_j_security_check)
     def test_get_cookie(self, mock_post):
         # Arrange
         username = "admin"
@@ -70,9 +69,8 @@ class TestvManageAuth(TestCase):
             "j_username": username,
             "j_password": self.password,
         }
-        auth = vManageAuth(self.base_url, username, self.password)
         # Act
-        auth.get_cookie()
+        vManageAuth.get_jsessionid(self.base_url, username, self.password)
 
         # Assert
         mock_post.assert_called_with(
@@ -82,7 +80,7 @@ class TestvManageAuth(TestCase):
             headers={"Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT},
         )
 
-    @mock.patch("requests.post", side_effect=mock_request_j_security_check)
+    @mock.patch("catalystwan.vmanage_auth.post", side_effect=mock_request_j_security_check)
     def test_get_cookie_invalid_username(self, mock_post):
         # Arrange
         username = "invalid_username"
@@ -90,10 +88,9 @@ class TestvManageAuth(TestCase):
             "j_username": username,
             "j_password": self.password,
         }
-        auth = vManageAuth(self.base_url, username, self.password)
         # Act
         with self.assertRaises(UnauthorizedAccessError):
-            auth.get_cookie()
+            vManageAuth.get_jsessionid(self.base_url, username, self.password)
 
         # Assert
         mock_post.assert_called_with(
@@ -103,18 +100,18 @@ class TestvManageAuth(TestCase):
             headers={"Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT},
         )
 
-    @mock.patch("requests.cookies.RequestsCookieJar")
-    @mock.patch("requests.get", side_effect=mock_valid_token)
-    def test_fetch_token(self, mock_get, cookies):
+    @mock.patch("catalystwan.vmanage_auth.get", side_effect=mock_valid_token)
+    def test_fetch_token(self, mock_get):
         # Arrange
         valid_url = "https://1.1.1.1:1111/dataservice/client/token"
-        auth = vManageAuth(self.base_url, "admin", self.password)
 
         # Act
-        token = auth.fetch_token(cookies)
+        token = vManageAuth.get_xsrftoken(self.base_url, "xyz")
 
         # Assert
         self.assertEqual(token, "valid-token")
+        cookies = RequestsCookieJar()
+        cookies.set("JSESSIONID", "xyz")
         mock_get.assert_called_with(
             url=valid_url,
             verify=False,
@@ -122,19 +119,15 @@ class TestvManageAuth(TestCase):
             cookies=cookies,
         )
 
-    @mock.patch("requests.cookies.RequestsCookieJar")
-    @mock.patch("requests.get", side_effect=mock_invalid_token_status)
-    def test_incorrect_xsrf_token_status(self, mock_get, cookies):
-        auth = vManageAuth("http://invalid.response", "admin", self.password)
+    @mock.patch("catalystwan.vmanage_auth.get", side_effect=mock_invalid_token_status)
+    def test_incorrect_xsrf_token_status(self, mock_get):
         with self.assertRaises(CatalystwanException):
-            auth.fetch_token(cookies)
+            vManageAuth.get_xsrftoken(self.base_url, "xyz")
 
-    @mock.patch("requests.cookies.RequestsCookieJar")
-    @mock.patch("requests.get", side_effect=mock_invalid_token_format)
-    def test_incorrect_xsrf_token_format(self, mock_get, cookies):
-        auth = vManageAuth("http://invalid.response", "admin", self.password)
+    @mock.patch("catalystwan.vmanage_auth.get", side_effect=mock_invalid_token_format)
+    def test_incorrect_xsrf_token_format(self, mock_get):
         with self.assertRaises(CatalystwanException):
-            auth.fetch_token(cookies)
+            vManageAuth.get_xsrftoken(self.base_url, "xyz")
 
 
 if __name__ == "__main__":
