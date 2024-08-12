@@ -61,6 +61,14 @@ class Certificate(BaseModel):
     email: Optional[str] = Field(default=None)
 
 
+class EnterpriseRootCA(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    enterprise_root_ca: str = Field(serialization_alias="enterpriseRootCA", validation_alias="enterpriseRootCA")
+    control_connection_up: Optional[bool] = Field(
+        default=False, serialization_alias="controlConnectionUp", validation_alias="controlConnectionUp"
+    )
+
+
 class VEdgeCloud(BaseModel):
     certificateauthority: Optional[str] = None
 
@@ -431,6 +439,11 @@ class ConfigurationSettings(APIEndpoints):
         ...
 
     @view({SingleTenantView, ProviderView})
+    @get("/settings/configuration/certificate/enterpriserootca", "data")
+    def get_enterprise_root_ca(self) -> DataSequence[EnterpriseRootCA]:
+        ...
+
+    @view({SingleTenantView, ProviderView})
     @get("/settings/configuration/vedgecloud", "data")
     def get_vedge_cloud(self) -> DataSequence[VEdgeCloud]:
         ...
@@ -592,6 +605,11 @@ class ConfigurationSettings(APIEndpoints):
     @view({SingleTenantView, ProviderView})
     @put("/settings/configuration/certificate", "data")
     def edit_certificates(self, payload: Certificate) -> DataSequence[Certificate]:
+        ...
+
+    @view({SingleTenantView, ProviderView})
+    @put("/settings/configuration/certificate/enterpriserootca", "data")
+    def edit_enterprise_root_ca(self, payload: EnterpriseRootCA) -> DataSequence[EnterpriseRootCA]:
         ...
 
     @view({SingleTenantView, ProviderView})
