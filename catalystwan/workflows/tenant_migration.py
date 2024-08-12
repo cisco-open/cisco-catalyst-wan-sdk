@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from copy import copy
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
@@ -127,9 +128,9 @@ def migration_preconditions_check(
     logger.info("Checking if migrated devices can reach target validator...")
     conn_check = False
     if origin_session.session_type == SessionType.PROVIDER:
-        origin_session.subdomain = tenant.subdomain
-        origin_session.logout()
-        with origin_session.login() as provider_as_tenant_session:
+        as_tenant = copy(origin_session)
+        as_tenant.subdomain = tenant.subdomain
+        with as_tenant.login() as provider_as_tenant_session:
             conn_check = check_control_connectivity_from_edge_devices(provider_as_tenant_session, validator)
     else:
         conn_check = check_control_connectivity_from_edge_devices(origin_session, validator)

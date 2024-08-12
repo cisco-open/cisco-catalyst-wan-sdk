@@ -553,5 +553,8 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
     def validate_responses(self, value: bool):
         self._validate_responses = value
 
+    def __copy__(self) -> ManagerSession:
+        return ManagerSession(base_url=self.base_url, auth=self._auth, subdomain=self.subdomain, logger=self.logger)
+
     def __str__(self) -> str:
         return f"ManagerSession(session_type={self.session_type}, auth={self._auth})"
