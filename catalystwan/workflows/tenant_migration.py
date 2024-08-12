@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from copy import copy
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
@@ -13,7 +14,7 @@ from catalystwan.api.tenant_migration_api import TenantMigrationAPI
 from catalystwan.endpoints.troubleshooting_tools.device_connectivity import NPingRequest
 from catalystwan.exceptions import TenantMigrationPreconditionsError
 from catalystwan.models.tenant import TenantExport
-from catalystwan.session import ManagerSession, create_manager_session
+from catalystwan.session import ManagerSession
 from catalystwan.utils.personality import Personality
 from catalystwan.utils.session_type import SessionType
 
@@ -127,14 +128,9 @@ def migration_preconditions_check(
     logger.info("Checking if migrated devices can reach target validator...")
     conn_check = False
     if origin_session.session_type == SessionType.PROVIDER:
-        with create_manager_session(
-            url=origin_session.url,
-            username=origin_session.username,
-            password=origin_session.password,
-            port=origin_session.port,
-            subdomain=tenant.subdomain,
-            logger=origin_session.logger,
-        ) as provider_as_tenant_session:
+        as_tenant = copy(origin_session)
+        as_tenant.subdomain = tenant.subdomain
+        with as_tenant.login() as provider_as_tenant_session:
             conn_check = check_control_connectivity_from_edge_devices(provider_as_tenant_session, validator)
     else:
         conn_check = check_control_connectivity_from_edge_devices(origin_session, validator)

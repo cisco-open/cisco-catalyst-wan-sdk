@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 from catalystwan.api.task_status_api import Task
 from catalystwan.endpoints.tenant_management import (
@@ -62,7 +62,7 @@ class TenantManagementAPI:
             tenant_id=tenant_update_request.tenant_id, tenant_update_request=tenant_update_request
         )
 
-    def delete(self, tenant_id_list: List[str], password: Optional[str] = None) -> Task:
+    def delete(self, tenant_id_list: List[str], password: str) -> Task:
         """Deletes tenants on vManage
 
         Args:
@@ -72,8 +72,6 @@ class TenantManagementAPI:
         Returns:
             Task: Object representing tenant deletion process
         """
-        if password is None:
-            password = self.session.password
         delete_request = TenantBulkDeleteRequest(tenant_id_list=tenant_id_list, password=password)
         task_id = self._endpoints.delete_tenant_async_bulk(delete_request).id
         return Task(self.session, task_id)
