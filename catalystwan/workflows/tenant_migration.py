@@ -128,8 +128,9 @@ def migration_preconditions_check(
     conn_check = False
     if origin_session.session_type == SessionType.PROVIDER:
         origin_session.subdomain = tenant.subdomain
-        origin_session.state = ManagerSessionState.LOGIN
-        conn_check = check_control_connectivity_from_edge_devices(origin_session, validator)
+        origin_session.subdomain = tenant.subdomain
+        with origin_session.login() as provider_as_tenant_session:
+            conn_check = check_control_connectivity_from_edge_devices(provider_as_tenant_session, validator)
     else:
         conn_check = check_control_connectivity_from_edge_devices(origin_session, validator)
     if not conn_check:
