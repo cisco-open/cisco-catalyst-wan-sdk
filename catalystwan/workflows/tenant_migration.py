@@ -13,7 +13,7 @@ from catalystwan.api.tenant_migration_api import TenantMigrationAPI
 from catalystwan.endpoints.troubleshooting_tools.device_connectivity import NPingRequest
 from catalystwan.exceptions import TenantMigrationPreconditionsError
 from catalystwan.models.tenant import TenantExport
-from catalystwan.session import ManagerSession, ManagerSessionState
+from catalystwan.session import ManagerSession
 from catalystwan.utils.personality import Personality
 from catalystwan.utils.session_type import SessionType
 
@@ -128,8 +128,9 @@ def migration_preconditions_check(
     conn_check = False
     if origin_session.session_type == SessionType.PROVIDER:
         origin_session.subdomain = tenant.subdomain
-        origin_session.state = ManagerSessionState.LOGIN
-        conn_check = check_control_connectivity_from_edge_devices(origin_session, validator)
+        origin_session.logout()
+        with origin_session.login() as provider_as_tenant_session:
+            conn_check = check_control_connectivity_from_edge_devices(provider_as_tenant_session, validator)
     else:
         conn_check = check_control_connectivity_from_edge_devices(origin_session, validator)
     if not conn_check:
