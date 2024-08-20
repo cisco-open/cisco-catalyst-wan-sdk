@@ -52,47 +52,57 @@ SchemaType = Literal[
 
 
 class ParcelBasic(BaseModel):
-    parcel_id: str = Field(alias="parcelId")
+    parcel_id: str = Field(serialization_alias="parcelId", validation_alias="parcelId")
     description: Optional[str] = None
 
 
 class FeatureProfileInfo(BaseModel):
-    profile_id: UUID = Field(alias="profileId")
-    profile_name: str = Field(alias="profileName")
+    profile_id: UUID = Field(serialization_alias="profileId", validation_alias="profileId")
+    profile_name: str = Field(serialization_alias="profileName", validation_alias="profileName")
     solution: Solution
-    profile_type: ProfileType = Field(alias="profileType")
-    created_by: str = Field(alias="createdBy")
-    last_updated_by: str = Field(alias="lastUpdatedBy")
-    description: str
-    created_on: datetime = Field(alias="createdOn")
-    last_updated_on: datetime = Field(alias="lastUpdatedOn")
-    reference_count: Optional[int] = Field(default=None, alias="referenceCount")
+    profile_type: ProfileType = Field(serialization_alias="profileType", validation_alias="profileType")
+    created_by: str = Field(serialization_alias="createdBy", validation_alias="createdBy")
+    last_updated_by: str = Field(serialization_alias="lastUpdatedBy", validation_alias="lastUpdatedBy")
+    description: Optional[str] = None
+    created_on: datetime = Field(serialization_alias="createdOn", validation_alias="createdOn")
+    last_updated_on: datetime = Field(serialization_alias="lastUpdatedOn", validation_alias="lastUpdatedOn")
+    reference_count: Optional[int] = Field(
+        default=None, serialization_alias="referenceCount", validation_alias="referenceCount"
+    )
 
 
 class FeatureProfileDetail(BaseModel):
-    profile_id: str = Field(alias="profileId")
-    profile_name: str = Field(alias="profileName")
+    profile_id: str = Field(serialization_alias="profileId", validation_alias="profileId")
+    profile_name: str = Field(serialization_alias="profileName", validation_alias="profileName")
     solution: Solution
-    profile_type: ProfileType = Field(alias="profileType")
-    created_by: str = Field(alias="createdBy")
-    last_updated_by: str = Field(alias="lastUpdatedBy")
-    description: str
-    created_on: datetime = Field(alias="createdOn")
-    last_updated_on: datetime = Field(alias="lastUpdatedOn")
-    associated_profile_parcels: Optional[Union[List[str], List[ParcelBasic]]] = Field(alias="associatedProfileParcels")
-    rid: int = Field(alias="@rid")
-    profile_parcel_count: Optional[int] = Field(default=None, alias="profileParcelCount")
-    cached_profile: Optional[str] = Field(default=None, alias="cachedProfile")
+    profile_type: ProfileType = Field(serialization_alias="profileType", validation_alias="profileType")
+    created_by: str = Field(serialization_alias="createdBy", validation_alias="createdBy")
+    last_updated_by: str = Field(serialization_alias="lastUpdatedBy", validation_alias="lastUpdatedBy")
+    description: Optional[str] = None
+    created_on: datetime = Field(serialization_alias="createdOn", validation_alias="createdOn")
+    last_updated_on: datetime = Field(serialization_alias="lastUpdatedOn", validation_alias="lastUpdatedOn")
+    associated_profile_parcels: Optional[Union[List[str], List[ParcelBasic]]] = Field(
+        serialization_alias="associatedProfileParcels", validation_alias="associatedProfileParcels"
+    )
+    rid: int = Field(serialization_alias="@rid", validation_alias="@rid")
+    profile_parcel_count: Optional[int] = Field(
+        default=None, serialization_alias="profileParcelCount", validation_alias="profileParcelCount"
+    )
+    cached_profile: Optional[str] = Field(
+        default=None, serialization_alias="cachedProfile", validation_alias="cachedProfile"
+    )
 
 
 class FromFeatureProfile(BaseModel):
-    copy_: UUID = Field(alias="copy")
+    copy_: UUID = Field(serialization_alias="copy", validation_alias="copy")
 
 
 class FeatureProfileCreationPayload(BaseModel):
     name: str
     description: str
-    from_feature_profile: Optional[FromFeatureProfile] = Field(alias="fromFeatureProfile", default=None)
+    from_feature_profile: Optional[FromFeatureProfile] = Field(
+        serialization_alias="fromFeatureProfile", validation_alias="fromFeatureProfile", default=None
+    )
 
 
 class FeatureProfileEditPayload(BaseModel):
@@ -112,7 +122,7 @@ class AddressWithMask(BaseModel):
 class SchemaTypeQuery(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    schema_type: SchemaType = Field(alias="schemaType")
+    schema_type: SchemaType = Field(serialization_alias="schemaType", validation_alias="schemaType")
 
 
 class GetFeatureProfilesParams(BaseModel):
@@ -181,9 +191,13 @@ class IPv4Prefix(BaseModel):
 
 class WANIPv4StaticRoute(BaseModel):
     prefix: IPv4Prefix = Field()
-    gateway: Global[Literal["nextHop", "null0", "dhcp"]] = Field(default=Global(value="nextHop"), alias="gateway")
-    next_hops: Optional[List[NextHop]] = Field(default_factory=list, alias="nextHop")
-    distance: Optional[Global[int]] = Field(default=None, alias="distance")
+    gateway: Global[Literal["nextHop", "null0", "dhcp"]] = Field(
+        default=Global(value="nextHop"), serialization_alias="gateway", validation_alias="gateway"
+    )
+    next_hops: Optional[List[NextHop]] = Field(
+        default_factory=list, serialization_alias="nextHop", validation_alias="nextHop"
+    )
+    distance: Optional[Global[int]] = Field(default=None, serialization_alias="distance", validation_alias="distance")
 
     def set_to_next_hop(
         self,
@@ -222,7 +236,7 @@ class WANIPv4StaticRoute(BaseModel):
 
 
 class NextHopContainer(BaseModel):
-    next_hop: List[NextHop] = Field(default=[], alias="nextHop")
+    next_hop: List[NextHop] = Field(default=[], serialization_alias="nextHop", validation_alias="nextHop")
 
 
 class Ipv6StaticRouteNull0(BaseModel):
@@ -239,7 +253,9 @@ class IPv6StaticRouteNAT(BaseModel):
 
 class WANIPv6StaticRoute(BaseModel):
     prefix: Global[IPv6Address] = Field()
-    gateway: Union[Ipv6StaticRouteNull0, IPv6StaticRouteNextHop, IPv6StaticRouteNAT] = Field(alias="oneOfIpRoute")
+    gateway: Union[Ipv6StaticRouteNull0, IPv6StaticRouteNextHop, IPv6StaticRouteNAT] = Field(
+        serialization_alias="oneOfIpRoute", validation_alias="oneOfIpRoute"
+    )
 
     def set_to_next_hop(
         self,
@@ -249,7 +265,7 @@ class WANIPv6StaticRoute(BaseModel):
         if prefix is not None:
             self.prefix = as_global(prefix)
         if next_hops:
-            self.gateway = IPv6StaticRouteNextHop(next_hop_container=NextHopContainer(nextHop=next_hops))
+            self.gateway = IPv6StaticRouteNextHop(next_hop_container=NextHopContainer(next_hop=next_hops))
 
     def set_to_null0(
         self,
@@ -273,7 +289,7 @@ class WANIPv6StaticRoute(BaseModel):
 
 
 class WANService(BaseModel):
-    service_type: Global[Literal["TE"]] = Field(alias="serviceType")
+    service_type: Global[Literal["TE"]] = Field(serialization_alias="serviceType", validation_alias="serviceType")
 
 
 class RefIdItem(BaseModel):
