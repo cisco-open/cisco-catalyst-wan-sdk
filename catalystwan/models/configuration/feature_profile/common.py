@@ -99,7 +99,7 @@ class FromFeatureProfile(BaseModel):
 
 class FeatureProfileCreationPayload(BaseModel):
     name: str
-    description: Optional[str] = None
+    description: str
     from_feature_profile: Optional[FromFeatureProfile] = Field(
         serialization_alias="fromFeatureProfile", validation_alias="fromFeatureProfile", default=None
     )
@@ -107,7 +107,7 @@ class FeatureProfileCreationPayload(BaseModel):
 
 class FeatureProfileEditPayload(BaseModel):
     name: str
-    description: Optional[str] = None
+    description: str
 
 
 class FeatureProfileCreationResponse(BaseModel):
