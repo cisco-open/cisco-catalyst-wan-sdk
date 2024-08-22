@@ -12,6 +12,7 @@ from catalystwan.endpoints.cluster_management import ClusterManagement
 from catalystwan.endpoints.configuration.device.software_update import ConfigurationDeviceSoftwareUpdate
 from catalystwan.endpoints.configuration.disaster_recovery import ConfigurationDisasterRecovery
 from catalystwan.endpoints.configuration.feature_profile.sdwan.cli import CliFeatureProfile
+from catalystwan.endpoints.configuration.feature_profile.sdwan.policy_object import PolicyObjectFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.sig_security import SIGSecurity
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.topology import TopologyFeatureProfile
@@ -173,6 +174,7 @@ class ConfigurationSDWANFeatureProfileContainer:
         self.system = SystemFeatureProfile(client=session)
         self.cli = CliFeatureProfile(client=session)
         self.topology = TopologyFeatureProfile(client=session)
+        self.policy = PolicyObjectFeatureProfile(client=session)
 
 
 class ConfigurationFeatureProfileContainer:
