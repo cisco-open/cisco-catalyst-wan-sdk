@@ -135,6 +135,7 @@ class CLITemplate:
             second: Second template for comparison.
             full: Return a full comparison if True, otherwise only the lines that differ.
             debug: Adding debug to the logger. Defaults to False.
+            ignored_lines: List of configs statements to be excluded from comparison
 
         Returns:
             str: The compared templates.
@@ -190,6 +191,7 @@ class CLITemplate:
             device: The device on which to compare config.
             full: Return a full comparison if True, otherwise only the lines that differ.
             debug: Adding debug to the logger. Defaults to False.
+            ignored_lines: List of configs statements to be excluded from comparison
 
         Returns:
             str: The compared templates.
