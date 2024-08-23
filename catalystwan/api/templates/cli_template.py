@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 from difflib import Differ
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from attr import define  # type: ignore
 from ciscoconfparse import CiscoConfParse  # type: ignore
@@ -136,6 +136,7 @@ class CLITemplate:
         second: CiscoConfParse,
         full: bool = False,
         debug: bool = False,
+        ignored_lines: List[str] = [],
     ) -> str:
         """
 
@@ -144,6 +145,7 @@ class CLITemplate:
             second: Second template for comparison.
             full: Return a full comparison if True, otherwise only the lines that differ.
             debug: Adding debug to the logger. Defaults to False.
+            ignored_lines: List of configs statements to be excluded from comparison
 
         Returns:
             str: The compared templates.
@@ -172,8 +174,11 @@ class CLITemplate:
             auth-port 151
         exit
         """
-        first_n = list(map(lambda x: x + "\n", first.ioscfg))
-        second_n = list(map(lambda x: x + "\n", second.ioscfg))
+        for line in ignored_lines:
+            first.delete_lines(line)
+            second.delete_lines(line)
+        first_n = list(map(lambda x: x.strip() + "\n", first.ioscfg))
+        second_n = list(map(lambda x: x.strip() + "\n", second.ioscfg))
         compare = list(Differ().compare(first_n, second_n))
         if not full:
             compare = [x for x in compare if x[0] in ["?", "-", "+"]]
@@ -187,6 +192,7 @@ class CLITemplate:
         template: CiscoConfParse,
         device: Device,
         debug: bool = False,
+        ignored_lines: List[str] = [],
     ) -> str:
         """The comparison of the config with the one running on the machine.
 
@@ -195,6 +201,7 @@ class CLITemplate:
             device: The device on which to compare config.
             full: Return a full comparison if True, otherwise only the lines that differ.
             debug: Adding debug to the logger. Defaults to False.
+            ignored_lines: List of configs statements to be excluded from comparison
 
         Returns:
             str: The compared templates.
@@ -226,4 +233,4 @@ class CLITemplate:
         .
         """
         running_config = self.load_running(session, device)
-        return self.compare_template(running_config, template, debug)
+        return self.compare_template(running_config, template, debug=debug, ignored_lines=ignored_lines)
