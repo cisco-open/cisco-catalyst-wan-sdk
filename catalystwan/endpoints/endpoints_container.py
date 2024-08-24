@@ -22,6 +22,8 @@ from catalystwan.endpoints.configuration.policy.definition.access_control_list i
 from catalystwan.endpoints.configuration.policy.definition.access_control_list_ipv6 import (
     ConfigurationPolicyAclIPv6Definition,
 )
+from catalystwan.endpoints.configuration.policy.definition.aip import ConfigurationPolicyAIPDefinition
+from catalystwan.endpoints.configuration.policy.definition.amp import ConfigurationPolicyAMPDefinition
 from catalystwan.endpoints.configuration.policy.definition.control import ConfigurationPolicyControlDefinition
 from catalystwan.endpoints.configuration.policy.definition.device_access import (
     ConfigurationPolicyDeviceAccessDefinition,
@@ -137,28 +139,30 @@ class ConfigurationPolicyListContainer:
         self.sla = ConfigurationPolicySLAClassList(session)
         self.tloc = ConfigurationPolicyTLOCList(session)
         self.trunkgroup = ConfigurationPolicyTrunkGroupList(session)
-        self.url_block_list = ConfigurationPolicyURLBlockList(session)
         self.url_allow_list = ConfigurationPolicyURLAllowList(session)
+        self.url_block_list = ConfigurationPolicyURLBlockList(session)
         self.vpn = ConfigurationPolicyVPNList(session)
         self.zone = ConfigurationPolicyZoneList(session)
 
 
 class ConfigurationPolicyDefinitionContainer:
     def __init__(self, session: ManagerSession):
-        self.data = ConfigurationPolicyDataDefinition(session)
-        self.rule_set = ConfigurationPolicyRuleSetDefinition(session)
-        self.security_group = ConfigurationPolicySecurityGroupDefinition(session)
-        self.zone_based_firewall = ConfigurationPolicyZoneBasedFirewallDefinition(session)
-        self.qos_map = ConfigurationPolicyQoSMapDefinition(session)
-        self.rewrite = ConfigurationPolicyRewriteRuleDefinition(session)
-        self.control = ConfigurationPolicyControlDefinition(session)
-        self.vpn_membership = ConfigurationPolicyVPNMembershipGroupDefinition(session)
-        self.hub_and_spoke = ConfigurationPolicyHubAndSpokeDefinition(session)
-        self.mesh = ConfigurationPolicyMeshDefinition(session)
         self.acl = ConfigurationPolicyAclDefinition(session)
         self.acl_ipv6 = ConfigurationPolicyAclIPv6Definition(session)
+        self.advanced_inspection_profile = ConfigurationPolicyAIPDefinition(session)
+        self.advanced_malware_protection = ConfigurationPolicyAMPDefinition(session)
+        self.control = ConfigurationPolicyControlDefinition(session)
+        self.data = ConfigurationPolicyDataDefinition(session)
         self.device_access = ConfigurationPolicyDeviceAccessDefinition(session)
         self.device_access_ipv6 = ConfigurationPolicyDeviceAccessIPv6Definition(session)
+        self.hub_and_spoke = ConfigurationPolicyHubAndSpokeDefinition(session)
+        self.mesh = ConfigurationPolicyMeshDefinition(session)
+        self.qos_map = ConfigurationPolicyQoSMapDefinition(session)
+        self.rewrite = ConfigurationPolicyRewriteRuleDefinition(session)
+        self.rule_set = ConfigurationPolicyRuleSetDefinition(session)
+        self.security_group = ConfigurationPolicySecurityGroupDefinition(session)
+        self.vpn_membership = ConfigurationPolicyVPNMembershipGroupDefinition(session)
+        self.zone_based_firewall = ConfigurationPolicyZoneBasedFirewallDefinition(session)
 
 
 class ConfigurationPolicyContainer:
