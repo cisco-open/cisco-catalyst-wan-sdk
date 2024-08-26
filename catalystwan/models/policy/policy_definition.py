@@ -114,7 +114,7 @@ class VariableName(BaseModel):
 
 class LocalTLOCListEntryValue(BaseModel):
     color: SpaceSeparatedTLOCColorStr
-    encap: EncapType
+    encap: Optional[EncapType] = None
     restrict: Optional[str] = None
 
 
@@ -1163,7 +1163,9 @@ class Action(BaseModel):
 
 class PolicyDefinitionSequenceBase(BaseModel):
     sequence_id: int = Field(default=0, serialization_alias="sequenceId", validation_alias="sequenceId")
-    sequence_name: str = Field(serialization_alias="sequenceName", validation_alias="sequenceName")
+    sequence_name: Optional[str] = Field(
+        default=None, serialization_alias="sequenceName", validation_alias="sequenceName"
+    )
     base_action: str = Field(serialization_alias="baseAction", validation_alias="baseAction")
     sequence_type: SequenceType = Field(serialization_alias="sequenceType", validation_alias="sequenceType")
     sequence_ip_type: Optional[SequenceIpType] = Field(
