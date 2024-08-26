@@ -1,11 +1,11 @@
 # Copyright 2023 Cisco Systems, Inc. and its affiliates
 
 # mypy: disable-error-code="empty-body"
-from typing import Literal, Optional
+from typing import Dict, Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
-from catalystwan.endpoints import APIEndpoints, get
+from catalystwan.endpoints import JSON, APIEndpoints, get, post, put
 from catalystwan.typed_list import DataSequence
 
 TenancyModes = Literal["SingleTenant", "MultiTenant"]
@@ -24,12 +24,30 @@ class VManageDetails(BaseModel):
     status: str
 
 
+class ConnectedDevice(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    uuid: str
+    device_id: str = Field(serialization_alias="deviceId", validation_alias="deviceId")
+
+
+class VManageSetup(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    vmanage_id: Optional[str] = Field(default=None, serialization_alias="vmanageID", validation_alias="vmanageID")
+    device_ip: str = Field(default=None, serialization_alias="deviceIP", validation_alias="deviceIP")
+    username: str = Field(default=None)
+    password: str = Field(default=None)
+    gen_csr: Optional[bool] = Field(default=None, serialization_alias="genCSR", validation_alias="genCSR")
+    persona: str = Field(default=None)
+    services: Optional[Dict[str, Dict[str, bool]]] = Field(default=None)
+
+
 class ClusterManagement(APIEndpoints):
     def add_or_update_user_credentials(self):
         # POST /clusterManagement/userCreds
         ...
 
-    def add_vmanage(self):
+    @post("/clusterManagement/setup")
+    def add_vmanage(self, payload: VManageSetup) -> JSON:
         # POST /clusterManagement/setup
         ...
 
@@ -41,7 +59,8 @@ class ClusterManagement(APIEndpoints):
         # POST /clusterManagement/configure
         ...
 
-    def edit_vmanage(self):
+    @put("/clusterManagement/setup")
+    def edit_vmanage(self, payload: VManageSetup) -> JSON:
         # PUT /clusterManagement/setup
         ...
 
@@ -53,8 +72,8 @@ class ClusterManagement(APIEndpoints):
         # GET /clusterManagement/iplist/{vmanageID}
         ...
 
-    def get_connected_devices(self):
-        # GET /clusterManagement/connectedDevices/{vmanageIP}
+    @get("/clusterManagement/connectedDevices/{vmanageIP}", "data")
+    def get_connected_devices(self, vmanageIP: str) -> DataSequence[ConnectedDevice]:
         ...
 
     def get_connected_devices_per_tenant(self):
