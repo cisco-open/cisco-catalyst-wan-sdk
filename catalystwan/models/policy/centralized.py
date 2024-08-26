@@ -18,6 +18,8 @@ TrafficDataDirection = Literal[
     "service",
     "tunnel",
     "all",
+    "from-service",
+    "from-tunnel",
 ]
 
 ControlDirection = Literal[
@@ -167,7 +169,7 @@ class MeshPolicyItem(AssemblyItemBase):
 
 
 class AppRoutePolicyItem(AssemblyItemBase):
-    type: Literal["appRoute"] = "appRoute"
+    type: Literal["approute"] = "approute"
 
 
 class CFlowDPolicyItem(AssemblyItemBase):
