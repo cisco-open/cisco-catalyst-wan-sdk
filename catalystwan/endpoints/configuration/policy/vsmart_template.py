@@ -26,7 +26,7 @@ class AutoConfirm(BaseModel):
 
 
 class ActivateDeactivateTaskId(BaseModel):
-    id: UUID
+    id: str
 
 
 class ConfigurationVSmartTemplatePolicy(APIEndpoints):
