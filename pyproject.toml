@@ -1,10 +1,6 @@
 [tool.poetry]
 name = "catalystwan"
-<<<<<<< HEAD
-version = "0.34.0dev7"
-=======
-version = "0.35.0"
->>>>>>> 0e0394d2 (Merge pull request #795 from cisco-open/apigw)
+version = "0.35.0dev0"
 description = "Cisco Catalyst WAN SDK for Python"
 authors = ["kagorski <kagorski@cisco.com>"]
 readme = "README.md"
