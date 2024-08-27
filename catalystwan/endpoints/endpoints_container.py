@@ -12,6 +12,7 @@ from catalystwan.endpoints.cluster_management import ClusterManagement
 from catalystwan.endpoints.configuration.device.software_update import ConfigurationDeviceSoftwareUpdate
 from catalystwan.endpoints.configuration.disaster_recovery import ConfigurationDisasterRecovery
 from catalystwan.endpoints.configuration.feature_profile.sdwan.cli import CliFeatureProfile
+from catalystwan.endpoints.configuration.feature_profile.sdwan.policy_object import PolicyObjectFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.sig_security import SIGSecurity
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.topology import TopologyFeatureProfile
@@ -21,6 +22,8 @@ from catalystwan.endpoints.configuration.policy.definition.access_control_list i
 from catalystwan.endpoints.configuration.policy.definition.access_control_list_ipv6 import (
     ConfigurationPolicyAclIPv6Definition,
 )
+from catalystwan.endpoints.configuration.policy.definition.aip import ConfigurationPolicyAIPDefinition
+from catalystwan.endpoints.configuration.policy.definition.amp import ConfigurationPolicyAMPDefinition
 from catalystwan.endpoints.configuration.policy.definition.control import ConfigurationPolicyControlDefinition
 from catalystwan.endpoints.configuration.policy.definition.device_access import (
     ConfigurationPolicyDeviceAccessDefinition,
@@ -52,6 +55,7 @@ from catalystwan.endpoints.configuration.policy.list.community import Configurat
 from catalystwan.endpoints.configuration.policy.list.data_ipv6_prefix import ConfigurationPolicyDataIPv6PrefixList
 from catalystwan.endpoints.configuration.policy.list.data_prefix import ConfigurationPolicyDataPrefixList
 from catalystwan.endpoints.configuration.policy.list.expanded_community import ConfigurationPolicyExpandedCommunityList
+from catalystwan.endpoints.configuration.policy.list.extended_community import ConfigurationPolicyExtendedCommunityList
 from catalystwan.endpoints.configuration.policy.list.fqdn import ConfigurationPolicyFQDNList
 from catalystwan.endpoints.configuration.policy.list.geo_location import ConfigurationPolicyGeoLocationList
 from catalystwan.endpoints.configuration.policy.list.ips_signature import ConfigurationPolicyIPSSignatureList
@@ -117,6 +121,7 @@ class ConfigurationPolicyListContainer:
         self.data_ipv6_prefix = ConfigurationPolicyDataIPv6PrefixList(session)
         self.data_prefix = ConfigurationPolicyDataPrefixList(session)
         self.expanded_community = ConfigurationPolicyExpandedCommunityList(session)
+        self.extended_community = ConfigurationPolicyExtendedCommunityList(session)
         self.fqdn = ConfigurationPolicyFQDNList(session)
         self.geo_location = ConfigurationPolicyGeoLocationList(session)
         self.ips_signature = ConfigurationPolicyIPSSignatureList(session)
@@ -134,28 +139,30 @@ class ConfigurationPolicyListContainer:
         self.sla = ConfigurationPolicySLAClassList(session)
         self.tloc = ConfigurationPolicyTLOCList(session)
         self.trunkgroup = ConfigurationPolicyTrunkGroupList(session)
-        self.url_block_list = ConfigurationPolicyURLBlockList(session)
         self.url_allow_list = ConfigurationPolicyURLAllowList(session)
+        self.url_block_list = ConfigurationPolicyURLBlockList(session)
         self.vpn = ConfigurationPolicyVPNList(session)
         self.zone = ConfigurationPolicyZoneList(session)
 
 
 class ConfigurationPolicyDefinitionContainer:
     def __init__(self, session: ManagerSession):
-        self.data = ConfigurationPolicyDataDefinition(session)
-        self.rule_set = ConfigurationPolicyRuleSetDefinition(session)
-        self.security_group = ConfigurationPolicySecurityGroupDefinition(session)
-        self.zone_based_firewall = ConfigurationPolicyZoneBasedFirewallDefinition(session)
-        self.qos_map = ConfigurationPolicyQoSMapDefinition(session)
-        self.rewrite = ConfigurationPolicyRewriteRuleDefinition(session)
-        self.control = ConfigurationPolicyControlDefinition(session)
-        self.vpn_membership = ConfigurationPolicyVPNMembershipGroupDefinition(session)
-        self.hub_and_spoke = ConfigurationPolicyHubAndSpokeDefinition(session)
-        self.mesh = ConfigurationPolicyMeshDefinition(session)
         self.acl = ConfigurationPolicyAclDefinition(session)
         self.acl_ipv6 = ConfigurationPolicyAclIPv6Definition(session)
+        self.advanced_inspection_profile = ConfigurationPolicyAIPDefinition(session)
+        self.advanced_malware_protection = ConfigurationPolicyAMPDefinition(session)
+        self.control = ConfigurationPolicyControlDefinition(session)
+        self.data = ConfigurationPolicyDataDefinition(session)
         self.device_access = ConfigurationPolicyDeviceAccessDefinition(session)
         self.device_access_ipv6 = ConfigurationPolicyDeviceAccessIPv6Definition(session)
+        self.hub_and_spoke = ConfigurationPolicyHubAndSpokeDefinition(session)
+        self.mesh = ConfigurationPolicyMeshDefinition(session)
+        self.qos_map = ConfigurationPolicyQoSMapDefinition(session)
+        self.rewrite = ConfigurationPolicyRewriteRuleDefinition(session)
+        self.rule_set = ConfigurationPolicyRuleSetDefinition(session)
+        self.security_group = ConfigurationPolicySecurityGroupDefinition(session)
+        self.vpn_membership = ConfigurationPolicyVPNMembershipGroupDefinition(session)
+        self.zone_based_firewall = ConfigurationPolicyZoneBasedFirewallDefinition(session)
 
 
 class ConfigurationPolicyContainer:
@@ -173,6 +180,7 @@ class ConfigurationSDWANFeatureProfileContainer:
         self.system = SystemFeatureProfile(client=session)
         self.cli = CliFeatureProfile(client=session)
         self.topology = TopologyFeatureProfile(client=session)
+        self.policy = PolicyObjectFeatureProfile(client=session)
 
 
 class ConfigurationFeatureProfileContainer:
