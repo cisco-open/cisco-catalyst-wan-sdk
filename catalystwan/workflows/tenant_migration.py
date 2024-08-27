@@ -103,7 +103,7 @@ def migration_preconditions_check(
             problems.append(
                 "Migration to MT (using provider) is expected to be initiated from ST (using single tenant)"
             )
-        if not tenant.org_name.startswith(target_org):
+        if target_org is None or not tenant.org_name.startswith(target_org):
             problems.append(f"Provided '{tenant.org_name}' but target organization is '{target_org}'")
 
     # Checks for ST target

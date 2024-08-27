@@ -3,8 +3,9 @@ from typing import TYPE_CHECKING, Literal, Optional
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, PositiveInt
-from requests import PreparedRequest, post
+from requests import HTTPError, PreparedRequest, post
 from requests.auth import AuthBase
+from requests.exceptions import JSONDecodeError
 
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.response import ManagerResponse
@@ -48,7 +49,9 @@ class ApiGwAuth(AuthBase):
             self.authenticate(request)
 
     def authenticate(self, request: PreparedRequest):
-        base_url = f"{str(urlparse(request.url).scheme)}://{str(urlparse(request.url).netloc)}"
+        assert request.url is not None
+        url = urlparse(request.url)
+        base_url = f"{url.scheme}://{url.netloc}"
         self.token = self.get_token(base_url, self.login)
 
     def build_digest_header(self, request: PreparedRequest) -> None:
@@ -60,15 +63,24 @@ class ApiGwAuth(AuthBase):
 
     @staticmethod
     def get_token(base_url: str, apigw_login: ApiGwLogin) -> str:
-        response = post(
-            url=f"{base_url}/apigw/login",
-            verify=False,
-            json=apigw_login.model_dump(exclude_none=True),
-            timeout=10,
-        )
-        token = response.json().get("token", "")
-        if not token or not isinstance(token, str):
-            raise CatalystwanException("Failed to get bearer token")
+        try:
+            response = post(
+                url=f"{base_url}/apigw/login",
+                verify=False,
+                json=apigw_login.model_dump(exclude_none=True),
+                timeout=10,
+            )
+            response.raise_for_status()
+            token = response.json()["token"]
+        except JSONDecodeError:
+            raise CatalystwanException(f"Incorrect response type from ApiGateway login request, ({response.text})")
+        except HTTPError as ex:
+            raise CatalystwanException(f"Problem with connection to ApiGateway login endpoint, ({ex})")
+        except KeyError as ex:
+            raise CatalystwanException(f"Not found token in login response from ApiGateway, ({ex})")
+        else:
+            if not token or not isinstance(token, str):
+                raise CatalystwanException("Failed to get bearer token")
         return token
 
     def __str__(self) -> str:

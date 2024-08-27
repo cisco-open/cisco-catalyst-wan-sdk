@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING, Optional
 from urllib.parse import urlparse
 
-from packaging.version import Version
+from packaging.version import Version  # type: ignore
 from requests import PreparedRequest, Response, get, post
 from requests.auth import AuthBase
 from requests.cookies import RequestsCookieJar
