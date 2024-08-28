@@ -27,6 +27,8 @@ ControlDirection = Literal[
     "out",
 ]
 
+AppRouteItemType = Literal["approute", "appRoute"]
+
 
 def assert_feature_defintion(definition: Any) -> "CentralizedPolicyDefinition":
     assert isinstance(definition, CentralizedPolicyDefinition)
@@ -169,7 +171,7 @@ class MeshPolicyItem(AssemblyItemBase):
 
 
 class AppRoutePolicyItem(AssemblyItemBase):
-    type: Literal["approute"] = "approute"
+    type: AppRouteItemType = "appRoute"
 
 
 class CFlowDPolicyItem(AssemblyItemBase):
