@@ -193,7 +193,7 @@ class TemplatesAPI:
         task = Task(session=self.session, task_id=response["id"]).wait_for_completed(timeout_seconds=timeout_seconds)
         if task.result:
             return True
-        logger.warning(f"Failed to attach tempate: {name} to the device: {device.hostname}.")
+        logger.warning(f"Failed to attach template: {name} to the device: {device.hostname}.")
         logger.warning(f"Task activity information: {task.sub_tasks_data[0].activity}")
         return False
 
