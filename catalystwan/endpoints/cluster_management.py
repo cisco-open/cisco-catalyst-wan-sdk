@@ -2,11 +2,13 @@
 
 # mypy: disable-error-code="empty-body"
 from typing import Dict, Literal, Optional
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from catalystwan.endpoints import JSON, APIEndpoints, get, post, put
 from catalystwan.typed_list import DataSequence
+from catalystwan.utils.persona import Persona
 
 TenancyModes = Literal["SingleTenant", "MultiTenant"]
 
@@ -26,7 +28,7 @@ class VManageDetails(BaseModel):
 
 class ConnectedDevice(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    uuid: str
+    uuid: UUID
     device_id: str = Field(serialization_alias="deviceId", validation_alias="deviceId")
 
 
@@ -37,7 +39,7 @@ class VManageSetup(BaseModel):
     username: str = Field(default=None)
     password: str = Field(default=None)
     gen_csr: Optional[bool] = Field(default=None, serialization_alias="genCSR", validation_alias="genCSR")
-    persona: str = Field(default=None)
+    persona: Persona = Field(default=None)
     services: Optional[Dict[str, Dict[str, bool]]] = Field(default=None)
 
 

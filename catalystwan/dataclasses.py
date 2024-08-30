@@ -282,7 +282,7 @@ class ServiceConfigurationData(DataclassBase):
     vmanage_id: str = field(metadata={FIELD_NAME: "vmanageID"})
     device_ip: str = field(metadata={FIELD_NAME: "deviceIP"})  # consider using ip4 module to verify
     services: dict = field(metadata={FIELD_NAME: "services"})  # consider using nested dataclasses
-    persona: Persona = field(converter=Persona, default=Persona.COMPUTE_AND_DATA)
+    persona: Persona = field(default="COMPUTE_AND_DATA")
     username: Optional[str] = field(default=None)
     password: Optional[str] = field(default=None)
 

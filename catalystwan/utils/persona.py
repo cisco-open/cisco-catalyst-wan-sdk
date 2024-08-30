@@ -1,9 +1,5 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from enum import Enum
+from typing import Literal
 
-
-class Persona(str, Enum):
-    COMPUTE_AND_DATA = "COMPUTE_AND_DATA"
-    COMPUTE = "COMPUTE"
-    DATA = "DATA"
+Persona = Literal["COMPUTE_AND_DATA", "COMPUTE", "DATA"]
