@@ -85,6 +85,15 @@ class DeviceTemplate(BaseModel):
     security_policy_id: str = Field(
         default="", serialization_alias="securityPolicyId", validation_alias="securityPolicyId"
     )
+    template_configuration_edited: Optional[str] = Field(
+        default=None, serialization_alias="templateConfigurationEdited", validation_alias="templateConfigurationEdited"
+    )
+    template_configuration: Optional[str] = Field(
+        default=None, serialization_alias="templateConfiguration", validation_alias="templateConfiguration"
+    )
+    rid: Optional[int] = Field(default=None, serialization_alias="@rid", validation_alias="@rid")
+    cli_type: Optional[str] = Field(default=None, serialization_alias="cliType", validation_alias="cliType")
+    copy_edited: Optional[bool] = Field(default=None, serialization_alias="copyEdited", validation_alias="copyEdited")
 
     def get_security_policy_uuid(self) -> Optional[UUID]:
         return str_to_uuid(self.security_policy_id)
