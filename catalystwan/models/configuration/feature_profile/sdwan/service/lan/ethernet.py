@@ -46,10 +46,10 @@ class StaticIPv6AddressConfig(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     primary_ip_address: StaticIPv6Address = Field(
-        serialization_alias="staticIpV6AddressPrimary", validation_alias="staticIpV6AddressPrimary"
+        serialization_alias="primaryIpV6Address", validation_alias="primaryIpV6Address"
     )
     secondary_ip_address: Optional[List[StaticIPv6Address]] = Field(
-        serialization_alias="staticIpV6AddressSecondary", validation_alias="staticIpV6AddressSecondary", default=None
+        serialization_alias="secondaryIpV6Address", validation_alias="secondaryIpV6Address", default=None
     )
     dhcp_helper_v6: Optional[List[Dhcpv6Helper]] = Field(
         serialization_alias="dhcpHelperV6", validation_alias="dhcpHelperV6", default=None
