@@ -6,25 +6,8 @@ from uuid import UUID
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 
 from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
+from catalystwan.models.common import SLAClassCriteria
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
-
-SLAClassCriteria = Literal[
-    "loss",
-    "latency",
-    "jitter",
-    "loss-latency",
-    "loss-jitter",
-    "latency-loss",
-    "latency-jitter",
-    "jitter-latency",
-    "jitter-loss",
-    "loss-latency-jitter",
-    "loss-jitter-latency",
-    "latency-loss-jitter",
-    "latency-jitter-loss",
-    "jitter-latency-loss",
-    "jitter-loss-latency",
-]
 
 
 def check_latency_ms(cls, latency: Optional[Global]):

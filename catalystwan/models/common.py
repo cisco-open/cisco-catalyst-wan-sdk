@@ -1353,3 +1353,21 @@ DeviceModel = Literal[
     "vedge-C8200L-1N-4T",
     "vedge-ISRv",
 ]
+
+SLAClassCriteria = Literal[
+    "loss",
+    "latency",
+    "jitter",
+    "loss-latency",
+    "loss-jitter",
+    "latency-loss",
+    "latency-jitter",
+    "jitter-latency",
+    "jitter-loss",
+    "loss-latency-jitter",
+    "loss-jitter-latency",
+    "latency-loss-jitter",
+    "latency-jitter-loss",
+    "jitter-latency-loss",
+    "jitter-loss-latency",
+]

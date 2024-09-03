@@ -23,7 +23,7 @@ class Collector(BaseModel):
     address: str
     port: int = Field(ge=1024, le=65536)
     transport: TransportProtocol
-    source_interface: str = Field(
+    source_interface: Optional[str] = Field(
         default=None, validation_alias="sourceInterface", serialization_alias="sourceInterface"
     )
     export_spread: Optional[ExportState] = Field(
