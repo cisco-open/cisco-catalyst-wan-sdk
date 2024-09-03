@@ -35,11 +35,11 @@ class ConnectedDevice(BaseModel):
 class VManageSetup(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     vmanage_id: Optional[str] = Field(default=None, serialization_alias="vmanageID", validation_alias="vmanageID")
-    device_ip: str = Field(default=None, serialization_alias="deviceIP", validation_alias="deviceIP")
-    username: str = Field(default=None)
-    password: str = Field(default=None)
+    device_ip: str = Field(serialization_alias="deviceIP", validation_alias="deviceIP")
+    username: str
+    password: str
     gen_csr: Optional[bool] = Field(default=None, serialization_alias="genCSR", validation_alias="genCSR")
-    persona: Persona = Field(default=None)
+    persona: Persona
     services: Optional[Dict[str, Dict[str, bool]]] = Field(default=None)
 
 
