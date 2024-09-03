@@ -107,22 +107,22 @@ class ServicesIp(BaseModel):
         serialization_alias="globalOtherSettingsIgnoreBootp",
         validation_alias="globalOtherSettingsIgnoreBootp",
     )
-    nat64_udp_timeout: Union[Variable, Global[bool], Default[int]] = Field(
+    nat64_udp_timeout: Union[Variable, Global[int], Default[int]] = Field(
         default=as_default(300),
         serialization_alias="globalSettingsNat64UdpTimeout",
         validation_alias="globalSettingsNat64UdpTimeout",
     )
-    nat64_tcp_timeout: Union[Variable, Global[bool], Default[int]] = Field(
+    nat64_tcp_timeout: Union[Variable, Global[int], Default[int]] = Field(
         default=as_default(3600),
         serialization_alias="globalSettingsNat64TcpTimeout",
         validation_alias="globalSettingsNat64TcpTimeout",
     )
-    http_authentication: Union[Variable, Global[bool], Default[None]] = Field(
+    http_authentication: Union[Variable, Global[str], Default[None]] = Field(
         default=Default[None](value=None),
         serialization_alias="globalSettingsHttpAuthentication",
         validation_alias="globalSettingsHttpAuthentication",
     )
-    ssh_version: Union[Variable, Global[bool], Default[None]] = Field(
+    ssh_version: Union[Variable, Global[str], Default[None]] = Field(
         default=Default[None](value=None),
         serialization_alias="globalSettingsSSHVersion",
         validation_alias="globalSettingsSSHVersion",
