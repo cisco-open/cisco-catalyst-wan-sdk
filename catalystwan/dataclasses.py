@@ -500,7 +500,7 @@ class ExtendedTacacsServer(TacacsServer):
     """
     Extended TACACS server with additional fields.
     """
-   
+
     source_vpn: Optional[int] = field(default=None, metadata={FIELD_NAME: "sourceVpn"})
 
 
