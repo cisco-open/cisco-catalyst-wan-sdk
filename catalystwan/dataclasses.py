@@ -463,7 +463,7 @@ class RadiusServer(DataclassBase):
 @define(frozen=True)
 class RadiusServerSrcVpn(DataclassBase):
     """
-    Provider-Tenant -> Tenant -> Administration -> Manage users -> 
+    Provider-Tenant -> Tenant -> Administration -> Manage users ->
     Remote AAA -> RADIUS selection without service connector
     """
 
@@ -479,7 +479,7 @@ class RadiusServerSrcVpn(DataclassBase):
 @define(frozen=True)
 class RadiusServerVxlanSrcVpn(DataclassBase):
     """
-    Provider-Tenant -> Tenant -> Administration -> Manage users -> 
+    Provider-Tenant -> Tenant -> Administration -> Manage users ->
     Remote AAA -> RADIUS selection with service connector and vpn 512
     """
 
@@ -523,7 +523,7 @@ class TacacsServer(DataclassBase):
 @define(frozen=True)
 class TacacsServerSrcVpn(DataclassBase):
     """
-    Provider-Tenant -> Tenant -> Administration -> Manage users -> 
+    Provider-Tenant -> Tenant -> Administration -> Manage users ->
     Remote AAA -> TACACS selection without service connector
     """
 
@@ -538,7 +538,7 @@ class TacacsServerSrcVpn(DataclassBase):
 @define(frozen=True)
 class TacacsServerVxlanSrcVpn(DataclassBase):
     """
-    Provider-Tenant -> Tenant -> Administration -> Manage users -> 
+    Provider-Tenant -> Tenant -> Administration -> Manage users ->
     Remote AAA -> TACACS selection with service connector and vpn 512
     """
 
