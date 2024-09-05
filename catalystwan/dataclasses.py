@@ -466,9 +466,9 @@ class ExtendedRadiusServer(RadiusServer):
     Extended RADIUS server with additional fields.
     """
 
-    sourceVpn: Optional[int] = field(metadata={FIELD_NAME: "sourceVpn"}, default=None)
-    vpn: Optional[int] = field(metadata={FIELD_NAME: "vpn"}, default=None)
-    vpn_ip_subnet: Optional[str] = field(metadata={FIELD_NAME: "vpnIpSubnet"}, default=None)
+    sourceVpn: Optional[int] = field(metadata={FIELD_NAME: "sourceVpn"})
+    vpn: Optional[int] = field(metadata={FIELD_NAME: "vpn"})
+    vpn_ip_subnet: Optional[str] = field(metadata={FIELD_NAME: "vpnIpSubnet"})
 
 
 @define(frozen=True)
@@ -503,9 +503,9 @@ class ExtendedTacacsServer(TacacsServer):
     Extended TACACS server with additional fields.
     """
 
-    sourceVpn: Optional[int] = field(metadata={FIELD_NAME: "sourceVpn"}, default=None)
-    vpn: Optional[int] = field(metadata={FIELD_NAME: "vpn"}, default=None)
-    vpn_ip_subnet: Optional[str] = field(metadata={FIELD_NAME: "vpnIpSubnet"}, default=None)
+    sourceVpn: Optional[int] = field(metadata={FIELD_NAME: "sourceVpn"})
+    vpn: Optional[int] = field(metadata={FIELD_NAME: "vpn"})
+    vpn_ip_subnet: Optional[str] = field(metadata={FIELD_NAME: "vpnIpSubnet"})
 
 
 @define(frozen=True)
