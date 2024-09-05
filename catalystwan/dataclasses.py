@@ -453,12 +453,22 @@ class RadiusServer(DataclassBase):
     address: str = field(metadata={FIELD_NAME: "address"})
     auth_port: int = field(metadata={FIELD_NAME: "authPort"})
     acct_port: int = field(metadata={FIELD_NAME: "acctPort"})
-    sourceVpn: Optional[int] = field(metadata={FIELD_NAME: "sourceVpn"})
-    vpn: Optional[int] = field(metadata={FIELD_NAME: "vpn"})
-    vpn_ip_subnet: Optional[str] = field(metadata={FIELD_NAME: "vpnIpSubnet"})
+    vpn: int = field(metadata={FIELD_NAME: "vpn"})
+    vpn_ip_subnet: str = field(metadata={FIELD_NAME: "vpnIpSubnet"})
     key: str = field(metadata={FIELD_NAME: "key"})
     secret_key: str = field(metadata={FIELD_NAME: "secretKey"})
     priority: int = field(metadata={FIELD_NAME: "priority"})
+
+
+@define(frozen=True)
+class ExtendedRadiusServer(RadiusServer):
+    """
+    Extended RADIUS server with additional fields.
+    """
+
+    sourceVpn: Optional[int] = field(metadata={FIELD_NAME: "sourceVpn"}, default=None)
+    vpn: Optional[int] = field(metadata={FIELD_NAME: "vpn"}, default=None)
+    vpn_ip_subnet: Optional[str] = field(metadata={FIELD_NAME: "vpnIpSubnet"}, default=None)
 
 
 @define(frozen=True)
@@ -480,12 +490,22 @@ class TacacsServer(DataclassBase):
 
     address: str = field(metadata={FIELD_NAME: "address"})
     auth_port: int = field(metadata={FIELD_NAME: "authPort"})
-    sourceVpn:  Optional[int] = field(metadata={FIELD_NAME: "sourceVpn"})
-    vpn:  Optional[int] = field(metadata={FIELD_NAME: "vpn"})
-    vpn_ip_subnet:  Optional[str] = field(metadata={FIELD_NAME: "vpnIpSubnet"})
+    vpn: int = field(metadata={FIELD_NAME: "vpn"})
+    vpn_ip_subnet: str = field(metadata={FIELD_NAME: "vpnIpSubnet"})
     key: str = field(metadata={FIELD_NAME: "key"})
     secret_key: str = field(metadata={FIELD_NAME: "secretKey"})
     priority: int = field(metadata={FIELD_NAME: "priority"})
+
+
+@define(frozen=True)
+class ExtendedTacacsServer(TacacsServer):
+    """
+    Extended TACACS server with additional fields.
+    """
+
+    sourceVpn: Optional[int] = field(metadata={FIELD_NAME: "sourceVpn"}, default=None)
+    vpn: Optional[int] = field(metadata={FIELD_NAME: "vpn"}, default=None)
+    vpn_ip_subnet: Optional[str] = field(metadata={FIELD_NAME: "vpnIpSubnet"}, default=None)
 
 
 @define(frozen=True)
