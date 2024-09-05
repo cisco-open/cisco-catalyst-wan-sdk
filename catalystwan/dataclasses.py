@@ -452,7 +452,7 @@ class RadiusServer(DataclassBase):
 
     address: str = field(metadata={FIELD_NAME: "address"})
     auth_port: int = field(metadata={FIELD_NAME: "authPort"})
-    acct_port: int = field(metadata={FIELD_NAME: "acctPort"})    
+    acct_port: int = field(metadata={FIELD_NAME: "acctPort"})
     vpn: Optional[int] = field(metadata={FIELD_NAME: "vpn", "description": "required field  < 20.16"})
     vpn_ip_subnet: Optional[str] = field(metadata={FIELD_NAME: "vpnIpSubnet", "description": "required field  < 20.16"})
     key: str = field(metadata={FIELD_NAME: "key"})
@@ -466,8 +466,7 @@ class ExtendedRadiusServer(RadiusServer):
     Extended RADIUS server with additional fields.
     """
 
-    source_vpn: Optional[int] = field(default=None, metadata={FIELD_NAME: "sourceVpn"})  
-
+    source_vpn: Optional[int] = field(default=None, metadata={FIELD_NAME: "sourceVpn"})
 
 
 @define(frozen=True)
@@ -502,7 +501,7 @@ class ExtendedTacacsServer(TacacsServer):
     Extended TACACS server with additional fields.
     """
 
-    source_vpn: Optional[int] = field(default=None, metadata={FIELD_NAME: "sourceVpn"})  
+    source_vpn: Optional[int] = field(default=None, metadata={FIELD_NAME: "sourceVpn"})
     
 
 @define(frozen=True)
