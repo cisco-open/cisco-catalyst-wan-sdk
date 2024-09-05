@@ -453,42 +453,9 @@ class RadiusServer(DataclassBase):
     address: str = field(metadata={FIELD_NAME: "address"})
     auth_port: int = field(metadata={FIELD_NAME: "authPort"})
     acct_port: int = field(metadata={FIELD_NAME: "acctPort"})
-    vpn: int = field(metadata={FIELD_NAME: "vpn"})
-    vpn_ip_subnet: str = field(metadata={FIELD_NAME: "vpnIpSubnet"})
-    key: str = field(metadata={FIELD_NAME: "key"})
-    secret_key: str = field(metadata={FIELD_NAME: "secretKey"})
-    priority: int = field(metadata={FIELD_NAME: "priority"})
-
-
-@define(frozen=True)
-class RadiusServerSrcVpn(DataclassBase):
-    """
-    Provider-Tenant -> Tenant -> Administration -> Manage users ->
-    Remote AAA -> RADIUS selection without service connector
-    """
-
-    address: str = field(metadata={FIELD_NAME: "address"})
-    auth_port: int = field(metadata={FIELD_NAME: "authPort"})
-    acct_port: int = field(metadata={FIELD_NAME: "acctPort"})
-    sourceVpn: int = field(metadata={FIELD_NAME: "sourceVpn"})
-    key: str = field(metadata={FIELD_NAME: "key"})
-    secret_key: str = field(metadata={FIELD_NAME: "secretKey"})
-    priority: int = field(metadata={FIELD_NAME: "priority"})
-
-
-@define(frozen=True)
-class RadiusServerVxlanSrcVpn(DataclassBase):
-    """
-    Provider-Tenant -> Tenant -> Administration -> Manage users ->
-    Remote AAA -> RADIUS selection with service connector and vpn 512
-    """
-
-    address: str = field(metadata={FIELD_NAME: "address"})
-    auth_port: int = field(metadata={FIELD_NAME: "authPort"})
-    acct_port: int = field(metadata={FIELD_NAME: "acctPort"})
-    sourceVpn: int = field(metadata={FIELD_NAME: "sourceVpn"})
-    vpn: int = field(metadata={FIELD_NAME: "vpn"})
-    vpn_ip_subnet: str = field(metadata={FIELD_NAME: "vpnIpSubnet"})
+    sourceVpn: Optional[int] = field(metadata={FIELD_NAME: "sourceVpn"})
+    vpn: Optional[int] = field(metadata={FIELD_NAME: "vpn"})
+    vpn_ip_subnet: Optional[str] = field(metadata={FIELD_NAME: "vpnIpSubnet"})
     key: str = field(metadata={FIELD_NAME: "key"})
     secret_key: str = field(metadata={FIELD_NAME: "secretKey"})
     priority: int = field(metadata={FIELD_NAME: "priority"})
@@ -513,40 +480,9 @@ class TacacsServer(DataclassBase):
 
     address: str = field(metadata={FIELD_NAME: "address"})
     auth_port: int = field(metadata={FIELD_NAME: "authPort"})
-    vpn: int = field(metadata={FIELD_NAME: "vpn"})
-    vpn_ip_subnet: str = field(metadata={FIELD_NAME: "vpnIpSubnet"})
-    key: str = field(metadata={FIELD_NAME: "key"})
-    secret_key: str = field(metadata={FIELD_NAME: "secretKey"})
-    priority: int = field(metadata={FIELD_NAME: "priority"})
-
-
-@define(frozen=True)
-class TacacsServerSrcVpn(DataclassBase):
-    """
-    Provider-Tenant -> Tenant -> Administration -> Manage users ->
-    Remote AAA -> TACACS selection without service connector
-    """
-
-    address: str = field(metadata={FIELD_NAME: "address"})
-    auth_port: int = field(metadata={FIELD_NAME: "authPort"})
-    sourceVpn: int = field(metadata={FIELD_NAME: "sourceVpn"})
-    key: str = field(metadata={FIELD_NAME: "key"})
-    secret_key: str = field(metadata={FIELD_NAME: "secretKey"})
-    priority: int = field(metadata={FIELD_NAME: "priority"})
-
-
-@define(frozen=True)
-class TacacsServerVxlanSrcVpn(DataclassBase):
-    """
-    Provider-Tenant -> Tenant -> Administration -> Manage users ->
-    Remote AAA -> TACACS selection with service connector and vpn 512
-    """
-
-    address: str = field(metadata={FIELD_NAME: "address"})
-    auth_port: int = field(metadata={FIELD_NAME: "authPort"})
-    sourceVpn: int = field(metadata={FIELD_NAME: "sourceVpn"})
-    vpn: int = field(metadata={FIELD_NAME: "vpn"})
-    vpn_ip_subnet: str = field(metadata={FIELD_NAME: "vpnIpSubnet"})
+    sourceVpn:  Optional[int] = field(metadata={FIELD_NAME: "sourceVpn"})
+    vpn:  Optional[int] = field(metadata={FIELD_NAME: "vpn"})
+    vpn_ip_subnet:  Optional[str] = field(metadata={FIELD_NAME: "vpnIpSubnet"})
     key: str = field(metadata={FIELD_NAME: "key"})
     secret_key: str = field(metadata={FIELD_NAME: "secretKey"})
     priority: int = field(metadata={FIELD_NAME: "priority"})
