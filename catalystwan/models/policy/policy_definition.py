@@ -82,6 +82,7 @@ SequenceType = Literal[
     "deviceaccesspolicyv6",
     "sslDecryption",
     "vedgeRoute",
+    "vedgeroute",
 ]
 
 

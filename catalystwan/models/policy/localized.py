@@ -18,6 +18,7 @@ LocalizedPolicySupportedItemType = Literal[
     "deviceaccesspolicyv6",
     "deviceAccessPolicyv6",
     "vedgeRoute",
+    "vedgeroute",
 ]
 
 
