@@ -463,7 +463,8 @@ class RadiusServer(DataclassBase):
 @define(frozen=True)
 class RadiusServerSrcVpn(DataclassBase):
     """
-    Provider-Tenant -> Tenant -> Administration -> Manage users -> Remote AAA -> RADIUS selection without service connector
+    Provider-Tenant -> Tenant -> Administration -> Manage users -> 
+    Remote AAA -> RADIUS selection without service connector
     """
 
     address: str = field(metadata={FIELD_NAME: "address"})
@@ -478,7 +479,8 @@ class RadiusServerSrcVpn(DataclassBase):
 @define(frozen=True)
 class RadiusServerVxlanSrcVpn(DataclassBase):
     """
-    Provider-Tenant -> Tenant -> Administration -> Manage users -> Remote AAA -> RADIUS selection with service connector and vpn 512
+    Provider-Tenant -> Tenant -> Administration -> Manage users -> 
+    Remote AAA -> RADIUS selection with service connector and vpn 512
     """
 
     address: str = field(metadata={FIELD_NAME: "address"})
@@ -521,7 +523,8 @@ class TacacsServer(DataclassBase):
 @define(frozen=True)
 class TacacsServerSrcVpn(DataclassBase):
     """
-    Provider-Tenant -> Tenant -> Administration -> Manage users -> Remote AAA -> TACACS selection without service connector
+    Provider-Tenant -> Tenant -> Administration -> Manage users -> 
+    Remote AAA -> TACACS selection without service connector
     """
 
     address: str = field(metadata={FIELD_NAME: "address"})
@@ -535,7 +538,8 @@ class TacacsServerSrcVpn(DataclassBase):
 @define(frozen=True)
 class TacacsServerVxlanSrcVpn(DataclassBase):
     """
-    Provider-Tenant -> Tenant -> Administration -> Manage users -> Remote AAA -> TACACS selection with service connector and vpn 512
+    Provider-Tenant -> Tenant -> Administration -> Manage users -> 
+    Remote AAA -> TACACS selection with service connector and vpn 512
     """
 
     address: str = field(metadata={FIELD_NAME: "address"})
