@@ -31,13 +31,18 @@ from catalystwan.models.common import (
     VersionedField,
 )
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
-from catalystwan.models.policy.centralized import TrafficDataDirection
 from catalystwan.models.policy.policy_definition import DNSTypeEntryType, LossProtectionType
+
+TrafficPolicyDirection = Literal[
+    "service",
+    "tunnel",
+    "all",
+]
 
 
 class TrafficPolicyTarget(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    direction: Global[TrafficDataDirection]
+    direction: Global[TrafficPolicyDirection]
     vpn: Global[List[str]]
 
 
