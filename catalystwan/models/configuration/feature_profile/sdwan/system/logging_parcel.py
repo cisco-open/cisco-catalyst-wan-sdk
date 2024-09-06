@@ -2,7 +2,7 @@ from typing import List, Literal, Optional, Union
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, _ParcelBase, as_default, as_global
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default, as_global
 
 Priority = Literal["information", "debugging", "notice", "warn", "error", "critical", "alert", "emergency"]
 TlsVersion = Literal["TLSv1.1", "TLSv1.2"]
@@ -21,45 +21,45 @@ CypherSuite = Literal[
 
 
 class TlsProfile(BaseModel):
-    profile: Global[str]
-    version: Union[Global[TlsVersion], Default[TlsVersion]] = Field(
+    profile: Union[Global[str], Variable]
+    version: Union[Global[TlsVersion], Default[TlsVersion], Variable] = Field(
         default=as_default("TLSv1.1", TlsVersion), serialization_alias="tlsVersion", validation_alias="tlsVersion"
     )
     auth_type: Default[AuthType] = Field(
         default=as_default("Server", AuthType), serialization_alias="authType", validation_alias="authType"
     )  # Value can't be changed in the UI
-    ciphersuite_list: Union[Global[List[CypherSuite]], Default[None]] = Field(
+    ciphersuite_list: Union[Global[List[CypherSuite]], Default[None], Variable] = Field(
         default=Default[None](value=None), serialization_alias="cipherSuiteList", validation_alias="cipherSuiteList"
     )
     model_config = ConfigDict(populate_by_name=True)
 
 
 class Server(BaseModel):
-    name: Global[str]
-    vpn: Union[Global[int], Default[int]] = Field(default=as_default(0))
-    source_interface: Union[Global[str], Default[None]] = Field(
+    name: Union[Global[str], Variable]
+    vpn: Union[Global[int], Default[int], Variable] = Field(default=as_default(0))
+    source_interface: Union[Global[str], Default[None], Variable] = Field(
         default=Default[None](value=None), serialization_alias="sourceInterface", validation_alias="sourceInterface"
     )
-    priority: Union[Global[Priority], Default[Priority]] = Field(default=as_default("information", Priority))
-    enable_tls: Union[Global[bool], Default[bool]] = Field(
+    priority: Union[Global[Priority], Default[Priority], Variable] = Field(default=as_default("information", Priority))
+    enable_tls: Union[Global[bool], Default[bool], Variable] = Field(
         default=as_default(False), serialization_alias="tlsEnable", validation_alias="tlsEnable"
     )
-    custom_profile: Optional[Union[Global[bool], Default[bool]]] = Field(
+    custom_profile: Optional[Union[Global[bool], Default[bool], Variable]] = Field(
         default=None,
         serialization_alias="tlsPropertiesCustomProfile",
         validation_alias="tlsPropertiesCustomProfile",
     )
-    profile_properties: Optional[Global[str]] = Field(
+    profile_properties: Optional[Union[Global[str], Variable]] = Field(
         default=None, serialization_alias="tlsPropertiesProfile", validation_alias="tlsPropertiesProfile"
     )
     model_config = ConfigDict(populate_by_name=True)
 
 
 class File(BaseModel):
-    disk_file_size: Optional[Union[Global[int], Default[int]]] = Field(
+    disk_file_size: Optional[Union[Global[int], Default[int], Variable]] = Field(
         default=as_default(10), serialization_alias="diskFileSize", validation_alias="diskFileSize"
     )
-    disk_file_rotate: Optional[Union[Global[int], Default[int]]] = Field(
+    disk_file_rotate: Optional[Union[Global[int], Default[int], Variable]] = Field(
         default=as_default(10), serialization_alias="diskFileRotate", validation_alias="diskFileRotate"
     )
 
