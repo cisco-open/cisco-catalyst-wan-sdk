@@ -94,6 +94,7 @@ class DeviceCsrGenerationResponse(BaseModel):
 class Validity(str, Enum):
     VALID = "valid"
     INVALID = "invalid"
+    STAGING = "staging"
 
 
 class VedgeListValidityPayload(BaseModel):
