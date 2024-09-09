@@ -121,7 +121,7 @@ class Radius(BaseModel):
     vpn: Union[Global[int], Default[int], None] = Field(
         default=None, description="Set VPN in which Radius server is located"
     )
-    source_interface: Union[Global[str], Default[None], Variable, None] = Field(
+    source_interface: Optional[Union[Global[str], Default[None], Variable]] = Field(
         default=None,
         validation_alias="sourceInterface",
         serialization_alias="sourceInterface",
@@ -196,7 +196,7 @@ class Tacacs(BaseModel):
     vpn: Union[Global[int], Default[int], None] = Field(
         default=None, description="Set VPN in which TACACS server is located"
     )
-    source_interface: Union[Global[str], Default[str], None] = Field(
+    source_interface: Optional[Union[Global[str], Default[str], Variable]] = Field(
         default=None,
         validation_alias="sourceInterface",
         serialization_alias="sourceInterface",
