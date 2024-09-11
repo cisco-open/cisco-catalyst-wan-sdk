@@ -210,8 +210,6 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         logger: override default module logger
 
     Attributes:
-        enable_relogin (bool): defaults to True, in case that session is not properly logged-in, session will try to
-            relogin and try the same request again
         api: APIContainer: container for API methods
         endpoints: APIEndpointContainter: container for API endpoints
         state: ManagerSessionState: current state of the session can be used to control session flow
@@ -237,7 +235,6 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self._session_type = SessionType.NOT_DEFINED
         self.server_name: Optional[str] = None
         self.logger = logger or logging.getLogger(__name__)
-        self.enable_relogin: bool = True
         self.response_trace: Callable[
             [Optional[Response], Union[Request, PreparedRequest, None]], str
         ] = response_history_debug
@@ -314,7 +311,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
             ManagerSession: (self)
         """
         self.cookies.clear_session_cookies()
-        self._auth.clear_tokens_and_cookies()
+        self._auth.clear()
         self.auth = self._auth
         if self.subdomain:
             tenant_id = self.get_tenant_id()
@@ -346,13 +343,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self.logger.info(
             f"Logged to vManage({self.platform_version}) as {self.auth}. The session type is {self.session_type}"
         )
-        self._set_jsessionid(self.auth)
         return self
-
-    def _set_jsessionid(self, auth: Union[vManageAuth, ApiGwAuth]) -> None:
-        if isinstance(auth, vManageAuth):
-            if jsessionid := auth.jsessionid:
-                self.cookies.set("JSESSIONID", jsessionid)
 
     def wait_server_ready(self, timeout: int, poll_period: int = 10) -> None:
         """Waits until server is ready for API requests with given timeout in seconds"""
@@ -423,16 +414,6 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
                 return self.request(method, url, *args, **_kwargs)
             self.logger.debug(exception)
             raise ManagerRequestException(*exception.args, request=exception.request, response=exception.response)
-
-        if self.enable_relogin and response.jsessionid_expired and self.state == ManagerSessionState.OPERATIVE:
-            self.logger.warning("Logging to session. Reason: expired JSESSIONID detected in response headers")
-            self.state = ManagerSessionState.LOGIN
-            return self.request(method, url, *args, **_kwargs)
-
-        if self.enable_relogin and response.api_gw_unauthorized and self.state == ManagerSessionState.OPERATIVE:
-            self.logger.warning("Logging to API GW session. Reason: unauthorized detected in response headers")
-            self.state = ManagerSessionState.LOGIN
-            return self.request(method, url, *args, **_kwargs)
 
         if response.request.url and "passwordReset.html" in response.request.url:
             raise DefaultPasswordError("Password must be changed to use this session.")
@@ -511,8 +492,8 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         response = self.post(url_path)
         return response.json()["VSessionId"]
 
-    def logout(self) -> Optional[ManagerResponse]:
-        return self._auth.logout(self)
+    def logout(self) -> None:
+        self._auth.logout(self)
 
     def close(self) -> None:
         """Closes the ManagerSession.
