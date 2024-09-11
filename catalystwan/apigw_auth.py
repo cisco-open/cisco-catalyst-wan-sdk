@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import Literal, Optional
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, PositiveInt
@@ -7,11 +7,9 @@ from requests import HTTPError, PreparedRequest, post
 from requests.auth import AuthBase
 from requests.exceptions import JSONDecodeError
 
+from catalystwan.abstractions import APIEndpointClient, AuthProtocol
 from catalystwan.exceptions import CatalystwanException
-from catalystwan.response import ManagerResponse
-
-if TYPE_CHECKING:
-    from catalystwan.session import ManagerSession
+from catalystwan.response import auth_response_debug
 
 LoginMode = Literal["machine", "user", "session"]
 
@@ -27,17 +25,18 @@ class ApiGwLogin(BaseModel):
     token_duration: PositiveInt = Field(default=10, description="in minutes")
 
 
-class ApiGwAuth(AuthBase):
+class ApiGwAuth(AuthBase, AuthProtocol):
     """Attaches ApiGateway Authentication to the given Requests object.
 
     1. Get a bearer token by sending a POST request to the /apigw/login endpoint.
     2. Use the token in the Authorization header for subsequent requests.
     """
 
-    def __init__(self, login: ApiGwLogin, logger: Optional[logging.Logger] = None):
+    def __init__(self, login: ApiGwLogin, logger: Optional[logging.Logger] = None, verify=False):
         self.login = login
         self.token = ""
         self.logger = logger or logging.getLogger(__name__)
+        self.verify = verify
 
     def __call__(self, request: PreparedRequest) -> PreparedRequest:
         self.handle_auth(request)
@@ -51,8 +50,8 @@ class ApiGwAuth(AuthBase):
     def authenticate(self, request: PreparedRequest):
         assert request.url is not None
         url = urlparse(request.url)
-        base_url = f"{url.scheme}://{url.netloc}"
-        self.token = self.get_token(base_url, self.login)
+        base_url = f"{url.scheme}://{url.netloc}"  # noqa: E231
+        self.token = self.get_token(base_url, self.login, self.logger, self.verify)
 
     def build_digest_header(self, request: PreparedRequest) -> None:
         header = {
@@ -62,14 +61,16 @@ class ApiGwAuth(AuthBase):
         request.headers.update(header)
 
     @staticmethod
-    def get_token(base_url: str, apigw_login: ApiGwLogin) -> str:
+    def get_token(base_url: str, apigw_login: ApiGwLogin, logger: Optional[logging.Logger] = None, verify=False) -> str:
         try:
             response = post(
                 url=f"{base_url}/apigw/login",
-                verify=False,
+                verify=verify,
                 json=apigw_login.model_dump(exclude_none=True),
                 timeout=10,
             )
+            if logger is not None:
+                logger.debug(auth_response_debug(response))
             response.raise_for_status()
             token = response.json()["token"]
         except JSONDecodeError:
@@ -86,8 +87,8 @@ class ApiGwAuth(AuthBase):
     def __str__(self) -> str:
         return f"ApiGatewayAuth(mode={self.login.mode})"
 
-    def logout(self, session: "ManagerSession") -> Optional[ManagerResponse]:
+    def logout(self, client: APIEndpointClient) -> None:
         return None
 
-    def clear_tokens_and_cookies(self) -> None:
+    def clear(self) -> None:
         self.token = ""

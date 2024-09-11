@@ -46,7 +46,7 @@ class APIEndpointClient(Protocol):
         ...
 
     @property
-    def api_version(self) -> Optional[Version]:
+    def api_version(self) -> Version:
         ...
 
     @property
@@ -55,4 +55,16 @@ class APIEndpointClient(Protocol):
 
     @property
     def validate_responses(self) -> bool:
+        ...
+
+
+class AuthProtocol(Protocol):
+    """
+    Additional interface for Auth to handle login/logout for multiple auth types by common ManagerSession
+    """
+
+    def logout(self, client: APIEndpointClient) -> None:
+        ...
+
+    def clear(self) -> None:
         ...
