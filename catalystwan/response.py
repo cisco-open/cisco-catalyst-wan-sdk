@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from functools import wraps
+from os import environ
 from pprint import pformat
 from typing import Any, Callable, Dict, Optional, Sequence, Type, TypeVar, Union, cast
 from urllib.parse import urlparse
@@ -102,6 +103,14 @@ def response_history_debug(response: Optional[Response], request: Union[Request,
     response_debugs = [response_debug(resp, None) for resp in response.history]
     response_debugs += [response_debug(response, request)]
     return "\n".join(response_debugs)
+
+
+def auth_response_debug(response: Response, title: str = "Auth") -> str:
+    if environ.get("catalystwan_auth_trace") is not None:
+        return response_history_debug(response, None)
+    return ", ".join(
+        [f"{title}: {r.request.method} {r.request.url} <{r.status_code}>" for r in response.history + [response]]
+    )
 
 
 def parse_cookies_to_dict(cookies: str) -> Dict[str, str]:
