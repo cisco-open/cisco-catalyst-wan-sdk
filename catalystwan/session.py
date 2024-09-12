@@ -30,7 +30,7 @@ from catalystwan.models.tenant import Tenant
 from catalystwan.response import ManagerResponse, response_history_debug
 from catalystwan.utils.session_type import SessionType
 from catalystwan.version import NullVersion, parse_api_version
-from catalystwan.vmanage_auth import vManageAuth
+from catalystwan.vmanage_auth import create_vmanage_auth, vManageAuth
 
 JSON = Union[Dict[str, "JSON"], List["JSON"], str, int, float, bool, None]
 
@@ -169,7 +169,7 @@ def create_manager_session(
     Returns:
         ManagerSession: logged-in and operative session to perform tasks on SDWAN Manager.
     """
-    auth = vManageAuth(username, password, logger=logger)
+    auth = create_vmanage_auth(username, password, subdomain, logger)
     session = ManagerSession(
         base_url=create_base_url(url, port),
         auth=auth,
@@ -242,6 +242,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self.verify = False
         self.headers.update({"User-Agent": USER_AGENT})
         self._auth = auth
+        self._auth.cookies = self.cookies
         self._platform_version: str = ""
         self._api_version: Version = NullVersion  # type: ignore
         self.restart_timeout: int = 1200
@@ -313,10 +314,6 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self.cookies.clear_session_cookies()
         self._auth.clear()
         self.auth = self._auth
-        if self.subdomain:
-            tenant_id = self.get_tenant_id()
-            vsession_id = self.get_virtual_session_id(tenant_id)
-            self.headers.update({"VSessionId": vsession_id})
         try:
             server_info = self.server()
         except DefaultPasswordError:
@@ -361,7 +358,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
                 resp = head(
                     self.base_url,
                     timeout=self.polling_requests_timeout,
-                    verify=False,
+                    verify=self.verify,
                     headers={"User-Agent": USER_AGENT},
                 )
                 self.logger.debug(self.response_trace(resp, None))
@@ -381,7 +378,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
                 resp = get(
                     server_ready_url,
                     timeout=self.polling_requests_timeout,
-                    verify=False,
+                    verify=self.verify,
                     headers={"User-Agent": USER_AGENT},
                 )
                 self.logger.debug(self.response_trace(resp, None))
@@ -414,6 +411,16 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
                 return self.request(method, url, *args, **_kwargs)
             self.logger.debug(exception)
             raise ManagerRequestException(*exception.args, request=exception.request, response=exception.response)
+
+        if response.jsessionid_expired and self.state == ManagerSessionState.OPERATIVE:
+            self.logger.warning("Logging to session. Reason: expired JSESSIONID detected in response headers")
+            self.state = ManagerSessionState.LOGIN
+            return self.request(method, url, *args, **_kwargs)
+
+        if response.api_gw_unauthorized and self.state == ManagerSessionState.OPERATIVE:
+            self.logger.warning("Logging to API GW session. Reason: unauthorized detected in response headers")
+            self.state = ManagerSessionState.LOGIN
+            return self.request(method, url, *args, **_kwargs)
 
         if response.request.url and "passwordReset.html" in response.request.url:
             raise DefaultPasswordError("Password must be changed to use this session.")
@@ -477,20 +484,6 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
             raise TenantSubdomainNotFound(f"Tenant ID for sub-domain: {self.subdomain} not found")
 
         return tenant.tenant_id
-
-    def get_virtual_session_id(self, tenant_id: str) -> str:
-        """Get VSessionId for a specific tenant
-
-        Note: In a multitenant vManage system, this API is only available in the Provider view.
-
-        Args:
-            tenant_id: provider or tenant UUID
-        Returns:
-            Virtual session token
-        """
-        url_path = f"/dataservice/tenant/{tenant_id}/vsessionid"
-        response = self.post(url_path)
-        return response.json()["VSessionId"]
 
     def logout(self) -> None:
         self._auth.logout(self)
