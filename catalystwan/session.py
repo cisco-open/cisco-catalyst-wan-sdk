@@ -242,7 +242,6 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self.verify = False
         self.headers.update({"User-Agent": USER_AGENT})
         self._auth = auth
-        self._auth.cookies = self.cookies
         self._platform_version: str = ""
         self._api_version: Version = NullVersion  # type: ignore
         self.restart_timeout: int = 1200
