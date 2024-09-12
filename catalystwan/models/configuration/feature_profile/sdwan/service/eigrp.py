@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-from catalystwan.models.configuration.feature_profile.common import AddressWithMask
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask, RefIdItem
 
 EigrpAuthType = Literal[
     "md5",
@@ -71,7 +71,9 @@ class RedistributeIntoEigrp(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     protocol: Union[Global[RedistributeProtocol], Variable]
-    route_policy: Optional[Union[Default[None], Global[UUID]]] = Default[None](value=None)
+    route_policy: Optional[Union[Default[None], RefIdItem]] = Field(
+        default=Default[None](value=None), serialization_alias="routePolicy", validation_alias="routePolicy"
+    )
 
 
 class AddressFamily(BaseModel):

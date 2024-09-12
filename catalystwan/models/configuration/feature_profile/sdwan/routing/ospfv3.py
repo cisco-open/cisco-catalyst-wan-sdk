@@ -2,13 +2,12 @@
 
 from ipaddress import IPv4Address, IPv6Interface
 from typing import List, Literal, Optional, Union
-from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
 from catalystwan.models.common import MetricType
-from catalystwan.models.configuration.feature_profile.common import AddressWithMask
+from catalystwan.models.configuration.feature_profile.common import AddressWithMask, RefIdItem
 
 NetworkType = Literal[
     "broadcast",
@@ -191,8 +190,10 @@ class RedistributedRoute(BaseModel):
     nat_dia: Optional[Union[Global[bool], Variable, Default[bool]]] = Field(
         serialization_alias="natDia", validation_alias="natDia", default=None
     )
-    route_policy: Optional[Union[Default[None], Global[UUID]]] = Field(
-        serialization_alias="routePolicy", validation_alias="routePolicy", default=None
+    route_policy: Optional[Union[Default[None], RefIdItem]] = Field(
+        default=Default[None](value=None),
+        serialization_alias="routePolicy",
+        validation_alias="routePolicy",
     )
 
 
@@ -200,8 +201,10 @@ class RedistributedRouteIPv6(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
     protocol: Union[Global[RedistributeProtocolIPv6], Variable]
-    route_policy: Optional[Union[Default[None], Global[UUID]]] = Field(
-        serialization_alias="routePolicy", validation_alias="routePolicy", default=None
+    route_policy: Optional[Union[Default[None], RefIdItem]] = Field(
+        default=Default[None](value=None),
+        serialization_alias="routePolicy",
+        validation_alias="routePolicy",
     )
 
 
@@ -241,8 +244,8 @@ class AdvancedOspfv3Attributes(BaseModel):
         serialization_alias="defaultOriginate", validation_alias="defaultOriginate", default=None
     )
     spf_timers: Optional[SpfTimers] = Field(serialization_alias="spfTimers", validation_alias="spfTimers", default=None)
-    policy_name: Optional[Union[Default[None], Global[UUID]]] = Field(
-        serialization_alias="policyName", validation_alias="policyName", default=None
+    policy_name: Optional[Union[Default[None], RefIdItem]] = Field(
+        default=Default[None](value=None), serialization_alias="policyName", validation_alias="policyName"
     )
     filter: Optional[Union[Global[bool], Variable, Default[bool]]] = None
 
