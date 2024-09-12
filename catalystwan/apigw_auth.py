@@ -32,11 +32,14 @@ class ApiGwAuth(AuthBase, AuthProtocol):
     2. Use the token in the Authorization header for subsequent requests.
     """
 
-    def __init__(self, login: ApiGwLogin, logger: Optional[logging.Logger] = None, verify=False):
+    def __init__(self, login: ApiGwLogin, logger: Optional[logging.Logger] = None, verify: bool = False):
         self.login = login
         self.token = ""
         self.logger = logger or logging.getLogger(__name__)
         self.verify = verify
+
+    def __str__(self) -> str:
+        return f"ApiGatewayAuth(mode={self.login.mode})"
 
     def __call__(self, request: PreparedRequest) -> PreparedRequest:
         self.handle_auth(request)
@@ -61,7 +64,9 @@ class ApiGwAuth(AuthBase, AuthProtocol):
         request.headers.update(header)
 
     @staticmethod
-    def get_token(base_url: str, apigw_login: ApiGwLogin, logger: Optional[logging.Logger] = None, verify=False) -> str:
+    def get_token(
+        base_url: str, apigw_login: ApiGwLogin, logger: Optional[logging.Logger] = None, verify: bool = False
+    ) -> str:
         try:
             response = post(
                 url=f"{base_url}/apigw/login",
@@ -83,9 +88,6 @@ class ApiGwAuth(AuthBase, AuthProtocol):
             if not token or not isinstance(token, str):
                 raise CatalystwanException("Failed to get bearer token")
         return token
-
-    def __str__(self) -> str:
-        return f"ApiGatewayAuth(mode={self.login.mode})"
 
     def logout(self, client: APIEndpointClient) -> None:
         return None
