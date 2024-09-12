@@ -156,11 +156,14 @@ class Trustsec(BaseModel):
         Union[Global[bool], Default[None]],
         VersionedField(versions="<=20.12", serialization_alias="enableEnforcedPropogation"),
     ] = Field(
+        default=Default[None](value=None),
         serialization_alias="enableEnforcedPropagation",
         validation_alias=AliasChoices("enableEnforcedPropagation", "enableEnforcedPropogation"),
     )
     enforced_security_group_tag: Union[Global[int], Variable, Default[None]] = Field(
-        serialization_alias="enforcedSecurityGroupTag", validation_alias="enforcedSecurityGroupTag"
+        default=Default[None](value=None),
+        serialization_alias="enforcedSecurityGroupTag",
+        validation_alias="enforcedSecurityGroupTag",
     )
 
     @model_serializer(mode="wrap", when_used="json")
