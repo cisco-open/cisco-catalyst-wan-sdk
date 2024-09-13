@@ -47,7 +47,7 @@ class EigrpAuthentication(BaseModel):
 class TableMap(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    name: Optional[Union[Default[None], Global[UUID]]] = Default[None](value=None)
+    name: Optional[Union[Default[None], RefIdItem]] = Default[None](value=None)
     filter: Optional[Union[Global[bool], Variable, Default[bool]]] = Default[bool](value=False)
 
 
