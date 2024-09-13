@@ -1,17 +1,19 @@
 # Copyright 2022 Cisco Systems, Inc. and its affiliates
 
 import logging
-from typing import Callable, Optional
+from http.cookies import SimpleCookie
+from typing import Optional
 from urllib.parse import urlparse
 
 from packaging.version import Version  # type: ignore
 from requests import PreparedRequest, Response, get, post
 from requests.auth import AuthBase
-from requests.cookies import RequestsCookieJar
+from requests.cookies import RequestsCookieJar, merge_cookies
 
 from catalystwan import USER_AGENT
 from catalystwan.abstractions import APIEndpointClient, AuthProtocol
-from catalystwan.exceptions import CatalystwanException
+from catalystwan.exceptions import CatalystwanException, TenantSubdomainNotFound
+from catalystwan.models.tenant import Tenant
 from catalystwan.response import ManagerResponse, auth_response_debug
 from catalystwan.version import NullVersion
 
@@ -39,6 +41,25 @@ class UnauthorizedAccessError(CatalystwanException):
         return f"Trying to access vManage with the following credentials: {self.username}/****. {self.message}"
 
 
+def update_headers(
+    request: PreparedRequest,
+    jsessionid: Optional[str],
+    xsrftoken: Optional[str] = None,
+    vsessionid: Optional[str] = None,
+) -> None:
+    if jsessionid is not None:
+        # preserve existing cookies and insert JSESSIONID
+        # PreparedRequest.preparce_cookies cannot be used as they can be already set in session context
+        cookie: SimpleCookie = SimpleCookie()
+        cookie.load(request.headers.get("Cookie", ""))
+        cookie["JSESSIONID"] = jsessionid
+        request.headers["Cookie"] = cookie.output(header="", sep=";").strip()
+    if xsrftoken is not None:
+        request.headers["x-xsrf-token"] = xsrftoken
+    if vsessionid is not None:
+        request.headers["VSessionId"] = vsessionid
+
+
 class vManageAuth(AuthBase, AuthProtocol):
     """Attaches vManage Authentication to the given Requests object.
 
@@ -49,81 +70,67 @@ class vManageAuth(AuthBase, AuthProtocol):
     2. Get a cross-site request forgery prevention token, which is required for most POST operations.
     """
 
-    def __init__(self, username: str, password: str, logger: Optional[logging.Logger] = None, verify=False):
+    def __init__(self, username: str, password: str, logger: Optional[logging.Logger] = None, verify: bool = False):
         self.username = username
         self.password = password
-        self.jsessionid: str = ""
-        self.xsrftoken: str = ""
+        self.xsrftoken: Optional[str] = None
         self.verify = verify
         self.logger = logger or logging.getLogger(__name__)
-        self._cookie: RequestsCookieJar = RequestsCookieJar()
-        self._callback: Optional[Callable[[AuthBase], None]] = None
-        self._base_url: Optional[str] = None
+        self.cookies: RequestsCookieJar = RequestsCookieJar()
+        self._base_url: str = ""
 
-    def response_hook(self, r: Response, **kwargs) -> Response:
-        _r = ManagerResponse(r)
-        if _r.jsessionid_expired:
-            self.clear()
-        return r
+    def __str__(self) -> str:
+        return f"vManageAuth(username={self.username})"
 
     def __call__(self, request: PreparedRequest) -> PreparedRequest:
         self.handle_auth(request)
-        self.build_digest_header(request)
-        request.register_hook("response", self.response_hook)
+        update_headers(request, self.jsessionid, self.xsrftoken)
         return request
+
+    def sync_cookies(self, cookies: RequestsCookieJar) -> None:
+        self.cookies = merge_cookies(self.cookies, cookies)
+
+    @property
+    def jsessionid(self) -> Optional[str]:
+        return self.cookies.get("JSESSIONID")
 
     def handle_auth(self, request: PreparedRequest):
         if not self.jsessionid or not self.xsrftoken:
             self.authenticate(request)
 
-    @staticmethod
-    def get_jsessionid(
-        base_url: str, username: str, password: str, logger: Optional[logging.Logger] = None, verify: bool = False
-    ) -> str:
+    def get_jsessionid(self) -> str:
         security_payload = {
-            "j_username": username,
-            "j_password": password,
+            "j_username": self.username,
+            "j_password": self.password,
         }
-        url = base_url + "/j_security_check"
+        url = self._base_url + "/j_security_check"
         headers = {"Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT}
-        response: Response = post(url=url, headers=headers, data=security_payload, verify=verify)
-        if logger is not None:
-            logger.debug(auth_response_debug(response))
-        jsessionid = response.cookies.get("JSESSIONID", "")
-        if response.text != "" or not isinstance(jsessionid, str) or jsessionid == "":
-            raise UnauthorizedAccessError(username, password)
-        return jsessionid
+        response: Response = post(url=url, headers=headers, data=security_payload, verify=self.verify)
+        self.sync_cookies(response.cookies)
+        self.logger.debug(auth_response_debug(response, str(self)))
+        if response.text != "" or not isinstance(self.jsessionid, str) or self.jsessionid == "":
+            raise UnauthorizedAccessError(self.username, self.password)
+        return self.jsessionid
 
-    @staticmethod
-    def get_xsrftoken(
-        base_url: str, jsessionid: str, logger: Optional[logging.Logger] = None, verify: bool = False
-    ) -> str:
-        url = base_url + "/dataservice/client/token"
+    def get_xsrftoken(self) -> str:
+        url = self._base_url + "/dataservice/client/token"
         headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT}
-        cookie = RequestsCookieJar()
-        cookie.set("JSESSIONID", jsessionid)
         response: Response = get(
             url=url,
-            cookies=cookie,
+            cookies=self.cookies,
             headers=headers,
-            verify=verify,
+            verify=self.verify,
         )
-        if logger is not None:
-            logger.debug(auth_response_debug(response))
+        self.sync_cookies(response.cookies)
+        self.logger.debug(auth_response_debug(response, str(self)))
         if response.status_code != 200 or "<html>" in response.text:
             raise CatalystwanException("Failed to get XSRF token")
         return response.text
 
     def authenticate(self, request: PreparedRequest):
         self._base_url = f"{str(urlparse(request.url).scheme)}://{str(urlparse(request.url).netloc)}"  # noqa: E231
-        self.jsessionid = self.get_jsessionid(self._base_url, self.username, self.password, self.logger, self.verify)
-        self._cookie = RequestsCookieJar()
-        self._cookie.set("JSESSIONID", self.jsessionid)
-        self.xsrftoken = self.get_xsrftoken(self._base_url, self.jsessionid, self.logger, self.verify)
-
-    def build_digest_header(self, request: PreparedRequest) -> None:
-        request.headers["x-xsrf-token"] = self.xsrftoken
-        request.prepare_cookies(self._cookie)
+        self.get_jsessionid()
+        self.xsrftoken = self.get_xsrftoken()
 
     def logout(self, client: APIEndpointClient) -> None:
         if isinstance((version := client.api_version), NullVersion):
@@ -131,23 +138,90 @@ class vManageAuth(AuthBase, AuthProtocol):
         elif self._base_url is None:
             self.logger.warning("Cannot perform logout without known base url")
         else:
+            headers = {"x-xsrf-token": self.xsrftoken, "User-Agent": USER_AGENT}
             if version >= Version("20.12"):
-                response = post(
-                    f"{self._base_url}/logout",
-                    cookies=self._cookie,
-                    headers={"x-xsrf-token": self.xsrftoken},
-                    verify=False,
-                )
+                response = post(f"{self._base_url}/logout", headers=headers, cookies=self.cookies, verify=self.verify)
             else:
-                response = get(f"{self._base_url}", cookies=self._cookie, verify=False)
-            self.logger.debug(auth_response_debug(response))
+                response = get(f"{self._base_url}/logout", headers=headers, cookies=self.cookies, verify=self.verify)
+            self.logger.debug(auth_response_debug(response, str(self)))
             if response.status_code != 200:
                 self.logger.error("Unsuccessfull logout")
-
-    def __str__(self) -> str:
-        return f"vManageAuth(username={self.username})"
+        self.clear()
 
     def clear(self) -> None:
-        self.jsessionid = ""
-        self.xsrftoken = ""
-        self._cookie = RequestsCookieJar()
+        self.cookies.clear_session_cookies()
+        self.xsrftoken = None
+
+
+class vSessionAuth(vManageAuth):
+    def __init__(
+        self,
+        username: str,
+        password: str,
+        subdomain: str,
+        logger: Optional[logging.Logger] = None,
+        verify: bool = False,
+    ):
+        super().__init__(username, password, logger, verify)
+        self.subdomain = subdomain
+        self.vsessionid: Optional[str] = None
+
+    def __str__(self) -> str:
+        return f"vSessionAuth(username={self.username},subdomain={self.subdomain})"  # noqa: E231
+
+    def __call__(self, request: PreparedRequest) -> PreparedRequest:
+        self.handle_auth(request)
+        update_headers(request, self.jsessionid, self.xsrftoken, self.vsessionid)
+        return request
+
+    def authenticate(self, request: PreparedRequest):
+        super().authenticate(request)
+        tenantid = self.get_tenantid()
+        self.vsessionid = self.get_vsessionid(tenantid)
+
+    def get_tenantid(self) -> str:
+        url = self._base_url + "/dataservice/tenant"
+        headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT, "x-xsrf-token": self.xsrftoken}
+        response: Response = get(
+            url=url,
+            cookies=self.cookies,
+            headers=headers,
+            verify=self.verify,
+        )
+        self.sync_cookies(response.cookies)
+        self.logger.debug(auth_response_debug(response, str(self)))
+        tenants = ManagerResponse(response).dataseq(Tenant)
+        tenant = tenants.filter(subdomain=self.subdomain).single_or_default()
+        if not tenant or not tenant.tenant_id:
+            raise TenantSubdomainNotFound(f"Tenant ID for sub-domain: {self.subdomain} not found")
+        return tenant.tenant_id
+
+    def get_vsessionid(self, tenantid: str) -> str:
+        url = self._base_url + f"/dataservice/tenant/{tenantid}/vsessionid"
+        headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT, "x-xsrf-token": self.xsrftoken}
+        response: Response = post(
+            url=url,
+            cookies=self.cookies,
+            headers=headers,
+            verify=self.verify,
+        )
+        self.sync_cookies(response.cookies)
+        self.logger.debug(auth_response_debug(response, str(self)))
+        return response.json()["VSessionId"]
+
+    def clear(self) -> None:
+        super().clear()
+        self.vsessionid = None
+
+
+def create_vmanage_auth(
+    username: str,
+    password: str,
+    subdomain: Optional[str] = None,
+    logger: Optional[logging.Logger] = None,
+    verify: bool = False,
+) -> vManageAuth:
+    if subdomain is not None:
+        return vSessionAuth(username, password, subdomain, logger=logger, verify=verify)
+    else:
+        return vManageAuth(username, password, logger=logger, verify=verify)

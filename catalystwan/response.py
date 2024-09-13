@@ -109,7 +109,7 @@ def auth_response_debug(response: Response, title: str = "Auth") -> str:
     if environ.get("catalystwan_auth_trace") is not None:
         return response_history_debug(response, None)
     return ", ".join(
-        [f"{title}: {r.request.method} {r.request.url} <{r.status_code}>" for r in response.history + [response]]
+        [title] + [f"{r.request.method} {r.request.url} <{r.status_code}>" for r in response.history + [response]]
     )
 
 
