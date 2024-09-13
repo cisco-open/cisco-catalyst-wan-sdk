@@ -1,7 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
 from typing import List, Literal, Optional, Union
-from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
@@ -47,7 +46,7 @@ class EigrpAuthentication(BaseModel):
 class TableMap(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    name: Optional[Union[Default[None], Global[UUID]]] = Default[None](value=None)
+    name: Optional[Union[Default[None], RefIdItem]] = Default[None](value=None)
     filter: Optional[Union[Global[bool], Variable, Default[bool]]] = Default[bool](value=False)
 
 
