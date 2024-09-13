@@ -3,12 +3,12 @@
 
 from ipaddress import IPv4Address
 from typing import List, Literal, Optional, Union
-from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
 from catalystwan.models.common import MetricType
+from catalystwan.models.configuration.feature_profile.common import RefIdItem
 
 NetworkType = Literal[
     "broadcast",
@@ -112,7 +112,7 @@ class RedistributedRoute(BaseModel):
 
     protocol: Union[Global[RedistributeProtocolOspf], Variable]
     dia: Optional[Union[Global[bool], Variable, Default[bool]]] = None
-    route_policy: Optional[Union[Default[None], Global[str], Global[UUID]]] = Field(
+    route_policy: Optional[Union[Default[None], RefIdItem]] = Field(
         serialization_alias="routePolicy", validation_alias="routePolicy", default=None
     )
 
@@ -164,7 +164,7 @@ class RoutingOspfParcel(_ParcelBase):
         validation_alias=AliasPath("data", "redistribute"), default=None
     )
     router_lsa: Optional[List[RouterLsa]] = Field(validation_alias=AliasPath("data", "routerLsa"), default=None)
-    route_policy: Optional[Union[Default[None], Global[str], Global[UUID]]] = Field(
+    route_policy: Optional[Union[Default[None], RefIdItem]] = Field(
         validation_alias=AliasPath("data", "routePolicy"), default=None
     )
     area: Optional[List[OspfArea]] = Field(validation_alias=AliasPath("data", "area"), default=None)

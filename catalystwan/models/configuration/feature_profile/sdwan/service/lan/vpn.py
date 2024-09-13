@@ -7,7 +7,13 @@ from uuid import UUID
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default
-from catalystwan.models.configuration.feature_profile.common import AddressWithMask, DNSIPv4, DNSIPv6, HostMapping
+from catalystwan.models.configuration.feature_profile.common import (
+    AddressWithMask,
+    DNSIPv4,
+    DNSIPv6,
+    HostMapping,
+    RefIdItem,
+)
 
 ProtocolIPv4 = Literal[
     "bgp",
@@ -473,7 +479,7 @@ class RedistributeToService(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
     protocol: Union[Variable, Global[RedistributeToServiceProtocol]]
-    policy: Union[Default[None], Global[UUID]] = Default[None](value=None)
+    policy: Union[Default[None], RefIdItem] = Default[None](value=None)
 
 
 class RedistributeToGlobal(BaseModel):
@@ -489,7 +495,7 @@ class RouteLeakFromGlobal(BaseModel):
     route_protocol: Union[Variable, Global[RouteLeakFromGlobalProtocol]] = Field(
         serialization_alias="routeProtocol", validation_alias="routeProtocol"
     )
-    route_policy: Optional[Union[Default[None], Global[UUID]]] = Field(
+    route_policy: Optional[Union[Default[None], RefIdItem]] = Field(
         serialization_alias="routePolicy", validation_alias="routePolicy", default=None
     )
     redistribute_to_protocol: Optional[List[RedistributeToService]] = Field(
@@ -503,7 +509,7 @@ class RouteLeakFromService(BaseModel):
     route_protocol: Union[Variable, Global[RouteLeakFromServiceProtocol]] = Field(
         serialization_alias="routeProtocol", validation_alias="routeProtocol"
     )
-    route_policy: Optional[Union[Default[None], Global[UUID]]] = Field(
+    route_policy: Optional[Union[Default[None], RefIdItem]] = Field(
         serialization_alias="routePolicy", validation_alias="routePolicy", default=None
     )
     redistribute_to_protocol: Optional[List[RedistributeToService]] = Field(
@@ -518,7 +524,7 @@ class RouteLeakBetweenServices(BaseModel):
     route_protocol: Union[Variable, Global[RouteLeakFromServiceProtocol]] = Field(
         serialization_alias="routeProtocol", validation_alias="routeProtocol"
     )
-    route_policy: Optional[Union[Default[None], Global[UUID]]] = Field(
+    route_policy: Optional[Union[Default[None], RefIdItem]] = Field(
         serialization_alias="routePolicy", validation_alias="routePolicy", default=None
     )
     redistribute_to_protocol: Optional[List[RedistributeToService]] = Field(
