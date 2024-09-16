@@ -128,6 +128,27 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         cls.api = cls.session.api.sdwan_feature_profiles.service
         cls.profile_uuid = cls.api.create_profile(create_name_with_run_id("TestProfileService"), "Description").id
 
+    def test_update(self):
+        dhcp_server_parcel = LanVpnDhcpServerParcel(
+            parcel_name="DhcpServerDefault",
+            parcel_description="Dhcp Server Parcel",
+            address_pool=AddressPool(
+                network_address=Global[IPv4Address](value=IPv4Address("10.0.0.2")),
+                subnet_mask=Global[SubnetMask](value="255.255.255.255"),
+            ),
+        )
+        parcel_id = self.api.create_parcel(self.profile_uuid, dhcp_server_parcel).id
+        parcel = self.api.get_parcel(self.profile_uuid, LanVpnDhcpServerParcel, parcel_id)
+        assert isinstance(parcel.payload, LanVpnDhcpServerParcel)
+        assert parcel.payload == dhcp_server_parcel
+
+        dhcp_server_parcel.address_pool.network_address = Global[IPv4Address](value=IPv4Address("10.3.2.1"))
+        dhcp_server_parcel.address_pool.subnet_mask = Global[SubnetMask](value="248.0.0.0")
+        parcel_id = self.api.update_parcel(self.profile_uuid, LanVpnDhcpServerParcel, parcel_id, dhcp_server_parcel).id
+        parcel = self.api.get_parcel(self.profile_uuid, LanVpnDhcpServerParcel, parcel_id)
+        assert isinstance(parcel.payload, LanVpnDhcpServerParcel)
+        assert parcel.payload == dhcp_server_parcel
+
     def test_when_default_values_dhcp_server_parcel_expect_successful_post(self):
         # Arrange
         dhcp_server_parcel = LanVpnDhcpServerParcel(
@@ -141,7 +162,9 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, dhcp_server_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, LanVpnDhcpServerParcel, parcel_id)
+        assert isinstance(parcel.payload, LanVpnDhcpServerParcel)
+        assert parcel.payload == dhcp_server_parcel
 
     def test_when_default_values_service_vpn_parcel_expect_successful_post(self):
         # Arrange
@@ -187,7 +210,9 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, vpn_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, LanVpnParcel, parcel_id)
+        assert isinstance(parcel.payload, LanVpnParcel)
+        assert parcel.payload == vpn_parcel
 
     def test_when_default_values_ospf_parcel_expect_successful_post(self):
         # Arrange
@@ -198,7 +223,9 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, ospf_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, RoutingOspfParcel, parcel_id)
+        assert isinstance(parcel.payload, RoutingOspfParcel)
+        assert parcel.payload == ospf_parcel
 
     def test_when_default_ospfv3_ipv4_expect_successful_post(self):
         # Arrange
@@ -215,7 +242,9 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, ospfv3ipv4_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, RoutingOspfv3IPv4Parcel, parcel_id)
+        assert isinstance(parcel.payload, RoutingOspfv3IPv4Parcel)
+        assert parcel.payload == ospfv3ipv4_parcel
 
     def test_when_default_ospfv3_ipv6_expect_successful_post(self):
         # Arrange
@@ -232,7 +261,9 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, ospfv3ipv6_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, RoutingOspfv3IPv6Parcel, parcel_id)
+        assert isinstance(parcel.payload, RoutingOspfv3IPv6Parcel)
+        assert parcel.payload == ospfv3ipv6_parcel
 
     def test_when_default_values_eigrp_parcel_expect_successful_post(self):
         eigrp_parcel = EigrpParcel(
@@ -253,7 +284,9 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, eigrp_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, EigrpParcel, parcel_id)
+        assert isinstance(parcel.payload, EigrpParcel)
+        assert parcel.payload == eigrp_parcel
 
     def test_when_default_values_route_policy_parcel_expect_successful_post(self):
         # Arrange
@@ -264,7 +297,9 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, route_policy_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, RoutePolicyParcel, parcel_id)
+        assert isinstance(parcel.payload, RoutePolicyParcel)
+        assert parcel.payload == route_policy_parcel
 
     def test_when_default_values_acl_ipv4_expect_successful_post(self):
         # Arrange
@@ -275,7 +310,9 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv4_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, Ipv4AclParcel, parcel_id)
+        assert isinstance(parcel.payload, Ipv4AclParcel)
+        assert parcel.payload == acl_ipv4_parcel
 
     def test_when_fully_specified_acl_ipv4_expect_successful_post(self):
         # Arrange
@@ -300,7 +337,9 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv4_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, Ipv4AclParcel, parcel_id)
+        assert isinstance(parcel.payload, Ipv4AclParcel)
+        assert parcel.payload == acl_ipv4_parcel
 
     def test_when_default_values_acl_ipv6_expect_successful_post(self):
         # Arrange
@@ -311,7 +350,9 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv6_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, Ipv6AclParcel, parcel_id)
+        assert isinstance(parcel.payload, Ipv6AclParcel)
+        assert parcel.payload == acl_ipv6_parcel
 
     def test_when_fully_specified_acl_ipv6_expect_successful_post(self):
         # Arrange
@@ -333,7 +374,9 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv6_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, Ipv6AclParcel, parcel_id)
+        assert isinstance(parcel.payload, Ipv6AclParcel)
+        assert parcel.payload == acl_ipv6_parcel
 
     def test_when_fully_specified_routing_bgp_expect_successful_post(self):
         # Arrange
@@ -457,7 +500,9 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, bgp_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, RoutingBgpParcel, parcel_id)
+        assert isinstance(parcel.payload, RoutingBgpParcel)
+        assert parcel.payload == bgp_parcel
 
     def test_when_correct_values_switchport_parcel_expect_successful_post(self):
         # Arrange
@@ -503,7 +548,10 @@ class TestServiceFeatureProfileModels(TestCaseBase):
             with self.subTest(switchport_parcel=switchport_parcel.parcel_name):
                 parcel_id = self.api.create_parcel(self.profile_uuid, switchport_parcel).id
                 # Assert
-                assert parcel_id
+                parcel = self.api.get_parcel(self.profile_uuid, SwitchportParcel, parcel_id)
+                assert isinstance(parcel.payload, SwitchportParcel)
+                assert parcel.payload == switchport_parcel
+
                 # Cleanup
                 self.api.delete_parcel(self.profile_uuid, SwitchportParcel, parcel_id)
 
@@ -517,7 +565,9 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, multicast_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, MulticastParcel, parcel_id)
+        assert isinstance(parcel.payload, MulticastParcel)
+        assert parcel.payload == multicast_parcel
 
     def test_when_fully_specified_values_multicast_expect_successful_post(self):
         # Arrange
@@ -610,7 +660,9 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, multicast_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, MulticastParcel, parcel_id)
+        assert isinstance(parcel.payload, MulticastParcel)
+        assert parcel.payload == multicast_parcel
 
     def test_when_fully_specified_values_wireless_lan_expect_successful_post(self):
         # Arrange
@@ -650,7 +702,9 @@ class TestServiceFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, wireless_lan_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, WirelessLanParcel, parcel_id)
+        assert isinstance(parcel.payload, WirelessLanParcel)
+        assert parcel.payload == wireless_lan_parcel
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -673,6 +727,28 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
             ),
         ).id
 
+    def test_update_interface(self):
+        # Arrange
+        svi_parcel = InterfaceSviParcel(
+            parcel_name="TestSviParcel",
+            parcel_description="Test Svi Parcel",
+            interface_name=as_global("Vlan1"),
+            svi_description=as_global("Test Svi Description"),
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, svi_parcel, self.vpn_parcel_uuid).id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceSviParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid)
+        assert isinstance(parcel.payload, InterfaceSviParcel)
+        assert parcel.payload == svi_parcel
+        # Assert
+        svi_parcel.svi_description = as_global("Updated Svi Description")
+        parcel_id = self.api.update_parcel(
+            self.profile_uuid, InterfaceSviParcel, parcel_id, svi_parcel, vpn_uuid=self.vpn_parcel_uuid
+        ).id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceSviParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid)
+        assert isinstance(parcel.payload, InterfaceSviParcel)
+        assert parcel.payload == svi_parcel
+
     def test_when_default_values_gre_parcel_expect_successful_post(self):
         # Arrange
         gre_parcel = InterfaceGreParcel(
@@ -690,7 +766,9 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, gre_parcel, self.vpn_parcel_uuid).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceGreParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid)
+        assert isinstance(parcel.payload, InterfaceGreParcel)
+        assert parcel.payload == gre_parcel
 
     def test_when_default_values_svi_parcel_expect_successful_post(self):
         # Arrange
@@ -703,7 +781,9 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, svi_parcel, self.vpn_parcel_uuid).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceSviParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid)
+        assert isinstance(parcel.payload, InterfaceSviParcel)
+        assert parcel.payload == svi_parcel
 
     def test_when_default_values_ethernet_parcel_expect_successful_post(self):
         # Arrange
@@ -716,7 +796,11 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(
+            self.profile_uuid, InterfaceEthernetParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid
+        )
+        assert isinstance(parcel.payload, InterfaceEthernetParcel)
+        assert parcel.payload == ethernet_parcel
 
     def test_set_dynamic_interface_ip_address_for_ethernet_parcel(self):
         # Arrange
@@ -729,7 +813,11 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
         parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
 
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(
+            self.profile_uuid, InterfaceEthernetParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid
+        )
+        assert isinstance(parcel.payload, InterfaceEthernetParcel)
+        assert parcel.payload == ethernet_parcel
 
     def test_set_dynamic_interface_ip_address_as_variable_for_ethernet_parcel(self):
         # Arrange
@@ -742,7 +830,11 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
         parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
 
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(
+            self.profile_uuid, InterfaceEthernetParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid
+        )
+        assert isinstance(parcel.payload, InterfaceEthernetParcel)
+        assert parcel.payload == ethernet_parcel
 
     def test_set_primary_static_interface_ip_address_for_ethernet_parcel(self):
         # Arrange
@@ -755,7 +847,11 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
         parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
 
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(
+            self.profile_uuid, InterfaceEthernetParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid
+        )
+        assert isinstance(parcel.payload, InterfaceEthernetParcel)
+        assert parcel.payload == ethernet_parcel
 
     def test_set_primary_static_interface_ip_address_as_variable_for_ethernet_parcel(self):
         # Arrange
@@ -768,7 +864,11 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
         parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
 
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(
+            self.profile_uuid, InterfaceEthernetParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid
+        )
+        assert isinstance(parcel.payload, InterfaceEthernetParcel)
+        assert parcel.payload == ethernet_parcel
 
     def test_set_primary_static_with_mask_interface_ip_address_for_ethernet_parcel(self):
         # Arrange
@@ -782,7 +882,11 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
         parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
 
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(
+            self.profile_uuid, InterfaceEthernetParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid
+        )
+        assert isinstance(parcel.payload, InterfaceEthernetParcel)
+        assert parcel.payload == ethernet_parcel
 
     def test_set_primary_static_with_mask_interface_ip_address_as_varialbles_for_ethernet_parcel(self):
         # Arrange
@@ -798,7 +902,11 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
         parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
 
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(
+            self.profile_uuid, InterfaceEthernetParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid
+        )
+        assert isinstance(parcel.payload, InterfaceEthernetParcel)
+        assert parcel.payload == ethernet_parcel
 
     def test_when_default_values_ipsec_parcel_expect_successful_post(self):
         # Arrange
@@ -818,7 +926,9 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, ipsec_parcel, self.vpn_parcel_uuid).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceIpsecParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid)
+        assert isinstance(parcel.payload, InterfaceIpsecParcel)
+        assert parcel.payload == ipsec_parcel
 
     def test_when_routing_parcel_and_vpn_uuid_present_expect_create_then_assign_to_vpn(self):
         # Arrange
@@ -830,7 +940,9 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, multicast_parcel, self.vpn_parcel_uuid).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, MulticastParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid)
+        assert isinstance(parcel.payload, MulticastParcel)
+        assert parcel.payload == multicast_parcel
 
     def test_when_fully_specified_multilink_interface_parcel_expect_successful_post(self):
         nim_list = [
@@ -925,7 +1037,11 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
 
         parcel_id = self.api.create_parcel(self.profile_uuid, multilink_parcel, self.vpn_parcel_uuid).id
 
-        assert parcel_id
+        parcel = self.api.get_parcel(
+            self.profile_uuid, InterfaceMultilinkParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid
+        )
+        assert isinstance(parcel.payload, InterfaceMultilinkParcel)
+        assert parcel.payload == multilink_parcel
 
     def test_when_default_values_ethernet_interface_expect_successful_post(self):
         # For 20.13 when we send "advanced.intfruMtu" as Default 1500
@@ -944,7 +1060,11 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.vpn_parcel_uuid).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(
+            self.profile_uuid, InterfaceEthernetParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid
+        )
+        assert isinstance(parcel.payload, InterfaceEthernetParcel)
+        assert parcel.payload == ethernet_parcel
 
     @classmethod
     def tearDownClass(cls) -> None:

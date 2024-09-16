@@ -1,6 +1,5 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from enum import Enum
 from typing import Any, Dict, Generic, List, Literal, Optional, Tuple, TypeVar
 
 from pydantic import (
@@ -13,6 +12,7 @@ from pydantic import (
     SerializerFunctionWrapHandler,
     model_serializer,
 )
+from pydantic.alias_generators import to_camel
 from typing_extensions import get_origin
 
 from catalystwan.exceptions import CatalystwanException
@@ -81,24 +81,11 @@ class _ParcelBase(BaseModel):
         raise CatalystwanException(f"{cls.__name__} field parcel type is not set.")
 
 
-class OptionType(str, Enum):
-    GLOBAL = "global"
-    DEFAULT = "default"
-    VARIABLE = "variable"
-
-
-class ParcelAttribute(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    option_type: OptionType = Field(serialization_alias="optionType", validation_alias="optionType")
-
-
 # https://github.com/pydantic/pydantic/discussions/6090
 # Usage: Global[str](value="test")
-class Global(ParcelAttribute, Generic[T]):
-    model_config = ConfigDict(populate_by_name=True)
-    option_type: OptionType = Field(
-        default=OptionType.GLOBAL, serialization_alias="optionType", validation_alias="optionType"
-    )
+class Global(BaseModel, Generic[T]):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+    option_type: Literal["global"] = "global"
     value: T
 
     def __bool__(self) -> bool:
@@ -121,17 +108,15 @@ class Global(ParcelAttribute, Generic[T]):
         return False
 
 
-class Variable(ParcelAttribute):
-    option_type: OptionType = Field(
-        default=OptionType.VARIABLE, serialization_alias="optionType", validation_alias="optionType"
-    )
+class Variable(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+    option_type: Literal["variable"] = "variable"
     value: str = Field(pattern=r"^\{\{[.\/\[\]a-zA-Z0-9_-]+\}\}$", min_length=1, max_length=64)
 
 
-class Default(ParcelAttribute, Generic[T]):
-    option_type: OptionType = Field(
-        default=OptionType.DEFAULT, serialization_alias="optionType", validation_alias="optionType"
-    )
+class Default(BaseModel, Generic[T]):
+    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+    option_type: Literal["default"] = "default"
     value: Optional[T] = None
 
 

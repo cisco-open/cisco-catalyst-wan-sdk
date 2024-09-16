@@ -351,7 +351,7 @@ class ServiceRoute(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
     prefix: RoutePrefix
-    service: Union[Variable, Global[ServiceRouteType], Default[ServiceRouteType]] = Default[ServiceRouteType](
+    service: Union[Default[ServiceRouteType], Variable, Global[ServiceRouteType]] = Default[ServiceRouteType](
         value="SIG"
     )
     vpn: Global[int] = Global[int](value=0)

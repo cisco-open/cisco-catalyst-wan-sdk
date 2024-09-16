@@ -71,6 +71,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.routing.bgp import (
     RedistributeItem,
     RoutingBgpParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.routing.ospf import RoutingOspfParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.management.ethernet import (
     Advanced as ManagementEthernetAdvanced,
 )
@@ -183,6 +184,19 @@ class TestTransportFeatureProfileModels(TestCaseBase):
         cls.api = cls.session.api.sdwan_feature_profiles.transport
         cls.profile_uuid = cls.api.create_profile(create_name_with_run_id("TestTransportModels"), "Description").id
 
+    def test_when_default_values_ospf_expect_successful_post(self):
+        # Arrange
+        ospf_parcel = RoutingOspfParcel(
+            parcel_name="TestOspfParcel-Defaults",
+            parcel_description="Test Ospf Parcel",
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, ospf_parcel).id
+        # Assert
+        parcel = self.api.get_parcel(self.profile_uuid, RoutingOspfParcel, parcel_id)
+        assert isinstance(parcel.payload, RoutingOspfParcel)
+        assert parcel.payload == ospf_parcel
+
     def test_when_fully_specified_management_vpn_parcel_expect_successful_post(self):
         # Arrange
         management_vpn_parcel = ManagementVpnParcel(
@@ -230,7 +244,9 @@ class TestTransportFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, management_vpn_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, ManagementVpnParcel, parcel_id)
+        assert isinstance(parcel.payload, ManagementVpnParcel)
+        assert parcel.payload == management_vpn_parcel
 
     def test_when_fully_specified_t1e1controller_type_e1_parcel_expect_successful_post(self):
         # Arrange
