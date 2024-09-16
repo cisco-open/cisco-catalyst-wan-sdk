@@ -141,6 +141,12 @@ from catalystwan.models.configuration.feature_profile.sdwan.system import (
 )
 
 
+def removeprefix(s: str, prefix: str) -> str:
+    if s.startswith(prefix):
+        return s[len(prefix) :]
+    return s
+
+
 class SDRoutingFeatureProfilesAPI:
     def __init__(self, session: ManagerSession):
         self.cli = SDRoutingCLIFeatureProfileAPI(session=session)
@@ -342,7 +348,9 @@ class TransportFeatureProfileAPI:
         """
         if vpn_uuid is not None:
             vpn_parcel = self._get_vpn_parcel(profile_id, vpn_uuid).payload
-            parcel_type = payload._get_parcel_type().removeprefix("wan/vpn/").removeprefix("management/vpn/")
+            parcel_type = payload._get_parcel_type()
+            parcel_type = removeprefix(parcel_type, "wan/vpn/")
+            parcel_type = removeprefix(parcel_type, "management/vpn/")
             if vpn_parcel._get_parcel_type() == TransportVpnParcel._get_parcel_type():
                 return self.endpoint.update_transport_vpn_sub_parcel(
                     profile_id, vpn_uuid, parcel_type, parcel_id, payload
@@ -700,7 +708,7 @@ class ServiceFeatureProfileAPI:
         """
         if vpn_uuid is not None:
             return self.endpoint.get_lan_vpn_sub_parcel(
-                profile_id, vpn_uuid, parcel_type._get_parcel_type().removeprefix("lan/vpn/"), parcel_id
+                profile_id, vpn_uuid, removeprefix(parcel_type._get_parcel_type(), "lan/vpn/"), parcel_id
             )
         return self.endpoint.get_by_id(profile_id, parcel_type._get_parcel_type(), parcel_id)
 
@@ -717,7 +725,7 @@ class ServiceFeatureProfileAPI:
         """
         if vpn_uuid is not None:
             return self.endpoint.update_lan_vpn_sub_parcel(
-                profile_id, vpn_uuid, parcel_type._get_parcel_type().removeprefix("lan/vpn/"), parcel_id, payload
+                profile_id, vpn_uuid, removeprefix(parcel_type._get_parcel_type(), "lan/vpn/"), parcel_id, payload
             )
         return self.endpoint.update(profile_id, parcel_type._get_parcel_type(), parcel_id, payload)
 
@@ -1114,7 +1122,7 @@ class PolicyObjectFeatureProfileAPI:
         return self.endpoint.get_profiles()
 
     def create_profile(self, profile: FeatureProfileCreationPayload) -> FeatureProfileCreationResponse:
-        return self.endpoint.create_profile()
+        return self.endpoint.create_profile(profile)
 
     def delete_profile(self, profile_id: UUID) -> None:
         return self.endpoint.delete_profile(profile_id=profile_id)
