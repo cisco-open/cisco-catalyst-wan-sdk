@@ -55,10 +55,10 @@ class BasicGre(BaseModel):
     tunnel_source_type: Optional[Union[TunnelSourceType, GreSourceIPv6]] = Field(
         serialization_alias="tunnelSourceType", validation_alias="tunnelSourceType", default=None
     )
-    tunnel_destination: Union[Global[str], Global[IPv4Address], Variable] = Field(
+    tunnel_destination: Union[Global[IPv4Address], Variable] = Field(
         serialization_alias="tunnelDestination", validation_alias="tunnelDestination"
     )
-    tunnel_destination_v6: Optional[Union[Global[str], Global[IPv6Address], Variable]] = Field(
+    tunnel_destination_v6: Optional[Union[Global[IPv6Address], Variable]] = Field(
         default=None, serialization_alias="tunnelDestinationV6", validation_alias="tunnelDestinationV6"
     )
     mtu: Optional[Union[Global[int], Variable, Default[int]]] = Default[int](value=1500)

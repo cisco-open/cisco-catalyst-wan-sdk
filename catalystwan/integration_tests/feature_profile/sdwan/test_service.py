@@ -4,6 +4,7 @@ from typing import Literal
 from uuid import UUID
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global, as_variable
+from catalystwan.api.feature_profile_api import ServiceFeatureProfileAPI
 from catalystwan.integration_tests.base import TestCaseBase, create_name_with_run_id
 from catalystwan.models.common import (
     CableLengthLongValue,
@@ -122,6 +123,8 @@ from catalystwan.models.configuration.feature_profile.sdwan.service.wireless_lan
 
 
 class TestServiceFeatureProfileModels(TestCaseBase):
+    api: ServiceFeatureProfileAPI
+
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
@@ -130,7 +133,7 @@ class TestServiceFeatureProfileModels(TestCaseBase):
 
     def test_update(self):
         dhcp_server_parcel = LanVpnDhcpServerParcel(
-            parcel_name="DhcpServerDefault",
+            parcel_name="DhcpServerDefault_TestUpdate",
             parcel_description="Dhcp Server Parcel",
             address_pool=AddressPool(
                 network_address=Global[IPv4Address](value=IPv4Address("10.0.0.2")),
@@ -411,7 +414,7 @@ class TestServiceFeatureProfileModels(TestCaseBase):
                     send_community=Global[bool](value=True),
                     send_ext_community=Global[bool](value=False),
                     ebgp_multihop=Global[int](value=147),
-                    password=Global[str](value="Qzxpq"),
+                    password=None,
                     send_label=Global[bool](value=True),
                     as_override=Global[bool](value=False),
                     as_number=Variable(value="{{lbgp_1_ipv4_conf_1_asNumber}}"),
@@ -442,7 +445,7 @@ class TestServiceFeatureProfileModels(TestCaseBase):
                     send_community=Global[bool](value=True),
                     send_ext_community=Global[bool](value=False),
                     ebgp_multihop=Global[int](value=21),
-                    password=Global[str](value="vaPsP"),
+                    password=None,
                     as_override=Global[bool](value=True),
                     as_number=Global[int](value=10),
                     address_family=[
@@ -647,7 +650,7 @@ class TestServiceFeatureProfileModels(TestCaseBase):
                                 peer_ip=Global[IPv4Address](value=IPv4Address("5.5.5.5")),
                                 connect_source_intf=as_global("GigabitEthernet0/0/0"),
                                 remote_as=as_global(10),
-                                password=as_global("TestPassword"),
+                                password=None,
                                 keepalive_holdtime=as_global(20),
                                 keepalive_interval=as_global(10),
                                 sa_limit=as_global(10),
@@ -730,7 +733,7 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
     def test_update_interface(self):
         # Arrange
         svi_parcel = InterfaceSviParcel(
-            parcel_name="TestSviParcel",
+            parcel_name="TestSviParcel_ToUpdate",
             parcel_description="Test Svi Parcel",
             interface_name=as_global("Vlan1"),
             svi_description=as_global("Test Svi Description"),
@@ -748,6 +751,9 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
         parcel = self.api.get_parcel(self.profile_uuid, InterfaceSviParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid)
         assert isinstance(parcel.payload, InterfaceSviParcel)
         assert parcel.payload == svi_parcel
+
+        # Cleanup
+        self.api.delete_parcel(self.profile_uuid, InterfaceSviParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid)
 
     def test_when_default_values_gre_parcel_expect_successful_post(self):
         # Arrange
@@ -940,7 +946,7 @@ class TestServiceFeatureProfileVPNSubparcelModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, multicast_parcel, self.vpn_parcel_uuid).id
         # Assert
-        parcel = self.api.get_parcel(self.profile_uuid, MulticastParcel, parcel_id, vpn_uuid=self.vpn_parcel_uuid)
+        parcel = self.api.get_parcel(self.profile_uuid, MulticastParcel, parcel_id)
         assert isinstance(parcel.payload, MulticastParcel)
         assert parcel.payload == multicast_parcel
 

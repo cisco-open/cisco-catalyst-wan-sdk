@@ -43,7 +43,13 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object.securi
     SslDecryptionProfileParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.url import URLParcel
-from catalystwan.models.configuration.feature_profile.sdwan.routing import AnyRoutingParcel, RoutingBgpParcel
+from catalystwan.models.configuration.feature_profile.sdwan.routing import (
+    AnyRoutingParcel,
+    RoutingBgpParcel,
+    RoutingOspfParcel,
+    RoutingOspfv3IPv4Parcel,
+    RoutingOspfv3IPv6Parcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import EigrpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet import InterfaceEthernetParcel
@@ -494,10 +500,20 @@ class ServiceFeatureProfileAPI:
                 return self.endpoint.create_lan_vpn_sub_parcel(profile_id, vpn_uuid, parcel_type, payload)
         return self.endpoint.create_service_parcel(profile_id, payload._get_parcel_type(), payload)
 
-    def delete_parcel(self, profile_uuid: UUID, parcel_type: Type[AnyServiceParcel], parcel_uuid: UUID) -> None:
+    def delete_parcel(
+        self,
+        profile_uuid: UUID,
+        parcel_type: Type[AnyServiceParcel],
+        parcel_uuid: UUID,
+        vpn_uuid: Optional[UUID] = None,
+    ) -> None:
         """
         Delete Service Parcel for selected profile_uuid based on payload type
         """
+        if vpn_uuid is not None:
+            return self.endpoint.delete_lan_vpn_sub_parcel(
+                profile_uuid, vpn_uuid, removeprefix(parcel_type._get_parcel_type(), "lan/vpn/"), parcel_uuid
+            )
         return self.endpoint.delete_service_parcel(profile_uuid, parcel_type._get_parcel_type(), parcel_uuid)
 
     @overload
@@ -694,6 +710,42 @@ class ServiceFeatureProfileAPI:
         parcel_id: UUID,
         vpn_uuid: UUID,
     ) -> Parcel[InterfaceMultilinkParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[RoutingBgpParcel],
+        parcel_id: UUID,
+    ) -> Parcel[RoutingBgpParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[RoutingOspfv3IPv6Parcel],
+        parcel_id: UUID,
+    ) -> Parcel[RoutingOspfv3IPv6Parcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[RoutingOspfParcel],
+        parcel_id: UUID,
+    ) -> Parcel[RoutingOspfParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[RoutingOspfv3IPv4Parcel],
+        parcel_id: UUID,
+    ) -> Parcel[RoutingOspfv3IPv4Parcel]:
         ...
 
     def get_parcel(

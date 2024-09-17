@@ -70,6 +70,7 @@ ParcelType = Literal[
     "preferred-color-group",
     "prefix",
     "qos-policy",
+    "route-policy",
     "routing/bgp",
     "routing/eigrp",
     "routing/multicast",

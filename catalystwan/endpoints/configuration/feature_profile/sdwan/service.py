@@ -19,6 +19,7 @@ from catalystwan.models.configuration.feature_profile.parcel import (
 from catalystwan.models.configuration.feature_profile.sdwan.routing import AnyRoutingParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service import (
     AnyLanVpnInterfaceParcel,
+    AnyServiceParcel,
     AnyTopLevelServiceParcel,
 )
 from catalystwan.typed_list import DataSequence
@@ -54,6 +55,13 @@ class ServiceFeatureProfile(APIEndpoints):
     @versions(supported_versions=(">=20.9"), raises=False)
     @delete("/v1/feature-profile/sdwan/service/{profile_uuid}/{parcel_type}/{parcel_uuid}")
     def delete_service_parcel(self, profile_uuid: UUID, parcel_type: str, parcel_uuid: UUID) -> None:
+        ...
+
+    @versions(supported_versions=(">=20.9"), raises=False)
+    @delete("/v1/feature-profile/sdwan/service/{profile_uuid}/lan/vpn/{vpn_uuid}/{parcel_type}/{parcel_uuid}")
+    def delete_lan_vpn_sub_parcel(
+        self, profile_uuid: UUID, vpn_uuid: UUID, parcel_type: str, parcel_uuid: UUID
+    ) -> None:
         ...
 
     @versions(supported_versions=(">=20.9"), raises=False)
@@ -111,14 +119,14 @@ class ServiceFeatureProfile(APIEndpoints):
     @get("/v1/feature-profile/sdwan/service/{profile_id}/{parcel_type}/{parcel_id}")
     def get_by_id(
         self, profile_id: UUID, parcel_type: str, parcel_id: UUID
-    ) -> Parcel[Union[AnyTopLevelServiceParcel, AnyRoutingParcel]]:
+    ) -> Parcel[Union[AnyServiceParcel, AnyRoutingParcel]]:
         ...
 
     @versions(supported_versions=(">=20.9"), raises=False)
     @get("/v1/feature-profile/sdwan/service/{profile_id}/{parcel_type}")
     def get_all(
         self, profile_id: UUID, parcel_type: str
-    ) -> DataSequence[Parcel[Union[AnyTopLevelServiceParcel, AnyRoutingParcel]]]:
+    ) -> DataSequence[Parcel[Union[AnyServiceParcel, AnyRoutingParcel]]]:
         ...
 
     @versions(supported_versions=(">=20.9"), raises=False)
