@@ -103,6 +103,20 @@ class TransportFeatureProfile(APIEndpoints):
         ...
 
     @versions(supported_versions=(">=20.12"), raises=False)
+    @get("/v1/feature-profile/sdwan/transport/{profile_id}/wan/vpn/{vpn_id}/{parcel_type}/{parcel_id}")
+    def get_transport_vpn_sub_parcel(
+        self, profile_id: UUID, vpn_id: UUID, parcel_type: str, parcel_id: UUID
+    ) -> Parcel[AnyTransportParcel]:
+        ...
+
+    @versions(supported_versions=(">=20.12"), raises=False)
+    @get("/v1/feature-profile/sdwan/transport/{profile_id}/management/vpn/{vpn_id}/{parcel_type}/{parcel_id}")
+    def get_management_vpn_sub_parcel(
+        self, profile_id: UUID, vpn_id: UUID, parcel_type: str, parcel_id: UUID
+    ) -> Parcel[AnyTransportParcel]:
+        ...
+
+    @versions(supported_versions=(">=20.12"), raises=False)
     @put("/v1/feature-profile/sdwan/transport/{profile_id}/wan/vpn/{vpn_id}/{parcel_type}/{parcel_id}")
     def update_transport_vpn_sub_parcel(
         self, profile_id: UUID, vpn_id: UUID, parcel_type: str, parcel_id: UUID, payload: _ParcelBase

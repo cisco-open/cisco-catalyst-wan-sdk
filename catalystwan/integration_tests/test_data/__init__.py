@@ -2,7 +2,7 @@
 from ipaddress import IPv4Address
 from typing import List, Literal
 
-from catalystwan.api.configuration_groups.parcel import Default, Global, as_global
+from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
 from catalystwan.models.configuration.feature_profile.sdwan.routing.bgp import RoutingBgpParcel
 from catalystwan.models.configuration.feature_profile.sdwan.routing.ospf import RoutingOspfParcel
 from catalystwan.models.configuration.feature_profile.sdwan.routing.ospfv3 import (
@@ -46,7 +46,7 @@ cellular_profile_parcel = CellularProfileParcel(
             apn=Global[str](value="KvqJrCD"),
             authentication=Authentication(
                 need_authentication=NeedAuthentication(
-                    password=Global[str](value="HfBBBHZlFH"),
+                    password=Variable(value="{{HfBBBHZlFH}}"),
                     type=Global[Literal["chap", "pap", "pap_chap"]](value="chap"),
                     username=Global[str](value="BABBBBBBV"),
                 )

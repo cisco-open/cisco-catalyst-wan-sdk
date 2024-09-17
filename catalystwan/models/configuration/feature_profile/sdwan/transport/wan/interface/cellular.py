@@ -1,7 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 from __future__ import annotations
 
-from ipaddress import IPv4Address
 from typing import List, Literal, Optional, Union
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
@@ -11,6 +10,7 @@ from catalystwan.models.common import CarrierType, TLOCColor
 from catalystwan.models.configuration.feature_profile.common import (
     AclQos,
     AllowService,
+    Arp,
     Encapsulation,
     MultiRegionFabric,
 )
@@ -82,19 +82,6 @@ class NatAttributesIpv4(BaseModel):
     )
     udp_timeout: Union[Global[int], Default[int], Variable] = Field(
         default=as_default(1), validation_alias="udpTimeout", serialization_alias="udpTimeout"
-    )
-
-
-class Arp(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    ip_address: Union[Global[str], Global[IPv4Address], Default[None], Variable] = Field(
-        default=as_default(None), validation_alias="ipAddress", serialization_alias="ipAddress"
-    )
-    mac_address: Union[Global[str], Default[None], Variable] = Field(
-        default=as_default(None), validation_alias="macAddress", serialization_alias="macAddress"
     )
 
 

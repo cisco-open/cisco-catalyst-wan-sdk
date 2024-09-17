@@ -40,7 +40,7 @@ class NextHopItem(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    address: Union[Variable, Global[IPv4Address], Global[str]] = Field(..., description="Variable")
+    address: Union[Variable, Global[IPv4Address]] = Field(..., description="Variable")
     distance: Union[Variable, Global[int], Default[int]] = Field(as_default(1), description="Administrative distance")
 
 
