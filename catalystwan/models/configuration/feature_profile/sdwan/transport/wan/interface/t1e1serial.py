@@ -129,7 +129,7 @@ class T1E1SerialParcel(_ParcelBase):
         extra="forbid",
         populate_by_name=True,
     )
-    type_: Literal["interface/serial"] = Field(default="interface/serial", exclude=True)
+    type_: Literal["wan/vpn/interface/serial"] = Field(default="wan/vpn/interface/serial", exclude=True)
     interface_name: Union[Global[str], Variable] = Field(validation_alias=AliasPath("data", "interfaceName"))
     acl_qos: Optional[AclQos] = Field(
         default=None,

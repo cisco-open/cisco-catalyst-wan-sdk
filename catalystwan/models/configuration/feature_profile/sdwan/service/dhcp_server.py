@@ -89,7 +89,7 @@ class LanVpnDhcpServerParcel(_ParcelBase):
         validation_alias=AliasPath("data", "exclude"),
         description="Configure IPv4 address to exclude from DHCP address pool",
     )
-    lease_time: Union[Global[int], Variable, Default[int]] = Field(
+    lease_time: Union[Default[int], Global[int], Variable] = Field(
         default=Default[int](value=86400),
         validation_alias=AliasPath("data", "leaseTime"),
         description="Configure how long a DHCP-assigned IP address is valid",

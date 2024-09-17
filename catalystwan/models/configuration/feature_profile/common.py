@@ -115,8 +115,8 @@ class FeatureProfileCreationResponse(BaseModel):
 
 
 class AddressWithMask(BaseModel):
-    address: Union[Variable, Global[str], Global[IPv4Address], Global[IPv6Address]]
-    mask: Union[Variable, Global[str], Global[SubnetMask]]
+    address: Union[Variable, Global[IPv4Address], Global[IPv6Address]]
+    mask: Union[Variable, Global[SubnetMask]]
 
 
 class SchemaTypeQuery(BaseModel):
@@ -141,12 +141,12 @@ class DNSIPv4(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    primary_dns_address_ipv4: Union[Default[None], Global[str], Global[IPv4Address], Variable] = Field(
+    primary_dns_address_ipv4: Union[Default[None], Global[IPv4Address], Variable] = Field(
         default=Default[None](value=None),
         serialization_alias="primaryDnsAddressIpv4",
         validation_alias="primaryDnsAddressIpv4",
     )
-    secondary_dns_address_ipv4: Optional[Union[Default[None], Global[str], Global[IPv4Address], Variable]] = Field(
+    secondary_dns_address_ipv4: Optional[Union[Default[None], Global[IPv4Address], Variable]] = Field(
         default=None,
         serialization_alias="secondaryDnsAddressIpv4",
         validation_alias="secondaryDnsAddressIpv4",
@@ -158,12 +158,12 @@ class DNSIPv6(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    primary_dns_address_ipv6: Union[Default[None], Global[str], Global[IPv6Address], Variable] = Field(
+    primary_dns_address_ipv6: Union[Default[None], Global[IPv6Address], Variable] = Field(
         default=Default[None](value=None),
         serialization_alias="primaryDnsAddressIpv6",
         validation_alias="primaryDnsAddressIpv6",
     )
-    secondary_dns_address_ipv6: Optional[Union[Default[None], Global[str], Global[IPv6Address], Variable]] = Field(
+    secondary_dns_address_ipv6: Optional[Union[Default[None], Global[IPv6Address], Variable]] = Field(
         default=None,
         serialization_alias="secondaryDnsAddressIpv6",
         validation_alias="secondaryDnsAddressIpv6",
@@ -518,7 +518,7 @@ class AllowService(BaseModel):
 class Arp(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    ip_address: Union[Variable, Global[str], Global[IPv4Address], Default[None]] = Field(
+    ip_address: Union[Variable, Global[IPv4Address], Default[None]] = Field(
         serialization_alias="ipAddress", validation_alias="ipAddress", default=Default[None](value=None)
     )
     mac_address: Union[Global[str], Variable] = Field(serialization_alias="macAddress", validation_alias="macAddress")
@@ -542,11 +542,9 @@ class EthernetNatPool(BaseModel):
 class StaticNat(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    source_ip: Union[Global[str], Global[IPv4Address], Variable] = Field(
-        serialization_alias="sourceIp", validation_alias="sourceIp"
-    )
+    source_ip: Union[Global[IPv4Address], Variable] = Field(serialization_alias="sourceIp", validation_alias="sourceIp")
 
-    translate_ip: Union[Global[str], Global[IPv4Address], Variable] = Field(
+    translate_ip: Union[Global[IPv4Address], Variable] = Field(
         serialization_alias="translateIp", validation_alias="translateIp"
     )
     static_nat_direction: Union[Global[EthernetDirection], Default[EthernetDirection]] = Field(

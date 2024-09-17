@@ -6,6 +6,7 @@ from uuid import UUID
 from packaging.version import Version  # type: ignore
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, as_global
+from catalystwan.api.feature_profile_api import TransportFeatureProfileAPI
 from catalystwan.integration_tests.base import TestCaseBase, create_name_with_run_id
 from catalystwan.integration_tests.test_data import cellular_controller_parcel, cellular_profile_parcel, gps_parcel
 from catalystwan.models.common import (
@@ -26,10 +27,7 @@ from catalystwan.models.common import (
     T1Linecode,
     TLOCColor,
 )
-from catalystwan.models.configuration.feature_profile.common import AclQos
-from catalystwan.models.configuration.feature_profile.common import AddressWithMask
-from catalystwan.models.configuration.feature_profile.common import AddressWithMask as CommonPrefix
-from catalystwan.models.configuration.feature_profile.common import AdvancedGre, AllowService
+from catalystwan.models.configuration.feature_profile.common import AclQos, AddressWithMask, AdvancedGre, AllowService
 from catalystwan.models.configuration.feature_profile.common import Arp as CommonArp
 from catalystwan.models.configuration.feature_profile.common import ChannelGroup, DNSIPv4, DNSIPv6
 from catalystwan.models.configuration.feature_profile.common import (
@@ -71,6 +69,13 @@ from catalystwan.models.configuration.feature_profile.sdwan.routing.bgp import (
     RedistributeItem,
     RoutingBgpParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.routing.ospf import RoutingOspfParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
+from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_controller import (
+    CellularControllerParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_profile import CellularProfileParcel
+from catalystwan.models.configuration.feature_profile.sdwan.transport.gps import GpsParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.management.ethernet import (
     Advanced as ManagementEthernetAdvanced,
 )
@@ -111,7 +116,6 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
     Advanced as AdvancedCellular,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.cellular import (
-    Arp,
     InterfaceCellularParcel,
     NatAttributesIpv4,
 )
@@ -177,11 +181,41 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
 
 
 class TestTransportFeatureProfileModels(TestCaseBase):
+    api: TransportFeatureProfileAPI
+
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.api = cls.session.api.sdwan_feature_profiles.transport
         cls.profile_uuid = cls.api.create_profile(create_name_with_run_id("TestTransportModels"), "Description").id
+
+    def test_update(self):
+        # Arrange
+        parcel = RoutePolicyParcel(
+            parcel_name="TestRoutePolicyParcel_ToUpdate",
+            parcel_description="Description",
+        )
+        parcel_id = self.api.create_parcel(self.profile_uuid, parcel).id
+        # Act
+        parcel.parcel_name = "TestRoutePolicyParcel_Updated"
+        parcel_id = self.api.update_parcel(self.profile_uuid, parcel, parcel_id).id
+        # Assert
+        updated_parcel = self.api.get_parcel(self.profile_uuid, RoutePolicyParcel, parcel_id)
+        assert isinstance(updated_parcel.payload, RoutePolicyParcel)
+        assert updated_parcel.payload == parcel
+
+    def test_when_default_values_ospf_expect_successful_post(self):
+        # Arrange
+        ospf_parcel = RoutingOspfParcel(
+            parcel_name="TestOspfParcel-Defaults",
+            parcel_description="Test Ospf Parcel",
+        )
+        # Act
+        parcel_id = self.api.create_parcel(self.profile_uuid, ospf_parcel).id
+        # Assert
+        parcel = self.api.get_parcel(self.profile_uuid, RoutingOspfParcel, parcel_id)
+        assert isinstance(parcel.payload, RoutingOspfParcel)
+        assert parcel.payload == ospf_parcel
 
     def test_when_fully_specified_management_vpn_parcel_expect_successful_post(self):
         # Arrange
@@ -230,7 +264,9 @@ class TestTransportFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, management_vpn_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, ManagementVpnParcel, parcel_id)
+        assert isinstance(parcel.payload, ManagementVpnParcel)
+        assert parcel.payload == management_vpn_parcel
 
     def test_when_fully_specified_t1e1controller_type_e1_parcel_expect_successful_post(self):
         # Arrange
@@ -262,7 +298,9 @@ class TestTransportFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, t1e1controller).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, T1E1ControllerParcel, parcel_id)
+        assert isinstance(parcel.payload, T1E1ControllerParcel)
+        assert parcel.payload == t1e1controller
 
     def test_when_fully_specified_t1e1controller_type_t1_parcel_expect_successful_post(self):
         # Arrange
@@ -298,25 +336,33 @@ class TestTransportFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, t1e1controller).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, T1E1ControllerParcel, parcel_id)
+        assert isinstance(parcel.payload, T1E1ControllerParcel)
+        assert parcel.payload == t1e1controller
 
     def test_when_fully_specifed_gps_parcel_expect_successful_post(self):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, gps_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, GpsParcel, parcel_id)
+        assert isinstance(parcel.payload, GpsParcel)
+        assert parcel.payload == gps_parcel
 
     def test_when_fully_specifed_cellular_controller_expect_successful_post(self):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, cellular_controller_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, CellularControllerParcel, parcel_id)
+        assert isinstance(parcel.payload, CellularControllerParcel)
+        assert parcel.payload == cellular_controller_parcel
 
     def test_when_fully_specifed_cellular_profile_expect_successful_post(self):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, cellular_profile_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, CellularProfileParcel, parcel_id)
+        assert isinstance(parcel.payload, CellularProfileParcel)
+        assert parcel.payload == cellular_profile_parcel
 
     def test_when_default_values_acl_ipv4_expect_successful_post(self):
         # Arrange
@@ -326,9 +372,10 @@ class TestTransportFeatureProfileModels(TestCaseBase):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv4_parcel).id
-        self.api.get_parcel(self.profile_uuid, Ipv4AclParcel, parcel_id)
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, Ipv4AclParcel, parcel_id)
+        assert isinstance(parcel.payload, Ipv4AclParcel)
+        assert parcel.payload == acl_ipv4_parcel
 
     def test_when_fully_specified_acl_ipv4_expect_successful_post(self):
         # Arrange
@@ -352,9 +399,10 @@ class TestTransportFeatureProfileModels(TestCaseBase):
         seq2.match_source_ports([1, 3, (10, 100), (50, 200), 600])
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv4_parcel).id
-        self.api.get_parcel(self.profile_uuid, Ipv4AclParcel, parcel_id)
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, Ipv4AclParcel, parcel_id)
+        assert isinstance(parcel.payload, Ipv4AclParcel)
+        assert parcel.payload == acl_ipv4_parcel
 
     def test_when_default_values_acl_ipv6_expect_successful_post(self):
         # Arrange
@@ -364,9 +412,10 @@ class TestTransportFeatureProfileModels(TestCaseBase):
         )
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv6_parcel).id
-        self.api.get_parcel(self.profile_uuid, Ipv6AclParcel, parcel_id)
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, Ipv6AclParcel, parcel_id)
+        assert isinstance(parcel.payload, Ipv6AclParcel)
+        assert parcel.payload == acl_ipv6_parcel
 
     def test_when_fully_specified_acl_ipv6_expect_successful_post(self):
         # Arrange
@@ -387,9 +436,10 @@ class TestTransportFeatureProfileModels(TestCaseBase):
         seq2.match_source_ports([1, 3, (10, 100), (50, 200), 600])
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, acl_ipv6_parcel).id
-        self.api.get_parcel(self.profile_uuid, Ipv6AclParcel, parcel_id)
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, Ipv6AclParcel, parcel_id)
+        assert isinstance(parcel.payload, Ipv6AclParcel)
+        assert parcel.payload == acl_ipv6_parcel
 
     def test_when_fully_specified_routing_bgp_expect_successful_post(self):
         # Arrange
@@ -424,7 +474,7 @@ class TestTransportFeatureProfileModels(TestCaseBase):
                     send_community=Global[bool](value=True),
                     send_ext_community=Global[bool](value=False),
                     ebgp_multihop=Global[int](value=147),
-                    password=Global[str](value="Qzxpq"),
+                    password=None,
                     send_label=Global[bool](value=True),
                     as_override=Global[bool](value=False),
                     as_number=Variable(value="{{lbgp_1_ipv4_conf_1_asNumber}}"),
@@ -455,7 +505,7 @@ class TestTransportFeatureProfileModels(TestCaseBase):
                     send_community=Global[bool](value=True),
                     send_ext_community=Global[bool](value=False),
                     ebgp_multihop=Global[int](value=21),
-                    password=Global[str](value="vaPsP"),
+                    password=None,
                     as_override=Global[bool](value=True),
                     as_number=Global[int](value=10),
                     address_family=[
@@ -513,7 +563,9 @@ class TestTransportFeatureProfileModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, bgp_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, RoutingBgpParcel, parcel_id)
+        assert isinstance(parcel.payload, RoutingBgpParcel)
+        assert parcel.payload == bgp_parcel
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -538,7 +590,9 @@ class TestTransportFeatureProfileTransportVpn(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, TransportVpnParcel, parcel_id)
+        assert isinstance(parcel.payload, TransportVpnParcel)
+        assert parcel.payload == transport_vpn_parcel
 
     def test_when_set_dns_address_specifed_transport_vpn_parcel_expect_successful_post(self):
         # Arrange
@@ -551,7 +605,9 @@ class TestTransportFeatureProfileTransportVpn(TestCaseBase):
 
         parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, TransportVpnParcel, parcel_id)
+        assert isinstance(parcel.payload, TransportVpnParcel)
+        assert parcel.payload == transport_vpn_parcel
 
     def test_when_add_ipv4_route_specifed_transport_vpn_parcel_expect_successful_post(self):
         # Arrange
@@ -571,7 +627,9 @@ class TestTransportFeatureProfileTransportVpn(TestCaseBase):
         parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
 
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, TransportVpnParcel, parcel_id)
+        assert isinstance(parcel.payload, TransportVpnParcel)
+        assert parcel.payload == transport_vpn_parcel
 
     def test_when_fully_specifed_transport_vpn_parcel_expect_successful_post(self):
         # Arrange
@@ -625,7 +683,9 @@ class TestTransportFeatureProfileTransportVpn(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, transport_vpn_parcel).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, TransportVpnParcel, parcel_id)
+        assert isinstance(parcel.payload, TransportVpnParcel)
+        assert parcel.payload == transport_vpn_parcel
 
     def tearDown(self) -> None:
         self.session.api.config_group.delete(self.config_id)
@@ -634,6 +694,7 @@ class TestTransportFeatureProfileTransportVpn(TestCaseBase):
 
 class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
     wan_uuid: UUID
+    api: TransportFeatureProfileAPI
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -664,7 +725,9 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
             parcel_name="T1E1FullySpecifiedParcel",
             parcel_description="Description",
             interface_name=Global[str](value="Serial3"),
-            address_v4=CommonPrefix(address=Global[str](value="1.1.1.1"), mask=Variable(value="{{NQokHq}}")),
+            address_v4=AddressWithMask(
+                address=Global[IPv4Address](value=IPv4Address("1.1.1.1")), mask=Variable(value="{{NQokHq}}")
+            ),
             address_v6=Variable(value="{{i4i}}"),
             advanced=Advanced(
                 ip_mtu=Global[int](value=1500),
@@ -737,7 +800,9 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, t1e1serial, self.wan_uuid).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, T1E1SerialParcel, parcel_id, self.wan_uuid)
+        assert isinstance(parcel.payload, T1E1SerialParcel)
+        assert parcel.payload == t1e1serial
 
     def test_when_fully_specified_ethpppoe_interface_parcel_expect_successfull_post(self):
         # Arrange
@@ -840,7 +905,9 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, ethpppoe_parcel, self.wan_uuid).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceEthPPPoEParcel, parcel_id, self.wan_uuid)
+        assert isinstance(parcel.payload, InterfaceEthPPPoEParcel)
+        assert parcel.payload == ethpppoe_parcel
 
     def test_when_fully_specified_dslpppoe_interface_parcel_expect_successfull_post(self):
         # Arrange
@@ -947,7 +1014,9 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, ethpppoe_parcel, self.wan_uuid).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceDslPPPoEParcel, parcel_id, self.wan_uuid)
+        assert isinstance(parcel.payload, InterfaceDslPPPoEParcel)
+        assert parcel.payload == ethpppoe_parcel
 
     def test_when_correct_values_dlspppoa_interface_parcel_expect_successfull_post(self):
         """This test case don't cover all fields because the models
@@ -974,7 +1043,9 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, dslpppoa_parcel, self.wan_uuid).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceDslPPPoAParcel, parcel_id, self.wan_uuid)
+        assert isinstance(parcel.payload, InterfaceDslPPPoAParcel)
+        assert parcel.payload == dslpppoa_parcel
 
     def test_when_correct_values_dlsipoe_interface_parcel_expect_successfull_post(self):
         """This test case don't cover all fields because the models
@@ -998,7 +1069,9 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, dslipoe_parcel, self.wan_uuid).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceDslIPoEParcel, parcel_id, self.wan_uuid)
+        assert isinstance(parcel.payload, InterfaceDslIPoEParcel)
+        assert parcel.payload == dslipoe_parcel
 
     def test_when_fully_specified_gre_interface_parcel_expect_successful_post(self):
         # Arrange
@@ -1006,7 +1079,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
             parcel_name="InterfaceGreParcel",
             parcel_description="Description",
             basic=Basic(
-                address=CommonPrefix(
+                address=AddressWithMask(
                     address=Global[IPv4Address](value=IPv4Address("39.5.0.97")),
                     mask=Variable(value="{{QPg11165441vY1}}"),
                 ),
@@ -1029,13 +1102,15 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, gre_parcel, self.wan_uuid).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceGreParcel, parcel_id, self.wan_uuid)
+        assert isinstance(parcel.payload, InterfaceGreParcel)
+        assert parcel.payload == gre_parcel
 
     def test_when_fully_specified_ipsec_interface_parcel_expect_successful_post(self):
         ipsec_parcel = InterfaceIpsecParcel(
             parcel_name="InterfaceIpsecParcel",
             parcel_description="Description",
-            address=CommonPrefix(
+            address=AddressWithMask(
                 address=Global[IPv4Address](value=IPv4Address("127.211.176.149")),
                 mask=Global[SubnetMask](value="255.255.255.0"),
             ),
@@ -1059,10 +1134,10 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
             pre_shared_secret=Global[str](value="iEKeBeVb"),
             shutdown=Default[bool](value=True),
             tcp_mss_adjust=Default[None](value=None),
-            tunnel_destination=CommonPrefix(
+            tunnel_destination=AddressWithMask(
                 address=Global[IPv4Address](value=IPv4Address("192.0.0.171")), mask=Variable(value="{{Dr}}")
             ),
-            tunnel_source=CommonPrefix(
+            tunnel_source=AddressWithMask(
                 address=Global[IPv4Address](value=IPv4Address("192.52.193.221")),
                 mask=Global[SubnetMask](value="255.255.254.0"),
             ),
@@ -1073,7 +1148,9 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, ipsec_parcel, self.wan_uuid).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceIpsecParcel, parcel_id, self.wan_uuid)
+        assert isinstance(parcel.payload, InterfaceIpsecParcel)
+        assert parcel.payload == ipsec_parcel
 
     def test_when_fully_specified_cellular_interface_parcel_expect_successful_post(self):
         # Arrange
@@ -1136,12 +1213,15 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
                 stun=Global[bool](value=True),
             ),
             arp=[
-                Arp(
+                CommonArp(
                     ip_address=Global[IPv4Address](value=IPv4Address("203.0.113.2")),
                     mac_address=Global[str](value="DC:F1:17:22:FA:3D"),
                 ),
-                Arp(ip_address=Global[str](value="3.2.1.1"), mac_address=Global[str](value="BF:DB:A1:F0:4B:C8")),
-                Arp(
+                CommonArp(
+                    ip_address=Global[IPv4Address](value=IPv4Address("3.2.1.1")),
+                    mac_address=Global[str](value="BF:DB:A1:F0:4B:C8"),
+                ),
+                CommonArp(
                     ip_address=Global[IPv4Address](value=IPv4Address("192.0.0.170")),
                     mac_address=Global[str](value="1B:5A:0F:AB:9E:CE"),
                 ),
@@ -1179,7 +1259,9 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, cellular_parcel, self.wan_uuid).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceCellularParcel, parcel_id, self.wan_uuid)
+        assert isinstance(parcel.payload, InterfaceCellularParcel)
+        assert parcel.payload == cellular_parcel
 
     def test_when_fully_specified_ethernet_interface_expect_successfull_post(self):
         # Arrange
@@ -1250,7 +1332,10 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
                     ip_address=Global[IPv4Address](value=IPv4Address("203.0.113.2")),
                     mac_address=Global[str](value="DC:F1:17:22:FA:3D"),
                 ),
-                CommonArp(ip_address=Global[str](value="3.2.1.1"), mac_address=Global[str](value="BF:DB:A1:F0:4B:C8")),
+                CommonArp(
+                    ip_address=Global[IPv4Address](value=IPv4Address("3.2.1.1")),
+                    mac_address=Global[str](value="BF:DB:A1:F0:4B:C8"),
+                ),
                 CommonArp(
                     ip_address=Global[IPv4Address](value=IPv4Address("192.0.0.170")),
                     mac_address=Global[str](value="1B:5A:0F:AB:9E:CE"),
@@ -1275,7 +1360,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
                         source_vpn=Global[int](value=422),
                     ),
                     StaticNat(
-                        source_ip=Global[str](value="hWhYrEZZ"),
+                        source_ip=Global[IPv4Address](value=IPv4Address("10.0.2.1")),
                         translate_ip=Variable(value="{{xskEgr6}}"),
                         static_nat_direction=Default[Literal["inside", "outside"]](value="inside"),
                         source_vpn=Default[int](value=0),
@@ -1330,7 +1415,9 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
         # Act
         parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.wan_uuid).id
         # Assert
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceEthernetParcel, parcel_id, self.wan_uuid)
+        assert isinstance(parcel.payload, InterfaceEthernetParcel)
+        assert parcel.payload == ethernet_parcel
 
     def test_when_fully_specified_multilink_interface_parcel_expect_successful_post(self):
         # Arrange
@@ -1452,7 +1539,7 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
             ospf=Global[bool](value=True),
             password=Global[str](value="hyBBiuDgO"),
             port_hop=Global[bool](value=False),
-            ppp_auth_password=Global[str](value="aCBBBxnzsw"),
+            ppp_auth_password=None,
             restrict=Global[bool](value=False),
             shaping_rate=Global[int](value=294),
             shutdown=Global[bool](value=False),
@@ -1471,7 +1558,56 @@ class TestTransportFeatureProfileWanInterfaceModels(TestCaseBase):
 
         parcel_id = self.api.create_parcel(self.profile_uuid, multilink_parcel, self.wan_uuid).id
 
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceMultilinkParcel, parcel_id, self.wan_uuid)
+        assert isinstance(parcel.payload, InterfaceMultilinkParcel)
+        assert parcel.payload == multilink_parcel
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.api.delete_profile(cls.profile_uuid)
+        super().tearDownClass()
+
+
+class TestTransportFeatureProfileWanInterfaceModelsUpdate(TestCaseBase):
+    wan_uuid: UUID
+    api: TransportFeatureProfileAPI
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.api = cls.session.api.sdwan_feature_profiles.transport
+        cls.profile_uuid = cls.api.create_profile(create_name_with_run_id("TestTransportInterface"), "Description").id
+        cls.wan_uuid = cls.api.create_parcel(
+            cls.profile_uuid,
+            TransportVpnParcel(
+                parcel_name="TestTransportVpnParcel",
+                parcel_description="Description",
+            ),
+        ).id
+
+    def test_update(self):
+        gre_parcel = InterfaceGreParcel(
+            parcel_name="InterfaceGreParcel",
+            parcel_description="Description",
+            basic=Basic(
+                if_name=Global[str](value="gre23"),
+                tunnel_destination=Global[IPv4Address](value=IPv4Address("5.5.2.1")),
+                address=AddressWithMask(
+                    address=Global[IPv4Address](value=IPv4Address("30.2.1.1")),
+                    mask=Variable(value="{{QPg111654}}"),
+                ),
+            ),
+        )
+        parcel_id = self.api.create_parcel(self.profile_uuid, gre_parcel, self.wan_uuid).id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceGreParcel, parcel_id, self.wan_uuid)
+        assert isinstance(parcel.payload, InterfaceGreParcel)
+        assert parcel.payload == gre_parcel
+
+        gre_parcel.basic.address.address = as_global(IPv4Address("20.3.2.1"))
+        parcel_id = self.api.update_parcel(self.profile_uuid, gre_parcel, parcel_id, self.wan_uuid).id
+        parcel = self.api.get_parcel(self.profile_uuid, InterfaceGreParcel, parcel_id, self.wan_uuid)
+        assert isinstance(parcel.payload, InterfaceGreParcel)
+        assert parcel.payload == gre_parcel
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -1514,7 +1650,10 @@ class TestTransportFeatureProfileWanManagementModels(TestCaseBase):
                 ip_address=Global[IPv4Address](value=IPv4Address("203.0.113.2")),
                 mac_address=Global[str](value="DC:F1:17:22:FA:3D"),
             ),
-            CommonArp(ip_address=Global[str](value="3.2.1.1"), mac_address=Global[str](value="BF:DB:A1:F0:4B:C8")),
+            CommonArp(
+                ip_address=Global[IPv4Address](value=IPv4Address("3.2.1.1")),
+                mac_address=Global[str](value="BF:DB:A1:F0:4B:C8"),
+            ),
             CommonArp(
                 ip_address=Global[IPv4Address](value=IPv4Address("192.0.0.170")),
                 mac_address=Global[str](value="1B:5A:0F:AB:9E:CE"),
@@ -1551,7 +1690,9 @@ class TestTransportFeatureProfileWanManagementModels(TestCaseBase):
 
         parcel_id = self.api.create_parcel(self.profile_uuid, ethernet_parcel, self.wan_uuid).id
 
-        assert parcel_id
+        parcel = self.api.get_parcel(self.profile_uuid, ManagementEthernetParcel, parcel_id, self.wan_uuid)
+        assert isinstance(parcel.payload, ManagementEthernetParcel)
+        assert parcel.payload == ethernet_parcel
 
     @classmethod
     def tearDownClass(cls) -> None:

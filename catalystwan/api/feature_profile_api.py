@@ -14,7 +14,7 @@ from catalystwan.endpoints.configuration.feature_profile.sdwan.sig_security impo
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.topology import TopologyFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
-from catalystwan.exceptions import ManagerHTTPError
+from catalystwan.exceptions import CatalystwanException, ManagerHTTPError
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.application_priority import (
@@ -43,10 +43,33 @@ from catalystwan.models.configuration.feature_profile.sdwan.policy_object.securi
     SslDecryptionProfileParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.policy_object.security.url import URLParcel
-from catalystwan.models.configuration.feature_profile.sdwan.routing import AnyRoutingParcel, RoutingBgpParcel
+from catalystwan.models.configuration.feature_profile.sdwan.routing import (
+    AnyRoutingParcel,
+    RoutingBgpParcel,
+    RoutingOspfParcel,
+    RoutingOspfv3IPv4Parcel,
+    RoutingOspfv3IPv6Parcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.service import AnyServiceParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.eigrp import EigrpParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ethernet import (
+    InterfaceEthernetParcel as LanInterfaceEthernetParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.gre import (
+    InterfaceGreParcel as LanInterfaceGreParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.ipsec import (
+    InterfaceIpsecParcel as LanInterfaceIpsecParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.multilink import (
+    InterfaceMultilinkParcel as LanInterfaceMultilinkParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.svi import InterfaceSviParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.lan.vpn import LanVpnParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.multicast import MulticastParcel
 from catalystwan.models.configuration.feature_profile.sdwan.service.route_policy import RoutePolicyParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.switchport import SwitchportParcel
+from catalystwan.models.configuration.feature_profile.sdwan.service.wireless_lan import WirelessLanParcel
 from catalystwan.models.configuration.feature_profile.sdwan.sig_security.sig_security import SIGParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology import AnyTopologyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology.custom_control import CustomControlParcel
@@ -56,8 +79,33 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport import Any
 from catalystwan.models.configuration.feature_profile.sdwan.transport.cellular_controller import (
     CellularControllerParcel,
 )
+from catalystwan.models.configuration.feature_profile.sdwan.transport.management.ethernet import (
+    InterfaceEthernetParcel as ManagementInterfaceEthernetParcel,
+)
 from catalystwan.models.configuration.feature_profile.sdwan.transport.t1e1controller import T1E1ControllerParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport.vpn import ManagementVpnParcel, TransportVpnParcel
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.cellular import (
+    InterfaceCellularParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.ethernet import (
+    InterfaceEthernetParcel as WanInterfaceEthernetParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.gre import (
+    InterfaceGreParcel as WanInterfaceGreParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.ipsec import (
+    InterfaceIpsecParcel as WanInterfaceIpsecParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.multilink import (
+    InterfaceMultilinkParcel as WanInterfaceMultilinkParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.protocol_over import (
+    InterfaceDslIPoEParcel,
+    InterfaceDslPPPoAParcel,
+    InterfaceDslPPPoEParcel,
+    InterfaceEthPPPoEParcel,
+)
+from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.t1e1serial import T1E1SerialParcel
 from catalystwan.typed_list import DataSequence
 
 if TYPE_CHECKING:
@@ -130,6 +178,12 @@ from catalystwan.models.configuration.feature_profile.sdwan.system import (
     SecurityParcel,
     SNMPParcel,
 )
+
+
+def removeprefix(s: str, prefix: str) -> str:
+    if s.startswith(prefix):
+        return s[len(prefix) :]
+    return s
 
 
 class SDRoutingFeatureProfilesAPI:
@@ -267,7 +321,11 @@ class TransportFeatureProfileAPI:
         try:
             return self.endpoint.get_transport_parcel(profile_id, TransportVpnParcel._get_parcel_type(), vpn_uuid)
         except ManagerHTTPError:
+            pass
+        try:
             return self.endpoint.get_transport_parcel(profile_id, ManagementVpnParcel._get_parcel_type(), vpn_uuid)
+        except ManagerHTTPError:
+            raise CatalystwanException(f"VPN parcel wih uuid: {vpn_uuid} is not found")
 
     @overload
     def get_parcel(
@@ -279,12 +337,6 @@ class TransportFeatureProfileAPI:
     def get_parcel(
         self, profile_id: UUID, parcel_type: Type[T1E1ControllerParcel], parcel_id: UUID
     ) -> Parcel[T1E1ControllerParcel]:
-        ...
-
-    @overload
-    def get_parcel(
-        self, profile_id: UUID, parcel_type: Type[RoutingBgpParcel], parcel_id: UUID
-    ) -> Parcel[RoutingBgpParcel]:
         ...
 
     @overload
@@ -313,13 +365,149 @@ class TransportFeatureProfileAPI:
     ) -> Parcel[RoutePolicyParcel]:
         ...
 
+    @overload
     def get_parcel(
-        self, profile_id: UUID, parcel_type: Type[Union[AnyTransportParcel, AnyRoutingParcel]], parcel_id: UUID
+        self, profile_id: UUID, parcel_type: Type[WanInterfaceMultilinkParcel], parcel_id: UUID, vpn_uuid: UUID
+    ) -> Parcel[WanInterfaceMultilinkParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[InterfaceEthPPPoEParcel], parcel_id: UUID, vpn_uuid: UUID
+    ) -> Parcel[InterfaceEthPPPoEParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[InterfaceDslPPPoEParcel], parcel_id: UUID, vpn_uuid: UUID
+    ) -> Parcel[InterfaceDslPPPoEParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[InterfaceDslPPPoAParcel], parcel_id: UUID, vpn_uuid: UUID
+    ) -> Parcel[InterfaceDslPPPoAParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[InterfaceDslIPoEParcel], parcel_id: UUID, vpn_uuid: UUID
+    ) -> Parcel[InterfaceDslIPoEParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[WanInterfaceGreParcel], parcel_id: UUID, vpn_uuid: UUID
+    ) -> Parcel[WanInterfaceGreParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[WanInterfaceEthernetParcel], parcel_id: UUID, vpn_uuid: UUID
+    ) -> Parcel[WanInterfaceEthernetParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[ManagementInterfaceEthernetParcel], parcel_id: UUID, vpn_uuid: UUID
+    ) -> Parcel[ManagementInterfaceEthernetParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[RoutingBgpParcel], parcel_id: UUID
+    ) -> Parcel[RoutingBgpParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[RoutingOspfParcel], parcel_id: UUID
+    ) -> Parcel[RoutingOspfParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[RoutingOspfv3IPv6Parcel], parcel_id: UUID
+    ) -> Parcel[RoutingOspfv3IPv6Parcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self, profile_id: UUID, parcel_type: Type[RoutingOspfv3IPv4Parcel], parcel_id: UUID
+    ) -> Parcel[RoutingOspfv3IPv4Parcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[InterfaceCellularParcel],
+        parcel_id: UUID,
+        vpn_uuid: UUID,
+    ) -> Parcel[InterfaceCellularParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[T1E1SerialParcel],
+        parcel_id: UUID,
+        vpn_uuid: UUID,
+    ) -> Parcel[T1E1SerialParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[WanInterfaceIpsecParcel],
+        parcel_id: UUID,
+        vpn_uuid: UUID,
+    ) -> Parcel[WanInterfaceIpsecParcel]:
+        ...
+
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[Union[AnyTransportParcel, AnyRoutingParcel]],
+        parcel_id: UUID,
+        vpn_uuid: Optional[UUID] = None,
     ) -> Parcel:
         """
         Get one Transport Parcel given profile id, parcel type and parcel id
         """
+        if vpn_uuid is not None:
+            vpn_parcel = self._get_vpn_parcel(profile_id, vpn_uuid).payload
+            parcel_type_str = parcel_type._get_parcel_type()
+            parcel_type_str = removeprefix(parcel_type_str, "wan/vpn/")
+            parcel_type_str = removeprefix(parcel_type_str, "management/vpn/")
+            if vpn_parcel._get_parcel_type() == TransportVpnParcel._get_parcel_type():
+                return self.endpoint.get_transport_vpn_sub_parcel(profile_id, vpn_uuid, parcel_type_str, parcel_id)
+            else:
+                return self.endpoint.get_management_vpn_sub_parcel(profile_id, vpn_uuid, parcel_type_str, parcel_id)
         return self.endpoint.get_transport_parcel(profile_id, parcel_type._get_parcel_type(), parcel_id)
+
+    def update_parcel(
+        self, profile_id: UUID, payload: AnyTransportParcel, parcel_id: UUID, vpn_uuid: Optional[UUID] = None
+    ) -> ParcelCreationResponse:
+        """
+        Update Transport Parcel for selected profile_id based on payload type
+        """
+        if vpn_uuid is not None:
+            vpn_parcel = self._get_vpn_parcel(profile_id, vpn_uuid).payload
+            parcel_type = payload._get_parcel_type()
+            parcel_type = removeprefix(parcel_type, "wan/vpn/")
+            parcel_type = removeprefix(parcel_type, "management/vpn/")
+            if vpn_parcel._get_parcel_type() == TransportVpnParcel._get_parcel_type():
+                return self.endpoint.update_transport_vpn_sub_parcel(
+                    profile_id, vpn_uuid, parcel_type, parcel_id, payload
+                )
+            else:
+                return self.endpoint.update_management_vpn_sub_parcel(
+                    profile_id, vpn_uuid, parcel_type, parcel_id, payload
+                )
+        return self.endpoint.update_transport_parcel(profile_id, payload._get_parcel_type(), parcel_id, payload)
 
 
 class OtherFeatureProfileAPI:
@@ -454,11 +642,286 @@ class ServiceFeatureProfileAPI:
                 return self.endpoint.create_lan_vpn_sub_parcel(profile_id, vpn_uuid, parcel_type, payload)
         return self.endpoint.create_service_parcel(profile_id, payload._get_parcel_type(), payload)
 
-    def delete_parcel(self, profile_uuid: UUID, parcel_type: Type[AnyServiceParcel], parcel_uuid: UUID) -> None:
+    def delete_parcel(
+        self,
+        profile_uuid: UUID,
+        parcel_type: Type[AnyServiceParcel],
+        parcel_uuid: UUID,
+        vpn_uuid: Optional[UUID] = None,
+    ) -> None:
         """
         Delete Service Parcel for selected profile_uuid based on payload type
         """
+        if vpn_uuid is not None:
+            return self.endpoint.delete_lan_vpn_sub_parcel(
+                profile_uuid, vpn_uuid, removeprefix(parcel_type._get_parcel_type(), "lan/vpn/"), parcel_uuid
+            )
         return self.endpoint.delete_service_parcel(profile_uuid, parcel_type._get_parcel_type(), parcel_uuid)
+
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[RoutePolicyParcel],
+    ) -> DataSequence[Parcel[RoutePolicyParcel]]:
+        ...
+
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[Ipv4AclParcel],
+    ) -> DataSequence[Parcel[Ipv4AclParcel]]:
+        ...
+
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[Ipv6AclParcel],
+    ) -> DataSequence[Parcel[Ipv6AclParcel]]:
+        ...
+
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[LanVpnParcel],
+    ) -> DataSequence[Parcel[LanVpnParcel]]:
+        ...
+
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[MulticastParcel],
+    ) -> DataSequence[Parcel[MulticastParcel]]:
+        ...
+
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[EigrpParcel],
+    ) -> DataSequence[Parcel[EigrpParcel]]:
+        ...
+
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[SwitchportParcel],
+    ) -> DataSequence[Parcel[SwitchportParcel]]:
+        ...
+
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[WirelessLanParcel],
+    ) -> DataSequence[Parcel[WirelessLanParcel]]:
+        ...
+
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[AnyServiceParcel],
+    ) -> DataSequence:
+        """
+        Get all Service Parcels given profile id and parcel type
+        """
+        return self.endpoint.get_all(profile_id, parcel_type._get_parcel_type())
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[RoutePolicyParcel],
+        parcel_id: UUID,
+    ) -> Parcel[RoutePolicyParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[Ipv4AclParcel],
+        parcel_id: UUID,
+    ) -> Parcel[Ipv4AclParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[Ipv6AclParcel],
+        parcel_id: UUID,
+    ) -> Parcel[Ipv6AclParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[LanVpnParcel],
+        parcel_id: UUID,
+    ) -> Parcel[LanVpnParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[MulticastParcel],
+        parcel_id: UUID,
+    ) -> Parcel[MulticastParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[EigrpParcel],
+        parcel_id: UUID,
+    ) -> Parcel[EigrpParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[SwitchportParcel],
+        parcel_id: UUID,
+    ) -> Parcel[SwitchportParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[WirelessLanParcel],
+        parcel_id: UUID,
+    ) -> Parcel[WirelessLanParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[LanInterfaceEthernetParcel],
+        parcel_id: UUID,
+        vpn_uuid: UUID,
+    ) -> Parcel[LanInterfaceEthernetParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[LanInterfaceGreParcel],
+        parcel_id: UUID,
+        vpn_uuid: UUID,
+    ) -> Parcel[LanInterfaceGreParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[LanInterfaceIpsecParcel],
+        parcel_id: UUID,
+        vpn_uuid: UUID,
+    ) -> Parcel[LanInterfaceIpsecParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[InterfaceSviParcel],
+        parcel_id: UUID,
+        vpn_uuid: UUID,
+    ) -> Parcel[InterfaceSviParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[LanInterfaceMultilinkParcel],
+        parcel_id: UUID,
+        vpn_uuid: UUID,
+    ) -> Parcel[LanInterfaceMultilinkParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[RoutingBgpParcel],
+        parcel_id: UUID,
+    ) -> Parcel[RoutingBgpParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[RoutingOspfv3IPv6Parcel],
+        parcel_id: UUID,
+    ) -> Parcel[RoutingOspfv3IPv6Parcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[RoutingOspfParcel],
+        parcel_id: UUID,
+    ) -> Parcel[RoutingOspfParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[RoutingOspfv3IPv4Parcel],
+        parcel_id: UUID,
+    ) -> Parcel[RoutingOspfv3IPv4Parcel]:
+        ...
+
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[AnyServiceParcel],
+        parcel_id: UUID,
+        vpn_uuid: Optional[UUID] = None,
+    ) -> Parcel:
+        """
+        Get one Service Parcel given profile id, parcel type and parcel id
+        """
+        if vpn_uuid is not None:
+            return self.endpoint.get_lan_vpn_sub_parcel(
+                profile_id, vpn_uuid, removeprefix(parcel_type._get_parcel_type(), "lan/vpn/"), parcel_id
+            )
+        return self.endpoint.get_by_id(profile_id, parcel_type._get_parcel_type(), parcel_id)
+
+    def update_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[AnyServiceParcel],
+        parcel_id: UUID,
+        payload: AnyServiceParcel,
+        vpn_uuid: Optional[UUID] = None,
+    ) -> ParcelCreationResponse:
+        """
+        Update Service Parcel for selected profile_id based on payload type
+        """
+        if vpn_uuid is not None:
+            return self.endpoint.update_lan_vpn_sub_parcel(
+                profile_id, vpn_uuid, removeprefix(parcel_type._get_parcel_type(), "lan/vpn/"), parcel_id, payload
+            )
+        return self.endpoint.update(profile_id, parcel_type._get_parcel_type(), parcel_id, payload)
 
 
 class SystemFeatureProfileAPI:
@@ -853,7 +1316,7 @@ class PolicyObjectFeatureProfileAPI:
         return self.endpoint.get_profiles()
 
     def create_profile(self, profile: FeatureProfileCreationPayload) -> FeatureProfileCreationResponse:
-        return self.endpoint.create_profile()
+        return self.endpoint.create_profile(profile)
 
     def delete_profile(self, profile_id: UUID) -> None:
         return self.endpoint.delete_profile(profile_id=profile_id)

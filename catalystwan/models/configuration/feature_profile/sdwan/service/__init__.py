@@ -4,6 +4,8 @@ from typing import List, Union
 from pydantic import Field
 from typing_extensions import Annotated
 
+from catalystwan.models.configuration.feature_profile.sdwan.routing import AnyRoutingParcel
+
 from ..acl import AnyAclParcel
 from .appqoe import AppqoeParcel
 from .dhcp_server import LanVpnDhcpServerParcel
@@ -56,7 +58,7 @@ AnyAssociatoryParcel = Annotated[
 ]
 
 AnyServiceParcel = Annotated[
-    Union[AnyAclParcel, AnyTopLevelServiceParcel, AnyLanVpnInterfaceParcel],
+    Union[AnyAclParcel, AnyTopLevelServiceParcel, AnyLanVpnInterfaceParcel, AnyRoutingParcel],
     Field(discriminator="type_"),
 ]
 

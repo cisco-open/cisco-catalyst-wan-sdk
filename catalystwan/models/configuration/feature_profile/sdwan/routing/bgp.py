@@ -407,9 +407,7 @@ class Ipv6AggregateAddres(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    prefix: Union[Global[str], Global[IPv6Interface], Variable] = Field(
-        ..., description="Configure the IPv6 prefixes to aggregate"
-    )
+    prefix: Union[Global[IPv6Interface], Variable] = Field(..., description="Configure the IPv6 prefixes to aggregate")
     as_set: Optional[Union[Variable, Global[bool], Default[Literal[False]]]] = Field(
         default=None, serialization_alias="asSet", validation_alias="asSet", description="Set AS set path information"
     )
@@ -426,7 +424,7 @@ class Ipv6NetworkItem(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    prefix: Union[Global[str], Global[IPv6Interface], Variable] = Field(
+    prefix: Union[Global[IPv6Interface], Variable] = Field(
         ..., description="Configure the prefixes for BGP to announce"
     )
 
