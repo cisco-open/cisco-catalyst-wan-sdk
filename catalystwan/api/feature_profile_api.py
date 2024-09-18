@@ -909,9 +909,8 @@ class ServiceFeatureProfileAPI:
     def update_parcel(
         self,
         profile_id: UUID,
-        parcel_type: Type[AnyServiceParcel],
-        parcel_id: UUID,
         payload: AnyServiceParcel,
+        parcel_id: UUID,
         vpn_uuid: Optional[UUID] = None,
     ) -> ParcelCreationResponse:
         """
@@ -919,9 +918,9 @@ class ServiceFeatureProfileAPI:
         """
         if vpn_uuid is not None:
             return self.endpoint.update_lan_vpn_sub_parcel(
-                profile_id, vpn_uuid, removeprefix(parcel_type._get_parcel_type(), "lan/vpn/"), parcel_id, payload
+                profile_id, vpn_uuid, removeprefix(payload._get_parcel_type(), "lan/vpn/"), parcel_id, payload
             )
-        return self.endpoint.update(profile_id, parcel_type._get_parcel_type(), parcel_id, payload)
+        return self.endpoint.update(profile_id, payload._get_parcel_type(), parcel_id, payload)
 
 
 class SystemFeatureProfileAPI:
@@ -1869,7 +1868,7 @@ class CliFeatureProfileAPI:
         """
         return self.endpoint.create(profile_id, config)
 
-    def update_parcel(self, profile_id: UUID, parcel_id: UUID, config: ConfigParcel) -> ParcelCreationResponse:
+    def update_parcel(self, profile_id: UUID, config: ConfigParcel, parcel_id: UUID) -> ParcelCreationResponse:
         """
         Update CLI Parcel for selected profile_id
         """
