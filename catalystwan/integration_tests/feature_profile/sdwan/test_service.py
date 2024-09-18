@@ -147,7 +147,7 @@ class TestServiceFeatureProfileModels(TestCaseBase):
 
         dhcp_server_parcel.address_pool.network_address = Global[IPv4Address](value=IPv4Address("10.3.2.1"))
         dhcp_server_parcel.address_pool.subnet_mask = Global[SubnetMask](value="248.0.0.0")
-        parcel_id = self.api.update_parcel(self.profile_uuid, LanVpnDhcpServerParcel, parcel_id, dhcp_server_parcel).id
+        parcel_id = self.api.update_parcel(self.profile_uuid, dhcp_server_parcel, parcel_id).id
         parcel = self.api.get_parcel(self.profile_uuid, LanVpnDhcpServerParcel, parcel_id)
         assert isinstance(parcel.payload, LanVpnDhcpServerParcel)
         assert parcel.payload == dhcp_server_parcel
