@@ -329,7 +329,7 @@ class StaticRouteIPv4(BaseModel):
 class StaticRouteIPv6(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
-    prefix: RoutePrefix
+    prefix: Union[Global[IPv6Interface], Variable] = Field()
     one_of_ip_route: Union[NextHopRouteIPv6Container, Null0IPv6, NAT, InterfaceRouteIPv6Container] = Field(
         serialization_alias="oneOfIpRoute", validation_alias="oneOfIpRoute"
     )
