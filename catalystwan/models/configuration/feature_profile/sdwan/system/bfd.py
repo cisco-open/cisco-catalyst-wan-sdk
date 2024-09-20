@@ -12,7 +12,7 @@ class Color(BaseModel):
         default=as_default(1000), validation_alias="helloInterval", serialization_alias="helloInterval"
     )
     multiplier: Optional[Union[Global[int], Default[int]]] = as_default(7)
-    pmtu_discovery: Optional[Union[Global[bool], Default[int]]] = Field(
+    pmtu_discovery: Optional[Union[Global[bool], Default[bool]]] = Field(
         default=as_default(True), validation_alias="pmtuDiscovery", serialization_alias="pmtuDiscovery"
     )
     dscp: Optional[Union[Global[int], Default[int]]] = as_default(48)

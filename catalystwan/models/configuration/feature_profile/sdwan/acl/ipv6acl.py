@@ -2,10 +2,10 @@ from ipaddress import IPv6Address, IPv6Interface
 from typing import List, Literal, Optional, Tuple, Union
 from uuid import UUID
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, model_validator
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, _ParcelBase, as_global
-from catalystwan.models.common import AcceptDropActionType
+from catalystwan.models.common import AcceptDropActionType, check_fields_exclusive
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
 
 
@@ -192,26 +192,33 @@ class Sequence(BaseModel):
         default=None, validation_alias="sequenceName", serialization_alias="sequenceName"
     )
 
-    @property
-    def _action(self) -> Union[AcceptAction, DropAction]:
+    @model_validator(mode="after")
+    def check_base_action_xor_actions(self):
+        check_fields_exclusive(self.__dict__, {"base_action", "actions"}, True)
+        return self
+
+    def _action(self, mode: Optional[AcceptDropActionType] = None) -> Union[AcceptAction, DropAction]:
+        if mode is None and self.base_action is not None:
+            _mode = self.base_action.value
+        else:
+            _mode = mode
+        self.base_action = None
         if self.actions is None:
-            if self.base_action is None:
-                self.base_action = Global[AcceptDropActionType](value="accept")
-            if self.base_action.value == "accept":
-                self.actions = [(AcceptAction(accept=Accept()))]
-            else:
+            if _mode == "drop":
                 self.actions = [(DropAction(drop=Drop()))]
+            else:
+                self.actions = [(AcceptAction(accept=Accept()))]
         return self.actions[0]
 
     @property
     def _accept_action(self) -> Accept:
-        action = self._action
+        action = self._action("accept")
         assert isinstance(action, AcceptAction), "Sequence action must be set to accept"
         return action.accept
 
     @property
     def _drop_action(self) -> Drop:
-        action = self._action
+        action = self._action("drop")
         assert isinstance(action, DropAction), "Sequence action must be set to drop"
         return action.drop
 
@@ -282,13 +289,13 @@ class Sequence(BaseModel):
         self._entry.traffic_class = as_global(classes)
 
     def associate_log_action(self):
-        if isinstance(self._action, DropAction):
+        if isinstance(self._action(), DropAction):
             self._drop_action.log = as_global(True)
         else:
             self._accept_action.log = as_global(True)
 
     def associate_counter_action(self, name: str):
-        if isinstance(self._action, DropAction):
+        if isinstance(self._action(), DropAction):
             self._drop_action.counter_name = as_global(name)
         else:
             self._accept_action.counter_name = as_global(name)
@@ -320,8 +327,12 @@ class Ipv6AclParcel(_ParcelBase):
         self.default_action = as_global(action, AcceptDropActionType)
 
     def add_sequence(self, name: str, id_: int, base_action: Optional[AcceptDropActionType] = None) -> Sequence:
+        if base_action is not None:
+            _base_action = as_global(base_action, AcceptDropActionType)
+        else:
+            _base_action = Default[Literal["accept"]](value="accept")
         seq = Sequence(
-            base_action=as_global(base_action, AcceptDropActionType) if base_action is not None else None,
+            base_action=_base_action,
             sequence_id=as_global(id_),
             sequence_name=as_global(name),
         )
