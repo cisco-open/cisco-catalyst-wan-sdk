@@ -294,8 +294,14 @@ class SlaClass(BaseModel):
 class LocalTlocList(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
     color: Global[List[TLOCColor]] = Field(default=None)
-    encap: Optional[Global[EncapType]] = Field(default=None)
+    encap: Optional[Union[Global[EncapType], Global[List[EncapType]]]] = Field(
+        default=None, description="encap is list <=20.12"
+    )
     restrict: Optional[Global[bool]] = Field(default=None)
+
+    def make_encap_list(self):
+        if self.encap is not None and self.encap.value is not None and not isinstance(self.encap.value, List):
+            self.encap = Global[List[EncapType]](value=[self.encap.value])
 
 
 class PreferredRemoteColor(BaseModel):
@@ -354,6 +360,10 @@ class SetLocalTlocList(BaseModel):
     local_tloc_list: Optional[LocalTlocList] = Field(
         default=None, validation_alias="localTlocList", serialization_alias="localTlocList"
     )
+
+    def make_encap_list(self):
+        if self.local_tloc_list is not None:
+            self.local_tloc_list.make_encap_list()
 
 
 class SetNextHop(BaseModel):
@@ -845,13 +855,15 @@ class Sequence(BaseModel):
 
     def associate_local_tloc_list_action(
         self, color: List[TLOCColor], encap: Optional[EncapType] = None, restrict: bool = False
-    ) -> None:
+    ) -> SetLocalTlocList:
         tloc_list = LocalTlocList(
             color=Global[List[TLOCColor]](value=color),
             encap=as_optional_global(encap, EncapType),
             restrict=as_global(restrict),
         )
-        self._insert_action_in_set(SetLocalTlocList(local_tloc_list=tloc_list))
+        set_local_tloc_list = SetLocalTlocList(local_tloc_list=tloc_list)
+        self._insert_action_in_set(set_local_tloc_list)
+        return set_local_tloc_list
 
     def associate_next_hop_action(self, ip: IPv4Address) -> None:
         self._insert_action_in_set(SetNextHop(next_hop=as_global(ip)))
