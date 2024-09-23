@@ -500,7 +500,7 @@ class RoutingBgpParcel(_ParcelBase):
         extra="forbid",
         populate_by_name=True,
     )
-    as_num: Union[Global[int], Global[str], Variable] = Field(
+    as_num: Union[Global[int], Variable] = Field(
         validation_alias=AliasPath("data", "asNum"),
         description="Set autonomous system number <1..4294967295> or <XX.YY>",
     )
