@@ -20,6 +20,7 @@ from catalystwan.models.configuration.feature_profile.common import (
 
 
 class Static(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
     primary_ip_v6_address: Optional[StaticIPv6Address] = Field(
         default=None,
         validation_alias="primaryIpV6Address",
