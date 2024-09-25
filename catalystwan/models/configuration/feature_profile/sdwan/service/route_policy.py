@@ -17,28 +17,13 @@ from catalystwan.api.configuration_groups.parcel import (
     as_variable,
 )
 from catalystwan.models.common import AcceptRejectActionType
+from catalystwan.models.configuration.feature_profile.common import RefIdItem
 
 Community = Literal["internet", "local-AS", "no-advertise", "no-export"]
 Criteria = Literal["OR", "AND", "EXACT"]
 Protocol = Literal["IPV4", "IPV6", "BOTH"]
 MetricType = Literal["type1", "type2"]
 Origin = Literal["EGP", "IGP", "Incomplete"]
-
-
-class ReferenceId(BaseModel):
-    """
-    Don't repeat yourself. Use RefereneceId for all policies
-    """
-
-    model_config = ConfigDict(
-        extra="forbid",
-        populate_by_name=True,
-    )
-    ref_id: UUID = Field(..., serialization_alias="refId", validation_alias="refId")
-
-    @classmethod
-    def from_uuid(cls, uuid: UUID) -> ReferenceId:
-        return cls(ref_id=uuid)
 
 
 class StandardCommunityList(BaseModel):
@@ -53,7 +38,7 @@ class StandardCommunityList(BaseModel):
     criteria: Union[Global[Criteria], Default[Criteria]] = Field(
         default=as_default("OR", Criteria), description="Select a condition such as OR, AND or EXACT"
     )
-    standard_community_list: List[ReferenceId] = Field(
+    standard_community_list: List[RefIdItem] = Field(
         ...,
         serialization_alias="standardCommunityList",
         validation_alias="standardCommunityList",
@@ -64,7 +49,7 @@ class StandardCommunityList(BaseModel):
     @classmethod
     def create(cls, standard_community_list: List[UUID], criteria: Criteria = "OR") -> StandardCommunityList:
         return cls(
-            standard_community_list=[ReferenceId.from_uuid(i) for i in standard_community_list],
+            standard_community_list=[RefIdItem.from_uuid(i) for i in standard_community_list],
             criteria=as_global(criteria, Criteria),
         )
 
@@ -78,7 +63,7 @@ class ExpandedCommunityList(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    expanded_community_list: ReferenceId = Field(
+    expanded_community_list: RefIdItem = Field(
         ...,
         serialization_alias="expandedCommunityList",
         validation_alias="expandedCommunityList",
@@ -87,7 +72,7 @@ class ExpandedCommunityList(BaseModel):
 
     @classmethod
     def create(cls, expanded_community_list: UUID) -> ExpandedCommunityList:
-        return cls(expanded_community_list=ReferenceId.from_uuid(expanded_community_list))
+        return cls(expanded_community_list=RefIdItem.from_uuid(expanded_community_list))
 
 
 class MatchEntry(BaseModel):
@@ -95,7 +80,7 @@ class MatchEntry(BaseModel):
         extra="forbid",
         populate_by_name=True,
     )
-    as_path_list: Optional[ReferenceId] = Field(
+    as_path_list: Optional[RefIdItem] = Field(
         default=None, serialization_alias="asPathList", validation_alias="asPathList", description="As Path List"
     )
     community_list: Optional[Union[StandardCommunityList, ExpandedCommunityList]] = Field(
@@ -104,7 +89,7 @@ class MatchEntry(BaseModel):
         validation_alias="communityList",
         description="Community List",
     )
-    ext_community_list: Optional[ReferenceId] = Field(
+    ext_community_list: Optional[RefIdItem] = Field(
         default=None,
         serialization_alias="extCommunityList",
         validation_alias="extCommunityList",
@@ -123,16 +108,16 @@ class MatchEntry(BaseModel):
     ospf_tag: Optional[Global[int]] = Field(
         default=None, serialization_alias="ospfTag", validation_alias="ospfTag", description="Select OSPF Tag"
     )
-    ipv4_address: Optional[ReferenceId] = Field(
+    ipv4_address: Optional[RefIdItem] = Field(
         default=None, serialization_alias="ipv4Address", validation_alias="ipv4Address", description="Ipv4 Address"
     )
-    ipv4_next_hop: Optional[ReferenceId] = Field(
+    ipv4_next_hop: Optional[RefIdItem] = Field(
         default=None, serialization_alias="ipv4NextHop", validation_alias="ipv4NextHop", description="Ipv4 Next Hop"
     )
-    ipv6_address: Optional[ReferenceId] = Field(
+    ipv6_address: Optional[RefIdItem] = Field(
         default=None, serialization_alias="ipv6Address", validation_alias="ipv6Address", description="Ipv6 Address"
     )
-    ipv6_next_hop: Optional[ReferenceId] = Field(
+    ipv6_next_hop: Optional[RefIdItem] = Field(
         default=None, serialization_alias="ipv6NextHop", validation_alias="ipv6NextHop", description="Ipv6 Next Hop"
     )
 
@@ -298,7 +283,7 @@ class RoutePolicySequence(BaseModel):
         return self.match_entries[0]
 
     def match_as_path_list(self, as_path_list: UUID) -> None:
-        self._entry.as_path_list = ReferenceId.from_uuid(as_path_list)
+        self._entry.as_path_list = RefIdItem.from_uuid(as_path_list)
 
     def match_community_list(
         self,
@@ -316,7 +301,7 @@ class RoutePolicySequence(BaseModel):
             self._entry.community_list = StandardCommunityList.create(standard_community_list, criteria)
 
     def match_ext_community_list(self, ext_community_list: UUID) -> None:
-        self._entry.ext_community_list = ReferenceId.from_uuid(ext_community_list)
+        self._entry.ext_community_list = RefIdItem.from_uuid(ext_community_list)
 
     def match_bgp_local_preference(self, bgp_local_preference: int) -> None:
         self._entry.bgp_local_preference = as_global(bgp_local_preference)
@@ -331,16 +316,16 @@ class RoutePolicySequence(BaseModel):
         self._entry.ospf_tag = as_global(ospf_tag)
 
     def match_ipv4_address(self, ipv4_address: UUID) -> None:
-        self._entry.ipv4_address = ReferenceId.from_uuid(ipv4_address)
+        self._entry.ipv4_address = RefIdItem.from_uuid(ipv4_address)
 
     def match_ipv4_next_hop(self, ipv4_next_hop: UUID) -> None:
-        self._entry.ipv4_next_hop = ReferenceId.from_uuid(ipv4_next_hop)
+        self._entry.ipv4_next_hop = RefIdItem.from_uuid(ipv4_next_hop)
 
     def match_ipv6_address(self, ipv6_address: UUID) -> None:
-        self._entry.ipv6_address = ReferenceId.from_uuid(ipv6_address)
+        self._entry.ipv6_address = RefIdItem.from_uuid(ipv6_address)
 
     def match_ipv6_next_hop(self, ipv6_next_hop: UUID) -> None:
-        self._entry.ipv6_next_hop = ReferenceId.from_uuid(ipv6_next_hop)
+        self._entry.ipv6_next_hop = RefIdItem.from_uuid(ipv6_next_hop)
 
     def associate_reject_action(self) -> None:
         self.actions = [(RejectActions(reject=as_default(True)))]
