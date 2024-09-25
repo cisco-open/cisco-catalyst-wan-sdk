@@ -33,8 +33,8 @@ class FeatureTemplateInformation(TemplateInformation):
     created_on: Optional[int] = Field(default=None, serialization_alias="createdOn", validation_alias="createdOn")
     last_updated_on: dt.datetime = Field(serialization_alias="lastUpdatedOn", validation_alias="lastUpdatedOn")
     config_type: Optional[str] = Field(default=None, serialization_alias="configType", validation_alias="configType")
-    attached_masters_count: Optional[str] = Field(
-        default=None, serialization_alias="attachedMasterCount", validation_alias="attachedMasterCount"
+    attached_masters_count: Optional[int] = Field(
+        default=None, serialization_alias="attachedMastersCount", validation_alias="attachedMastersCount"
     )
     devices_attached: int = Field(serialization_alias="devicesAttached", validation_alias="devicesAttached")
     resource_group: Optional[str] = Field(
@@ -71,8 +71,8 @@ class FeatureTemplateDefinition(TemplateInformation):
         serialization_alias="templateDefinition", validation_alias="templateDefinition"
     )
     config_type: str = Field(serialization_alias="configType", validation_alias="configType")
-    attached_masters_count: Optional[str] = Field(
-        default=None, serialization_alias="attachedMasterCount", validation_alias="attachedMasterCount"
+    attached_masters_count: Optional[int] = Field(
+        default=None, serialization_alias="attachedMastersCount", validation_alias="attachedMastersCount"
     )
     feature: FeatureType
     created_on: Optional[int] = Field(default=None, serialization_alias="createdOn", validation_alias="createdOn")
