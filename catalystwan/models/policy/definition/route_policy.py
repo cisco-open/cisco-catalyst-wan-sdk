@@ -47,7 +47,7 @@ from catalystwan.models.policy.policy_definition import (
 
 class RoutePolicyRuleSequence(PolicyDefinitionSequenceBase):
     model_config = ConfigDict(populate_by_name=True)
-    sequence_type: Literal["vedgeRoute"] = Field(
+    sequence_type: Literal["vedgeRoute", "vedgeroute"] = Field(
         default="vedgeRoute", serialization_alias="sequenceType", validation_alias="sequenceType"
     )
     base_action: AcceptRejectActionType = Field(
