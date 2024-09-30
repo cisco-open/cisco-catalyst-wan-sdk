@@ -11,6 +11,7 @@ from catalystwan.utils.alarm_status import Severity
 from catalystwan.utils.certificate_status import ValidityPeriod
 from catalystwan.utils.colors import PrintColors
 from catalystwan.utils.creation_tools import FIELD_NAME, asdict, convert_attributes
+from catalystwan.utils.persona import Persona
 from catalystwan.utils.personality import Personality
 from catalystwan.utils.reachability import Reachability
 
@@ -281,7 +282,7 @@ class ServiceConfigurationData(DataclassBase):
     vmanage_id: str = field(metadata={FIELD_NAME: "vmanageID"})
     device_ip: str = field(metadata={FIELD_NAME: "deviceIP"})  # consider using ip4 module to verify
     services: dict = field(metadata={FIELD_NAME: "services"})  # consider using nested dataclasses
-    persona: str = field(default="COMPUTE_AND_DATA")  # TODO Enum
+    persona: Persona = field(default="COMPUTE_AND_DATA")
     username: Optional[str] = field(default=None)
     password: Optional[str] = field(default=None)
 
