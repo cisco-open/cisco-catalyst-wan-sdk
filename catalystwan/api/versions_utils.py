@@ -162,7 +162,7 @@ class RepositoryAPI:
             ):
                 if not (image_details.remote_server_id and image_details.version_id):
                     raise ValueError(
-                        f"Requested image: '{image_name}' does not include include required fields for this operation:"
+                        f"Requested image: '{image_name}' does not include include required fields for this operation: "
                         f"image_details.remote_server_id - (current value: {image_details.remote_server_id})"
                         f"image_details.version_id - (current value: {image_details.version_id})"
                     )
@@ -221,9 +221,9 @@ class DeviceVersions:
         for device in devices:
             if not device.uuid or not device.local_system_ip:
                 raise ValueError(
-                    f"Provided device '{device.host_name}' doesn't include required fields for this operation:"
+                    f"Provided device '{device.host_name}' doesn't include required fields for this operation: "
                     f"device.uuid (current value: {device.uuid})"
-                    f"device.device_ip (current value: {device.device_ip})"
+                    f"device.local_system_ip (current value: {device.local_system_ip})"
                 )
 
     def get_lxcactivate_device_list(
@@ -409,5 +409,6 @@ class DeviceVersions:
         self._validate_devices_required_fields(devices)
 
         return [
-            PartitionDevice(device_id=device.uuid, device_ip=device.device_ip) for device in devices  # type: ignore
+            PartitionDevice(device_id=device.uuid, device_ip=device.local_system_ip)  # type: ignore
+            for device in devices
         ]
