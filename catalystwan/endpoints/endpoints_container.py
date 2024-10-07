@@ -24,6 +24,7 @@ from catalystwan.endpoints.configuration.policy.definition.access_control_list_i
 )
 from catalystwan.endpoints.configuration.policy.definition.aip import ConfigurationPolicyAIPDefinition
 from catalystwan.endpoints.configuration.policy.definition.amp import ConfigurationPolicyAMPDefinition
+from catalystwan.endpoints.configuration.policy.definition.app_route import ConfigurationPolicyAppRouteDefinition
 from catalystwan.endpoints.configuration.policy.definition.control import ConfigurationPolicyControlDefinition
 from catalystwan.endpoints.configuration.policy.definition.device_access import (
     ConfigurationPolicyDeviceAccessDefinition,
@@ -151,6 +152,7 @@ class ConfigurationPolicyDefinitionContainer:
         self.acl_ipv6 = ConfigurationPolicyAclIPv6Definition(session)
         self.advanced_inspection_profile = ConfigurationPolicyAIPDefinition(session)
         self.advanced_malware_protection = ConfigurationPolicyAMPDefinition(session)
+        self.app_route = ConfigurationPolicyAppRouteDefinition(session)
         self.control = ConfigurationPolicyControlDefinition(session)
         self.data = ConfigurationPolicyDataDefinition(session)
         self.device_access = ConfigurationPolicyDeviceAccessDefinition(session)
