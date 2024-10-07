@@ -6,6 +6,7 @@ from typing import List, Union
 from pydantic import Field
 from typing_extensions import Annotated
 
+from catalystwan.models.policy.definition.app_route import AppRoutePolicy
 from catalystwan.models.policy.list.app import AppList, AppListInfo
 from catalystwan.models.policy.list.app_probe import AppProbeClassList, AppProbeClassListInfo
 from catalystwan.models.policy.list.as_path import ASPathList, ASPathListInfo
@@ -92,6 +93,7 @@ AnyPolicyDefinition = Annotated[
         AclPolicy,
         AdvancedInspectionProfilePolicy,
         AdvancedMalwareProtectionPolicy,
+        AppRoutePolicy,
         CflowdPolicy,
         ControlPolicy,
         IntrusionPreventionPolicy,
