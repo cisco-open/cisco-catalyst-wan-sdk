@@ -4,7 +4,7 @@ import datetime
 from dataclasses import dataclass, field
 from functools import wraps
 from ipaddress import IPv4Address, IPv4Interface, IPv4Network, IPv6Address, IPv6Interface, IPv6Network
-from typing import Any, Dict, List, MutableSequence, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Dict, List, MutableSequence, Optional, Sequence, Set, Tuple, Union, overload
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, RootModel, field_validator, model_validator
@@ -83,6 +83,7 @@ SequenceType = Literal[
     "sslDecryption",
     "vedgeRoute",
     "vedgeroute",
+    "appRoute",
 ]
 
 
@@ -94,6 +95,8 @@ Optimized = Literal[
 AdvancedCommunityMatchFlag = Literal["or", "and", "exact"]
 
 MetricType = Literal["type1", "type2"]
+
+SlaNotMetAction = Literal["strict", "fallbackToBestPath"]
 
 
 class Reference(BaseModel):
@@ -674,6 +677,11 @@ class AppListEntry(BaseModel):
     ref: SpaceSeparatedUUIDList
 
 
+class SaaSAppListEntry(BaseModel):
+    field: Literal["saasAppList"] = "saasAppList"
+    ref: UUID
+
+
 class AppListFlatEntry(BaseModel):
     field: Literal["appListFlat"] = "appListFlat"
     ref: SpaceSeparatedUUIDList
@@ -980,6 +988,83 @@ class AdvancedInspectionProfileAction(BaseModel):
     parameter: ReferenceWithId
 
 
+class BackupSlaPrefferedColorAction(BaseModel):
+    type: Literal["backupSlaPreferredColor"] = "backupSlaPreferredColor"
+    parameter: SpaceSeparatedTLOCColorStr
+
+
+class SlaName(BaseModel):
+    field: Literal["name"] = "name"
+    ref: UUID
+
+
+class SlaPreferredColor(BaseModel):
+    field: Literal["preferredColor"] = "preferredColor"
+    value: SpaceSeparatedTLOCColorStr
+
+
+class SlaPreferredColorGroup(BaseModel):
+    field: Literal["preferredColorGroup"] = "preferredColorGroup"
+    ref: UUID
+
+
+class SlaNotMet(BaseModel):
+    field: SlaNotMetAction
+
+
+SlaClassActionParam = Annotated[
+    Union[
+        SlaName,
+        SlaPreferredColor,
+        SlaPreferredColorGroup,
+        SlaNotMet,
+    ],
+    Field(discriminator="field"),
+]
+
+
+class SlaClassAction(BaseModel):
+    type: Literal["slaClass"] = "slaClass"
+    parameter: List[SlaClassActionParam] = Field(default=[])
+
+    @overload
+    @staticmethod
+    def from_params(
+        sla_class: UUID, not_met_action: Optional[SlaNotMetAction] = None, *, preferred_color: List[TLOCColor]
+    ) -> "SlaClassAction":
+        ...
+
+    @overload
+    @staticmethod
+    def from_params(
+        sla_class: UUID, not_met_action: Optional[SlaNotMetAction] = None, *, preferred_color_group: UUID
+    ) -> "SlaClassAction":
+        ...
+
+    @staticmethod
+    def from_params(
+        sla_class: UUID,
+        not_met_action: Optional[SlaNotMetAction] = None,
+        *,
+        preferred_color: Optional[List[TLOCColor]] = None,
+        preferred_color_group: Optional[UUID] = None,
+    ) -> "SlaClassAction":
+        action = SlaClassAction()
+        action.parameter.append(SlaName(ref=sla_class))
+        if not_met_action is not None:
+            action.parameter.append(SlaNotMet(field=not_met_action))
+        if preferred_color is not None:
+            action.parameter.append(SlaPreferredColor(value=preferred_color))
+        if preferred_color_group is not None:
+            action.parameter.append(SlaPreferredColorGroup(ref=preferred_color_group))
+        return action
+
+
+class CloudSaaSAction(BaseModel):
+    type: Literal["cloudSaas"] = "cloudSaas"
+    parameter: str = Field(default="")
+
+
 ActionSetEntry = Annotated[
     Union[
         AffinityEntry,
@@ -1025,8 +1110,10 @@ ActionEntry = Annotated[
     Union[
         ActionSet,
         AdvancedInspectionProfileAction,
+        BackupSlaPrefferedColorAction,
         CFlowDAction,
         ClassMapAction,
+        CloudSaaSAction,
         ConnectionEventsAction,
         CountAction,
         DREOptimizationAction,
@@ -1042,6 +1129,7 @@ ActionEntry = Annotated[
         RedirectDNSAction,
         SecureInternetGatewayAction,
         ServiceNodeGroupAction,
+        SlaClassAction,
         TCPOptimizationAction,
     ],
     Field(discriminator="type"),
@@ -1102,6 +1190,7 @@ MatchEntry = Annotated[
         RegionListEntry,
         RoleEntry,
         RuleSetListEntry,
+        SaaSAppListEntry,
         SiteEntry,
         SiteListEntry,
         SiteListEntry,
@@ -1167,7 +1256,7 @@ class PolicyDefinitionSequenceBase(BaseModel):
     sequence_name: Optional[str] = Field(
         default=None, serialization_alias="sequenceName", validation_alias="sequenceName"
     )
-    base_action: str = Field(serialization_alias="baseAction", validation_alias="baseAction")
+    base_action: Optional[str] = Field(default=None, serialization_alias="baseAction", validation_alias="baseAction")
     sequence_type: SequenceType = Field(serialization_alias="sequenceType", validation_alias="sequenceType")
     sequence_ip_type: Optional[SequenceIpType] = Field(
         default="ipv4", serialization_alias="sequenceIpType", validation_alias="sequenceIpType"
