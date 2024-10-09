@@ -113,7 +113,7 @@ class TrafficClassMatch(BaseModel):
 
 class DscpMatch(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    dscp: Global[List[int]] = Field(default=None)
+    dscp: Global[int] = Field(default=None)
 
 
 class PacketLengthMatch(BaseModel):
@@ -767,7 +767,7 @@ class Sequence(BaseModel):
         entry = TrafficClassMatch(traffic_class=as_global(traffic_class, TrafficClass))
         self._match(entry)
 
-    def match_dscp(self, dscp: List[int]):
+    def match_dscp(self, dscp: int):
         entry = DscpMatch(dscp=as_global(dscp))
         self._match(entry)
 
