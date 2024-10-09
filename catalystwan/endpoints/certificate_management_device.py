@@ -8,7 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from catalystwan.endpoints import APIEndpoints, delete, post
+from catalystwan.endpoints import APIEndpoints, delete, post, versions
 from catalystwan.typed_list import DataSequence
 
 
@@ -114,8 +114,14 @@ class CertificateManagementDevice(APIEndpoints):
     def delete_configuration(self, uuid: str) -> DeviceDeletionResponse:
         ...
 
+    @versions("<20.16")
     @post("/certificate/generate/csr", "data")
     def generate_csr(self, payload: TargetDevice) -> DataSequence[DeviceCsrGenerationResponse]:
+        ...
+
+    @versions(">=20.16")
+    @post("/certificate/generate/csr")
+    def generate_csr_task(self, payload: TargetDevice) -> CertActionResponse:
         ...
 
     @post("/certificate/save/vedge/list")
