@@ -172,6 +172,7 @@ class MeshPolicyItem(AssemblyItemBase):
 
 class AppRoutePolicyItem(AssemblyItemBase):
     type: AppRouteItemType = "appRoute"
+    entries: List[DataApplicationEntry] = []
 
 
 class CFlowDPolicyItem(AssemblyItemBase):
