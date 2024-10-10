@@ -16,7 +16,7 @@ class URLParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["security-urllist"] = Field(default="security-urllist", exclude=True)
     type: Literal["urlallowed", "urlblocked"]
-    entries: List[BaseURLListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[BaseURLListEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def add_url(self, pattern: str):
         self.entries.append(BaseURLListEntry(pattern=as_global(pattern)))

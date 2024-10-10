@@ -16,9 +16,11 @@ class Hub(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     site_list: UUID = Field(validation_alias="siteList", serialization_alias="siteList")
     preference: Optional[str] = None
-    prefix_lists: List[UUID] = Field(default=[], validation_alias="prefixLists", serialization_alias="prefixLists")
+    prefix_lists: List[UUID] = Field(
+        default_factory=list, validation_alias="prefixLists", serialization_alias="prefixLists"
+    )
     ipv6_prefix_lists: List[UUID] = Field(
-        default=[], validation_alias="ipv6PrefixLists", serialization_alias="ipv6PrefixLists"
+        default_factory=list, validation_alias="ipv6PrefixLists", serialization_alias="ipv6PrefixLists"
     )
 
 
@@ -43,7 +45,7 @@ class HubAndSpokePolicyDefinition(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     vpn_list: UUID = Field(validation_alias="vpnList", serialization_alias="vpnList")
     sub_definitions: List[HubAndSpokePolicySubDefinition] = Field(
-        default=[], validation_alias="subDefinitions", serialization_alias="subDefinitions"
+        default_factory=list, validation_alias="subDefinitions", serialization_alias="subDefinitions"
     )
 
 

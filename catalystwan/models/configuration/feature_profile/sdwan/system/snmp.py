@@ -154,19 +154,19 @@ class SNMPParcel(_ParcelBase):
         description="Set the physical location of this managed node",
     )
     view: List[ViewItem] = Field(
-        default=[], validation_alias=AliasPath("data", "view"), description="Configure a view record"
+        default_factory=list, validation_alias=AliasPath("data", "view"), description="Configure a view record"
     )
     community: List[CommunityItem] = Field(
-        default=[], validation_alias=AliasPath("data", "community"), description="Configure SNMP community"
+        default_factory=list, validation_alias=AliasPath("data", "community"), description="Configure SNMP community"
     )
     group: List[GroupItem] = Field(
-        default=[], validation_alias=AliasPath("data", "group"), description="Configure an SNMP group"
+        default_factory=list, validation_alias=AliasPath("data", "group"), description="Configure an SNMP group"
     )
     user: List[UserItem] = Field(
-        default=[], validation_alias=AliasPath("data", "user"), description="Configure an SNMP user"
+        default_factory=list, validation_alias=AliasPath("data", "user"), description="Configure an SNMP user"
     )
     target: List[TargetItem] = Field(
-        default=[],
+        default_factory=list,
         validation_alias=AliasPath("data", "target"),
         description="Configure SNMP server to receive SNMP traps",
     )

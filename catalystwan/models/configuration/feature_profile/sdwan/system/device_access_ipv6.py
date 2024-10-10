@@ -133,7 +133,7 @@ class DeviceAccessIPv6Parcel(_ParcelBase):
         default=Default[AcceptDropActionType](value="drop"), validation_alias=AliasPath("data", "defaultAction")
     )
     sequences: List[Sequence] = Field(
-        default=[], validation_alias=AliasPath("data", "sequences"), description="Device Access Control List"
+        default_factory=list, validation_alias=AliasPath("data", "sequences"), description="Device Access Control List"
     )
 
     def set_default_action(self, default_action: AcceptDropActionType) -> None:

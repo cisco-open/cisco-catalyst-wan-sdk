@@ -17,7 +17,7 @@ class AppProbeMapItem(BaseModel):
 
 class AppProbeEntry(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    map: List[AppProbeMapItem] = Field(default=[])
+    map: List[AppProbeMapItem] = Field(default_factory=list)
     forwarding_class: Union[Global[str], RefIdItem] = Field(
         validation_alias="forwardingClass",
         serialization_alias="forwardingClass",
@@ -28,7 +28,7 @@ class AppProbeEntry(BaseModel):
 class AppProbeParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["app-probe"] = Field(default="app-probe", exclude=True)
-    entries: List[AppProbeEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[AppProbeEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def _insert_entry(self, entry: AppProbeEntry) -> None:
         if self.entries:

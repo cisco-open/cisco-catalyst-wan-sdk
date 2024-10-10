@@ -13,6 +13,7 @@ from catalystwan.endpoints.configuration.policy.definition.access_control_list_i
 )
 from catalystwan.endpoints.configuration.policy.definition.aip import ConfigurationPolicyAIPDefinition
 from catalystwan.endpoints.configuration.policy.definition.amp import ConfigurationPolicyAMPDefinition
+from catalystwan.endpoints.configuration.policy.definition.app_route import ConfigurationPolicyAppRouteDefinition
 from catalystwan.endpoints.configuration.policy.definition.cflowd import ConfigurationPolicyCflowdDefinition
 from catalystwan.endpoints.configuration.policy.definition.control import ConfigurationPolicyControlDefinition
 from catalystwan.endpoints.configuration.policy.definition.device_access import (
@@ -147,6 +148,7 @@ from catalystwan.models.policy.definition.amp import (
     AdvancedMalwareProtectionPolicy,
     AdvancedMalwareProtectionPolicyGetResponse,
 )
+from catalystwan.models.policy.definition.app_route import AppRoutePolicy, AppRoutePolicyGetResponse
 from catalystwan.models.policy.definition.cflowd import CflowdPolicy, CflowdPolicyGetResponse
 from catalystwan.models.policy.definition.control import ControlPolicy, ControlPolicyGetResponse
 from catalystwan.models.policy.definition.device_access import DeviceAccessPolicy, DeviceAccessPolicyGetResponse
@@ -257,29 +259,30 @@ POLICY_LIST_ENDPOINTS_MAP: Mapping[type, type] = {
 }
 
 POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
-    RuleSet: ConfigurationPolicyRuleSetDefinition,
-    SecurityGroup: ConfigurationPolicySecurityGroupDefinition,
-    ZoneBasedFWPolicy: ConfigurationPolicyZoneBasedFirewallDefinition,
-    TrafficDataPolicy: ConfigurationPolicyDataDefinition,
-    QoSMapPolicy: ConfigurationPolicyQoSMapDefinition,
-    RewritePolicy: ConfigurationPolicyRewriteRuleDefinition,
-    ControlPolicy: ConfigurationPolicyControlDefinition,
-    VPNMembershipPolicy: ConfigurationPolicyVPNMembershipGroupDefinition,
-    HubAndSpokePolicy: ConfigurationPolicyHubAndSpokeDefinition,
-    MeshPolicy: ConfigurationPolicyMeshDefinition,
-    AclPolicy: ConfigurationPolicyAclDefinition,
     AclIPv6Policy: ConfigurationPolicyAclIPv6Definition,
-    DeviceAccessPolicy: ConfigurationPolicyDeviceAccessDefinition,
-    DeviceAccessIPv6Policy: ConfigurationPolicyDeviceAccessIPv6Definition,
+    AclPolicy: ConfigurationPolicyAclDefinition,
     AdvancedInspectionProfilePolicy: ConfigurationPolicyAIPDefinition,
     AdvancedMalwareProtectionPolicy: ConfigurationPolicyAMPDefinition,
+    AppRoutePolicy: ConfigurationPolicyAppRouteDefinition,
+    CflowdPolicy: ConfigurationPolicyCflowdDefinition,
+    ControlPolicy: ConfigurationPolicyControlDefinition,
+    DeviceAccessIPv6Policy: ConfigurationPolicyDeviceAccessIPv6Definition,
+    DeviceAccessPolicy: ConfigurationPolicyDeviceAccessDefinition,
+    DnsSecurityPolicy: ConfigurationPolicyDnsSecurityDefinition,
+    HubAndSpokePolicy: ConfigurationPolicyHubAndSpokeDefinition,
     IntrusionPreventionPolicy: ConfigurationPolicyIntrusionPreventionDefinition,
+    MeshPolicy: ConfigurationPolicyMeshDefinition,
+    QoSMapPolicy: ConfigurationPolicyQoSMapDefinition,
+    RewritePolicy: ConfigurationPolicyRewriteRuleDefinition,
+    RoutePolicy: ConfigurationPolicyRouteDefinition,
+    RuleSet: ConfigurationPolicyRuleSetDefinition,
+    SecurityGroup: ConfigurationPolicySecurityGroupDefinition,
     SslDecryptionPolicy: ConfigurationSslDecryptionDefinition,
     SslDecryptionUtdProfilePolicy: ConfigurationSslDecryptionUtdProfileDefinition,
+    TrafficDataPolicy: ConfigurationPolicyDataDefinition,
     UrlFilteringPolicy: ConfigurationPolicyUrlFilteringDefinition,
-    DnsSecurityPolicy: ConfigurationPolicyDnsSecurityDefinition,
-    CflowdPolicy: ConfigurationPolicyCflowdDefinition,
-    RoutePolicy: ConfigurationPolicyRouteDefinition,
+    VPNMembershipPolicy: ConfigurationPolicyVPNMembershipGroupDefinition,
+    ZoneBasedFWPolicy: ConfigurationPolicyZoneBasedFirewallDefinition,
 }
 
 
@@ -827,6 +830,10 @@ class PolicyDefinitionsAPI:
     def get(self, type: Type[DeviceAccessIPv6Policy]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
+    @overload
+    def get(self, type: Type[AppRoutePolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
     # get by id
     @overload
     def get(self, type: Type[IntrusionPreventionPolicy], id: UUID) -> IntrusionPreventionPolicyGetResponse:
@@ -918,6 +925,10 @@ class PolicyDefinitionsAPI:
 
     @overload
     def get(self, type: Type[DeviceAccessIPv6Policy], id: UUID) -> DeviceAccessIPv6PolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[AppRoutePolicy], id: UUID) -> AppRoutePolicyGetResponse:
         ...
 
     def get(self, type: Type[AnyPolicyDefinition], id: Optional[UUID] = None) -> Any:

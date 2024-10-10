@@ -834,7 +834,7 @@ class NgFirewallSequence(BaseModel):
     )
     match: Match
     actions: List[Union[LogAction, AipAction]] = Field(
-        default=[], validation_alias="actions", min_length=0, max_length=2, serialization_alias="actions"
+        default_factory=list, validation_alias="actions", min_length=0, max_length=2, serialization_alias="actions"
     )
     disable_sequence: Global[bool] = Field(
         default=Global[bool](value=False),

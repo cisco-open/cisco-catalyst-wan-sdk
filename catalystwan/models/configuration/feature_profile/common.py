@@ -236,7 +236,7 @@ class WANIPv4StaticRoute(BaseModel):
 
 
 class NextHopContainer(BaseModel):
-    next_hop: List[NextHop] = Field(default=[], serialization_alias="nextHop", validation_alias="nextHop")
+    next_hop: List[NextHop] = Field(default_factory=list, serialization_alias="nextHop", validation_alias="nextHop")
 
 
 class Ipv6StaticRouteNull0(BaseModel):
@@ -687,7 +687,7 @@ class MultilinkControllerTxExList(BaseModel):
     )
 
     channel_group: List[ChannelGroup] = Field(
-        default=[],
+        default_factory=list,
         validation_alias="channelGroup",
         serialization_alias="channelGroup",
         description="Channel Group List",

@@ -25,8 +25,10 @@ class IntrusionPreventionDefinition(BaseModel):
         default=None, validation_alias="signatureWhiteList", serialization_alias="signatureWhiteList"
     )
     log_level: Optional[LogLevel] = Field(default="error", validation_alias="logLevel", serialization_alias="logLevel")
-    logging: List[str] = Field(default=[])
-    target_vpns: List[VpnId] = Field(default=[], validation_alias="targetVpns", serialization_alias="targetVpns")
+    logging: List[str] = Field(default_factory=list)
+    target_vpns: List[VpnId] = Field(
+        default_factory=list, validation_alias="targetVpns", serialization_alias="targetVpns"
+    )
     custom_signature: bool = Field(
         default=False, validation_alias="customSignature", serialization_alias="customSignature"
     )

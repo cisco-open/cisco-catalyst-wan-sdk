@@ -23,7 +23,7 @@ class GeoLocationListEntry(BaseModel):
 class GeoLocationListParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["security-geolocation"] = Field(default="security-geolocation", exclude=True)
-    entries: List[GeoLocationListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[GeoLocationListEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def add_country(self, country: str):
         self.entries.append(GeoLocationListEntry(country=as_global(country)))

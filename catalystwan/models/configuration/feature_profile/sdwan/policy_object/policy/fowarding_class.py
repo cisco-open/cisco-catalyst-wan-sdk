@@ -20,7 +20,7 @@ class FowardingClassQueueEntry(BaseModel):
 class FowardingClassParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["class"] = Field(default="class", exclude=True)
-    entries: List[FowardingClassQueueEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[FowardingClassQueueEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def add_queue(self, queue: int):
         self.entries.append(FowardingClassQueueEntry(queue=as_global(str(queue))))

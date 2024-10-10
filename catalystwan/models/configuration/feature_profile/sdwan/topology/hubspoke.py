@@ -45,7 +45,7 @@ class HubSpokeParcel(_ParcelBase):
     type_: Literal["hubspoke"] = Field(default="hubspoke", exclude=True)
     target: Target = Field(default=Target(), validation_alias=AliasPath("data", "target"))
     selected_hubs: Global[List[str]] = Field(default=as_global([]), validation_alias=AliasPath("data", "selectedHubs"))
-    spokes: List[Spoke] = Field(default=[], validation_alias=AliasPath("data", "spokes"))
+    spokes: List[Spoke] = Field(default_factory=list, validation_alias=AliasPath("data", "spokes"))
 
     def add_spoke(self, name: str, spoke_sites: List[str]) -> Spoke:
         spoke = Spoke.create(name=name, spoke_sites=spoke_sites)

@@ -113,7 +113,7 @@ class TrafficClassMatch(BaseModel):
 
 class DscpMatch(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
-    dscp: Global[List[int]] = Field(default=None)
+    dscp: Global[int] = Field(default=None)
 
 
 class PacketLengthMatch(BaseModel):
@@ -538,6 +538,36 @@ class SlaClassAction(BaseModel):
         default=None, validation_alias="slaClass", serialization_alias="slaClass", description="slaClass"
     )
 
+    @staticmethod
+    def from_params(
+        sla_name: Optional[UUID] = None,
+        preferred_color: Optional[List[TLOCColor]] = None,
+        preferred_color_group: Optional[UUID] = None,
+        preferred_remote_color: Optional[List[TLOCColor]] = None,
+        remote_color_restrict: Optional[bool] = None,
+        strict: Optional[bool] = None,
+        fallback_to_best_path: Optional[bool] = None,
+    ) -> "SlaClassAction":
+        action = SlaClassAction()
+        action.sla_class = []
+        if sla_name:
+            action.sla_class.append(SlaClass(sla_name=RefIdItem.from_uuid(sla_name)))
+        if preferred_color:
+            action.sla_class.append(SlaClass(preferred_color=Global[List[TLOCColor]](value=preferred_color)))
+        if preferred_color_group:
+            action.sla_class.append(SlaClass(preferred_color_group=RefIdItem.from_uuid(preferred_color_group)))
+        if preferred_remote_color:
+            action.sla_class.append(
+                SlaClass(preferred_remote_color=Global[List[TLOCColor]](value=preferred_remote_color))
+            )
+        if remote_color_restrict is not None:
+            action.sla_class.append(SlaClass(remote_color_restrict=Global[bool](value=remote_color_restrict)))
+        if strict is not None:
+            action.sla_class.append(SlaClass(strict=Global[bool](value=strict)))
+        if fallback_to_best_path is not None:
+            action.sla_class.append(SlaClass(fallback_to_best_path=Global[bool](value=fallback_to_best_path)))
+        return action
+
 
 class BackupSlaPreferredColorAction(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
@@ -767,7 +797,7 @@ class Sequence(BaseModel):
         entry = TrafficClassMatch(traffic_class=as_global(traffic_class, TrafficClass))
         self._match(entry)
 
-    def match_dscp(self, dscp: List[int]):
+    def match_dscp(self, dscp: int):
         entry = DscpMatch(dscp=as_global(dscp))
         self._match(entry)
 
@@ -952,8 +982,10 @@ class Sequence(BaseModel):
         action = AppqoeOptimizationAction(appqoe_optimization=appqoe_optimization)
         self._insert_action(action)
 
-    def associate_backup_sla_preferred_color_action(self) -> None:
-        pass  # TODO
+    def associate_backup_sla_preferred_color_action(self, tloc_colors: List[TLOCColor]) -> None:
+        self._insert_action(
+            BackupSlaPreferredColorAction(backup_sla_preferred_color=Global[List[TLOCColor]](value=tloc_colors))
+        )
 
     def associate_cflowd_action(self, cflowd: bool) -> None:
         self._insert_action(CflowdAction(cflowd=as_global(cflowd)))
@@ -962,7 +994,7 @@ class Sequence(BaseModel):
         pass  # TODO
 
     def associate_cloud_saas_action(self) -> None:
-        pass  # TODO
+        self._insert_action(CloudSaasAction(cloud_saas=as_global(True)))
 
     def associate_count_action(self, count: str) -> None:
         self._insert_action(CountAction(count=as_global(count)))
@@ -1006,8 +1038,26 @@ class Sequence(BaseModel):
     def associate_sig_action(self) -> None:
         self._insert_action(SigAction(sig=as_global(True)))
 
-    def associate_sla_class_action(self) -> None:
-        pass  # TODO
+    def associate_sla_class_action(
+        self,
+        sla_name: Optional[UUID] = None,
+        preferred_color: Optional[List[TLOCColor]] = None,
+        preferred_color_group: Optional[UUID] = None,
+        preferred_remote_color: Optional[List[TLOCColor]] = None,
+        remote_color_restrict: Optional[bool] = None,
+        strict: Optional[bool] = None,
+        fallback_to_best_path: Optional[bool] = None,
+    ) -> None:
+        action = SlaClassAction.from_params(
+            sla_name=sla_name,
+            preferred_color=preferred_color,
+            preferred_color_group=preferred_color_group,
+            preferred_remote_color=preferred_remote_color,
+            remote_color_restrict=remote_color_restrict,
+            strict=strict,
+            fallback_to_best_path=fallback_to_best_path,
+        )
+        self._insert_action(action)
 
     def associate_sse_action(self) -> None:
         pass  # TODO
@@ -1019,7 +1069,7 @@ class TrafficPolicyParcel(_ParcelBase):
         default=None, validation_alias=AliasPath("data", "dataDefaultAction")
     )
     has_cor_via_sig: Optional[Global[bool]] = Field(default=None, validation_alias=AliasPath("data", "hasCorViaSig"))
-    sequences: List[Sequence] = Field(default=[], validation_alias=AliasPath("data", "sequences"))
+    sequences: List[Sequence] = Field(default_factory=list, validation_alias=AliasPath("data", "sequences"))
     simple_flow: Optional[Global[bool]] = Field(default=None, validation_alias=AliasPath("data", "simpleFlow"))
     target: TrafficPolicyTarget = Field(validation_alias=AliasPath("data", "target"))
 

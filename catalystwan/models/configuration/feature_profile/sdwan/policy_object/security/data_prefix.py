@@ -16,7 +16,7 @@ class SecurityDataPrefixEntry(BaseModel):
 class SecurityDataPrefixParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["security-data-ip-prefix"] = Field(default="security-data-ip-prefix", exclude=True)
-    entries: List[SecurityDataPrefixEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[SecurityDataPrefixEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def add_prefix(self, ip_prefix: IPv4Network):
         self.entries.append(SecurityDataPrefixEntry(ip_prefix=as_global(ip_prefix)))
