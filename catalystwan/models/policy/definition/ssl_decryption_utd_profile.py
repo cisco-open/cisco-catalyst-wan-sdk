@@ -19,14 +19,14 @@ class SslDecryptionUtdProfileDefinition(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     decrypt_categories: List[WebCategory] = Field(
-        default=[], validation_alias="decryptCategories", serialization_alias="decryptCategories"
+        default_factory=list, validation_alias="decryptCategories", serialization_alias="decryptCategories"
     )
     never_decrypt_categories: List[WebCategory] = Field(
-        default=[], validation_alias="neverDecryptCategories", serialization_alias="neverDecryptCategories"
+        default_factory=list, validation_alias="neverDecryptCategories", serialization_alias="neverDecryptCategories"
     )
 
     skip_decrypt_categories: List[WebCategory] = Field(
-        default=[], validation_alias="skipDecryptCategories", serialization_alias="skipDecryptCategories"
+        default_factory=list, validation_alias="skipDecryptCategories", serialization_alias="skipDecryptCategories"
     )
 
     reputation: bool = False
@@ -36,10 +36,10 @@ class SslDecryptionUtdProfileDefinition(BaseModel):
     )
 
     filtered_url_white_list: List[URLAllowListInfo] = Field(
-        default=[], validation_alias="filteredUrlWhiteList", serialization_alias="filteredUrlWhiteList"
+        default_factory=list, validation_alias="filteredUrlWhiteList", serialization_alias="filteredUrlWhiteList"
     )
     filtered_url_black_list: List[URLBlockListInfo] = Field(
-        default=[], validation_alias="filteredUrlBlackList", serialization_alias="filteredUrlBlackList"
+        default_factory=list, validation_alias="filteredUrlBlackList", serialization_alias="filteredUrlBlackList"
     )
 
     url_white_list: Optional[Reference] = Field(

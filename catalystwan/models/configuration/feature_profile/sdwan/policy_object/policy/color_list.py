@@ -15,7 +15,7 @@ class ColorEntry(BaseModel):
 class ColorParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["color"] = Field(default="color", exclude=True)
-    entries: List[ColorEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[ColorEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def add_color(self, color: TLOCColor):
         self.entries.append(ColorEntry(color=as_global(color, TLOCColor)))

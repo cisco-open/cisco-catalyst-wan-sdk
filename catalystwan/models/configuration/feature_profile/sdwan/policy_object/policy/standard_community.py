@@ -18,7 +18,7 @@ class StandardCommunityEntry(BaseModel):
 class StandardCommunityParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["standard-community"] = Field(default="standard-community", exclude=True)
-    entries: List[StandardCommunityEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[StandardCommunityEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def _add_community(self, standard_community: str):
         self.entries.append(StandardCommunityEntry(standard_community=as_global(standard_community)))

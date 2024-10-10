@@ -320,7 +320,7 @@ class Ipv6AclParcel(_ParcelBase):
         default=Default[Literal["drop"]](value="drop"), validation_alias=AliasPath("data", "defaultAction")
     )
     sequences: List[Sequence] = Field(
-        default=[], validation_alias=AliasPath("data", "sequences"), description="Access Control List"
+        default_factory=list, validation_alias=AliasPath("data", "sequences"), description="Access Control List"
     )
 
     def set_default_action(self, action: AcceptDropActionType):

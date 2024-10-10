@@ -31,7 +31,7 @@ class SecurityPortListEntry(BaseModel):
 class SecurityPortParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["security-port"] = Field(default="security-port", exclude=True)
-    entries: List[SecurityPortListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[SecurityPortListEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def _add_port(self, port: str):
         self.entries.append(SecurityPortListEntry(port=as_global(port)))

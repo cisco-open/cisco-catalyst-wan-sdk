@@ -38,10 +38,14 @@ class UrlFilteringDefinition(BaseModel):
     block_page_contents: str = Field(
         default=BLOCK_PAGE_CONTENT_HEADER, validation_alias="blockPageContents", serialization_alias="blockPageContents"
     )
-    logging: List[str] = Field(default=[])
+    logging: List[str] = Field(default_factory=list)
     enable_alerts: bool = Field(validation_alias="enableAlerts", serialization_alias="enableAlerts")
-    alerts: Set[UrlFilteringAlerts] = Field(default=[], validation_alias="alerts", serialization_alias="alerts")
-    target_vpns: List[VpnId] = Field(default=[], validation_alias="targetVpns", serialization_alias="targetVpns")
+    alerts: Set[UrlFilteringAlerts] = Field(
+        default_factory=list, validation_alias="alerts", serialization_alias="alerts"
+    )
+    target_vpns: List[VpnId] = Field(
+        default_factory=list, validation_alias="targetVpns", serialization_alias="targetVpns"
+    )
 
     @field_validator("url_black_list", "url_white_list", mode="before")
     @classmethod

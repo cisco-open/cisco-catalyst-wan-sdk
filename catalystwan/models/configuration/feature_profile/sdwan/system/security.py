@@ -172,6 +172,8 @@ class SecurityParcel(_ParcelBase):
         description="Enable or disable IPsec pairwise-keying",
     )
     keychain: List[KeychainItem] = Field(
-        default=[], validation_alias=AliasPath("data", "keychain"), description="Configure a Keychain"
+        default_factory=list, validation_alias=AliasPath("data", "keychain"), description="Configure a Keychain"
     )
-    key: List[KeyItem] = Field(default=[], validation_alias=AliasPath("data", "key"), description="Configure a Key")
+    key: List[KeyItem] = Field(
+        default_factory=list, validation_alias=AliasPath("data", "key"), description="Configure a Key"
+    )

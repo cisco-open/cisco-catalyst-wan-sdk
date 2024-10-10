@@ -400,7 +400,7 @@ class RoutePolicyParcel(_ParcelBase):
         description="Default Action",
     )
     sequences: List[RoutePolicySequence] = Field(
-        default=[], validation_alias=AliasPath("data", "sequences"), description="Route Policy List"
+        default_factory=list, validation_alias=AliasPath("data", "sequences"), description="Route Policy List"
     )
 
     def set_default_action(self, default_action: AcceptRejectActionType):

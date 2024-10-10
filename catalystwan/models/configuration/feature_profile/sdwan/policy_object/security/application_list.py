@@ -21,7 +21,7 @@ class SecurityApplicationListParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["security-localapp"] = Field(default="security-localapp", exclude=True)
     entries: List[Union[SecurityApplicationFamilyListEntry, SecurityApplicationListEntry]] = Field(
-        default=[], validation_alias=AliasPath("data", "entries")
+        default_factory=list, validation_alias=AliasPath("data", "entries")
     )
 
     def add_application(self, application: str):

@@ -41,7 +41,7 @@ class DataApplicationEntry(BaseModel):
     site_lists: Optional[List[UUID]] = Field(
         default=None, serialization_alias="siteLists", validation_alias="siteLists"
     )
-    vpn_lists: List[UUID] = Field(default=[], serialization_alias="vpnLists", validation_alias="vpnLists")
+    vpn_lists: List[UUID] = Field(default_factory=list, serialization_alias="vpnLists", validation_alias="vpnLists")
     region_ids: Optional[List[str]] = Field(default=None, serialization_alias="regionIds", validation_alias="regionIds")
     region_lists: Optional[List[UUID]] = Field(
         default=None, serialization_alias="regionLists", validation_alias="regionLists"
@@ -199,7 +199,7 @@ AnyAssemblyItem = Annotated[
 class CentralizedPolicyDefinition(PolicyDefinition):
     model_config = ConfigDict(populate_by_name=True)
     region_role_assembly: List = Field(
-        default=[], serialization_alias="regionRoleAssembly", validation_alias="regionRoleAssembly"
+        default_factory=list, serialization_alias="regionRoleAssembly", validation_alias="regionRoleAssembly"
     )
     assembly: List[AnyAssemblyItem] = []
     model_config = ConfigDict(populate_by_name=True)

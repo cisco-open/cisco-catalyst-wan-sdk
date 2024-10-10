@@ -35,7 +35,7 @@ class AdvancedMalwareProtectionDefinition(BaseModel):
         default=False, validation_alias="fileAnalysisEnabled", serialization_alias="fileAnalysisEnabled"
     )
     file_analysis_file_types: List[FileAnalysisFileTypes] = Field(
-        default=[], validation_alias="fileAnalysisFileTypes", serialization_alias="fileAnalysisFileTypes"
+        default_factory=list, validation_alias="fileAnalysisFileTypes", serialization_alias="fileAnalysisFileTypes"
     )
     file_analysis_alert: AlertsLogLevel = Field(
         default="", validation_alias="fileAnalysisAlert", serialization_alias="fileAnalysisAlert"
@@ -43,7 +43,9 @@ class AdvancedMalwareProtectionDefinition(BaseModel):
     file_analysis_cloud_server: FileAnalysisServer = Field(
         default="", validation_alias="fileAnalysisCloudServer", serialization_alias="fileAnalysisCloudServer"
     )
-    target_vpns: List[VpnId] = Field(default=[], validation_alias="targetVpns", serialization_alias="targetVpns")
+    target_vpns: List[VpnId] = Field(
+        default_factory=list, validation_alias="targetVpns", serialization_alias="targetVpns"
+    )
 
 
 class AdvancedMalwareProtectionPolicy(PolicyDefinitionBase):

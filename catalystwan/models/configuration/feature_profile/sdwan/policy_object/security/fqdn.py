@@ -17,7 +17,7 @@ class FQDNListEntry(BaseModel):
 class FQDNDomainParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["security-fqdn"] = Field(default="security-fqdn", exclude=True)
-    entries: List[FQDNListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[FQDNListEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def from_fqdns(self, fqdns: List[str]):
         for fqdn in fqdns:

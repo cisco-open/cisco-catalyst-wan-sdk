@@ -58,7 +58,7 @@ class Authentication(BaseModel):
         populate_by_name=True,
     )
     authentication_keys: List[AuthenticationVariable] = Field(
-        default=[],
+        default_factory=list,
         serialization_alias="authenticationKeys",
         validation_alias="authenticationKeys",
         description="Set MD5 authentication key",
@@ -94,7 +94,7 @@ class NtpParcel(_ParcelBase):
         populate_by_name=True,
     )
     server: List[ServerItem] = Field(
-        default=[], validation_alias=AliasPath("data", "server"), description="Configure NTP servers"
+        default_factory=list, validation_alias=AliasPath("data", "server"), description="Configure NTP servers"
     )
     authentication: Authentication = Field(
         default_factory=Authentication, validation_alias=AliasPath("data", "authentication")  # type: ignore

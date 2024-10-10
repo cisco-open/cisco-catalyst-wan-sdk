@@ -25,7 +25,7 @@ class IPv6PrefixListEntry(BaseModel):
 class IPv6PrefixListParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["ipv6-prefix"] = Field(default="ipv6-prefix", exclude=True)
-    entries: List[IPv6PrefixListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[IPv6PrefixListEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def add_prefix(self, ipv6_network: IPv6Interface, ge: Optional[int] = None, le: Optional[int] = None):
         self.entries.append(

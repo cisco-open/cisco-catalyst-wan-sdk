@@ -151,7 +151,7 @@ class PolicyParcel(_ParcelBase):
         description="Set the parcel description",
     )
     assembly: List[Union[NgFirewallContainer, SslDecryption, AdvancedInspectionProfile]] = Field(
-        default=[], validation_alias=AliasPath("data", "assembly")
+        default_factory=list, validation_alias=AliasPath("data", "assembly")
     )
 
     settings: Optional[PolicySettings] = Field(default=None, validation_alias=AliasPath("data", "settings"))

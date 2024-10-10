@@ -175,11 +175,11 @@ class AppRoutePolicySequence(PolicyDefinitionSequenceBase):
         preferred_color_group: Optional[UUID] = None,
     ) -> None:
         if preferred_color is not None:
-            action = SlaClassAction().from_params(
+            action = SlaClassAction.from_params(
                 sla_class=sla_class, not_met_action=not_met_action, preferred_color=preferred_color
             )
         elif preferred_color_group is not None:
-            action = SlaClassAction().from_params(
+            action = SlaClassAction.from_params(
                 sla_class=sla_class, not_met_action=not_met_action, preferred_color_group=preferred_color_group
             )
         else:
@@ -204,10 +204,7 @@ class AppRoutePolicy(AppRoutePolicyHeader, DefinitionWithSequencesCommonBase):
     model_config = ConfigDict(populate_by_name=True)
 
     def set_default_action(self, sla_class: Optional[UUID]) -> None:
-        if sla_class is not None:
-            self.default_action = AppRouteDefaultAction(ref=sla_class)
-        else:
-            self.default_action = None
+        self.default_action = AppRouteDefaultAction(ref=sla_class) if sla_class else None
 
     def add_sequence(
         self,

@@ -65,7 +65,7 @@ class InterfaceMultilinkParcel(_ParcelBase):
         default=None, validation_alias=AliasPath("data", "controlConnections")
     )
     controller_tx_ex_list: List[MultilinkControllerTxExList] = Field(
-        default=[], validation_alias=AliasPath("data", "controllerTxExList")
+        default_factory=list, validation_alias=AliasPath("data", "controllerTxExList")
     )
     controller_type: Global[MultilinkControllerType] = Field(
         default=Global[MultilinkControllerType](value="T1/E1"), validation_alias=AliasPath("data", "controllerType")

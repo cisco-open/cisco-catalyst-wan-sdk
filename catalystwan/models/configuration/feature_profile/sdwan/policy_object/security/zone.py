@@ -27,7 +27,7 @@ class SecurityZoneListEntry(BaseModel):
 class SecurityZoneListParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["security-zone"] = Field(default="security-zone", exclude=True)
-    entries: List[SecurityZoneListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[SecurityZoneListEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def add_interface(self, interface: InterfaceStr):
         self.entries.append(

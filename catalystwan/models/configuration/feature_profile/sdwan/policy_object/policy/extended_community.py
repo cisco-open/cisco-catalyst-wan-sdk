@@ -20,7 +20,7 @@ class ExtendedCommunityEntry(BaseModel):
 class ExtendedCommunityParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["ext-community"] = Field(default="ext-community", exclude=True)
-    entries: List[ExtendedCommunityEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[ExtendedCommunityEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def add_site_of_origin_community(self, ip_address: IPv4Address, port: int):
         entry = f"soo {ip_address}:{port}"

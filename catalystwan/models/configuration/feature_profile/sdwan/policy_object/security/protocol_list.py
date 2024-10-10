@@ -15,7 +15,7 @@ class ProtocolListEntry(BaseModel):
 class ProtocolListParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["security-protocolname"] = Field(default="security-protocolname", exclude=True)
-    entries: List[ProtocolListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[ProtocolListEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def add_protocol(self, protocol: str):
         self.entries.append(ProtocolListEntry(protocol=as_global(protocol)))

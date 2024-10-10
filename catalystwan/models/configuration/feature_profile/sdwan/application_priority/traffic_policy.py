@@ -550,13 +550,13 @@ class SlaClassAction(BaseModel):
     ) -> "SlaClassAction":
         action = SlaClassAction()
         action.sla_class = []
-        if sla_name is not None:
+        if sla_name:
             action.sla_class.append(SlaClass(sla_name=RefIdItem.from_uuid(sla_name)))
         if preferred_color:
             action.sla_class.append(SlaClass(preferred_color=Global[List[TLOCColor]](value=preferred_color)))
-        if preferred_color_group is not None:
+        if preferred_color_group:
             action.sla_class.append(SlaClass(preferred_color_group=RefIdItem.from_uuid(preferred_color_group)))
-        if preferred_remote_color is not None:
+        if preferred_remote_color:
             action.sla_class.append(
                 SlaClass(preferred_remote_color=Global[List[TLOCColor]](value=preferred_remote_color))
             )
@@ -1069,7 +1069,7 @@ class TrafficPolicyParcel(_ParcelBase):
         default=None, validation_alias=AliasPath("data", "dataDefaultAction")
     )
     has_cor_via_sig: Optional[Global[bool]] = Field(default=None, validation_alias=AliasPath("data", "hasCorViaSig"))
-    sequences: List[Sequence] = Field(default=[], validation_alias=AliasPath("data", "sequences"))
+    sequences: List[Sequence] = Field(default_factory=list, validation_alias=AliasPath("data", "sequences"))
     simple_flow: Optional[Global[bool]] = Field(default=None, validation_alias=AliasPath("data", "simpleFlow"))
     target: TrafficPolicyTarget = Field(validation_alias=AliasPath("data", "target"))
 

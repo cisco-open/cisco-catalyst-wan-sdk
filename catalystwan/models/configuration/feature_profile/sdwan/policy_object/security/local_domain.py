@@ -17,7 +17,7 @@ class LocalDomainListEntry(BaseModel):
 class LocalDomainParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["security-localdomain"] = Field(default="security-localdomain", exclude=True)
-    entries: List[LocalDomainListEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[LocalDomainListEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def from_local_domains(self, domains: List[str]):
         for domain in domains:

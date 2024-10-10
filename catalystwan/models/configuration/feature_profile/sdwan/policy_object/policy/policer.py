@@ -30,7 +30,7 @@ class PolicerEntry(BaseModel):
 class PolicerParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["policer"] = Field(default="policer", exclude=True)
-    entries: List[PolicerEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[PolicerEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def add_entry(self, burst: int, exceed: PolicerExceedAction, rate: int):
         self.entries.append(

@@ -29,7 +29,7 @@ class TlocEntry(BaseModel):
 class TlocParcel(_ParcelBase):
     model_config = ConfigDict(populate_by_name=True)
     type_: Literal["tloc"] = Field(default="tloc", exclude=True)
-    entries: List[TlocEntry] = Field(default=[], validation_alias=AliasPath("data", "entries"))
+    entries: List[TlocEntry] = Field(default_factory=list, validation_alias=AliasPath("data", "entries"))
 
     def add_entry(
         self, tloc: IPv4Address, color: TLOCColor, encapsulation: EncapType, preference: Optional[str] = None

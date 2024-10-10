@@ -143,7 +143,7 @@ class LocalizedPolicyInfo(PolicyInfo, LocalizedPolicy):
 
 class LocalizedPolicyEditResponse(BaseModel):
     master_templates_affected: List[str] = Field(
-        default=[], serialization_alias="masterTemplatesAffected", validation_alias="masterTemplatesAffected"
+        default_factory=list, serialization_alias="masterTemplatesAffected", validation_alias="masterTemplatesAffected"
     )
 
 

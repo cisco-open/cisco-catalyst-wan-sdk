@@ -1025,7 +1025,7 @@ SlaClassActionParam = Annotated[
 
 class SlaClassAction(BaseModel):
     type: Literal["slaClass"] = "slaClass"
-    parameter: List[SlaClassActionParam] = Field(default=[])
+    parameter: List[SlaClassActionParam] = Field(default_factory=list)
 
     @overload
     @staticmethod
@@ -1051,11 +1051,11 @@ class SlaClassAction(BaseModel):
     ) -> "SlaClassAction":
         action = SlaClassAction()
         action.parameter.append(SlaName(ref=sla_class))
-        if not_met_action is not None:
+        if not_met_action:
             action.parameter.append(SlaNotMet(field=not_met_action))
-        if preferred_color is not None:
+        if preferred_color:
             action.parameter.append(SlaPreferredColor(value=preferred_color))
-        if preferred_color_group is not None:
+        if preferred_color_group:
             action.parameter.append(SlaPreferredColorGroup(ref=preferred_color_group))
         return action
 
@@ -1461,7 +1461,7 @@ class PolicyDefinitionGetResponse(PolicyDefinitionInfo):
 
 class PolicyDefinitionEditResponse(BaseModel):
     master_templates_affected: List[str] = Field(
-        default=[], serialization_alias="masterTemplatesAffected", validation_alias="masterTemplatesAffected"
+        default_factory=list, serialization_alias="masterTemplatesAffected", validation_alias="masterTemplatesAffected"
     )
 
 

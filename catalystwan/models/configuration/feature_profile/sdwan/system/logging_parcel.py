@@ -78,9 +78,11 @@ class LoggingParcel(_ParcelBase):
         populate_by_name=True,
     )
     disk: Disk = Field(default_factory=Disk, validation_alias=AliasPath("data", "disk"))
-    tls_profile: Optional[List[TlsProfile]] = Field(default=[], validation_alias=AliasPath("data", "tlsProfile"))
-    server: Optional[List[Server]] = Field(default=[], validation_alias=AliasPath("data", "server"))
-    ipv6_server: Optional[List[Server]] = Field(default=[], validation_alias=AliasPath("data", "ipv6Server"))
+    tls_profile: Optional[List[TlsProfile]] = Field(
+        default_factory=list, validation_alias=AliasPath("data", "tlsProfile")
+    )
+    server: Optional[List[Server]] = Field(default_factory=list, validation_alias=AliasPath("data", "server"))
+    ipv6_server: Optional[List[Server]] = Field(default_factory=list, validation_alias=AliasPath("data", "ipv6Server"))
 
     def set_disk(self, enable: bool, disk_file_size: int = 10, disk_file_rotate: int = 10):
         self.disk.disk_enable = as_global(enable)
