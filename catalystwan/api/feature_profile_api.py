@@ -131,7 +131,7 @@ from catalystwan.models.configuration.feature_profile.parcel import (
     ParcelAssociationPayload,
     ParcelCreationResponse,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.cli import ConfigParcel
+from catalystwan.models.configuration.feature_profile.sdwan.cli import AnyCliParcel
 from catalystwan.models.configuration.feature_profile.sdwan.dns_security import AnyDnsSecurityParcel, DnsParcel
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import (
     AnyEmbeddedSecurityParcel,
@@ -1856,23 +1856,34 @@ class CliFeatureProfileAPI:
         self,
         profile_id: UUID,
         parcel_id: UUID,
-    ) -> DataSequence[Parcel[Any]]:
+        parcel_type: str = "config",
+    ) -> Parcel[AnyCliParcel]:
         """
         Get all CLI Parcels for selected profile_id and selected type or get one CLI Parcel given parcel id
         """
-        return self.endpoint.get_by_id(profile_id, parcel_id)
+        return self.endpoint.get_by_id(profile_id, parcel_type, parcel_id)
 
-    def create_parcel(self, profile_id: UUID, config: ConfigParcel) -> ParcelCreationResponse:
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: str = "config",
+    ) -> DataSequence[Parcel[AnyCliParcel]]:
+        """
+        Get all CLI Parcels for selected profile_id and selected type or get one CLI Parcel given parcel id
+        """
+        return self.endpoint.get_all(profile_id, parcel_type)
+
+    def create_parcel(self, profile_id: UUID, config: AnyCliParcel) -> ParcelCreationResponse:
         """
         Create CLI Parcel for selected profile_id
         """
-        return self.endpoint.create(profile_id, config)
+        return self.endpoint.create(profile_id, config._get_parcel_type(), config)
 
-    def update_parcel(self, profile_id: UUID, config: ConfigParcel, parcel_id: UUID) -> ParcelCreationResponse:
+    def update_parcel(self, profile_id: UUID, config: AnyCliParcel, parcel_id: UUID) -> ParcelCreationResponse:
         """
         Update CLI Parcel for selected profile_id
         """
-        return self.endpoint.update(profile_id, parcel_id, config)
+        return self.endpoint.update(profile_id, config._get_parcel_type(), parcel_id, config)
 
     def delete_parcel(self, profile_id: UUID, parcel_id: UUID) -> None:
         """
@@ -1987,7 +1998,7 @@ class SIGSecurityAPI:
         """
         Delete SIG Security Feature Profile
         """
-        self.endpoint.delete_sig_security_feature_profile(profile_id)
+        self.endpoint.delete_sig_security_feature_profile(str(profile_id))
 
     def delete_all_profiles(self) -> None:
         """
@@ -2001,13 +2012,13 @@ class SIGSecurityAPI:
         """
         Create SIG Security Parcel for selected profile_id
         """
-        return self.endpoint.create_sig_security_parcel(profile_uuid, payload)
+        return self.endpoint.create_sig_security_parcel(str(profile_uuid), payload)
 
     def delete_parcel(self, profile_uuid: UUID, parcel_uuid: UUID) -> None:
         """
         Delete Service Parcel for selected profile_uuid based on payload type
         """
-        return self.endpoint.delete_sig_security_parcel(profile_uuid, parcel_uuid)
+        return self.endpoint.delete_sig_security_parcel(str(profile_uuid), str(parcel_uuid))
 
 
 class ApplicationPriorityFeatureProfileAPI:
@@ -2040,7 +2051,7 @@ class ApplicationPriorityFeatureProfileAPI:
         """
         Delete Application Priority Feature Profile
         """
-        self.endpoint.delete_application_priority_feature_profile(profile_id)
+        self.endpoint.delete_application_priority_feature_profile(str(profile_id))
 
     def delete_all_profiles(self) -> None:
         """
@@ -2174,7 +2185,7 @@ class TopologyFeatureProfileAPI:
         """
         Delete Topology Feature Profile
         """
-        self.endpoint.delete_topology_feature_profile(profile_id)
+        self.endpoint.delete_topology_feature_profile(str(profile_id))
 
     def delete_all_profiles(self) -> None:
         """
