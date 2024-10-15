@@ -140,7 +140,7 @@ class Trustsec(BaseModel):
 
     enable_sgt_propagation: Annotated[
         Union[Global[bool], Default[bool]],
-        VersionedField(versions="<=20.12", serialization_alias="enableSGTPropogation"),
+        VersionedField(versions="<=20.13", serialization_alias="enableSGTPropogation"),
     ] = Field(
         serialization_alias="enableSGTPropagation",
         validation_alias=AliasChoices("enableSGTPropagation", "enableSGTPropogation"),
@@ -154,7 +154,7 @@ class Trustsec(BaseModel):
     )
     enable_enforced_propagation: Annotated[
         Union[Global[bool], Default[None]],
-        VersionedField(versions="<=20.12", serialization_alias="enableEnforcedPropogation"),
+        VersionedField(versions="<=20.13", serialization_alias="enableEnforcedPropogation"),
     ] = Field(
         default=Default[None](value=None),
         serialization_alias="enableEnforcedPropagation",
