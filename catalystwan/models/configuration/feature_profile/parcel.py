@@ -18,6 +18,7 @@ from catalystwan.models.configuration.feature_profile.sdwan.sig_security import 
 from catalystwan.models.configuration.feature_profile.sdwan.system import AnySystemParcel
 from catalystwan.models.configuration.feature_profile.sdwan.topology import AnyTopologyParcel
 from catalystwan.models.configuration.feature_profile.sdwan.transport import AnyTransportParcel
+from catalystwan.models.configuration.feature_profile.sdwan.uc_voice import AnyUcVoiceParcel
 from catalystwan.models.configuration.network_hierarchy import AnyNetworkHierarchyParcel
 from catalystwan.utils.model import resolve_nested_base_model_unions
 
@@ -42,6 +43,7 @@ ParcelType = Literal[
     "data-prefix",
     "dhcp-server",
     "dns",
+    "dsp-farm",
     "expanded-community",
     "ext-community",
     "full-config",
@@ -60,6 +62,7 @@ ParcelType = Literal[
     "logging",
     "management/vpn",
     "management/vpn/interface/ethernet",
+    "media-profile",
     "mesh",
     "mirror",
     "mrf",
@@ -100,6 +103,7 @@ ParcelType = Literal[
     "tracker",
     "trackergroup",
     "traffic-policy",
+    "trunk-group",
     "unified/advanced-inspection-profile",
     "unified/advanced-malware-protection",
     "unified/intrusion-prevention",
@@ -124,19 +128,20 @@ ParcelType = Literal[
 
 AnyParcel = Annotated[
     Union[
-        AnySystemParcel,
-        AnyPolicyObjectParcel,
-        AnyServiceParcel,
-        AnyOtherParcel,
-        AnyTransportParcel,
-        AnyEmbeddedSecurityParcel,
+        AnyApplicationPriorityParcel,
         AnyCliParcel,
         AnyDnsSecurityParcel,
-        AnySIGSecurityParcel,
-        AnyApplicationPriorityParcel,
-        AnyTopologyParcel,
-        AnyRoutingParcel,
+        AnyEmbeddedSecurityParcel,
         AnyNetworkHierarchyParcel,
+        AnyOtherParcel,
+        AnyPolicyObjectParcel,
+        AnyRoutingParcel,
+        AnyServiceParcel,
+        AnySIGSecurityParcel,
+        AnySystemParcel,
+        AnyTopologyParcel,
+        AnyTransportParcel,
+        AnyUcVoiceParcel,
     ],
     Field(discriminator="type_"),
 ]
