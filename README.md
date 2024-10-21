@@ -439,7 +439,6 @@ def simple_request(auth, device_id):
         auth=auth,
         request_lmiter=limiter
     ) as client:
-    # Get current credentials
         admin_tech_file = client.api.admin_tech.generate(device_id)
         return admin_tech_file
     
