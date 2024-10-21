@@ -413,6 +413,46 @@ migrate_task.wait_for_completed()
 ```
 </details>
 
+<details>
+    <summary> <b>Threading</b> <i>(click to expand)</i></summary>
+
+```python
+from concurrent.futures import ThreadPoolExecutor
+
+from catalystwan.request_limiter import RequestLimiter
+from catalystwan.session import create_manager_session
+from catalystwan.vmanage_auth import create_vmanage_auth
+
+
+device_ids = [...]
+auth = create_vmanage_auth("username", "password")
+limiter = RequestLimiter(max_requests=60)
+
+
+def simple_request(auth, device_id):
+    logger = logging.getLogger(__name__)
+    logger.setLevel(level=10)
+    with create_manager_session(
+        url="url",
+        username="username",
+        password="password",
+        auth=auth,
+        request_lmiter=limiter
+    ) as client:
+    # Get current credentials
+        admin_tech_file = client.api.admin_tech.generate(device_id)
+        return admin_tech_file
+    
+with ThreadPoolExecutor(len(device_ids)) as executor:
+    results = [executor.submit(simple_request, auth, device_id) for device_id in device_ids]
+
+
+admin_tech_files = [result.result() for result in results]
+```
+Threading can be achieved by using a shared auth object with sessions in each thread. As `ManagerSession` is not guaranteed to be thread-safe, it is recommended to create one session per thread.
+`RequestLimiter` puts a limit on concurrent requests. It is not required, but highly recommended. Sending too many concurrent requests will result in either HTTP 503 or HTTP 429 errors.
+</details>
+
 ### Note:
 To remove `InsecureRequestWarning`, you can include in your scripts (warning is suppressed when `catalystwan_devel` environment variable is set):
 ```Python

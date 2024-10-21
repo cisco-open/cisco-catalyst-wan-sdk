@@ -1,4 +1,5 @@
 import logging
+from threading import RLock
 from typing import Literal, Optional
 from urllib.parse import urlparse
 
@@ -37,13 +38,16 @@ class ApiGwAuth(AuthBase, AuthProtocol):
         self.token = ""
         self.logger = logger or logging.getLogger(__name__)
         self.verify = verify
+        self.registered_sessions: int = 0
+        self.lock: RLock = RLock()
 
     def __str__(self) -> str:
         return f"ApiGatewayAuth(mode={self.login.mode})"
 
     def __call__(self, request: PreparedRequest) -> PreparedRequest:
-        self.handle_auth(request)
-        self.build_digest_header(request)
+        with self.lock:
+            self.handle_auth(request)
+            self.build_digest_header(request)
         return request
 
     def handle_auth(self, request: PreparedRequest) -> None:
@@ -93,4 +97,28 @@ class ApiGwAuth(AuthBase, AuthProtocol):
         return None
 
     def clear(self) -> None:
-        self.token = ""
+        with self.lock:
+            self.token = ""
+
+    def register_session(self) -> None:
+        with self.lock:
+            self.registered_sessions += 1
+
+    def unregister_session(self) -> None:
+        with self.lock:
+            self.registered_sessions -= 1
+
+    def clear_sync(self, last_request: Optional[PreparedRequest]) -> None:
+        with self.lock:
+            # extract previously used jsessionid
+            if last_request is None:
+                token = None
+            else:
+                token = last_request.headers.get("Authorization")
+
+            if self.token == "" or f"Bearer {self.token}" == token:
+                # used auth was up-to-date, clear state
+                return self.clear()
+            else:
+                # used auth was out-of-date, repeat the request with a new one
+                return

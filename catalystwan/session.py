@@ -15,6 +15,7 @@ from requests import PreparedRequest, Request, Response, Session, get, head
 from requests.exceptions import ConnectionError, HTTPError, RequestException
 
 from catalystwan import USER_AGENT
+from catalystwan.abstractions import AuthProtocol
 from catalystwan.apigw_auth import ApiGwAuth, ApiGwLogin, LoginMode
 from catalystwan.endpoints import APIEndpointClient
 from catalystwan.endpoints.client import AboutInfo, ServerInfo
@@ -27,6 +28,7 @@ from catalystwan.exceptions import (
     TenantSubdomainNotFound,
 )
 from catalystwan.models.tenant import Tenant
+from catalystwan.request_limiter import RequestLimiter
 from catalystwan.response import ManagerResponse, response_history_debug
 from catalystwan.utils.session_type import SessionType
 from catalystwan.version import NullVersion, parse_api_version
@@ -61,6 +63,8 @@ class ManagerSessionState(Enum):
     WAIT_SERVER_READY_AFTER_RESTART = 1
     LOGIN = 2
     OPERATIVE = 3
+    LOGIN_IN_PROGRESS = 4
+    AUTH_SYNC = 5
 
 
 def determine_session_type(
@@ -154,6 +158,8 @@ def create_manager_session(
     port: Optional[int] = None,
     subdomain: Optional[str] = None,
     logger: Optional[logging.Logger] = None,
+    auth: Optional[AuthProtocol] = None,
+    request_lmiter: Optional[RequestLimiter] = None,
 ) -> ManagerSession:
     """Factory method that creates session object and performs login according to parameters
 
@@ -169,12 +175,14 @@ def create_manager_session(
     Returns:
         ManagerSession: logged-in and operative session to perform tasks on SDWAN Manager.
     """
-    auth = create_vmanage_auth(username, password, subdomain, logger)
+    if auth is None:
+        auth = create_vmanage_auth(username, password, subdomain, logger)
     session = ManagerSession(
         base_url=create_base_url(url, port),
         auth=auth,
         subdomain=subdomain,
         logger=logger,
+        request_limiter=request_lmiter,
     )
     session.state = ManagerSessionState.LOGIN
     return session
@@ -229,6 +237,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         auth: Union[vManageAuth, ApiGwAuth],
         subdomain: Optional[str] = None,
         logger: Optional[logging.Logger] = None,
+        request_limiter: Optional[RequestLimiter] = None,
     ) -> None:
         self.base_url = base_url
         self.subdomain = subdomain
@@ -242,6 +251,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self.verify = False
         self.headers.update({"User-Agent": USER_AGENT})
         self._auth = auth
+        self._auth.register_session()
         self._platform_version: str = ""
         self._api_version: Version = NullVersion  # type: ignore
         self.restart_timeout: int = 1200
@@ -249,6 +259,8 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self.request_timeout: Optional[int] = None
         self._validate_responses = True
         self._state: ManagerSessionState = ManagerSessionState.OPERATIVE
+        self._last_request: Optional[PreparedRequest] = None
+        self._limiter: Optional[RequestLimiter] = request_limiter
 
     @cached_property
     def api(self) -> APIContainer:
@@ -286,8 +298,20 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
             self.wait_server_ready(self.restart_timeout)
             self.state = ManagerSessionState.LOGIN
         elif state == ManagerSessionState.LOGIN:
-            self.login()
+            self.state = ManagerSessionState.LOGIN_IN_PROGRESS
+            self._sync_auth()
+            server_info = self._fetch_server_info()
+            self._finalize_login(server_info)
             self.state = ManagerSessionState.OPERATIVE
+        elif state == ManagerSessionState.LOGIN_IN_PROGRESS:
+            # nothing to be done, continue to login
+            return
+        elif state == ManagerSessionState.AUTH_SYNC:
+            # this state can be reached when using an expired auth during the login (most likely
+            # to happen when multithreading). To avoid fetching server info multiple times, we will
+            # only authenticate here and then return to the previous login flow
+            self._sync_auth()
+            self.state = ManagerSessionState.LOGIN_IN_PROGRESS
         return
 
     def restart_imminent(self, restart_timeout_override: Optional[int] = None):
@@ -301,23 +325,20 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
             self.restart_timeout = restart_timeout_override
         self.state = ManagerSessionState.RESTART_IMMINENT
 
-    def login(self) -> ManagerSession:
-        """Performs login to SDWAN Manager and fetches important server info to instance variables
-
-        Raises:
-            SessionNotCreatedError: indicates session configuration is not consistent
-
-        Returns:
-            ManagerSession: (self)
-        """
+    def _sync_auth(self) -> None:
         self.cookies.clear_session_cookies()
-        self._auth.clear()
+        self._auth.clear_sync(self._last_request)
         self.auth = self._auth
+
+    def _fetch_server_info(self) -> ServerInfo:
         try:
             server_info = self.server()
         except DefaultPasswordError:
             server_info = ServerInfo.model_construct(**{})
 
+        return server_info
+
+    def _finalize_login(self, server_info: ServerInfo) -> None:
         self.server_name = server_info.server
 
         tenancy_mode = server_info.tenancy_mode
@@ -325,6 +346,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         view_mode = server_info.view_mode
 
         self._session_type = determine_session_type(tenancy_mode, user_mode, view_mode)
+
         if user_mode is UserMode.TENANT and self.subdomain:
             raise SessionNotCreatedError(
                 f"Session not created. Subdomain {self.subdomain} passed to tenant session, "
@@ -339,6 +361,17 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self.logger.info(
             f"Logged to vManage({self.platform_version}) as {self.auth}. The session type is {self.session_type}"
         )
+
+    def login(self) -> ManagerSession:
+        """Performs login to SDWAN Manager and fetches important server info to instance variables
+
+        Raises:
+            SessionNotCreatedError: indicates session configuration is not consistent
+
+        Returns:
+            ManagerSession: (self)
+        """
+        self.state = ManagerSessionState.LOGIN
         return self
 
     def wait_server_ready(self, timeout: int, poll_period: int = 10) -> None:
@@ -399,7 +432,12 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         if self.request_timeout is not None:  # do not modify user provided kwargs unless property is set
             _kwargs.update(timeout=self.request_timeout)
         try:
-            response = super(ManagerSession, self).request(method, full_url, *args, **_kwargs)
+            if self._limiter is None:
+                response = super(ManagerSession, self).request(method, full_url, *args, **_kwargs)
+            else:
+                delayed_request = lambda: super(ManagerSession, self).request(method, full_url, *args, **_kwargs)
+                response = self._limiter.send_request(delayed_request)
+
             self.logger.debug(self.response_trace(response, None))
             if self.state == ManagerSessionState.RESTART_IMMINENT and response.status_code == 503:
                 self.state = ManagerSessionState.WAIT_SERVER_READY_AFTER_RESTART
@@ -411,14 +449,23 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
             self.logger.debug(exception)
             raise ManagerRequestException(*exception.args, request=exception.request, response=exception.response)
 
-        if response.jsessionid_expired and self.state == ManagerSessionState.OPERATIVE:
-            self.logger.warning("Logging to session. Reason: expired JSESSIONID detected in response headers")
-            self.state = ManagerSessionState.LOGIN
+        self._last_request = response.request
+        if response.jsessionid_expired and self.state in [ManagerSessionState.OPERATIVE, ManagerSessionState.LOGIN_IN_PROGRESS]:
+            # detected expired auth during login, resync
+            if self.state == ManagerSessionState.LOGIN_IN_PROGRESS:
+                self.state = ManagerSessionState.AUTH_SYNC
+            else:
+                self.logger.warning("Logging to session. Reason: expired JSESSIONID detected in response headers")
+                self.state = ManagerSessionState.LOGIN
             return self.request(method, url, *args, **_kwargs)
 
-        if response.api_gw_unauthorized and self.state == ManagerSessionState.OPERATIVE:
-            self.logger.warning("Logging to API GW session. Reason: unauthorized detected in response headers")
-            self.state = ManagerSessionState.LOGIN
+        if response.api_gw_unauthorized and self.state in [ManagerSessionState.OPERATIVE, ManagerSessionState.LOGIN_IN_PROGRESS]:
+            # detected expired auth during login, resync
+            if self.state == ManagerSessionState.LOGIN_IN_PROGRESS:
+                self.state = ManagerSessionState.AUTH_SYNC
+            else:
+                self.logger.warning("Logging to API GW session. Reason: unauthorized detected in response headers")
+                self.state = ManagerSessionState.LOGIN
             return self.request(method, url, *args, **_kwargs)
 
         if response.request.url and "passwordReset.html" in response.request.url:
@@ -532,6 +579,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
             auth=self._auth,
             subdomain=self.subdomain,
             logger=self.logger,
+            request_limiter=self._limiter,
         )
 
     def __str__(self) -> str:
