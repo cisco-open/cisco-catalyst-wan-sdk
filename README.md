@@ -430,8 +430,6 @@ limiter = RequestLimiter(max_requests=60)
 
 
 def simple_request(auth, device_id):
-    logger = logging.getLogger(__name__)
-    logger.setLevel(level=10)
     with create_manager_session(
         url="url",
         username="username",
