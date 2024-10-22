@@ -408,7 +408,7 @@ class AdministrationSettingsAPI:
     def __update_certificate(self, payload: Certificate) -> Response:
         json_payload = asdict(payload)  # type: ignore
         endpoint = "/dataservice/settings/configuration/certificate"
-        return self.session.put(endpoint, json=json_payload)
+        return self.session.post(endpoint, json=json_payload)
 
     def __update_vbond(self, payload: dict) -> Response:
         endpoint = "/dataservice/settings/configuration/device"
