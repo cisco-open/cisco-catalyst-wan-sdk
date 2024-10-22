@@ -346,6 +346,32 @@ TLOCColor = Literal[
     "private6",
 ]
 
+MpVoiceCodec = Literal[
+    "G711aLaw",
+    "G711uLaw",
+    "G722",
+    "G729r8",
+    "ilbc",
+]
+
+MpDtmf = Literal[
+    "inband",
+    "rtp-nte",
+    "rtp-nte sip-kpml",
+    "rtp-nte sip-kpml sip-notify",
+    "rtp-nte sip-notify",
+    "rtp-nte sip-notify sip-kpml",
+    "sip-kpml",
+    "sip-kpml rtp-nte",
+    "sip-kpml rtp-nte sip-notify",
+    "sip-kpml sip-notify",
+    "sip-kpml sip-notify rtp-nte",
+    "sip-notify",
+    "sip-notify rtp-nte",
+    "sip-notify rtp-nte sip-kpml",
+    "sip-notify sip-kpml",
+    "sip-notify sip-kpml rtp-nte",
+]
 
 SpaceSeparatedTLOCColorStr = Annotated[
     List[TLOCColor],
