@@ -2,7 +2,6 @@
 
 # mypy: disable-error-code="empty-body"
 from typing import Dict, Literal, Optional
-from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -28,7 +27,7 @@ class VManageDetails(BaseModel):
 
 class ConnectedDevice(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    uuid: UUID
+    uuid: str
     device_id: str = Field(serialization_alias="deviceId", validation_alias="deviceId")
 
 
