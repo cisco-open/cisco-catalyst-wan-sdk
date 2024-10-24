@@ -3,6 +3,7 @@
 from typing import Optional, Protocol, Type, TypeVar
 
 from packaging.version import Version  # type: ignore
+from requests import PreparedRequest
 
 from catalystwan.typed_list import DataSequence
 from catalystwan.utils.session_type import SessionType
@@ -66,5 +67,11 @@ class AuthProtocol(Protocol):
     def logout(self, client: APIEndpointClient) -> None:
         ...
 
-    def clear(self) -> None:
+    def clear(self, last_request: Optional[PreparedRequest]) -> None:
+        ...
+
+    def increase_session_count(self) -> None:
+        ...
+
+    def decrease_session_count(self) -> None:
         ...
