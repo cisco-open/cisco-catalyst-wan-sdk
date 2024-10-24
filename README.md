@@ -125,6 +125,51 @@ with create_apigw_session(
 ```
 </details>
 
+<details>
+    <summary> <b>Threading</b> <i>(click to expand)</i></summary>
+
+```python
+from threading import Thread
+from catalystwan.session import ManagerSession
+from catalystwan.vmanage_auth import vManageAuth
+from copy import copy
+
+def print_devices(manager: ManagerSession):
+    # using context manager (recommended)
+    with manager.login() as session:
+        print(session.api.devices.get())
+
+if __name__ =="__main__":
+
+    auth = vManageAuth(username="username", password="password")
+    manager = ManagerSession(base_url="https://url:port", auth=auth)
+
+    t1 = Thread(target=print_devices, args=(manager,))
+    t2 = Thread(target=print_devices, args=(copy(manager),))
+    t3 = Thread(target=print_devices, args=(copy(manager),))
+
+    t1.start()
+    t2.start()
+    t3.start()
+
+    t1.join()
+    t2.join()
+    t3.join()
+
+    print("Done!")
+```
+Threading can be achieved by using a shared auth object with sessions in each thread. As `ManagerSession` is not guaranteed to be thread-safe, it is recommended to create one session per thread. `ManagerSession` also comes in with a default `RequestLimiter`, which limits the number of concurrent requests to 50. It keeps `ManagerSession` from overloading the server and avoids HTTP 503 and HTTP 429 errors.
+If you wish to modify the limit, you can pass a modified `RequestLimiter` to `ManagerSession`:
+```python
+from catalystwan.session import ManagerSession
+from catalystwan.vmanage_auth import vManageAuth
+from catalystwan.request_limiter import RequestLimiter
+
+auth = vManageAuth(username="username", password="password")
+limiter = RequestLimiter(max_requests=30)
+manager = ManagerSession(base_url="https://url:port", auth=auth)
+```
+</details>
 
 ## API usage examples
 All examples below assumes `session` variable contains logged-in [Manager Session](#Manager-Session) instance.
@@ -413,42 +458,6 @@ migrate_task.wait_for_completed()
 ```
 </details>
 
-<details>
-    <summary> <b>Threading</b> <i>(click to expand)</i></summary>
-
-```python
-from concurrent.futures import ThreadPoolExecutor
-
-from catalystwan.request_limiter import RequestLimiter
-from catalystwan.session import create_manager_session
-from catalystwan.vmanage_auth import create_vmanage_auth
-
-
-device_ids = [...]
-auth = create_vmanage_auth("username", "password")
-limiter = RequestLimiter(max_requests=60)
-
-
-def simple_request(auth, device_id):
-    with create_manager_session(
-        url="url",
-        username="username",
-        password="password",
-        auth=auth,
-        request_lmiter=limiter
-    ) as client:
-        admin_tech_file = client.api.admin_tech.generate(device_id)
-        return admin_tech_file
-    
-with ThreadPoolExecutor(len(device_ids)) as executor:
-    results = [executor.submit(simple_request, auth, device_id) for device_id in device_ids]
-
-
-admin_tech_files = [result.result() for result in results]
-```
-Threading can be achieved by using a shared auth object with sessions in each thread. As `ManagerSession` is not guaranteed to be thread-safe, it is recommended to create one session per thread.
-`RequestLimiter` puts a limit on concurrent requests. It is not required, but highly recommended. Sending too many concurrent requests will result in either HTTP 503 or HTTP 429 errors.
-</details>
 
 ### Note:
 To remove `InsecureRequestWarning`, you can include in your scripts (warning is suppressed when `catalystwan_devel` environment variable is set):

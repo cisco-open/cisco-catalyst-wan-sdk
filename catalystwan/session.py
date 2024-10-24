@@ -158,8 +158,6 @@ def create_manager_session(
     port: Optional[int] = None,
     subdomain: Optional[str] = None,
     logger: Optional[logging.Logger] = None,
-    auth: Optional[AuthProtocol] = None,
-    request_lmiter: Optional[RequestLimiter] = None,
 ) -> ManagerSession:
     """Factory method that creates session object and performs login according to parameters
 
@@ -175,14 +173,12 @@ def create_manager_session(
     Returns:
         ManagerSession: logged-in and operative session to perform tasks on SDWAN Manager.
     """
-    if auth is None:
-        auth = create_vmanage_auth(username, password, subdomain, logger)
+    auth = create_vmanage_auth(username, password, subdomain, logger)
     session = ManagerSession(
         base_url=create_base_url(url, port),
         auth=auth,
         subdomain=subdomain,
         logger=logger,
-        request_limiter=request_lmiter,
     )
     session.state = ManagerSessionState.LOGIN
     return session
@@ -250,8 +246,8 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         super(ManagerSession, self).__init__()
         self.verify = False
         self.headers.update({"User-Agent": USER_AGENT})
+        self._added_to_auth = False
         self._auth = auth
-        self._auth.register_session()
         self._platform_version: str = ""
         self._api_version: Version = NullVersion  # type: ignore
         self.restart_timeout: int = 1200
@@ -260,7 +256,7 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         self._validate_responses = True
         self._state: ManagerSessionState = ManagerSessionState.OPERATIVE
         self._last_request: Optional[PreparedRequest] = None
-        self._limiter: Optional[RequestLimiter] = request_limiter
+        self._limiter: RequestLimiter = request_limiter or RequestLimiter()
 
     @cached_property
     def api(self) -> APIContainer:
@@ -327,7 +323,10 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
 
     def _sync_auth(self) -> None:
         self.cookies.clear_session_cookies()
-        self._auth.clear_sync(self._last_request)
+        if not self._added_to_auth:
+            self._auth.increase_session_count()
+            self._added_to_auth = True
+        self._auth.clear(self._last_request)
         self.auth = self._auth
 
     def _fetch_server_info(self) -> ServerInfo:
@@ -432,12 +431,8 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         if self.request_timeout is not None:  # do not modify user provided kwargs unless property is set
             _kwargs.update(timeout=self.request_timeout)
         try:
-            if self._limiter is None:
+            with self._limiter:
                 response = super(ManagerSession, self).request(method, full_url, *args, **_kwargs)
-            else:
-                delayed_request = lambda: super(ManagerSession, self).request(method, full_url, *args, **_kwargs)
-                response = self._limiter.send_request(delayed_request)
-
             self.logger.debug(self.response_trace(response, None))
             if self.state == ManagerSessionState.RESTART_IMMINENT and response.status_code == 503:
                 self.state = ManagerSessionState.WAIT_SERVER_READY_AFTER_RESTART
@@ -532,6 +527,8 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
         return tenant.tenant_id
 
     def logout(self) -> None:
+        if self._added_to_auth:
+            self._auth.decrease_session_count()
         self._auth.logout(self)
 
     def close(self) -> None:

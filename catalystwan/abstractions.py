@@ -67,14 +67,11 @@ class AuthProtocol(Protocol):
     def logout(self, client: APIEndpointClient) -> None:
         ...
 
-    def clear(self) -> None:
+    def clear(self, last_request: Optional[PreparedRequest]) -> None:
         ...
 
-    def clear_sync(self, last_request: Optional[PreparedRequest]) -> None:
-        ...
-
-    def register_session(self) -> None:
+    def increase_session_count(self) -> None:
         ...
     
-    def unregister_session(self) -> None:
+    def decrease_session_count(self) -> None:
         ...

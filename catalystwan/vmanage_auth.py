@@ -79,7 +79,7 @@ class vManageAuth(AuthBase, AuthProtocol):
         self.logger = logger or logging.getLogger(__name__)
         self.cookies: RequestsCookieJar = RequestsCookieJar()
         self._base_url: str = ""
-        self.registered_sessions: int = 0
+        self.session_count: int = 0
         self.lock: RLock = RLock()
 
     def __str__(self) -> str:
@@ -112,7 +112,10 @@ class vManageAuth(AuthBase, AuthProtocol):
         response: Response = post(url=url, headers=headers, data=security_payload, verify=self.verify)
         self.sync_cookies(response.cookies)
         self.logger.debug(auth_response_debug(response, str(self)))
+        if response.status_code != 200:
+            print("OLABOGA")
         if response.text != "" or not isinstance(self.jsessionid, str) or self.jsessionid == "":
+            print("NEIN!!!")
             raise UnauthorizedAccessError(self.username, self.password)
         return self.jsessionid
 
@@ -128,6 +131,7 @@ class vManageAuth(AuthBase, AuthProtocol):
         self.sync_cookies(response.cookies)
         self.logger.debug(auth_response_debug(response, str(self)))
         if response.status_code != 200 or "<html>" in response.text:
+            print("MAMMA MIA!")
             raise CatalystwanException("Failed to get XSRF token")
         return response.text
 
@@ -138,9 +142,8 @@ class vManageAuth(AuthBase, AuthProtocol):
 
     def logout(self, client: APIEndpointClient) -> None:
         with self.lock:
-            if self.registered_sessions > 1:
+            if self.session_count > 1:
                 # Other sessions still use the auth, unregister and return
-                self.unregister_session()
                 return
 
             # last session using the auth, logout
@@ -157,23 +160,23 @@ class vManageAuth(AuthBase, AuthProtocol):
                 self.logger.debug(auth_response_debug(response, str(self)))
                 if response.status_code != 200:
                     self.logger.error("Unsuccessfull logout")
-            self.clear()
-            self.unregister_session()
+            self._clear()
 
-    def clear(self) -> None:
+    def _clear(self) -> None:
         with self.lock:
             self.cookies.clear_session_cookies()
             self.xsrftoken = None
 
-    def register_session(self) -> None:
+    def increase_session_count(self) -> None:
         with self.lock:
-            self.registered_sessions += 1
+            self.session_count += 1
 
-    def unregister_session(self) -> None:
+    def decrease_session_count(self) -> None:
         with self.lock:
-            self.registered_sessions -= 1
+            self.session_count -= 1
+            print(f"Remaining: {self.session_count}")
 
-    def clear_sync(self, last_request: Optional[PreparedRequest]) -> None:
+    def clear(self, last_request: Optional[PreparedRequest]) -> None:
         with self.lock:
             # extract previously used jsessionid
             if last_request is None:
@@ -188,7 +191,7 @@ class vManageAuth(AuthBase, AuthProtocol):
 
             if self.jsessionid is None or self.jsessionid == jsessionid:
                 # used auth was up-to-date, clear state
-                return self.clear()
+                return self._clear()
             else:
                 # used auth was out-of-date, repeat the request with a new one
                 return
@@ -251,9 +254,9 @@ class vSessionAuth(vManageAuth):
         self.logger.debug(auth_response_debug(response, str(self)))
         return response.json()["VSessionId"]
 
-    def clear(self) -> None:
+    def _clear(self) -> None:
         with self.lock:
-            super().clear()
+            super()._clear()
             self.vsessionid = None
 
 

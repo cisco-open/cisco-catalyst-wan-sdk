@@ -96,19 +96,19 @@ class ApiGwAuth(AuthBase, AuthProtocol):
     def logout(self, client: APIEndpointClient) -> None:
         return None
 
-    def clear(self) -> None:
+    def _clear(self) -> None:
         with self.lock:
             self.token = ""
 
-    def register_session(self) -> None:
+    def increase_session_count(self) -> None:
         with self.lock:
             self.registered_sessions += 1
 
-    def unregister_session(self) -> None:
+    def decrease_session_count(self) -> None:
         with self.lock:
             self.registered_sessions -= 1
 
-    def clear_sync(self, last_request: Optional[PreparedRequest]) -> None:
+    def clear(self, last_request: Optional[PreparedRequest]) -> None:
         with self.lock:
             # extract previously used jsessionid
             if last_request is None:
@@ -118,7 +118,7 @@ class ApiGwAuth(AuthBase, AuthProtocol):
 
             if self.token == "" or f"Bearer {self.token}" == token:
                 # used auth was up-to-date, clear state
-                return self.clear()
+                return self._clear()
             else:
                 # used auth was out-of-date, repeat the request with a new one
                 return
