@@ -2,8 +2,8 @@
 
 from typing import Optional, Protocol, Type, TypeVar
 
-from packaging.version import Version
-from requests import PreparedRequest  # type: ignore
+from packaging.version import Version # type: ignore
+from requests import PreparedRequest
 
 from catalystwan.typed_list import DataSequence
 from catalystwan.utils.session_type import SessionType

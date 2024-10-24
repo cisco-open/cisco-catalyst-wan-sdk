@@ -38,7 +38,7 @@ class ApiGwAuth(AuthBase, AuthProtocol):
         self.token = ""
         self.logger = logger or logging.getLogger(__name__)
         self.verify = verify
-        self.registered_sessions: int = 0
+        self.session_count: int = 0
         self.lock: RLock = RLock()
 
     def __str__(self) -> str:
@@ -102,11 +102,11 @@ class ApiGwAuth(AuthBase, AuthProtocol):
 
     def increase_session_count(self) -> None:
         with self.lock:
-            self.registered_sessions += 1
+            self.session_count += 1
 
     def decrease_session_count(self) -> None:
         with self.lock:
-            self.registered_sessions -= 1
+            self.session_count -= 1
 
     def clear(self, last_request: Optional[PreparedRequest]) -> None:
         with self.lock:

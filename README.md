@@ -167,7 +167,7 @@ from catalystwan.request_limiter import RequestLimiter
 
 auth = vManageAuth(username="username", password="password")
 limiter = RequestLimiter(max_requests=30)
-manager = ManagerSession(base_url="https://url:port", auth=auth)
+manager = ManagerSession(base_url="https://url:port", auth=auth, request_limiter=limiter)
 ```
 </details>
 

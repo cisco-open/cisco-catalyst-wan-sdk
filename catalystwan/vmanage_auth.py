@@ -112,10 +112,7 @@ class vManageAuth(AuthBase, AuthProtocol):
         response: Response = post(url=url, headers=headers, data=security_payload, verify=self.verify)
         self.sync_cookies(response.cookies)
         self.logger.debug(auth_response_debug(response, str(self)))
-        if response.status_code != 200:
-            print("OLABOGA")
         if response.text != "" or not isinstance(self.jsessionid, str) or self.jsessionid == "":
-            print("NEIN!!!")
             raise UnauthorizedAccessError(self.username, self.password)
         return self.jsessionid
 
@@ -131,7 +128,6 @@ class vManageAuth(AuthBase, AuthProtocol):
         self.sync_cookies(response.cookies)
         self.logger.debug(auth_response_debug(response, str(self)))
         if response.status_code != 200 or "<html>" in response.text:
-            print("MAMMA MIA!")
             raise CatalystwanException("Failed to get XSRF token")
         return response.text
 
@@ -174,7 +170,6 @@ class vManageAuth(AuthBase, AuthProtocol):
     def decrease_session_count(self) -> None:
         with self.lock:
             self.session_count -= 1
-            print(f"Remaining: {self.session_count}")
 
     def clear(self, last_request: Optional[PreparedRequest]) -> None:
         with self.lock:
