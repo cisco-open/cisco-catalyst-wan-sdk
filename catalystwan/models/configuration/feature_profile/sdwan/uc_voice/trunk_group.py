@@ -4,26 +4,7 @@ from typing import Literal, Optional, Union
 from pydantic import AliasPath, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase
-
-HuntSchemeMethod = Literal[
-    "least-idle",
-    "least-used",
-    "longest-idle",
-    "random",
-    "round-robin",
-    "sequential",
-]
-
-HuntSchemeChannel = Literal[
-    "both",
-    "even",
-    "odd",
-]
-
-HuntSchemeDirection = Literal[
-    "down",
-    "up",
-]
+from catalystwan.models.common import HuntSchemeChannel, HuntSchemeDirection, HuntSchemeMethod
 
 
 class TrunkGroupParcel(_ParcelBase):

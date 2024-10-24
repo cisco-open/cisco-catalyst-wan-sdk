@@ -373,6 +373,26 @@ MpDtmf = Literal[
     "sip-notify sip-kpml rtp-nte",
 ]
 
+HuntSchemeMethod = Literal[
+    "least-idle",
+    "least-used",
+    "longest-idle",
+    "random",
+    "round-robin",
+    "sequential",
+]
+
+HuntSchemeChannel = Literal[
+    "both",
+    "even",
+    "odd",
+]
+
+HuntSchemeDirection = Literal[
+    "down",
+    "up",
+]
+
 SpaceSeparatedTLOCColorStr = Annotated[
     List[TLOCColor],
     PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
