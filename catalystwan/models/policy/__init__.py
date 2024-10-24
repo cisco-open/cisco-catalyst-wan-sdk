@@ -29,6 +29,7 @@ from catalystwan.models.policy.list.ips_signature import IPSSignatureList, IPSSi
 from catalystwan.models.policy.list.ipv6_prefix import IPv6PrefixList, IPv6PrefixListInfo
 from catalystwan.models.policy.list.local_app import LocalAppList, LocalAppListInfo
 from catalystwan.models.policy.list.local_domain import LocalDomainList, LocalDomainListInfo
+from catalystwan.models.policy.list.media_profile import MediaProfileList
 from catalystwan.models.policy.list.mirror import MirrorList, MirrorListInfo
 from catalystwan.models.policy.list.policer import PolicerList, PolicerListInfo
 from catalystwan.models.policy.list.port import PortList, PortListInfo
@@ -41,6 +42,8 @@ from catalystwan.models.policy.list.site import SiteList, SiteListInfo
 from catalystwan.models.policy.list.sla import SLAClassList, SLAClassListInfo
 from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList, ThreatGridApiKeyListInfo
 from catalystwan.models.policy.list.tloc import TLOCList, TLOCListInfo
+from catalystwan.models.policy.list.translation_profile import TranslationProfileList
+from catalystwan.models.policy.list.translation_rules import TranslationRulesList
 from catalystwan.models.policy.list.trunkgroup import TrunkGroupList, TrunkGroupListInfo
 from catalystwan.models.policy.list.umbrella_data import UmbrellaDataList, UmbrellaDataListInfo
 from catalystwan.models.policy.list.url import URLAllowList, URLAllowListInfo, URLBlockList, URLBlockListInfo
@@ -136,6 +139,7 @@ AnyPolicyList = Annotated[
         IPv6PrefixList,
         LocalAppList,
         LocalDomainList,
+        MediaProfileList,
         MirrorList,
         PolicerList,
         PortList,
@@ -148,6 +152,8 @@ AnyPolicyList = Annotated[
         SLAClassList,
         ThreatGridApiKeyList,
         TLOCList,
+        TranslationProfileList,
+        TranslationRulesList,
         TrunkGroupList,
         UmbrellaDataList,
         URLAllowList,

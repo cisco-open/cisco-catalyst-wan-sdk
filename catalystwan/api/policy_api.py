@@ -66,6 +66,7 @@ from catalystwan.endpoints.configuration.policy.list.ips_signature import Config
 from catalystwan.endpoints.configuration.policy.list.ipv6_prefix import ConfigurationPolicyIPv6PrefixList
 from catalystwan.endpoints.configuration.policy.list.local_app import ConfigurationPolicyLocalAppList, LocalAppListInfo
 from catalystwan.endpoints.configuration.policy.list.local_domain import ConfigurationPolicyLocalDomainList
+from catalystwan.endpoints.configuration.policy.list.media_profile import ConfigurationPolicyMediaProfileList
 from catalystwan.endpoints.configuration.policy.list.mirror import ConfigurationPolicyMirrorList, MirrorListInfo
 from catalystwan.endpoints.configuration.policy.list.policer import ConfigurationPolicyPolicerClassList, PolicerListInfo
 from catalystwan.endpoints.configuration.policy.list.port import ConfigurationPolicyPortList, PortListInfo
@@ -84,6 +85,10 @@ from catalystwan.endpoints.configuration.policy.list.site import ConfigurationPo
 from catalystwan.endpoints.configuration.policy.list.sla import ConfigurationPolicySLAClassList, SLAClassListInfo
 from catalystwan.endpoints.configuration.policy.list.threat_grid_api_key import ConfigurationPolicyThreatGridApiKeyList
 from catalystwan.endpoints.configuration.policy.list.tloc import ConfigurationPolicyTLOCList, TLOCListInfo
+from catalystwan.endpoints.configuration.policy.list.translation_profile import (
+    ConfigurationPolicyTranslationProfileList,
+)
+from catalystwan.endpoints.configuration.policy.list.translation_rules import ConfigurationPolicyTranslationRulesList
 from catalystwan.endpoints.configuration.policy.list.trunkgroup import ConfigurationPolicyTrunkGroupList
 from catalystwan.endpoints.configuration.policy.list.umbrella_data import ConfigurationPolicyUmbrellaDataList
 from catalystwan.endpoints.configuration.policy.list.url_allow_list import (
@@ -191,8 +196,11 @@ from catalystwan.models.policy.list.identity import IdentityList, IdentityListIn
 from catalystwan.models.policy.list.ips_signature import IPSSignatureListInfo
 from catalystwan.models.policy.list.ipv6_prefix import IPv6PrefixListInfo
 from catalystwan.models.policy.list.local_domain import LocalDomainListInfo
+from catalystwan.models.policy.list.media_profile import MediaProfileList, MediaProfileListInfo
 from catalystwan.models.policy.list.scalable_group_tag import ScalableGroupTagList, ScalableGroupTagListInfo
 from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList, ThreatGridApiKeyListInfo
+from catalystwan.models.policy.list.translation_profile import TranslationProfileList, TranslationProfileListInfo
+from catalystwan.models.policy.list.translation_rules import TranslationRulesList, TranslationRulesListInfo
 from catalystwan.models.policy.list.trunkgroup import TrunkGroupList, TrunkGroupListInfo
 from catalystwan.models.policy.list.umbrella_data import UmbrellaDataList, UmbrellaDataListInfo
 from catalystwan.models.policy.localized import (
@@ -233,29 +241,32 @@ POLICY_LIST_ENDPOINTS_MAP: Mapping[type, type] = {
     ExtendedCommunityList: ConfigurationPolicyExtendedCommunityList,
     FQDNList: ConfigurationPolicyFQDNList,
     GeoLocationList: ConfigurationPolicyGeoLocationList,
+    IdentityList: ConfigurationPolicyIdentityList,
     IPSSignatureList: ConfigurationPolicyIPSSignatureList,
     IPv6PrefixList: ConfigurationPolicyIPv6PrefixList,
     LocalAppList: ConfigurationPolicyLocalAppList,
     LocalDomainList: ConfigurationPolicyLocalDomainList,
+    MediaProfileList: ConfigurationPolicyMediaProfileList,
     MirrorList: ConfigurationPolicyMirrorList,
     PolicerList: ConfigurationPolicyPolicerClassList,
-    ScalableGroupTagList: ConfigurationPolicyScalableGroupTagList,
     PortList: ConfigurationPolicyPortList,
     PreferredColorGroupList: ConfigurationPreferredColorGroupList,
     PrefixList: ConfigurationPolicyPrefixList,
     ProtocolNameList: ConfigurationPolicyProtocolNameList,
     RegionList: ConfigurationPolicyRegionList,
+    ScalableGroupTagList: ConfigurationPolicyScalableGroupTagList,
     SiteList: ConfigurationPolicySiteList,
     SLAClassList: ConfigurationPolicySLAClassList,
     ThreatGridApiKeyList: ConfigurationPolicyThreatGridApiKeyList,
     TLOCList: ConfigurationPolicyTLOCList,
+    TranslationProfileList: ConfigurationPolicyTranslationProfileList,
+    TranslationRulesList: ConfigurationPolicyTranslationRulesList,
     TrunkGroupList: ConfigurationPolicyTrunkGroupList,
     UmbrellaDataList: ConfigurationPolicyUmbrellaDataList,
-    URLBlockList: ConfigurationPolicyURLBlockList,
     URLAllowList: ConfigurationPolicyURLAllowList,
+    URLBlockList: ConfigurationPolicyURLBlockList,
     VPNList: ConfigurationPolicyVPNList,
     ZoneList: ConfigurationPolicyZoneList,
-    IdentityList: ConfigurationPolicyIdentityList,
 }
 
 POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
@@ -486,6 +497,10 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[MediaProfileList]) -> DataSequence[MediaProfileListInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[MirrorList]) -> DataSequence[MirrorListInfo]:
         ...
 
@@ -527,6 +542,14 @@ class PolicyListsAPI:
 
     @overload
     def get(self, type: Type[TLOCList]) -> DataSequence[TLOCListInfo]:
+        ...
+
+    @overload
+    def get(self, type: Type[TranslationProfileList]) -> DataSequence[TranslationProfileListInfo]:
+        ...
+
+    @overload
+    def get(self, type: Type[TranslationRulesList]) -> DataSequence[TranslationRulesListInfo]:
         ...
 
     @overload
@@ -628,6 +651,10 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[MediaProfileList], id: UUID) -> MediaProfileListInfo:
+        ...
+
+    @overload
     def get(self, type: Type[MirrorList], id: UUID) -> MirrorListInfo:
         ...
 
@@ -669,6 +696,14 @@ class PolicyListsAPI:
 
     @overload
     def get(self, type: Type[TLOCList], id: UUID) -> TLOCListInfo:
+        ...
+
+    @overload
+    def get(self, type: Type[TranslationProfileList], id: UUID) -> TranslationProfileListInfo:
+        ...
+
+    @overload
+    def get(self, type: Type[TranslationRulesList], id: UUID) -> TranslationRulesListInfo:
         ...
 
     @overload
