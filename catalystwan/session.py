@@ -15,7 +15,6 @@ from requests import PreparedRequest, Request, Response, Session, get, head
 from requests.exceptions import ConnectionError, HTTPError, RequestException
 
 from catalystwan import USER_AGENT
-from catalystwan.abstractions import AuthProtocol
 from catalystwan.apigw_auth import ApiGwAuth, ApiGwLogin, LoginMode
 from catalystwan.endpoints import APIEndpointClient
 from catalystwan.endpoints.client import AboutInfo, ServerInfo
@@ -445,7 +444,10 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
             raise ManagerRequestException(*exception.args, request=exception.request, response=exception.response)
 
         self._last_request = response.request
-        if response.jsessionid_expired and self.state in [ManagerSessionState.OPERATIVE, ManagerSessionState.LOGIN_IN_PROGRESS]:
+        if response.jsessionid_expired and self.state in [
+            ManagerSessionState.OPERATIVE,
+            ManagerSessionState.LOGIN_IN_PROGRESS,
+        ]:
             # detected expired auth during login, resync
             if self.state == ManagerSessionState.LOGIN_IN_PROGRESS:
                 self.state = ManagerSessionState.AUTH_SYNC
@@ -454,7 +456,10 @@ class ManagerSession(ManagerResponseAdapter, APIEndpointClient):
                 self.state = ManagerSessionState.LOGIN
             return self.request(method, url, *args, **_kwargs)
 
-        if response.api_gw_unauthorized and self.state in [ManagerSessionState.OPERATIVE, ManagerSessionState.LOGIN_IN_PROGRESS]:
+        if response.api_gw_unauthorized and self.state in [
+            ManagerSessionState.OPERATIVE,
+            ManagerSessionState.LOGIN_IN_PROGRESS,
+        ]:
             # detected expired auth during login, resync
             if self.state == ManagerSessionState.LOGIN_IN_PROGRESS:
                 self.state = ManagerSessionState.AUTH_SYNC

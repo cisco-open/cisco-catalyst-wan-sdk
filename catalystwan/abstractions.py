@@ -2,7 +2,7 @@
 
 from typing import Optional, Protocol, Type, TypeVar
 
-from packaging.version import Version # type: ignore
+from packaging.version import Version  # type: ignore
 from requests import PreparedRequest
 
 from catalystwan.typed_list import DataSequence
@@ -72,6 +72,6 @@ class AuthProtocol(Protocol):
 
     def increase_session_count(self) -> None:
         ...
-    
+
     def decrease_session_count(self) -> None:
         ...

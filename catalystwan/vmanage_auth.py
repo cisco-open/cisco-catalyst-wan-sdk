@@ -150,9 +150,13 @@ class vManageAuth(AuthBase, AuthProtocol):
             else:
                 headers = {"x-xsrf-token": self.xsrftoken, "User-Agent": USER_AGENT}
                 if version >= Version("20.12"):
-                    response = post(f"{self._base_url}/logout", headers=headers, cookies=self.cookies, verify=self.verify)
+                    response = post(
+                        f"{self._base_url}/logout", headers=headers, cookies=self.cookies, verify=self.verify
+                    )
                 else:
-                    response = get(f"{self._base_url}/logout", headers=headers, cookies=self.cookies, verify=self.verify)
+                    response = get(
+                        f"{self._base_url}/logout", headers=headers, cookies=self.cookies, verify=self.verify
+                    )
                 self.logger.debug(auth_response_debug(response, str(self)))
                 if response.status_code != 200:
                     self.logger.error("Unsuccessfull logout")
