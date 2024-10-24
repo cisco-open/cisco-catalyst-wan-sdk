@@ -63,6 +63,7 @@ from catalystwan.endpoints.configuration.policy.list.ips_signature import Config
 from catalystwan.endpoints.configuration.policy.list.ipv6_prefix import ConfigurationPolicyIPv6PrefixList
 from catalystwan.endpoints.configuration.policy.list.local_app import ConfigurationPolicyLocalAppList
 from catalystwan.endpoints.configuration.policy.list.local_domain import ConfigurationPolicyLocalDomainList
+from catalystwan.endpoints.configuration.policy.list.media_profile import ConfigurationPolicyMediaProfileList
 from catalystwan.endpoints.configuration.policy.list.mirror import ConfigurationPolicyMirrorList
 from catalystwan.endpoints.configuration.policy.list.policer import ConfigurationPolicyPolicerClassList
 from catalystwan.endpoints.configuration.policy.list.port import ConfigurationPolicyPortList
@@ -73,6 +74,10 @@ from catalystwan.endpoints.configuration.policy.list.region import Configuration
 from catalystwan.endpoints.configuration.policy.list.site import ConfigurationPolicySiteList
 from catalystwan.endpoints.configuration.policy.list.sla import ConfigurationPolicySLAClassList
 from catalystwan.endpoints.configuration.policy.list.tloc import ConfigurationPolicyTLOCList
+from catalystwan.endpoints.configuration.policy.list.translation_profile import (
+    ConfigurationPolicyTranslationProfileList,
+)
+from catalystwan.endpoints.configuration.policy.list.translation_rules import ConfigurationPolicyTranslationRulesList
 from catalystwan.endpoints.configuration.policy.list.trunkgroup import ConfigurationPolicyTrunkGroupList
 from catalystwan.endpoints.configuration.policy.list.url_allow_list import ConfigurationPolicyURLAllowList
 from catalystwan.endpoints.configuration.policy.list.url_block_list import ConfigurationPolicyURLBlockList
@@ -129,6 +134,7 @@ class ConfigurationPolicyListContainer:
         self.ipv6_prefix = ConfigurationPolicyIPv6PrefixList(session)
         self.local_app = ConfigurationPolicyLocalAppList(session)
         self.local_domain = ConfigurationPolicyLocalDomainList(session)
+        self.media_profile = ConfigurationPolicyMediaProfileList(session)
         self.mirror = ConfigurationPolicyMirrorList(session)
         self.policer = ConfigurationPolicyPolicerClassList(session)
         self.port = ConfigurationPolicyPortList(session)
@@ -139,6 +145,8 @@ class ConfigurationPolicyListContainer:
         self.site = ConfigurationPolicySiteList(session)
         self.sla = ConfigurationPolicySLAClassList(session)
         self.tloc = ConfigurationPolicyTLOCList(session)
+        self.translation_profile = ConfigurationPolicyTranslationProfileList(session)
+        self.translation_rules = ConfigurationPolicyTranslationRulesList(session)
         self.trunkgroup = ConfigurationPolicyTrunkGroupList(session)
         self.url_allow_list = ConfigurationPolicyURLAllowList(session)
         self.url_block_list = ConfigurationPolicyURLBlockList(session)

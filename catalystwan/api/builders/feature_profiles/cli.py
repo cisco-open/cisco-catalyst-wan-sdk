@@ -8,7 +8,6 @@ from catalystwan.api.feature_profile_api import CliFeatureProfileAPI
 from catalystwan.endpoints.configuration.feature_profile.sdwan.cli import CliFeatureProfile
 from catalystwan.models.configuration.feature_profile.common import FeatureProfileCreationPayload
 from catalystwan.models.configuration.feature_profile.sdwan.cli import AnyCliParcel
-from catalystwan.models.configuration.feature_profile.sdwan.cli.config import ConfigParcel
 
 if TYPE_CHECKING:
     from catalystwan.session import ManagerSession
@@ -30,7 +29,7 @@ class CliFeatureProfileBuilder:
         self._profile: FeatureProfileCreationPayload
         self._api = CliFeatureProfileAPI(session)
         self._endpoints = CliFeatureProfile(session)
-        self._cli_configs: List[ConfigParcel] = []
+        self._cli_configs: List[AnyCliParcel] = list()
 
     def add_profile_name_and_description(self, feature_profile: FeatureProfileCreationPayload) -> None:
         """

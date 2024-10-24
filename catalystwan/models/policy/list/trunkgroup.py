@@ -4,18 +4,17 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from catalystwan.models.common import HuntSchemeChannel as HuntSchemeMethodPrecedence
+from catalystwan.models.common import HuntSchemeMethod
 from catalystwan.models.policy.policy_list import PolicyListBase, PolicyListId, PolicyListInfo
-
-HuntSchemeMethods = Literal["least-idle", "least-used", "longest-idle", "round-robin", "sequential", "random"]
-HuntSchemeMethodPrecedences = Literal["even", "odd", "both"]
 
 
 class TrunkGroupListEntry(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    hunt_scheme_method: HuntSchemeMethods = Field(
+    hunt_scheme_method: HuntSchemeMethod = Field(
         validation_alias="huntSchemeMethod", serialization_alias="huntSchemeMethod"
     )
-    hunt_scheme_precedence: Optional[HuntSchemeMethodPrecedences] = Field(
+    hunt_scheme_precedence: Optional[HuntSchemeMethodPrecedence] = Field(
         default=None, validation_alias="huntSchemePrecedence", serialization_alias="huntSchemePrecedence"
     )
     max_calls_in: Optional[int] = Field(
@@ -33,8 +32,8 @@ class TrunkGroupList(PolicyListBase):
 
     def add_entry(
         self,
-        hunt_scheme_method: HuntSchemeMethods,
-        hunt_scheme_precedence: Optional[HuntSchemeMethodPrecedences],
+        hunt_scheme_method: HuntSchemeMethod,
+        hunt_scheme_precedence: Optional[HuntSchemeMethodPrecedence],
         max_retries: int,
         max_calls_in: Optional[int] = None,
         max_calls_out: Optional[int] = None,

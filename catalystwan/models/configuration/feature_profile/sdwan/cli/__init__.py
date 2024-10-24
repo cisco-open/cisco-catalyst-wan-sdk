@@ -1,17 +1,21 @@
-from typing import List
+from typing import List, Union
 
 from pydantic import Field
 from typing_extensions import Annotated
 
 from .config import ConfigParcel
+from .full_config import FullConfigParcel
 
 AnyCliParcel = Annotated[
-    ConfigParcel,
+    Union[
+        ConfigParcel,
+        FullConfigParcel,
+    ],
     Field(discriminator="type_"),
 ]
 
 
-__all__ = ("ConfigParcel",)
+__all__ = ("AnyCliParcel", "ConfigParcel", "FullConfigParcel")
 
 
 def __dir__() -> List[str]:

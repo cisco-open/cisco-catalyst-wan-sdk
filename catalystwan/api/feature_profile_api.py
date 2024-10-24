@@ -14,6 +14,7 @@ from catalystwan.endpoints.configuration.feature_profile.sdwan.sig_security impo
 from catalystwan.endpoints.configuration.feature_profile.sdwan.system import SystemFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.topology import TopologyFeatureProfile
 from catalystwan.endpoints.configuration.feature_profile.sdwan.transport import TransportFeatureProfile
+from catalystwan.endpoints.configuration.feature_profile.sdwan.uc_voice import UcVoiceFeatureProfile
 from catalystwan.exceptions import CatalystwanException, ManagerHTTPError
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv4acl import Ipv4AclParcel
 from catalystwan.models.configuration.feature_profile.sdwan.acl.ipv6acl import Ipv6AclParcel
@@ -106,6 +107,10 @@ from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interf
     InterfaceEthPPPoEParcel,
 )
 from catalystwan.models.configuration.feature_profile.sdwan.transport.wan.interface.t1e1serial import T1E1SerialParcel
+from catalystwan.models.configuration.feature_profile.sdwan.uc_voice import AnyUcVoiceParcel
+from catalystwan.models.configuration.feature_profile.sdwan.uc_voice.dsp_farm import DspFarmParcel
+from catalystwan.models.configuration.feature_profile.sdwan.uc_voice.media_profile import MediaProfileParcel
+from catalystwan.models.configuration.feature_profile.sdwan.uc_voice.trunk_group import TrunkGroupParcel
 from catalystwan.typed_list import DataSequence
 
 if TYPE_CHECKING:
@@ -131,7 +136,7 @@ from catalystwan.models.configuration.feature_profile.parcel import (
     ParcelAssociationPayload,
     ParcelCreationResponse,
 )
-from catalystwan.models.configuration.feature_profile.sdwan.cli import ConfigParcel
+from catalystwan.models.configuration.feature_profile.sdwan.cli import AnyCliParcel
 from catalystwan.models.configuration.feature_profile.sdwan.dns_security import AnyDnsSecurityParcel, DnsParcel
 from catalystwan.models.configuration.feature_profile.sdwan.embedded_security import (
     AnyEmbeddedSecurityParcel,
@@ -193,17 +198,18 @@ class SDRoutingFeatureProfilesAPI:
 
 class SDWANFeatureProfilesAPI:
     def __init__(self, session: ManagerSession):
-        self.policy_object = PolicyObjectFeatureProfileAPI(session=session)
-        self.system = SystemFeatureProfileAPI(session=session)
-        self.other = OtherFeatureProfileAPI(session=session)
-        self.service = ServiceFeatureProfileAPI(session=session)
-        self.topology = TopologyFeatureProfileAPI(session=session)
-        self.transport = TransportFeatureProfileAPI(session=session)
-        self.embedded_security = EmbeddedSecurityFeatureProfileAPI(session=session)
+        self.application_priority = ApplicationPriorityFeatureProfileAPI(session=session)
         self.cli = CliFeatureProfileAPI(session=session)
         self.dns_security = DnsSecurityFeatureProfileAPI(session=session)
+        self.embedded_security = EmbeddedSecurityFeatureProfileAPI(session=session)
+        self.other = OtherFeatureProfileAPI(session=session)
+        self.policy_object = PolicyObjectFeatureProfileAPI(session=session)
+        self.service = ServiceFeatureProfileAPI(session=session)
         self.sig_security = SIGSecurityAPI(session=session)
-        self.application_priority = ApplicationPriorityFeatureProfileAPI(session=session)
+        self.system = SystemFeatureProfileAPI(session=session)
+        self.topology = TopologyFeatureProfileAPI(session=session)
+        self.transport = TransportFeatureProfileAPI(session=session)
+        self.uc_voice = UcVoiceFeatureProfileAPI(session=session)
 
 
 class FeatureProfileAPI(Protocol):
@@ -1856,23 +1862,34 @@ class CliFeatureProfileAPI:
         self,
         profile_id: UUID,
         parcel_id: UUID,
-    ) -> DataSequence[Parcel[Any]]:
+        parcel_type: str = "config",
+    ) -> Parcel[AnyCliParcel]:
         """
         Get all CLI Parcels for selected profile_id and selected type or get one CLI Parcel given parcel id
         """
-        return self.endpoint.get_by_id(profile_id, parcel_id)
+        return self.endpoint.get_by_id(profile_id, parcel_type, parcel_id)
 
-    def create_parcel(self, profile_id: UUID, config: ConfigParcel) -> ParcelCreationResponse:
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: str = "config",
+    ) -> DataSequence[Parcel[AnyCliParcel]]:
+        """
+        Get all CLI Parcels for selected profile_id and selected type or get one CLI Parcel given parcel id
+        """
+        return self.endpoint.get_all(profile_id, parcel_type)
+
+    def create_parcel(self, profile_id: UUID, config: AnyCliParcel) -> ParcelCreationResponse:
         """
         Create CLI Parcel for selected profile_id
         """
-        return self.endpoint.create(profile_id, config)
+        return self.endpoint.create(profile_id, config._get_parcel_type(), config)
 
-    def update_parcel(self, profile_id: UUID, config: ConfigParcel, parcel_id: UUID) -> ParcelCreationResponse:
+    def update_parcel(self, profile_id: UUID, config: AnyCliParcel, parcel_id: UUID) -> ParcelCreationResponse:
         """
         Update CLI Parcel for selected profile_id
         """
-        return self.endpoint.update(profile_id, parcel_id, config)
+        return self.endpoint.update(profile_id, config._get_parcel_type(), parcel_id, config)
 
     def delete_parcel(self, profile_id: UUID, parcel_id: UUID) -> None:
         """
@@ -1987,7 +2004,7 @@ class SIGSecurityAPI:
         """
         Delete SIG Security Feature Profile
         """
-        self.endpoint.delete_sig_security_feature_profile(profile_id)
+        self.endpoint.delete_sig_security_feature_profile(str(profile_id))
 
     def delete_all_profiles(self) -> None:
         """
@@ -2001,13 +2018,13 @@ class SIGSecurityAPI:
         """
         Create SIG Security Parcel for selected profile_id
         """
-        return self.endpoint.create_sig_security_parcel(profile_uuid, payload)
+        return self.endpoint.create_sig_security_parcel(str(profile_uuid), payload)
 
     def delete_parcel(self, profile_uuid: UUID, parcel_uuid: UUID) -> None:
         """
         Delete Service Parcel for selected profile_uuid based on payload type
         """
-        return self.endpoint.delete_sig_security_parcel(profile_uuid, parcel_uuid)
+        return self.endpoint.delete_sig_security_parcel(str(profile_uuid), str(parcel_uuid))
 
 
 class ApplicationPriorityFeatureProfileAPI:
@@ -2040,7 +2057,7 @@ class ApplicationPriorityFeatureProfileAPI:
         """
         Delete Application Priority Feature Profile
         """
-        self.endpoint.delete_application_priority_feature_profile(profile_id)
+        self.endpoint.delete_application_priority_feature_profile(str(profile_id))
 
     def delete_all_profiles(self) -> None:
         """
@@ -2174,7 +2191,7 @@ class TopologyFeatureProfileAPI:
         """
         Delete Topology Feature Profile
         """
-        self.endpoint.delete_topology_feature_profile(profile_id)
+        self.endpoint.delete_topology_feature_profile(str(profile_id))
 
     def delete_all_profiles(self) -> None:
         """
@@ -2235,3 +2252,132 @@ class TopologyFeatureProfileAPI:
         Get one Topology Parcel given profile id, parcel type and parcel id
         """
         return self.endpoint.get_any_parcel_by_id(profile_id, parcel_type._get_parcel_type(), parcel_id)
+
+
+class UcVoiceFeatureProfileAPI:
+    """
+    SDWAN Feature Profile UC Voice APIs
+    """
+
+    def __init__(self, session: ManagerSession):
+        self.session = session
+        self.endpoint = UcVoiceFeatureProfile(session)
+
+    def get_profiles(
+        self, limit: Optional[int] = None, offset: Optional[int] = None
+    ) -> DataSequence[FeatureProfileInfo]:
+        """
+        Get all UC Voice Feature Profiles
+        """
+        payload = GetFeatureProfilesParams(limit=limit if limit else None, offset=offset if offset else None)
+
+        return self.endpoint.get_uc_voice_feature_profiles(payload)
+
+    def create_profile(self, name: str, description: str) -> FeatureProfileCreationResponse:
+        """
+        Create UC Voice Feature Profile
+        """
+        payload = FeatureProfileCreationPayload(name=name, description=description)
+        return self.endpoint.create_uc_voice_feature_profile(payload)
+
+    def delete_profile(self, profile_id: UUID) -> None:
+        """
+        Delete UC Voice Feature Profile
+        """
+        self.endpoint.delete_uc_voice_feature_profile(str(profile_id))
+
+    def delete_all_profiles(self) -> None:
+        """
+        Delete all UC Voice Feature Profiles
+        """
+        profiles = self.get_profiles()
+        for profile in profiles:
+            self.delete_profile(profile.profile_id)
+
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[DspFarmParcel],
+    ) -> DataSequence[Parcel[DspFarmParcel]]:
+        ...
+
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[MediaProfileParcel],
+    ) -> DataSequence[Parcel[MediaProfileParcel]]:
+        ...
+
+    @overload
+    def get_parcels(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[TrunkGroupParcel],
+    ) -> DataSequence[Parcel[TrunkGroupParcel]]:
+        ...
+
+    def get_parcels(self, profile_id: UUID, parcel_type: Type[AnyUcVoiceParcel]) -> DataSequence[Parcel]:
+        """
+        Get all UC Voice Parcels given profile id and parcel type
+        """
+        return self.endpoint.get_all(profile_id, parcel_type._get_parcel_type())
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[DspFarmParcel],
+        parcel_id: UUID,
+    ) -> Parcel[DspFarmParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[MediaProfileParcel],
+        parcel_id: UUID,
+    ) -> Parcel[MediaProfileParcel]:
+        ...
+
+    @overload
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[TrunkGroupParcel],
+        parcel_id: UUID,
+    ) -> Parcel[TrunkGroupParcel]:
+        ...
+
+    def get_parcel(
+        self,
+        profile_id: UUID,
+        parcel_type: Type[AnyUcVoiceParcel],
+        parcel_id: UUID,
+    ) -> Parcel:
+        """
+        Get one UC Voice Parcel given profile id, parcel type and parcel id
+        """
+        return self.endpoint.get_by_id(profile_id, parcel_type._get_parcel_type(), parcel_id)
+
+    def create_parcel(self, profile_id: UUID, payload: AnyUcVoiceParcel) -> ParcelCreationResponse:
+        """
+        Create UC Voice Parcel for selected profile_id based on payload type
+        """
+
+        return self.endpoint.create(profile_id, payload._get_parcel_type(), payload)
+
+    def update_parcel(self, profile_id: UUID, payload: AnyUcVoiceParcel, parcel_id: UUID) -> ParcelCreationResponse:
+        """
+        Update UC Voice Parcel for selected profile_id based on payload type
+        """
+
+        return self.endpoint.update(profile_id, payload._get_parcel_type(), parcel_id, payload)
+
+    def delete_parcel(self, profile_id: UUID, parcel_type: Type[AnyUcVoiceParcel], parcel_id: UUID) -> None:
+        """
+        Delete UC Voice Parcel for selected profile_id based on payload type
+        """
+        return self.endpoint.delete(profile_id, parcel_type._get_parcel_type(), parcel_id)
