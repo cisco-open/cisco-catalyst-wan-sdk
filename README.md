@@ -141,9 +141,12 @@ def print_devices(manager: ManagerSession):
 
 if __name__ =="__main__":
 
+    # 1. Create shared authentication handler for user session
     auth = vManageAuth(username="username", password="password")
+    # 2. Configure session with base url and attach authentication handler
     manager = ManagerSession(base_url="https://url:port", auth=auth)
 
+    # 3. Make sure each thread gets own copy of ManagerSession object
     t1 = Thread(target=print_devices, args=(manager,))
     t2 = Thread(target=print_devices, args=(copy(manager),))
     t3 = Thread(target=print_devices, args=(copy(manager),))
