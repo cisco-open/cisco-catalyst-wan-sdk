@@ -68,6 +68,7 @@ from catalystwan.endpoints.configuration.policy.list.local_app import Configurat
 from catalystwan.endpoints.configuration.policy.list.local_domain import ConfigurationPolicyLocalDomainList
 from catalystwan.endpoints.configuration.policy.list.media_profile import ConfigurationPolicyMediaProfileList
 from catalystwan.endpoints.configuration.policy.list.mirror import ConfigurationPolicyMirrorList, MirrorListInfo
+from catalystwan.endpoints.configuration.policy.list.modem_pass_through import ConfigurationPolicyModemPassThroughList
 from catalystwan.endpoints.configuration.policy.list.policer import ConfigurationPolicyPolicerClassList, PolicerListInfo
 from catalystwan.endpoints.configuration.policy.list.port import ConfigurationPolicyPortList, PortListInfo
 from catalystwan.endpoints.configuration.policy.list.preferred_color_group import (
@@ -197,6 +198,7 @@ from catalystwan.models.policy.list.ips_signature import IPSSignatureListInfo
 from catalystwan.models.policy.list.ipv6_prefix import IPv6PrefixListInfo
 from catalystwan.models.policy.list.local_domain import LocalDomainListInfo
 from catalystwan.models.policy.list.media_profile import MediaProfileList, MediaProfileListInfo
+from catalystwan.models.policy.list.modem_pass_through import ModemPassThroughList, ModemPassThroughListInfo
 from catalystwan.models.policy.list.scalable_group_tag import ScalableGroupTagList, ScalableGroupTagListInfo
 from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList, ThreatGridApiKeyListInfo
 from catalystwan.models.policy.list.translation_profile import TranslationProfileList, TranslationProfileListInfo
@@ -248,6 +250,7 @@ POLICY_LIST_ENDPOINTS_MAP: Mapping[type, type] = {
     LocalDomainList: ConfigurationPolicyLocalDomainList,
     MediaProfileList: ConfigurationPolicyMediaProfileList,
     MirrorList: ConfigurationPolicyMirrorList,
+    ModemPassThroughList: ConfigurationPolicyModemPassThroughList,
     PolicerList: ConfigurationPolicyPolicerClassList,
     PortList: ConfigurationPolicyPortList,
     PreferredColorGroupList: ConfigurationPreferredColorGroupList,
@@ -501,6 +504,10 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[ModemPassThroughList]) -> DataSequence[ModemPassThroughListInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[MirrorList]) -> DataSequence[MirrorListInfo]:
         ...
 
@@ -656,6 +663,10 @@ class PolicyListsAPI:
 
     @overload
     def get(self, type: Type[MirrorList], id: UUID) -> MirrorListInfo:
+        ...
+
+    @overload
+    def get(self, type: Type[ModemPassThroughList], id: UUID) -> ModemPassThroughListInfo:
         ...
 
     @overload

@@ -65,6 +65,7 @@ from catalystwan.endpoints.configuration.policy.list.local_app import Configurat
 from catalystwan.endpoints.configuration.policy.list.local_domain import ConfigurationPolicyLocalDomainList
 from catalystwan.endpoints.configuration.policy.list.media_profile import ConfigurationPolicyMediaProfileList
 from catalystwan.endpoints.configuration.policy.list.mirror import ConfigurationPolicyMirrorList
+from catalystwan.endpoints.configuration.policy.list.modem_pass_through import ConfigurationPolicyModemPassThroughList
 from catalystwan.endpoints.configuration.policy.list.policer import ConfigurationPolicyPolicerClassList
 from catalystwan.endpoints.configuration.policy.list.port import ConfigurationPolicyPortList
 from catalystwan.endpoints.configuration.policy.list.preferred_color_group import ConfigurationPreferredColorGroupList
@@ -136,6 +137,7 @@ class ConfigurationPolicyListContainer:
         self.local_domain = ConfigurationPolicyLocalDomainList(session)
         self.media_profile = ConfigurationPolicyMediaProfileList(session)
         self.mirror = ConfigurationPolicyMirrorList(session)
+        self.modem_pass_through = ConfigurationPolicyModemPassThroughList(session)
         self.policer = ConfigurationPolicyPolicerClassList(session)
         self.port = ConfigurationPolicyPortList(session)
         self.preferred_color_group = ConfigurationPreferredColorGroupList(session)

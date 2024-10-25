@@ -31,6 +31,7 @@ from catalystwan.models.policy.list.local_app import LocalAppList, LocalAppListI
 from catalystwan.models.policy.list.local_domain import LocalDomainList, LocalDomainListInfo
 from catalystwan.models.policy.list.media_profile import MediaProfileList
 from catalystwan.models.policy.list.mirror import MirrorList, MirrorListInfo
+from catalystwan.models.policy.list.modem_pass_through import ModemPassThroughList
 from catalystwan.models.policy.list.policer import PolicerList, PolicerListInfo
 from catalystwan.models.policy.list.port import PortList, PortListInfo
 from catalystwan.models.policy.list.preferred_color_group import PreferredColorGroupList, PreferredColorGroupListInfo
@@ -141,6 +142,7 @@ AnyPolicyList = Annotated[
         LocalDomainList,
         MediaProfileList,
         MirrorList,
+        ModemPassThroughList,
         PolicerList,
         PortList,
         PreferredColorGroupList,

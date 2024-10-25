@@ -354,6 +354,12 @@ MpVoiceCodec = Literal[
     "ilbc",
 ]
 
+ModemPassThroughCodec = Literal[
+    "none",
+    "g711ulaw",
+    "g711alaw",
+]
+
 MpDtmf = Literal[
     "inband",
     "rtp-nte",
