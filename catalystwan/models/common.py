@@ -354,7 +354,42 @@ MpVoiceCodec = Literal[
     "ilbc",
 ]
 
-ModemPassThroughCodec = Literal[
+FaxProtocols = Literal[
+    "Fax Pass-through G711alaw No ECM",
+    "Fax Pass-through G711alaw",
+    "Fax Pass-through G711ulaw No ECM",
+    "Fax Pass-through G711ulaw",
+    "None",
+    "T.38 Fax Relay Version 0 No ECM",
+    "T.38 Fax Relay Version 0 NSE force No ECM",
+    "T.38 Fax Relay Version 0 NSE force Rate 14.4 No ECM",
+    "T.38 Fax Relay Version 0 NSE force Rate 14.4",
+    "T.38 Fax Relay Version 0 NSE force Rate 9.6 No ECM",
+    "T.38 Fax Relay Version 0 NSE force Rate 9.6",
+    "T.38 Fax Relay Version 0 NSE force",
+    "T.38 Fax Relay Version 0 NSE No ECM",
+    "T.38 Fax Relay Version 0 NSE Rate 14.4 No ECM",
+    "T.38 Fax Relay Version 0 NSE Rate 14.4",
+    "T.38 Fax Relay Version 0 NSE Rate 9.6 No ECM",
+    "T.38 Fax Relay Version 0 NSE Rate 9.6",
+    "T.38 Fax Relay Version 0 NSE",
+    "T.38 Fax Relay Version 0 Rate 14.4 No ECM",
+    "T.38 Fax Relay Version 0 Rate 14.4",
+    "T.38 Fax Relay Version 0 Rate 9.6 No ECM",
+    "T.38 Fax Relay Version 0",
+    "T.38 Fax Relay Version 3 NSE force",
+    "T.38 Fax Relay Version 3 NSE",
+    "T.38 Fax Relay Version 3",
+]
+
+FaxPrimaryProtocols = Literal[
+    "none",
+    "t38",
+    "g711ulaw",
+    "g711alaw",
+]
+
+FaxFallBackProtocols = Literal[
     "none",
     "g711ulaw",
     "g711alaw",

@@ -4,13 +4,13 @@ from typing import List, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from catalystwan.models.common import ModemPassThroughCodec
+from catalystwan.models.common import FaxFallBackProtocols
 from catalystwan.models.policy.policy_list import PolicyListBase, PolicyListId, PolicyListInfo
 
 
 class ModemPassThroughListEntry(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    protocol: ModemPassThroughCodec
+    protocol: FaxFallBackProtocols
 
 
 class ModemPassThroughList(PolicyListBase):

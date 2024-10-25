@@ -57,6 +57,7 @@ from catalystwan.endpoints.configuration.policy.list.data_ipv6_prefix import Con
 from catalystwan.endpoints.configuration.policy.list.data_prefix import ConfigurationPolicyDataPrefixList
 from catalystwan.endpoints.configuration.policy.list.expanded_community import ConfigurationPolicyExpandedCommunityList
 from catalystwan.endpoints.configuration.policy.list.extended_community import ConfigurationPolicyExtendedCommunityList
+from catalystwan.endpoints.configuration.policy.list.fax_protocol import ConfigurationPolicyFaxProtocolList
 from catalystwan.endpoints.configuration.policy.list.fqdn import ConfigurationPolicyFQDNList
 from catalystwan.endpoints.configuration.policy.list.geo_location import ConfigurationPolicyGeoLocationList
 from catalystwan.endpoints.configuration.policy.list.ips_signature import ConfigurationPolicyIPSSignatureList
@@ -129,6 +130,7 @@ class ConfigurationPolicyListContainer:
         self.data_prefix = ConfigurationPolicyDataPrefixList(session)
         self.expanded_community = ConfigurationPolicyExpandedCommunityList(session)
         self.extended_community = ConfigurationPolicyExtendedCommunityList(session)
+        self.fax_protocol = ConfigurationPolicyFaxProtocolList(session)
         self.fqdn = ConfigurationPolicyFQDNList(session)
         self.geo_location = ConfigurationPolicyGeoLocationList(session)
         self.ips_signature = ConfigurationPolicyIPSSignatureList(session)

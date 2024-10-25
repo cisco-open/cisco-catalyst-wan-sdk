@@ -22,6 +22,7 @@ from catalystwan.models.policy.list.communities import (
 )
 from catalystwan.models.policy.list.data_ipv6_prefix import DataIPv6PrefixList, DataIPv6PrefixListInfo
 from catalystwan.models.policy.list.data_prefix import DataPrefixList, DataPrefixListInfo
+from catalystwan.models.policy.list.fax_protocol import FaxProtocolList
 from catalystwan.models.policy.list.fqdn import FQDNList, FQDNListInfo
 from catalystwan.models.policy.list.geo_location import GeoLocationList, GeoLocationListInfo
 from catalystwan.models.policy.list.identity import IdentityList, IdentityListInfo
@@ -133,6 +134,7 @@ AnyPolicyList = Annotated[
         DataPrefixList,
         ExpandedCommunityList,
         ExtendedCommunityList,
+        FaxProtocolList,
         FQDNList,
         GeoLocationList,
         IdentityList,

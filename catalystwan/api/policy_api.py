@@ -59,6 +59,7 @@ from catalystwan.endpoints.configuration.policy.list.data_ipv6_prefix import Con
 from catalystwan.endpoints.configuration.policy.list.data_prefix import ConfigurationPolicyDataPrefixList
 from catalystwan.endpoints.configuration.policy.list.expanded_community import ConfigurationPolicyExpandedCommunityList
 from catalystwan.endpoints.configuration.policy.list.extended_community import ConfigurationPolicyExtendedCommunityList
+from catalystwan.endpoints.configuration.policy.list.fax_protocol import ConfigurationPolicyFaxProtocolList
 from catalystwan.endpoints.configuration.policy.list.fqdn import ConfigurationPolicyFQDNList, FQDNListInfo
 from catalystwan.endpoints.configuration.policy.list.geo_location import ConfigurationPolicyGeoLocationList
 from catalystwan.endpoints.configuration.policy.list.identity import ConfigurationPolicyIdentityList
@@ -192,6 +193,7 @@ from catalystwan.models.policy.list.communities import (
 )
 from catalystwan.models.policy.list.data_ipv6_prefix import DataIPv6PrefixListInfo
 from catalystwan.models.policy.list.data_prefix import DataPrefixListInfo
+from catalystwan.models.policy.list.fax_protocol import FaxProtocolList, FaxProtocolListInfo
 from catalystwan.models.policy.list.geo_location import GeoLocationListInfo
 from catalystwan.models.policy.list.identity import IdentityList, IdentityListInfo
 from catalystwan.models.policy.list.ips_signature import IPSSignatureListInfo
@@ -241,6 +243,7 @@ POLICY_LIST_ENDPOINTS_MAP: Mapping[type, type] = {
     DataPrefixList: ConfigurationPolicyDataPrefixList,
     ExpandedCommunityList: ConfigurationPolicyExpandedCommunityList,
     ExtendedCommunityList: ConfigurationPolicyExtendedCommunityList,
+    FaxProtocolList: ConfigurationPolicyFaxProtocolList,
     FQDNList: ConfigurationPolicyFQDNList,
     GeoLocationList: ConfigurationPolicyGeoLocationList,
     IdentityList: ConfigurationPolicyIdentityList,
@@ -476,6 +479,10 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[FaxProtocolList]) -> DataSequence[FaxProtocolListInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[FQDNList]) -> DataSequence[FQDNListInfo]:
         ...
 
@@ -631,6 +638,10 @@ class PolicyListsAPI:
 
     @overload
     def get(self, type: Type[ExtendedCommunityList], id: UUID) -> ExtendedCommunityListInfo:
+        ...
+
+    @overload
+    def get(self, type: Type[FaxProtocolList], id: UUID) -> FaxProtocolListInfo:
         ...
 
     @overload
