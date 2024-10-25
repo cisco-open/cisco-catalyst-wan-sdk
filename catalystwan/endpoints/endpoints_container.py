@@ -75,6 +75,9 @@ from catalystwan.endpoints.configuration.policy.list.protocol_name import Config
 from catalystwan.endpoints.configuration.policy.list.region import ConfigurationPolicyRegionList
 from catalystwan.endpoints.configuration.policy.list.site import ConfigurationPolicySiteList
 from catalystwan.endpoints.configuration.policy.list.sla import ConfigurationPolicySLAClassList
+from catalystwan.endpoints.configuration.policy.list.supervisory_disconnect import (
+    ConfigurationPolicySupervisoryDisconnectList,
+)
 from catalystwan.endpoints.configuration.policy.list.tloc import ConfigurationPolicyTLOCList
 from catalystwan.endpoints.configuration.policy.list.translation_profile import (
     ConfigurationPolicyTranslationProfileList,
@@ -148,6 +151,7 @@ class ConfigurationPolicyListContainer:
         self.region = ConfigurationPolicyRegionList(session)
         self.site = ConfigurationPolicySiteList(session)
         self.sla = ConfigurationPolicySLAClassList(session)
+        self.supervisory_disconnect = ConfigurationPolicySupervisoryDisconnectList(session)
         self.tloc = ConfigurationPolicyTLOCList(session)
         self.translation_profile = ConfigurationPolicyTranslationProfileList(session)
         self.translation_rules = ConfigurationPolicyTranslationRulesList(session)

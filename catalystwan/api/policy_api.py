@@ -85,6 +85,9 @@ from catalystwan.endpoints.configuration.policy.list.region import Configuration
 from catalystwan.endpoints.configuration.policy.list.scalable_group_tag import ConfigurationPolicyScalableGroupTagList
 from catalystwan.endpoints.configuration.policy.list.site import ConfigurationPolicySiteList, SiteListInfo
 from catalystwan.endpoints.configuration.policy.list.sla import ConfigurationPolicySLAClassList, SLAClassListInfo
+from catalystwan.endpoints.configuration.policy.list.supervisory_disconnect import (
+    ConfigurationPolicySupervisoryDisconnectList,
+)
 from catalystwan.endpoints.configuration.policy.list.threat_grid_api_key import ConfigurationPolicyThreatGridApiKeyList
 from catalystwan.endpoints.configuration.policy.list.tloc import ConfigurationPolicyTLOCList, TLOCListInfo
 from catalystwan.endpoints.configuration.policy.list.translation_profile import (
@@ -202,6 +205,10 @@ from catalystwan.models.policy.list.local_domain import LocalDomainListInfo
 from catalystwan.models.policy.list.media_profile import MediaProfileList, MediaProfileListInfo
 from catalystwan.models.policy.list.modem_pass_through import ModemPassThroughList, ModemPassThroughListInfo
 from catalystwan.models.policy.list.scalable_group_tag import ScalableGroupTagList, ScalableGroupTagListInfo
+from catalystwan.models.policy.list.supervisory_disconnect import (
+    SupervisoryDisconnectList,
+    SupervisoryDisconnectListInfo,
+)
 from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList, ThreatGridApiKeyListInfo
 from catalystwan.models.policy.list.translation_profile import TranslationProfileList, TranslationProfileListInfo
 from catalystwan.models.policy.list.translation_rules import TranslationRulesList, TranslationRulesListInfo
@@ -263,6 +270,7 @@ POLICY_LIST_ENDPOINTS_MAP: Mapping[type, type] = {
     ScalableGroupTagList: ConfigurationPolicyScalableGroupTagList,
     SiteList: ConfigurationPolicySiteList,
     SLAClassList: ConfigurationPolicySLAClassList,
+    SupervisoryDisconnectList: ConfigurationPolicySupervisoryDisconnectList,
     ThreatGridApiKeyList: ConfigurationPolicyThreatGridApiKeyList,
     TLOCList: ConfigurationPolicyTLOCList,
     TranslationProfileList: ConfigurationPolicyTranslationProfileList,
@@ -551,6 +559,10 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[SupervisoryDisconnectList]) -> DataSequence[SupervisoryDisconnectListInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[ThreatGridApiKeyList]) -> DataSequence[ThreatGridApiKeyListInfo]:
         ...
 
@@ -710,6 +722,10 @@ class PolicyListsAPI:
 
     @overload
     def get(self, type: Type[SLAClassList], id: UUID) -> SLAClassListInfo:
+        ...
+
+    @overload
+    def get(self, type: Type[SupervisoryDisconnectList], id: UUID) -> SupervisoryDisconnectListInfo:
         ...
 
     @overload

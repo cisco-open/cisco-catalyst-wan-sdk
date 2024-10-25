@@ -42,6 +42,7 @@ from catalystwan.models.policy.list.region import RegionList, RegionListInfo
 from catalystwan.models.policy.list.scalable_group_tag import ScalableGroupTagList, ScalableGroupTagListInfo
 from catalystwan.models.policy.list.site import SiteList, SiteListInfo
 from catalystwan.models.policy.list.sla import SLAClassList, SLAClassListInfo
+from catalystwan.models.policy.list.supervisory_disconnect import SupervisoryDisconnectList
 from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList, ThreatGridApiKeyListInfo
 from catalystwan.models.policy.list.tloc import TLOCList, TLOCListInfo
 from catalystwan.models.policy.list.translation_profile import TranslationProfileList
@@ -154,6 +155,7 @@ AnyPolicyList = Annotated[
         ScalableGroupTagList,
         SiteList,
         SLAClassList,
+        SupervisoryDisconnectList,
         ThreatGridApiKeyList,
         TLOCList,
         TranslationProfileList,

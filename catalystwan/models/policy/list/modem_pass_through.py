@@ -16,7 +16,7 @@ class ModemPassThroughListEntry(BaseModel):
 class ModemPassThroughList(PolicyListBase):
     model_config = ConfigDict(populate_by_name=True)
     type: Literal["modemPassthrough", "modempassthrough"] = "modemPassthrough"
-    entires: List[ModemPassThroughListEntry] = Field(default_factory=list, max_length=1)
+    entries: List[ModemPassThroughListEntry] = Field(default_factory=list, max_length=1)
 
 
 class ModemPassThroughListEditPayload(ModemPassThroughList, PolicyListId):
