@@ -8,6 +8,7 @@ from typing_extensions import Annotated
 
 from catalystwan.models.policy.definition.app_route import AppRoutePolicy, AppRoutePolicyGetResponse
 from catalystwan.models.policy.definition.fxo_port import FxoPortPolicy, FxoPortPolicyGetResponse
+from catalystwan.models.policy.definition.fxs_port import FxsPortPolicy, FxsPortPolicyGetResponse
 from catalystwan.models.policy.list.app import AppList, AppListInfo
 from catalystwan.models.policy.list.app_probe import AppProbeClassList, AppProbeClassListInfo
 from catalystwan.models.policy.list.as_path import ASPathList, ASPathListInfo
@@ -110,6 +111,7 @@ AnyPolicyDefinition = Annotated[
         DeviceAccessPolicy,
         DnsSecurityPolicy,
         FxoPortPolicy,
+        FxsPortPolicy,
         HubAndSpokePolicy,
         IntrusionPreventionPolicy,
         MeshPolicy,
@@ -235,6 +237,7 @@ AnyPolicyDefinitionInfo = Annotated[
         DeviceAccessPolicyGetResponse,
         DnsSecurityPolicyGetResponse,
         FxoPortPolicyGetResponse,
+        FxsPortPolicyGetResponse,
         HubAndSpokePolicyGetResponse,
         IntrusionPreventionPolicyGetResponse,
         MeshPolicyGetResponse,

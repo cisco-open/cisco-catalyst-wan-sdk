@@ -33,6 +33,7 @@ from catalystwan.endpoints.configuration.policy.definition.device_access_ipv6 im
     ConfigurationPolicyDeviceAccessIPv6Definition,
 )
 from catalystwan.endpoints.configuration.policy.definition.fxo_port import ConfigurationPolicyFxoPortDefinition
+from catalystwan.endpoints.configuration.policy.definition.fxs_port import ConfigurationPolicyFxsPortDefinition
 from catalystwan.endpoints.configuration.policy.definition.hub_and_spoke import ConfigurationPolicyHubAndSpokeDefinition
 from catalystwan.endpoints.configuration.policy.definition.mesh import ConfigurationPolicyMeshDefinition
 from catalystwan.endpoints.configuration.policy.definition.qos_map import ConfigurationPolicyQoSMapDefinition
@@ -175,6 +176,7 @@ class ConfigurationPolicyDefinitionContainer:
         self.device_access = ConfigurationPolicyDeviceAccessDefinition(session)
         self.device_access_ipv6 = ConfigurationPolicyDeviceAccessIPv6Definition(session)
         self.fxo_port = ConfigurationPolicyFxoPortDefinition(session)
+        self.fxs_port = ConfigurationPolicyFxsPortDefinition(session)
         self.hub_and_spoke = ConfigurationPolicyHubAndSpokeDefinition(session)
         self.mesh = ConfigurationPolicyMeshDefinition(session)
         self.qos_map = ConfigurationPolicyQoSMapDefinition(session)

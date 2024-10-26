@@ -6,18 +6,17 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from catalystwan.models.policy.policy_definition import (
     CommonStation,
-    FxoTuningParams,
+    FxsTuningParams,
     LineParams,
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
-    SupervisoryDisconnectEntry,
     TranslationProfileEntry,
     TrunkGroupPreference,
 )
 
 
-class FxoPortPolicyDefinition(BaseModel):
+class FxsPortPolicyDefinition(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     common_station: Optional[CommonStation] = Field(
         default=None, serialization_alias="commonStation", validation_alias="commonStation"
@@ -25,7 +24,7 @@ class FxoPortPolicyDefinition(BaseModel):
     line_params: Optional[LineParams] = Field(
         default=None, serialization_alias="lineParams", validation_alias="lineParams"
     )
-    tuning_params: Optional[FxoTuningParams] = Field(
+    tuning_params: Optional[FxsTuningParams] = Field(
         default=None, serialization_alias="tuningParams", validation_alias="tuningParams"
     )
     trunk_group: Optional[List[TrunkGroupPreference]] = Field(
@@ -37,24 +36,18 @@ class FxoPortPolicyDefinition(BaseModel):
     outgoing_translation_profile: Optional[TranslationProfileEntry] = Field(
         default=None, serialization_alias="outgoingTranslationProfile", validation_alias="outgoingTranslationProfile"
     )
-    supervisory_disc_custom: Optional[SupervisoryDisconnectEntry] = Field(
-        default=None, serialization_alias="supervisoryDiscCustom", validation_alias="supervisoryDiscCustom"
-    )
-    supervisory_disc_dualtone: Optional[SupervisoryDisconnectEntry] = Field(
-        default=None, serialization_alias="supervisoryDiscDualtone", validation_alias="supervisoryDiscDualtone"
-    )
 
 
-class FxoPortPolicy(PolicyDefinitionBase):
+class FxsPortPolicy(PolicyDefinitionBase):
     model_config = ConfigDict(populate_by_name=True)
-    type: Literal["fxoPort", "fxoport"] = "fxoPort"
+    type: Literal["fxsPort", "fxsport"] = "fxsPort"
     port_type: Optional[str] = Field(default=None, serialization_alias="portType", validation_alias="portType")
-    definition: FxoPortPolicyDefinition = FxoPortPolicyDefinition()
+    definition: FxsPortPolicyDefinition = FxsPortPolicyDefinition()
 
 
-class FxoPortPolicyEditPayload(FxoPortPolicy, PolicyDefinitionId):
+class FxsPortPolicyEditPayload(FxsPortPolicy, PolicyDefinitionId):
     pass
 
 
-class FxoPortPolicyGetResponse(FxoPortPolicy, PolicyDefinitionGetResponse):
+class FxsPortPolicyGetResponse(FxsPortPolicy, PolicyDefinitionGetResponse):
     pass

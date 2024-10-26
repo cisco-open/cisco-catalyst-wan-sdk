@@ -133,7 +133,7 @@ class LineParams(BaseModel):
     impedance: str
 
 
-class TuningParams(BaseModel):
+class FxoTuningParams(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     pre_dial_delay: int = Field(ge=0, serialization_alias="preDialDelay", validation_alias="preDialDelay")
     timing_sup_disc: IntStr = Field(serialization_alias="timingSupDisc", validation_alias="timingSupDisc")
@@ -148,6 +148,25 @@ class TuningParams(BaseModel):
     battery_reversal_det_delay: IntStr = Field(
         serialization_alias="batteryReversalDetDelay", validation_alias="batteryReversalDetDelay"
     )
+
+
+class FxsTuningParams(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    timing_hookflash_in_min: IntStr = Field(
+        ge=0, le=400, serialization_alias="timingHookflashInMin", validation_alias="timingHookflashInMin"
+    )
+    timing_hookflash_in_max: IntStr = Field(
+        ge=50, le=1500, serialization_alias="timingHookflashInMax", validation_alias="timingHookflashInMax"
+    )
+    loop_length: str = Field(serialization_alias="loopLength", validation_alias="loopLength")
+    ring_frequency: IntStr = Field(serialization_alias="ringFrequency", validation_alias="ringFrequency")
+    ring_dc_offset: Optional[str] = Field(
+        default=None, serialization_alias="ringDcOffset", validation_alias="ringDcOffset"
+    )
+    pulse_digit_detection: bool = Field(
+        serialization_alias="pulseDigitDetection", validation_alias="pulseDigitDetection"
+    )
+    ren: IntStr = Field(ge=1, le=5)
 
 
 class TrunkGroupPreference(BaseModel):
