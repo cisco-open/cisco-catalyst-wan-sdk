@@ -36,7 +36,7 @@ class CustomModeEntry(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     mode: Literal["custom_mode"] = "custom_mode"
     dualtone_type: str = Field(validation_alias="dualtoneType", serialization_alias="dualtoneType")
-    cadence: IntStr = Field(ge=50, le=10_000)
+    cadence: IntStr = Field(ge=0, le=10_000)
     dualtone_frequency1: IntStr = Field(
         ge=300, le=3600, validation_alias="dualtoneFrequency1", serialization_alias="dualtoneFrequency1"
     )

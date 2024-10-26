@@ -7,6 +7,7 @@ from pydantic import Field
 from typing_extensions import Annotated
 
 from catalystwan.models.policy.definition.app_route import AppRoutePolicy, AppRoutePolicyGetResponse
+from catalystwan.models.policy.definition.fxo_port import FxoPortPolicy, FxoPortPolicyGetResponse
 from catalystwan.models.policy.list.app import AppList, AppListInfo
 from catalystwan.models.policy.list.app_probe import AppProbeClassList, AppProbeClassListInfo
 from catalystwan.models.policy.list.as_path import ASPathList, ASPathListInfo
@@ -22,7 +23,7 @@ from catalystwan.models.policy.list.communities import (
 )
 from catalystwan.models.policy.list.data_ipv6_prefix import DataIPv6PrefixList, DataIPv6PrefixListInfo
 from catalystwan.models.policy.list.data_prefix import DataPrefixList, DataPrefixListInfo
-from catalystwan.models.policy.list.fax_protocol import FaxProtocolList
+from catalystwan.models.policy.list.fax_protocol import FaxProtocolList, FaxProtocolListInfo
 from catalystwan.models.policy.list.fqdn import FQDNList, FQDNListInfo
 from catalystwan.models.policy.list.geo_location import GeoLocationList, GeoLocationListInfo
 from catalystwan.models.policy.list.identity import IdentityList, IdentityListInfo
@@ -30,9 +31,9 @@ from catalystwan.models.policy.list.ips_signature import IPSSignatureList, IPSSi
 from catalystwan.models.policy.list.ipv6_prefix import IPv6PrefixList, IPv6PrefixListInfo
 from catalystwan.models.policy.list.local_app import LocalAppList, LocalAppListInfo
 from catalystwan.models.policy.list.local_domain import LocalDomainList, LocalDomainListInfo
-from catalystwan.models.policy.list.media_profile import MediaProfileList
+from catalystwan.models.policy.list.media_profile import MediaProfileList, MediaProfileListInfo
 from catalystwan.models.policy.list.mirror import MirrorList, MirrorListInfo
-from catalystwan.models.policy.list.modem_pass_through import ModemPassThroughList
+from catalystwan.models.policy.list.modem_pass_through import ModemPassThroughList, ModemPassThroughListInfo
 from catalystwan.models.policy.list.policer import PolicerList, PolicerListInfo
 from catalystwan.models.policy.list.port import PortList, PortListInfo
 from catalystwan.models.policy.list.preferred_color_group import PreferredColorGroupList, PreferredColorGroupListInfo
@@ -42,11 +43,14 @@ from catalystwan.models.policy.list.region import RegionList, RegionListInfo
 from catalystwan.models.policy.list.scalable_group_tag import ScalableGroupTagList, ScalableGroupTagListInfo
 from catalystwan.models.policy.list.site import SiteList, SiteListInfo
 from catalystwan.models.policy.list.sla import SLAClassList, SLAClassListInfo
-from catalystwan.models.policy.list.supervisory_disconnect import SupervisoryDisconnectList
+from catalystwan.models.policy.list.supervisory_disconnect import (
+    SupervisoryDisconnectList,
+    SupervisoryDisconnectListInfo,
+)
 from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList, ThreatGridApiKeyListInfo
 from catalystwan.models.policy.list.tloc import TLOCList, TLOCListInfo
-from catalystwan.models.policy.list.translation_profile import TranslationProfileList
-from catalystwan.models.policy.list.translation_rules import TranslationRulesList
+from catalystwan.models.policy.list.translation_profile import TranslationProfileList, TranslationProfileListInfo
+from catalystwan.models.policy.list.translation_rules import TranslationRulesList, TranslationRulesListInfo
 from catalystwan.models.policy.list.trunkgroup import TrunkGroupList, TrunkGroupListInfo
 from catalystwan.models.policy.list.umbrella_data import UmbrellaDataList, UmbrellaDataListInfo
 from catalystwan.models.policy.list.url import URLAllowList, URLAllowListInfo, URLBlockList, URLBlockListInfo
@@ -105,6 +109,7 @@ AnyPolicyDefinition = Annotated[
         DeviceAccessIPv6Policy,
         DeviceAccessPolicy,
         DnsSecurityPolicy,
+        FxoPortPolicy,
         HubAndSpokePolicy,
         IntrusionPreventionPolicy,
         MeshPolicy,
@@ -182,6 +187,7 @@ AnyPolicyListInfo = Annotated[
         DataPrefixListInfo,
         ExpandedCommunityListInfo,
         ExtendedCommunityListInfo,
+        FaxProtocolListInfo,
         FQDNListInfo,
         GeoLocationListInfo,
         IdentityListInfo,
@@ -189,7 +195,9 @@ AnyPolicyListInfo = Annotated[
         IPv6PrefixListInfo,
         LocalAppListInfo,
         LocalDomainListInfo,
+        MediaProfileListInfo,
         MirrorListInfo,
+        ModemPassThroughListInfo,
         PolicerListInfo,
         PortListInfo,
         PreferredColorGroupListInfo,
@@ -199,8 +207,11 @@ AnyPolicyListInfo = Annotated[
         ScalableGroupTagListInfo,
         SiteListInfo,
         SLAClassListInfo,
+        SupervisoryDisconnectListInfo,
         ThreatGridApiKeyListInfo,
         TLOCListInfo,
+        TranslationProfileListInfo,
+        TranslationRulesListInfo,
         TrunkGroupListInfo,
         UmbrellaDataListInfo,
         URLAllowListInfo,
@@ -223,6 +234,7 @@ AnyPolicyDefinitionInfo = Annotated[
         DeviceAccessIPv6PolicyGetResponse,
         DeviceAccessPolicyGetResponse,
         DnsSecurityPolicyGetResponse,
+        FxoPortPolicyGetResponse,
         HubAndSpokePolicyGetResponse,
         IntrusionPreventionPolicyGetResponse,
         MeshPolicyGetResponse,

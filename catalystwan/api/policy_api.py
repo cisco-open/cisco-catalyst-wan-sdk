@@ -23,6 +23,7 @@ from catalystwan.endpoints.configuration.policy.definition.device_access_ipv6 im
     ConfigurationPolicyDeviceAccessIPv6Definition,
 )
 from catalystwan.endpoints.configuration.policy.definition.dns_security import ConfigurationPolicyDnsSecurityDefinition
+from catalystwan.endpoints.configuration.policy.definition.fxo_port import ConfigurationPolicyFxoPortDefinition
 from catalystwan.endpoints.configuration.policy.definition.hub_and_spoke import ConfigurationPolicyHubAndSpokeDefinition
 from catalystwan.endpoints.configuration.policy.definition.intrusion_prevention import (
     ConfigurationPolicyIntrusionPreventionDefinition,
@@ -167,6 +168,7 @@ from catalystwan.models.policy.definition.device_access_ipv6 import (
     DeviceAccessIPv6PolicyGetResponse,
 )
 from catalystwan.models.policy.definition.dns_security import DnsSecurityPolicy, DnsSecurityPolicyGetResponse
+from catalystwan.models.policy.definition.fxo_port import FxoPortPolicy, FxoPortPolicyGetResponse
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy, HubAndSpokePolicyGetResponse
 from catalystwan.models.policy.definition.intrusion_prevention import (
     IntrusionPreventionPolicy,
@@ -294,6 +296,7 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     DeviceAccessIPv6Policy: ConfigurationPolicyDeviceAccessIPv6Definition,
     DeviceAccessPolicy: ConfigurationPolicyDeviceAccessDefinition,
     DnsSecurityPolicy: ConfigurationPolicyDnsSecurityDefinition,
+    FxoPortPolicy: ConfigurationPolicyFxoPortDefinition,
     HubAndSpokePolicy: ConfigurationPolicyHubAndSpokeDefinition,
     IntrusionPreventionPolicy: ConfigurationPolicyIntrusionPreventionDefinition,
     MeshPolicy: ConfigurationPolicyMeshDefinition,
@@ -907,6 +910,10 @@ class PolicyDefinitionsAPI:
     def get(self, type: Type[AppRoutePolicy]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
+    @overload
+    def get(self, type: Type[FxoPortPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
     # get by id
     @overload
     def get(self, type: Type[IntrusionPreventionPolicy], id: UUID) -> IntrusionPreventionPolicyGetResponse:
@@ -1002,6 +1009,10 @@ class PolicyDefinitionsAPI:
 
     @overload
     def get(self, type: Type[AppRoutePolicy], id: UUID) -> AppRoutePolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[FxoPortPolicy], id: UUID) -> FxoPortPolicyGetResponse:
         ...
 
     def get(self, type: Type[AnyPolicyDefinition], id: Optional[UUID] = None) -> Any:

@@ -116,6 +116,70 @@ class VariableName(BaseModel):
     vip_variable_name: str = Field(serialization_alias="vipVariableName", validation_alias="vipVariableName")
 
 
+class CommonStation(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    name: str
+    number: str
+
+
+class LineParams(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    gain: IntStr
+    attenuation: IntStr
+    echo_cancellor: bool = Field(validation_alias="echoCancellor", serialization_alias="echoCancellor")
+    vad: bool
+    compand_type: str = Field(serialization_alias="compandType", validation_alias="compandType")
+    cptone: str
+    impedance: str
+
+
+class TuningParams(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    pre_dial_delay: int = Field(ge=0, serialization_alias="preDialDelay", validation_alias="preDialDelay")
+    timing_sup_disc: IntStr = Field(serialization_alias="timingSupDisc", validation_alias="timingSupDisc")
+    supervisory_disconnect: str = Field(
+        serialization_alias="supervisoryDisconnect", validation_alias="supervisoryDisconnect"
+    )
+    dial_type: str = Field(serialization_alias="dialType", validation_alias="dialType")
+    timing_hookflash_out: IntStr = Field(
+        serialization_alias="timingHookflashOut", validation_alias="timingHookflashOut"
+    )
+    timing_guard_out: IntStr = Field(serialization_alias="timingGuardOut", validation_alias="timingGuardOut")
+    battery_reversal_det_delay: IntStr = Field(
+        serialization_alias="batteryReversalDetDelay", validation_alias="batteryReversalDetDelay"
+    )
+
+
+class TrunkGroupPreference(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    ref: UUID
+    preference: int
+
+
+class TranslationRuleEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    ref: UUID
+    name: str
+
+
+class TranslationProfileEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    ref: UUID
+    name: str
+    calling_translation_rule: Optional[TranslationRuleEntry] = Field(
+        default=None, serialization_alias="callingTranslationRule", validation_alias="callingTranslationRule"
+    )
+    called_translation_rule: Optional[TranslationRuleEntry] = Field(
+        default=None, serialization_alias="calledTranslationRule", validation_alias="calledTranslationRule"
+    )
+
+
+class SupervisoryDisconnectEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    ref: UUID
+    name: str
+
+
 class LocalTLOCListEntryValue(BaseModel):
     color: SpaceSeparatedTLOCColorStr
     encap: Optional[EncapType] = None
