@@ -7,6 +7,7 @@ from pydantic import Field
 from typing_extensions import Annotated
 
 from catalystwan.models.policy.definition.app_route import AppRoutePolicy, AppRoutePolicyGetResponse
+from catalystwan.models.policy.definition.dial_peer import DialPeerPolicy, DialPeerPolicyGetResponse
 from catalystwan.models.policy.definition.fxo_port import FxoPortPolicy, FxoPortPolicyGetResponse
 from catalystwan.models.policy.definition.fxs_did_port import FxsDidPortPolicy, FxsDidPortPolicyGetResponse
 from catalystwan.models.policy.definition.fxs_port import FxsPortPolicy, FxsPortPolicyGetResponse
@@ -110,6 +111,7 @@ AnyPolicyDefinition = Annotated[
         ControlPolicy,
         DeviceAccessIPv6Policy,
         DeviceAccessPolicy,
+        DialPeerPolicy,
         DnsSecurityPolicy,
         FxoPortPolicy,
         FxsPortPolicy,
@@ -237,6 +239,7 @@ AnyPolicyDefinitionInfo = Annotated[
         ControlPolicyGetResponse,
         DeviceAccessIPv6PolicyGetResponse,
         DeviceAccessPolicyGetResponse,
+        DialPeerPolicyGetResponse,
         DnsSecurityPolicyGetResponse,
         FxoPortPolicyGetResponse,
         FxsPortPolicyGetResponse,

@@ -32,6 +32,7 @@ from catalystwan.endpoints.configuration.policy.definition.device_access import 
 from catalystwan.endpoints.configuration.policy.definition.device_access_ipv6 import (
     ConfigurationPolicyDeviceAccessIPv6Definition,
 )
+from catalystwan.endpoints.configuration.policy.definition.dial_peer import ConfigurationPolicyDialPeerDefinition
 from catalystwan.endpoints.configuration.policy.definition.fxo_port import ConfigurationPolicyFxoPortDefinition
 from catalystwan.endpoints.configuration.policy.definition.fxs_did_port import ConfigurationPolicyFxsDidPortDefinition
 from catalystwan.endpoints.configuration.policy.definition.fxs_port import ConfigurationPolicyFxsPortDefinition
@@ -176,6 +177,7 @@ class ConfigurationPolicyDefinitionContainer:
         self.data = ConfigurationPolicyDataDefinition(session)
         self.device_access = ConfigurationPolicyDeviceAccessDefinition(session)
         self.device_access_ipv6 = ConfigurationPolicyDeviceAccessIPv6Definition(session)
+        self.dial_peer = ConfigurationPolicyDialPeerDefinition(session)
         self.fxo_port = ConfigurationPolicyFxoPortDefinition(session)
         self.fxs_port = ConfigurationPolicyFxsPortDefinition(session)
         self.fxs_did_port = ConfigurationPolicyFxsDidPortDefinition(session)

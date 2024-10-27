@@ -122,6 +122,11 @@ class CommonStation(BaseModel):
     number: str
 
 
+class MediaProfileRef(BaseModel):
+    name: int
+    ref: UUID
+
+
 class LineParams(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     gain: IntStr
@@ -137,19 +142,13 @@ class DidTimers(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     answerWinkwidth: IntStr = Field(
         ge=110, le=290, serialization_alias="answerWinkwidth", validation_alias="answerWinkwidth"
-    )  # "answerWinkwidth": "110",
-    clearWait: IntStr = Field(
-        ge=200, le=2000, serialization_alias="clearWait", validation_alias="clearWait"
-    )  # "clearWait": "200",
-    waitWink: IntStr = Field(
-        ge=100, le=6500, serialization_alias="waitWink", validation_alias="waitWink"
-    )  # "waitWink": "100",
-    winkDuration: IntStr = Field(
-        ge=50, le=3000, serialization_alias="winkDuration", validation_alias="winkDuration"
-    )  # "winkDuration": "50",
+    )
+    clearWait: IntStr = Field(ge=200, le=2000, serialization_alias="clearWait", validation_alias="clearWait")
+    waitWink: IntStr = Field(ge=100, le=6500, serialization_alias="waitWink", validation_alias="waitWink")
+    winkDuration: IntStr = Field(ge=50, le=3000, serialization_alias="winkDuration", validation_alias="winkDuration")
     dialPulseMinDelay: IntStr = Field(
         ge=0, le=5000, serialization_alias="dialPulseMinDelay", validation_alias="dialPulseMinDelay"
-    )  # "dialPulseMinDelay": "140"
+    )
 
 
 class FxoTuningParams(BaseModel):

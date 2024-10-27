@@ -22,6 +22,7 @@ from catalystwan.endpoints.configuration.policy.definition.device_access import 
 from catalystwan.endpoints.configuration.policy.definition.device_access_ipv6 import (
     ConfigurationPolicyDeviceAccessIPv6Definition,
 )
+from catalystwan.endpoints.configuration.policy.definition.dial_peer import ConfigurationPolicyDialPeerDefinition
 from catalystwan.endpoints.configuration.policy.definition.dns_security import ConfigurationPolicyDnsSecurityDefinition
 from catalystwan.endpoints.configuration.policy.definition.fxo_port import ConfigurationPolicyFxoPortDefinition
 from catalystwan.endpoints.configuration.policy.definition.fxs_did_port import ConfigurationPolicyFxsDidPortDefinition
@@ -169,6 +170,7 @@ from catalystwan.models.policy.definition.device_access_ipv6 import (
     DeviceAccessIPv6Policy,
     DeviceAccessIPv6PolicyGetResponse,
 )
+from catalystwan.models.policy.definition.dial_peer import DialPeerPolicy, DialPeerPolicyGetResponse
 from catalystwan.models.policy.definition.dns_security import DnsSecurityPolicy, DnsSecurityPolicyGetResponse
 from catalystwan.models.policy.definition.fxo_port import FxoPortPolicy, FxoPortPolicyGetResponse
 from catalystwan.models.policy.definition.fxs_did_port import FxsDidPortPolicy, FxsDidPortPolicyGetResponse
@@ -299,6 +301,7 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     ControlPolicy: ConfigurationPolicyControlDefinition,
     DeviceAccessIPv6Policy: ConfigurationPolicyDeviceAccessIPv6Definition,
     DeviceAccessPolicy: ConfigurationPolicyDeviceAccessDefinition,
+    DialPeerPolicy: ConfigurationPolicyDialPeerDefinition,
     DnsSecurityPolicy: ConfigurationPolicyDnsSecurityDefinition,
     FxoPortPolicy: ConfigurationPolicyFxoPortDefinition,
     FxsPortPolicy: ConfigurationPolicyFxsPortDefinition,
@@ -928,6 +931,10 @@ class PolicyDefinitionsAPI:
     def get(self, type: Type[FxsDidPortPolicy]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
+    @overload
+    def get(self, type: Type[DialPeerPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
     # get by id
     @overload
     def get(self, type: Type[IntrusionPreventionPolicy], id: UUID) -> IntrusionPreventionPolicyGetResponse:
@@ -1035,6 +1042,10 @@ class PolicyDefinitionsAPI:
 
     @overload
     def get(self, type: Type[FxsDidPortPolicy], id: UUID) -> FxsDidPortPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[DialPeerPolicy], id: UUID) -> DialPeerPolicyGetResponse:
         ...
 
     def get(self, type: Type[AnyPolicyDefinition], id: Optional[UUID] = None) -> Any:

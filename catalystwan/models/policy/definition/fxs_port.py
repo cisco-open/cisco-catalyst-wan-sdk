@@ -41,7 +41,7 @@ class FxsPortPolicyDefinition(BaseModel):
 class FxsPortPolicy(PolicyDefinitionBase):
     model_config = ConfigDict(populate_by_name=True)
     type: Literal["fxsPort", "fxsport"] = "fxsPort"
-    port_type: Optional[str] = Field(default=None, serialization_alias="portType", validation_alias="portType")
+    port_type: Optional[str] = Field(default="voicePort", serialization_alias="portType", validation_alias="portType")
     definition: FxsPortPolicyDefinition = FxsPortPolicyDefinition()
 
 
