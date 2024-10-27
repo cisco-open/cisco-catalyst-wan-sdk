@@ -22,18 +22,26 @@ from catalystwan.endpoints.configuration.policy.definition.device_access import 
 from catalystwan.endpoints.configuration.policy.definition.device_access_ipv6 import (
     ConfigurationPolicyDeviceAccessIPv6Definition,
 )
+from catalystwan.endpoints.configuration.policy.definition.dial_peer import ConfigurationPolicyDialPeerDefinition
 from catalystwan.endpoints.configuration.policy.definition.dns_security import ConfigurationPolicyDnsSecurityDefinition
+from catalystwan.endpoints.configuration.policy.definition.fxo_port import ConfigurationPolicyFxoPortDefinition
+from catalystwan.endpoints.configuration.policy.definition.fxs_did_port import ConfigurationPolicyFxsDidPortDefinition
+from catalystwan.endpoints.configuration.policy.definition.fxs_port import ConfigurationPolicyFxsPortDefinition
 from catalystwan.endpoints.configuration.policy.definition.hub_and_spoke import ConfigurationPolicyHubAndSpokeDefinition
 from catalystwan.endpoints.configuration.policy.definition.intrusion_prevention import (
     ConfigurationPolicyIntrusionPreventionDefinition,
 )
 from catalystwan.endpoints.configuration.policy.definition.mesh import ConfigurationPolicyMeshDefinition
+from catalystwan.endpoints.configuration.policy.definition.pri_isdn_port import ConfigurationPolicyPriIsdnPortDefinition
 from catalystwan.endpoints.configuration.policy.definition.qos_map import ConfigurationPolicyQoSMapDefinition
 from catalystwan.endpoints.configuration.policy.definition.rewrite import ConfigurationPolicyRewriteRuleDefinition
 from catalystwan.endpoints.configuration.policy.definition.route_policy import ConfigurationPolicyRouteDefinition
 from catalystwan.endpoints.configuration.policy.definition.rule_set import ConfigurationPolicyRuleSetDefinition
 from catalystwan.endpoints.configuration.policy.definition.security_group import (
     ConfigurationPolicySecurityGroupDefinition,
+)
+from catalystwan.endpoints.configuration.policy.definition.srst_phone_profile import (
+    ConfigurationPolicySrstPhoneProfileDefinition,
 )
 from catalystwan.endpoints.configuration.policy.definition.ssl_decryption import ConfigurationSslDecryptionDefinition
 from catalystwan.endpoints.configuration.policy.definition.ssl_decryption_utd_profile import (
@@ -59,6 +67,7 @@ from catalystwan.endpoints.configuration.policy.list.data_ipv6_prefix import Con
 from catalystwan.endpoints.configuration.policy.list.data_prefix import ConfigurationPolicyDataPrefixList
 from catalystwan.endpoints.configuration.policy.list.expanded_community import ConfigurationPolicyExpandedCommunityList
 from catalystwan.endpoints.configuration.policy.list.extended_community import ConfigurationPolicyExtendedCommunityList
+from catalystwan.endpoints.configuration.policy.list.fax_protocol import ConfigurationPolicyFaxProtocolList
 from catalystwan.endpoints.configuration.policy.list.fqdn import ConfigurationPolicyFQDNList, FQDNListInfo
 from catalystwan.endpoints.configuration.policy.list.geo_location import ConfigurationPolicyGeoLocationList
 from catalystwan.endpoints.configuration.policy.list.identity import ConfigurationPolicyIdentityList
@@ -66,7 +75,9 @@ from catalystwan.endpoints.configuration.policy.list.ips_signature import Config
 from catalystwan.endpoints.configuration.policy.list.ipv6_prefix import ConfigurationPolicyIPv6PrefixList
 from catalystwan.endpoints.configuration.policy.list.local_app import ConfigurationPolicyLocalAppList, LocalAppListInfo
 from catalystwan.endpoints.configuration.policy.list.local_domain import ConfigurationPolicyLocalDomainList
+from catalystwan.endpoints.configuration.policy.list.media_profile import ConfigurationPolicyMediaProfileList
 from catalystwan.endpoints.configuration.policy.list.mirror import ConfigurationPolicyMirrorList, MirrorListInfo
+from catalystwan.endpoints.configuration.policy.list.modem_pass_through import ConfigurationPolicyModemPassThroughList
 from catalystwan.endpoints.configuration.policy.list.policer import ConfigurationPolicyPolicerClassList, PolicerListInfo
 from catalystwan.endpoints.configuration.policy.list.port import ConfigurationPolicyPortList, PortListInfo
 from catalystwan.endpoints.configuration.policy.list.preferred_color_group import (
@@ -82,8 +93,15 @@ from catalystwan.endpoints.configuration.policy.list.region import Configuration
 from catalystwan.endpoints.configuration.policy.list.scalable_group_tag import ConfigurationPolicyScalableGroupTagList
 from catalystwan.endpoints.configuration.policy.list.site import ConfigurationPolicySiteList, SiteListInfo
 from catalystwan.endpoints.configuration.policy.list.sla import ConfigurationPolicySLAClassList, SLAClassListInfo
+from catalystwan.endpoints.configuration.policy.list.supervisory_disconnect import (
+    ConfigurationPolicySupervisoryDisconnectList,
+)
 from catalystwan.endpoints.configuration.policy.list.threat_grid_api_key import ConfigurationPolicyThreatGridApiKeyList
 from catalystwan.endpoints.configuration.policy.list.tloc import ConfigurationPolicyTLOCList, TLOCListInfo
+from catalystwan.endpoints.configuration.policy.list.translation_profile import (
+    ConfigurationPolicyTranslationProfileList,
+)
+from catalystwan.endpoints.configuration.policy.list.translation_rules import ConfigurationPolicyTranslationRulesList
 from catalystwan.endpoints.configuration.policy.list.trunkgroup import ConfigurationPolicyTrunkGroupList
 from catalystwan.endpoints.configuration.policy.list.umbrella_data import ConfigurationPolicyUmbrellaDataList
 from catalystwan.endpoints.configuration.policy.list.url_allow_list import (
@@ -98,6 +116,7 @@ from catalystwan.endpoints.configuration.policy.list.vpn import ConfigurationPol
 from catalystwan.endpoints.configuration.policy.list.zone import ConfigurationPolicyZoneList, ZoneListInfo
 from catalystwan.endpoints.configuration.policy.security_template import ConfigurationSecurityTemplatePolicy
 from catalystwan.endpoints.configuration.policy.vedge_template import ConfigurationVEdgeTemplatePolicy
+from catalystwan.endpoints.configuration.policy.voice_template import ConfigurationVoiceTemplatePolicy
 from catalystwan.endpoints.configuration.policy.vsmart_template import (
     ConfigurationVSmartTemplatePolicy,
     VSmartConnectivityStatus,
@@ -156,18 +175,27 @@ from catalystwan.models.policy.definition.device_access_ipv6 import (
     DeviceAccessIPv6Policy,
     DeviceAccessIPv6PolicyGetResponse,
 )
+from catalystwan.models.policy.definition.dial_peer import DialPeerPolicy, DialPeerPolicyGetResponse
 from catalystwan.models.policy.definition.dns_security import DnsSecurityPolicy, DnsSecurityPolicyGetResponse
+from catalystwan.models.policy.definition.fxo_port import FxoPortPolicy, FxoPortPolicyGetResponse
+from catalystwan.models.policy.definition.fxs_did_port import FxsDidPortPolicy, FxsDidPortPolicyGetResponse
+from catalystwan.models.policy.definition.fxs_port import FxsPortPolicy, FxsPortPolicyGetResponse
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy, HubAndSpokePolicyGetResponse
 from catalystwan.models.policy.definition.intrusion_prevention import (
     IntrusionPreventionPolicy,
     IntrusionPreventionPolicyGetResponse,
 )
 from catalystwan.models.policy.definition.mesh import MeshPolicy, MeshPolicyGetResponse
+from catalystwan.models.policy.definition.pri_isdn_port import PriIsdnPortPolicy, PriIsdnPortPolicyGetResponse
 from catalystwan.models.policy.definition.qos_map import QoSMapPolicy, QoSMapPolicyGetResponse
 from catalystwan.models.policy.definition.rewrite import RewritePolicy, RewritePolicyGetResponse
 from catalystwan.models.policy.definition.route_policy import RoutePolicy, RoutePolicyGetResponse
 from catalystwan.models.policy.definition.rule_set import RuleSet, RuleSetGetResponse
 from catalystwan.models.policy.definition.security_group import SecurityGroup, SecurityGroupGetResponse
+from catalystwan.models.policy.definition.srst_phone_profile import (
+    SrstPhoneProfilePolicy,
+    SrstPhoneProfilePolicyGetResponse,
+)
 from catalystwan.models.policy.definition.ssl_decryption import SslDecryptionPolicy, SslDecryptionPolicyGetResponse
 from catalystwan.models.policy.definition.ssl_decryption_utd_profile import (
     SslDecryptionUtdProfilePolicy,
@@ -186,13 +214,22 @@ from catalystwan.models.policy.list.communities import (
 )
 from catalystwan.models.policy.list.data_ipv6_prefix import DataIPv6PrefixListInfo
 from catalystwan.models.policy.list.data_prefix import DataPrefixListInfo
+from catalystwan.models.policy.list.fax_protocol import FaxProtocolList, FaxProtocolListInfo
 from catalystwan.models.policy.list.geo_location import GeoLocationListInfo
 from catalystwan.models.policy.list.identity import IdentityList, IdentityListInfo
 from catalystwan.models.policy.list.ips_signature import IPSSignatureListInfo
 from catalystwan.models.policy.list.ipv6_prefix import IPv6PrefixListInfo
 from catalystwan.models.policy.list.local_domain import LocalDomainListInfo
+from catalystwan.models.policy.list.media_profile import MediaProfileList, MediaProfileListInfo
+from catalystwan.models.policy.list.modem_pass_through import ModemPassThroughList, ModemPassThroughListInfo
 from catalystwan.models.policy.list.scalable_group_tag import ScalableGroupTagList, ScalableGroupTagListInfo
+from catalystwan.models.policy.list.supervisory_disconnect import (
+    SupervisoryDisconnectList,
+    SupervisoryDisconnectListInfo,
+)
 from catalystwan.models.policy.list.threat_grid_api_key import ThreatGridApiKeyList, ThreatGridApiKeyListInfo
+from catalystwan.models.policy.list.translation_profile import TranslationProfileList, TranslationProfileListInfo
+from catalystwan.models.policy.list.translation_rules import TranslationRulesList, TranslationRulesListInfo
 from catalystwan.models.policy.list.trunkgroup import TrunkGroupList, TrunkGroupListInfo
 from catalystwan.models.policy.list.umbrella_data import UmbrellaDataList, UmbrellaDataListInfo
 from catalystwan.models.policy.localized import (
@@ -214,6 +251,7 @@ from catalystwan.models.policy.security import (
     SecurityPolicyEditResponse,
     UnifiedSecurityPolicy,
 )
+from catalystwan.models.policy.voice import VoicePolicy, VoicePolicyEditResponse, VoicePolicyInfo
 from catalystwan.typed_list import DataSequence
 
 if TYPE_CHECKING:
@@ -231,31 +269,37 @@ POLICY_LIST_ENDPOINTS_MAP: Mapping[type, type] = {
     DataPrefixList: ConfigurationPolicyDataPrefixList,
     ExpandedCommunityList: ConfigurationPolicyExpandedCommunityList,
     ExtendedCommunityList: ConfigurationPolicyExtendedCommunityList,
+    FaxProtocolList: ConfigurationPolicyFaxProtocolList,
     FQDNList: ConfigurationPolicyFQDNList,
     GeoLocationList: ConfigurationPolicyGeoLocationList,
+    IdentityList: ConfigurationPolicyIdentityList,
     IPSSignatureList: ConfigurationPolicyIPSSignatureList,
     IPv6PrefixList: ConfigurationPolicyIPv6PrefixList,
     LocalAppList: ConfigurationPolicyLocalAppList,
     LocalDomainList: ConfigurationPolicyLocalDomainList,
+    MediaProfileList: ConfigurationPolicyMediaProfileList,
     MirrorList: ConfigurationPolicyMirrorList,
+    ModemPassThroughList: ConfigurationPolicyModemPassThroughList,
     PolicerList: ConfigurationPolicyPolicerClassList,
-    ScalableGroupTagList: ConfigurationPolicyScalableGroupTagList,
     PortList: ConfigurationPolicyPortList,
     PreferredColorGroupList: ConfigurationPreferredColorGroupList,
     PrefixList: ConfigurationPolicyPrefixList,
     ProtocolNameList: ConfigurationPolicyProtocolNameList,
     RegionList: ConfigurationPolicyRegionList,
+    ScalableGroupTagList: ConfigurationPolicyScalableGroupTagList,
     SiteList: ConfigurationPolicySiteList,
     SLAClassList: ConfigurationPolicySLAClassList,
+    SupervisoryDisconnectList: ConfigurationPolicySupervisoryDisconnectList,
     ThreatGridApiKeyList: ConfigurationPolicyThreatGridApiKeyList,
     TLOCList: ConfigurationPolicyTLOCList,
+    TranslationProfileList: ConfigurationPolicyTranslationProfileList,
+    TranslationRulesList: ConfigurationPolicyTranslationRulesList,
     TrunkGroupList: ConfigurationPolicyTrunkGroupList,
     UmbrellaDataList: ConfigurationPolicyUmbrellaDataList,
-    URLBlockList: ConfigurationPolicyURLBlockList,
     URLAllowList: ConfigurationPolicyURLAllowList,
+    URLBlockList: ConfigurationPolicyURLBlockList,
     VPNList: ConfigurationPolicyVPNList,
     ZoneList: ConfigurationPolicyZoneList,
-    IdentityList: ConfigurationPolicyIdentityList,
 }
 
 POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
@@ -268,10 +312,15 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     ControlPolicy: ConfigurationPolicyControlDefinition,
     DeviceAccessIPv6Policy: ConfigurationPolicyDeviceAccessIPv6Definition,
     DeviceAccessPolicy: ConfigurationPolicyDeviceAccessDefinition,
+    DialPeerPolicy: ConfigurationPolicyDialPeerDefinition,
     DnsSecurityPolicy: ConfigurationPolicyDnsSecurityDefinition,
+    FxoPortPolicy: ConfigurationPolicyFxoPortDefinition,
+    FxsPortPolicy: ConfigurationPolicyFxsPortDefinition,
+    FxsDidPortPolicy: ConfigurationPolicyFxsDidPortDefinition,
     HubAndSpokePolicy: ConfigurationPolicyHubAndSpokeDefinition,
     IntrusionPreventionPolicy: ConfigurationPolicyIntrusionPreventionDefinition,
     MeshPolicy: ConfigurationPolicyMeshDefinition,
+    PriIsdnPortPolicy: ConfigurationPolicyPriIsdnPortDefinition,
     QoSMapPolicy: ConfigurationPolicyQoSMapDefinition,
     RewritePolicy: ConfigurationPolicyRewriteRuleDefinition,
     RoutePolicy: ConfigurationPolicyRouteDefinition,
@@ -279,6 +328,7 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     SecurityGroup: ConfigurationPolicySecurityGroupDefinition,
     SslDecryptionPolicy: ConfigurationSslDecryptionDefinition,
     SslDecryptionUtdProfilePolicy: ConfigurationSslDecryptionUtdProfileDefinition,
+    SrstPhoneProfilePolicy: ConfigurationPolicySrstPhoneProfileDefinition,
     TrafficDataPolicy: ConfigurationPolicyDataDefinition,
     UrlFilteringPolicy: ConfigurationPolicyUrlFilteringDefinition,
     VPNMembershipPolicy: ConfigurationPolicyVPNMembershipGroupDefinition,
@@ -399,6 +449,34 @@ class SecurityPolicyAPI:
         return self._endpoints.generate_security_template_list()
 
 
+class VoicePolicyAPI:
+    def __init__(self, session: ManagerSession):
+        self._session = session
+        self._endpoints = ConfigurationVoiceTemplatePolicy(session)
+
+    def create(self, policy: VoicePolicy) -> None:
+        self._endpoints.create_voice_template(policy)
+
+    def edit(self, id: UUID, policy: VoicePolicy) -> VoicePolicyEditResponse:
+        return self._endpoints.edit_voice_template(id, policy)
+
+    def delete(self, id: UUID) -> None:
+        self._endpoints.delete_voice_template(id)
+
+    @overload
+    def get(self) -> DataSequence[VoicePolicyInfo]:
+        ...
+
+    @overload
+    def get(self, id: UUID) -> VoicePolicy:
+        ...
+
+    def get(self, id: Optional[UUID] = None) -> Any:
+        if id is not None:
+            return self._endpoints.get_voice_template(id)
+        return self._endpoints.generate_voice_template_list()
+
+
 class PolicyListsAPI:
     def __init__(self, session: ManagerSession):
         self._session = session
@@ -462,6 +540,10 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[FaxProtocolList]) -> DataSequence[FaxProtocolListInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[FQDNList]) -> DataSequence[FQDNListInfo]:
         ...
 
@@ -483,6 +565,14 @@ class PolicyListsAPI:
 
     @overload
     def get(self, type: Type[LocalDomainList]) -> DataSequence[LocalDomainListInfo]:
+        ...
+
+    @overload
+    def get(self, type: Type[MediaProfileList]) -> DataSequence[MediaProfileListInfo]:
+        ...
+
+    @overload
+    def get(self, type: Type[ModemPassThroughList]) -> DataSequence[ModemPassThroughListInfo]:
         ...
 
     @overload
@@ -522,11 +612,23 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[SupervisoryDisconnectList]) -> DataSequence[SupervisoryDisconnectListInfo]:
+        ...
+
+    @overload
     def get(self, type: Type[ThreatGridApiKeyList]) -> DataSequence[ThreatGridApiKeyListInfo]:
         ...
 
     @overload
     def get(self, type: Type[TLOCList]) -> DataSequence[TLOCListInfo]:
+        ...
+
+    @overload
+    def get(self, type: Type[TranslationProfileList]) -> DataSequence[TranslationProfileListInfo]:
+        ...
+
+    @overload
+    def get(self, type: Type[TranslationRulesList]) -> DataSequence[TranslationRulesListInfo]:
         ...
 
     @overload
@@ -604,6 +706,10 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[FaxProtocolList], id: UUID) -> FaxProtocolListInfo:
+        ...
+
+    @overload
     def get(self, type: Type[FQDNList], id: UUID) -> FQDNListInfo:
         ...
 
@@ -628,7 +734,15 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[MediaProfileList], id: UUID) -> MediaProfileListInfo:
+        ...
+
+    @overload
     def get(self, type: Type[MirrorList], id: UUID) -> MirrorListInfo:
+        ...
+
+    @overload
+    def get(self, type: Type[ModemPassThroughList], id: UUID) -> ModemPassThroughListInfo:
         ...
 
     @overload
@@ -664,11 +778,23 @@ class PolicyListsAPI:
         ...
 
     @overload
+    def get(self, type: Type[SupervisoryDisconnectList], id: UUID) -> SupervisoryDisconnectListInfo:
+        ...
+
+    @overload
     def get(self, type: Type[ThreatGridApiKeyList], id: UUID) -> ThreatGridApiKeyListInfo:
         ...
 
     @overload
     def get(self, type: Type[TLOCList], id: UUID) -> TLOCListInfo:
+        ...
+
+    @overload
+    def get(self, type: Type[TranslationProfileList], id: UUID) -> TranslationProfileListInfo:
+        ...
+
+    @overload
+    def get(self, type: Type[TranslationRulesList], id: UUID) -> TranslationRulesListInfo:
         ...
 
     @overload
@@ -834,6 +960,30 @@ class PolicyDefinitionsAPI:
     def get(self, type: Type[AppRoutePolicy]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
+    @overload
+    def get(self, type: Type[FxoPortPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
+    def get(self, type: Type[FxsPortPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
+    def get(self, type: Type[FxsDidPortPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
+    def get(self, type: Type[DialPeerPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
+    def get(self, type: Type[PriIsdnPortPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
+    @overload
+    def get(self, type: Type[SrstPhoneProfilePolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
     # get by id
     @overload
     def get(self, type: Type[IntrusionPreventionPolicy], id: UUID) -> IntrusionPreventionPolicyGetResponse:
@@ -931,6 +1081,30 @@ class PolicyDefinitionsAPI:
     def get(self, type: Type[AppRoutePolicy], id: UUID) -> AppRoutePolicyGetResponse:
         ...
 
+    @overload
+    def get(self, type: Type[FxoPortPolicy], id: UUID) -> FxoPortPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[FxsPortPolicy], id: UUID) -> FxsPortPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[FxsDidPortPolicy], id: UUID) -> FxsDidPortPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[DialPeerPolicy], id: UUID) -> DialPeerPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[PriIsdnPortPolicy], id: UUID) -> PriIsdnPortPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[SrstPhoneProfilePolicy], id: UUID) -> SrstPhoneProfilePolicyGetResponse:
+        ...
+
     def get(self, type: Type[AnyPolicyDefinition], id: Optional[UUID] = None) -> Any:
         endpoints = self.__get_definition_endpoints_instance(type)
         if id is not None:
@@ -950,10 +1124,11 @@ class PolicyAPI:
     def __init__(self, session: ManagerSession):
         self._session = session
         self.centralized = CentralizedPolicyAPI(session)
-        self.localized = LocalizedPolicyAPI(session)
-        self.security = SecurityPolicyAPI(session)
         self.definitions = PolicyDefinitionsAPI(session)
         self.lists = PolicyListsAPI(session)
+        self.localized = LocalizedPolicyAPI(session)
+        self.security = SecurityPolicyAPI(session)
+        self.voice = VoicePolicyAPI(session)
 
     def delete_any(self, _type: Any, id: UUID) -> None:
         if issubclass(_type, PolicyListBase):

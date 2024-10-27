@@ -32,13 +32,21 @@ from catalystwan.endpoints.configuration.policy.definition.device_access import 
 from catalystwan.endpoints.configuration.policy.definition.device_access_ipv6 import (
     ConfigurationPolicyDeviceAccessIPv6Definition,
 )
+from catalystwan.endpoints.configuration.policy.definition.dial_peer import ConfigurationPolicyDialPeerDefinition
+from catalystwan.endpoints.configuration.policy.definition.fxo_port import ConfigurationPolicyFxoPortDefinition
+from catalystwan.endpoints.configuration.policy.definition.fxs_did_port import ConfigurationPolicyFxsDidPortDefinition
+from catalystwan.endpoints.configuration.policy.definition.fxs_port import ConfigurationPolicyFxsPortDefinition
 from catalystwan.endpoints.configuration.policy.definition.hub_and_spoke import ConfigurationPolicyHubAndSpokeDefinition
 from catalystwan.endpoints.configuration.policy.definition.mesh import ConfigurationPolicyMeshDefinition
+from catalystwan.endpoints.configuration.policy.definition.pri_isdn_port import ConfigurationPolicyPriIsdnPortDefinition
 from catalystwan.endpoints.configuration.policy.definition.qos_map import ConfigurationPolicyQoSMapDefinition
 from catalystwan.endpoints.configuration.policy.definition.rewrite import ConfigurationPolicyRewriteRuleDefinition
 from catalystwan.endpoints.configuration.policy.definition.rule_set import ConfigurationPolicyRuleSetDefinition
 from catalystwan.endpoints.configuration.policy.definition.security_group import (
     ConfigurationPolicySecurityGroupDefinition,
+)
+from catalystwan.endpoints.configuration.policy.definition.srst_phone_profile import (
+    ConfigurationPolicySrstPhoneProfileDefinition,
 )
 from catalystwan.endpoints.configuration.policy.definition.traffic_data import ConfigurationPolicyDataDefinition
 from catalystwan.endpoints.configuration.policy.definition.vpn_membership import (
@@ -57,13 +65,16 @@ from catalystwan.endpoints.configuration.policy.list.data_ipv6_prefix import Con
 from catalystwan.endpoints.configuration.policy.list.data_prefix import ConfigurationPolicyDataPrefixList
 from catalystwan.endpoints.configuration.policy.list.expanded_community import ConfigurationPolicyExpandedCommunityList
 from catalystwan.endpoints.configuration.policy.list.extended_community import ConfigurationPolicyExtendedCommunityList
+from catalystwan.endpoints.configuration.policy.list.fax_protocol import ConfigurationPolicyFaxProtocolList
 from catalystwan.endpoints.configuration.policy.list.fqdn import ConfigurationPolicyFQDNList
 from catalystwan.endpoints.configuration.policy.list.geo_location import ConfigurationPolicyGeoLocationList
 from catalystwan.endpoints.configuration.policy.list.ips_signature import ConfigurationPolicyIPSSignatureList
 from catalystwan.endpoints.configuration.policy.list.ipv6_prefix import ConfigurationPolicyIPv6PrefixList
 from catalystwan.endpoints.configuration.policy.list.local_app import ConfigurationPolicyLocalAppList
 from catalystwan.endpoints.configuration.policy.list.local_domain import ConfigurationPolicyLocalDomainList
+from catalystwan.endpoints.configuration.policy.list.media_profile import ConfigurationPolicyMediaProfileList
 from catalystwan.endpoints.configuration.policy.list.mirror import ConfigurationPolicyMirrorList
+from catalystwan.endpoints.configuration.policy.list.modem_pass_through import ConfigurationPolicyModemPassThroughList
 from catalystwan.endpoints.configuration.policy.list.policer import ConfigurationPolicyPolicerClassList
 from catalystwan.endpoints.configuration.policy.list.port import ConfigurationPolicyPortList
 from catalystwan.endpoints.configuration.policy.list.preferred_color_group import ConfigurationPreferredColorGroupList
@@ -72,7 +83,14 @@ from catalystwan.endpoints.configuration.policy.list.protocol_name import Config
 from catalystwan.endpoints.configuration.policy.list.region import ConfigurationPolicyRegionList
 from catalystwan.endpoints.configuration.policy.list.site import ConfigurationPolicySiteList
 from catalystwan.endpoints.configuration.policy.list.sla import ConfigurationPolicySLAClassList
+from catalystwan.endpoints.configuration.policy.list.supervisory_disconnect import (
+    ConfigurationPolicySupervisoryDisconnectList,
+)
 from catalystwan.endpoints.configuration.policy.list.tloc import ConfigurationPolicyTLOCList
+from catalystwan.endpoints.configuration.policy.list.translation_profile import (
+    ConfigurationPolicyTranslationProfileList,
+)
+from catalystwan.endpoints.configuration.policy.list.translation_rules import ConfigurationPolicyTranslationRulesList
 from catalystwan.endpoints.configuration.policy.list.trunkgroup import ConfigurationPolicyTrunkGroupList
 from catalystwan.endpoints.configuration.policy.list.url_allow_list import ConfigurationPolicyURLAllowList
 from catalystwan.endpoints.configuration.policy.list.url_block_list import ConfigurationPolicyURLBlockList
@@ -80,6 +98,7 @@ from catalystwan.endpoints.configuration.policy.list.vpn import ConfigurationPol
 from catalystwan.endpoints.configuration.policy.list.zone import ConfigurationPolicyZoneList
 from catalystwan.endpoints.configuration.policy.security_template import ConfigurationSecurityTemplatePolicy
 from catalystwan.endpoints.configuration.policy.vedge_template import ConfigurationVEdgeTemplatePolicy
+from catalystwan.endpoints.configuration.policy.voice_template import ConfigurationVoiceTemplatePolicy
 from catalystwan.endpoints.configuration.policy.vsmart_template import ConfigurationVSmartTemplatePolicy
 from catalystwan.endpoints.configuration.policy_group import PolicyGroupEndpoints
 from catalystwan.endpoints.configuration.software_actions import ConfigurationSoftwareActions
@@ -123,13 +142,16 @@ class ConfigurationPolicyListContainer:
         self.data_prefix = ConfigurationPolicyDataPrefixList(session)
         self.expanded_community = ConfigurationPolicyExpandedCommunityList(session)
         self.extended_community = ConfigurationPolicyExtendedCommunityList(session)
+        self.fax_protocol = ConfigurationPolicyFaxProtocolList(session)
         self.fqdn = ConfigurationPolicyFQDNList(session)
         self.geo_location = ConfigurationPolicyGeoLocationList(session)
         self.ips_signature = ConfigurationPolicyIPSSignatureList(session)
         self.ipv6_prefix = ConfigurationPolicyIPv6PrefixList(session)
         self.local_app = ConfigurationPolicyLocalAppList(session)
         self.local_domain = ConfigurationPolicyLocalDomainList(session)
+        self.media_profile = ConfigurationPolicyMediaProfileList(session)
         self.mirror = ConfigurationPolicyMirrorList(session)
+        self.modem_pass_through = ConfigurationPolicyModemPassThroughList(session)
         self.policer = ConfigurationPolicyPolicerClassList(session)
         self.port = ConfigurationPolicyPortList(session)
         self.preferred_color_group = ConfigurationPreferredColorGroupList(session)
@@ -138,7 +160,10 @@ class ConfigurationPolicyListContainer:
         self.region = ConfigurationPolicyRegionList(session)
         self.site = ConfigurationPolicySiteList(session)
         self.sla = ConfigurationPolicySLAClassList(session)
+        self.supervisory_disconnect = ConfigurationPolicySupervisoryDisconnectList(session)
         self.tloc = ConfigurationPolicyTLOCList(session)
+        self.translation_profile = ConfigurationPolicyTranslationProfileList(session)
+        self.translation_rules = ConfigurationPolicyTranslationRulesList(session)
         self.trunkgroup = ConfigurationPolicyTrunkGroupList(session)
         self.url_allow_list = ConfigurationPolicyURLAllowList(session)
         self.url_block_list = ConfigurationPolicyURLBlockList(session)
@@ -157,23 +182,30 @@ class ConfigurationPolicyDefinitionContainer:
         self.data = ConfigurationPolicyDataDefinition(session)
         self.device_access = ConfigurationPolicyDeviceAccessDefinition(session)
         self.device_access_ipv6 = ConfigurationPolicyDeviceAccessIPv6Definition(session)
+        self.dial_peer = ConfigurationPolicyDialPeerDefinition(session)
+        self.fxo_port = ConfigurationPolicyFxoPortDefinition(session)
+        self.fxs_port = ConfigurationPolicyFxsPortDefinition(session)
+        self.fxs_did_port = ConfigurationPolicyFxsDidPortDefinition(session)
         self.hub_and_spoke = ConfigurationPolicyHubAndSpokeDefinition(session)
         self.mesh = ConfigurationPolicyMeshDefinition(session)
+        self.pri_isdn_port = ConfigurationPolicyPriIsdnPortDefinition(session)
         self.qos_map = ConfigurationPolicyQoSMapDefinition(session)
         self.rewrite = ConfigurationPolicyRewriteRuleDefinition(session)
         self.rule_set = ConfigurationPolicyRuleSetDefinition(session)
         self.security_group = ConfigurationPolicySecurityGroupDefinition(session)
+        self.srst_phone_profile = ConfigurationPolicySrstPhoneProfileDefinition(session)
         self.vpn_membership = ConfigurationPolicyVPNMembershipGroupDefinition(session)
         self.zone_based_firewall = ConfigurationPolicyZoneBasedFirewallDefinition(session)
 
 
 class ConfigurationPolicyContainer:
     def __init__(self, session: ManagerSession):
-        self.list = ConfigurationPolicyListContainer(session)
         self.definition = ConfigurationPolicyDefinitionContainer(session)
-        self.vsmart_template = ConfigurationVSmartTemplatePolicy(session)
-        self.vedge_template = ConfigurationVEdgeTemplatePolicy(session)
+        self.list = ConfigurationPolicyListContainer(session)
         self.security_template = ConfigurationSecurityTemplatePolicy(session)
+        self.vedge_template = ConfigurationVEdgeTemplatePolicy(session)
+        self.voice_template = ConfigurationVoiceTemplatePolicy(session)
+        self.vsmart_template = ConfigurationVSmartTemplatePolicy(session)
 
 
 class ConfigurationSDWANFeatureProfileContainer:

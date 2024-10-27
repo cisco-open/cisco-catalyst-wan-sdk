@@ -346,6 +346,93 @@ TLOCColor = Literal[
     "private6",
 ]
 
+MpVoiceCodec = Literal[
+    "G711aLaw",
+    "G711uLaw",
+    "G722",
+    "G729r8",
+    "ilbc",
+]
+
+FaxProtocols = Literal[
+    "Fax Pass-through G711alaw No ECM",
+    "Fax Pass-through G711alaw",
+    "Fax Pass-through G711ulaw No ECM",
+    "Fax Pass-through G711ulaw",
+    "None",
+    "T.38 Fax Relay Version 0 No ECM",
+    "T.38 Fax Relay Version 0 NSE force No ECM",
+    "T.38 Fax Relay Version 0 NSE force Rate 14.4 No ECM",
+    "T.38 Fax Relay Version 0 NSE force Rate 14.4",
+    "T.38 Fax Relay Version 0 NSE force Rate 9.6 No ECM",
+    "T.38 Fax Relay Version 0 NSE force Rate 9.6",
+    "T.38 Fax Relay Version 0 NSE force",
+    "T.38 Fax Relay Version 0 NSE No ECM",
+    "T.38 Fax Relay Version 0 NSE Rate 14.4 No ECM",
+    "T.38 Fax Relay Version 0 NSE Rate 14.4",
+    "T.38 Fax Relay Version 0 NSE Rate 9.6 No ECM",
+    "T.38 Fax Relay Version 0 NSE Rate 9.6",
+    "T.38 Fax Relay Version 0 NSE",
+    "T.38 Fax Relay Version 0 Rate 14.4 No ECM",
+    "T.38 Fax Relay Version 0 Rate 14.4",
+    "T.38 Fax Relay Version 0 Rate 9.6 No ECM",
+    "T.38 Fax Relay Version 0",
+    "T.38 Fax Relay Version 3 NSE force",
+    "T.38 Fax Relay Version 3 NSE",
+    "T.38 Fax Relay Version 3",
+]
+
+FaxPrimaryProtocols = Literal[
+    "none",
+    "t38",
+    "g711ulaw",
+    "g711alaw",
+]
+
+FaxFallBackProtocols = Literal[
+    "none",
+    "g711ulaw",
+    "g711alaw",
+]
+
+MpDtmf = Literal[
+    "inband",
+    "rtp-nte",
+    "rtp-nte sip-kpml",
+    "rtp-nte sip-kpml sip-notify",
+    "rtp-nte sip-notify",
+    "rtp-nte sip-notify sip-kpml",
+    "sip-kpml",
+    "sip-kpml rtp-nte",
+    "sip-kpml rtp-nte sip-notify",
+    "sip-kpml sip-notify",
+    "sip-kpml sip-notify rtp-nte",
+    "sip-notify",
+    "sip-notify rtp-nte",
+    "sip-notify rtp-nte sip-kpml",
+    "sip-notify sip-kpml",
+    "sip-notify sip-kpml rtp-nte",
+]
+
+HuntSchemeMethod = Literal[
+    "least-idle",
+    "least-used",
+    "longest-idle",
+    "random",
+    "round-robin",
+    "sequential",
+]
+
+HuntSchemeChannel = Literal[
+    "both",
+    "even",
+    "odd",
+]
+
+HuntSchemeDirection = Literal[
+    "down",
+    "up",
+]
 
 SpaceSeparatedTLOCColorStr = Annotated[
     List[TLOCColor],

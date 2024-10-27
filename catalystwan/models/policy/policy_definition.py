@@ -98,6 +98,13 @@ MetricType = Literal["type1", "type2"]
 
 SlaNotMetAction = Literal["strict", "fallbackToBestPath"]
 
+VoicePortType = Literal[
+    "potsDialPeer",
+    "sipDialPeer",
+    "srstPhone",
+    "voicePort",
+]
+
 
 class Reference(BaseModel):
     ref: UUID
@@ -114,6 +121,107 @@ class ReferenceList(BaseModel):
 
 class VariableName(BaseModel):
     vip_variable_name: str = Field(serialization_alias="vipVariableName", validation_alias="vipVariableName")
+
+
+class CommonStation(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    name: str
+    number: str
+
+
+class MediaProfileRef(BaseModel):
+    name: int
+    ref: UUID
+
+
+class LineParams(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    gain: IntStr
+    attenuation: IntStr
+    echo_cancellor: bool = Field(validation_alias="echoCancellor", serialization_alias="echoCancellor")
+    vad: bool
+    compand_type: str = Field(serialization_alias="compandType", validation_alias="compandType")
+    cptone: str
+    impedance: Optional[str] = Field(default=None)
+
+
+class DidTimers(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    answerWinkwidth: IntStr = Field(
+        ge=110, le=290, serialization_alias="answerWinkwidth", validation_alias="answerWinkwidth"
+    )
+    clearWait: IntStr = Field(ge=200, le=2000, serialization_alias="clearWait", validation_alias="clearWait")
+    waitWink: IntStr = Field(ge=100, le=6500, serialization_alias="waitWink", validation_alias="waitWink")
+    winkDuration: IntStr = Field(ge=50, le=3000, serialization_alias="winkDuration", validation_alias="winkDuration")
+    dialPulseMinDelay: IntStr = Field(
+        ge=0, le=5000, serialization_alias="dialPulseMinDelay", validation_alias="dialPulseMinDelay"
+    )
+
+
+class FxoTuningParams(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    pre_dial_delay: int = Field(ge=0, serialization_alias="preDialDelay", validation_alias="preDialDelay")
+    timing_sup_disc: IntStr = Field(serialization_alias="timingSupDisc", validation_alias="timingSupDisc")
+    supervisory_disconnect: str = Field(
+        serialization_alias="supervisoryDisconnect", validation_alias="supervisoryDisconnect"
+    )
+    dial_type: str = Field(serialization_alias="dialType", validation_alias="dialType")
+    timing_hookflash_out: IntStr = Field(
+        serialization_alias="timingHookflashOut", validation_alias="timingHookflashOut"
+    )
+    timing_guard_out: IntStr = Field(serialization_alias="timingGuardOut", validation_alias="timingGuardOut")
+    battery_reversal_det_delay: IntStr = Field(
+        serialization_alias="batteryReversalDetDelay", validation_alias="batteryReversalDetDelay"
+    )
+
+
+class FxsTuningParams(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    timing_hookflash_in_min: IntStr = Field(
+        ge=0, le=400, serialization_alias="timingHookflashInMin", validation_alias="timingHookflashInMin"
+    )
+    timing_hookflash_in_max: IntStr = Field(
+        ge=50, le=1500, serialization_alias="timingHookflashInMax", validation_alias="timingHookflashInMax"
+    )
+    loop_length: str = Field(serialization_alias="loopLength", validation_alias="loopLength")
+    ring_frequency: IntStr = Field(serialization_alias="ringFrequency", validation_alias="ringFrequency")
+    ring_dc_offset: Optional[str] = Field(
+        default=None, serialization_alias="ringDcOffset", validation_alias="ringDcOffset"
+    )
+    pulse_digit_detection: bool = Field(
+        serialization_alias="pulseDigitDetection", validation_alias="pulseDigitDetection"
+    )
+    ren: IntStr = Field(ge=1, le=5)
+
+
+class TrunkGroupPreference(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    ref: UUID
+    preference: int
+
+
+class TranslationRuleEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    ref: UUID
+    name: str
+
+
+class TranslationProfileEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    ref: UUID
+    name: str
+    calling_translation_rule: Optional[TranslationRuleEntry] = Field(
+        default=None, serialization_alias="callingTranslationRule", validation_alias="callingTranslationRule"
+    )
+    called_translation_rule: Optional[TranslationRuleEntry] = Field(
+        default=None, serialization_alias="calledTranslationRule", validation_alias="calledTranslationRule"
+    )
+
+
+class SupervisoryDisconnectEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    ref: UUID
+    name: str
 
 
 class LocalTLOCListEntryValue(BaseModel):
