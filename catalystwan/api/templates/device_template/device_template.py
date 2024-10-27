@@ -85,6 +85,9 @@ class DeviceTemplate(BaseModel):
     security_policy_id: str = Field(
         default="", serialization_alias="securityPolicyId", validation_alias="securityPolicyId"
     )
+    voice_policy_id: Optional[str] = Field(
+        default=None, serialization_alias="voicePolicyId", validation_alias="voicePolicyId"
+    )
     template_configuration_edited: Optional[str] = Field(
         default=None, serialization_alias="templateConfigurationEdited", validation_alias="templateConfigurationEdited"
     )
