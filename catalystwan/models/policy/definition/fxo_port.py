@@ -14,6 +14,7 @@ from catalystwan.models.policy.policy_definition import (
     SupervisoryDisconnectEntry,
     TranslationProfileEntry,
     TrunkGroupPreference,
+    VoicePortType,
 )
 
 
@@ -48,7 +49,9 @@ class FxoPortPolicyDefinition(BaseModel):
 class FxoPortPolicy(PolicyDefinitionBase):
     model_config = ConfigDict(populate_by_name=True)
     type: Literal["fxoPort", "fxoport"] = "fxoPort"
-    port_type: Optional[str] = Field(default="voicePort", serialization_alias="portType", validation_alias="portType")
+    port_type: Optional[VoicePortType] = Field(
+        default="voicePort", serialization_alias="portType", validation_alias="portType"
+    )
     definition: FxoPortPolicyDefinition = FxoPortPolicyDefinition()
 
 

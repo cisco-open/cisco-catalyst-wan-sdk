@@ -116,6 +116,7 @@ from catalystwan.endpoints.configuration.policy.list.vpn import ConfigurationPol
 from catalystwan.endpoints.configuration.policy.list.zone import ConfigurationPolicyZoneList, ZoneListInfo
 from catalystwan.endpoints.configuration.policy.security_template import ConfigurationSecurityTemplatePolicy
 from catalystwan.endpoints.configuration.policy.vedge_template import ConfigurationVEdgeTemplatePolicy
+from catalystwan.endpoints.configuration.policy.voice_template import ConfigurationVoiceTemplatePolicy
 from catalystwan.endpoints.configuration.policy.vsmart_template import (
     ConfigurationVSmartTemplatePolicy,
     VSmartConnectivityStatus,
@@ -250,6 +251,7 @@ from catalystwan.models.policy.security import (
     SecurityPolicyEditResponse,
     UnifiedSecurityPolicy,
 )
+from catalystwan.models.policy.voice import VoicePolicy, VoicePolicyEditResponse, VoicePolicyInfo
 from catalystwan.typed_list import DataSequence
 
 if TYPE_CHECKING:
@@ -445,6 +447,34 @@ class SecurityPolicyAPI:
         if id is not None:
             return self._endpoints.get_security_template(id).root
         return self._endpoints.generate_security_template_list()
+
+
+class VoicePolicyAPI:
+    def __init__(self, session: ManagerSession):
+        self._session = session
+        self._endpoints = ConfigurationVoiceTemplatePolicy(session)
+
+    def create(self, policy: VoicePolicy) -> None:
+        self._endpoints.create_voice_template(policy)
+
+    def edit(self, id: UUID, policy: VoicePolicy) -> VoicePolicyEditResponse:
+        return self._endpoints.edit_voice_template(id, policy)
+
+    def delete(self, id: UUID) -> None:
+        self._endpoints.delete_voice_template(id)
+
+    @overload
+    def get(self) -> DataSequence[VoicePolicyInfo]:
+        ...
+
+    @overload
+    def get(self, id: UUID) -> VoicePolicy:
+        ...
+
+    def get(self, id: Optional[UUID] = None) -> Any:
+        if id is not None:
+            return self._endpoints.get_voice_template(id)
+        return self._endpoints.generate_voice_template_list()
 
 
 class PolicyListsAPI:
@@ -1094,10 +1124,11 @@ class PolicyAPI:
     def __init__(self, session: ManagerSession):
         self._session = session
         self.centralized = CentralizedPolicyAPI(session)
-        self.localized = LocalizedPolicyAPI(session)
-        self.security = SecurityPolicyAPI(session)
         self.definitions = PolicyDefinitionsAPI(session)
         self.lists = PolicyListsAPI(session)
+        self.localized = LocalizedPolicyAPI(session)
+        self.security = SecurityPolicyAPI(session)
+        self.voice = VoicePolicyAPI(session)
 
     def delete_any(self, _type: Any, id: UUID) -> None:
         if issubclass(_type, PolicyListBase):

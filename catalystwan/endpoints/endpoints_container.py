@@ -98,6 +98,7 @@ from catalystwan.endpoints.configuration.policy.list.vpn import ConfigurationPol
 from catalystwan.endpoints.configuration.policy.list.zone import ConfigurationPolicyZoneList
 from catalystwan.endpoints.configuration.policy.security_template import ConfigurationSecurityTemplatePolicy
 from catalystwan.endpoints.configuration.policy.vedge_template import ConfigurationVEdgeTemplatePolicy
+from catalystwan.endpoints.configuration.policy.voice_template import ConfigurationVoiceTemplatePolicy
 from catalystwan.endpoints.configuration.policy.vsmart_template import ConfigurationVSmartTemplatePolicy
 from catalystwan.endpoints.configuration.policy_group import PolicyGroupEndpoints
 from catalystwan.endpoints.configuration.software_actions import ConfigurationSoftwareActions
@@ -199,11 +200,12 @@ class ConfigurationPolicyDefinitionContainer:
 
 class ConfigurationPolicyContainer:
     def __init__(self, session: ManagerSession):
-        self.list = ConfigurationPolicyListContainer(session)
         self.definition = ConfigurationPolicyDefinitionContainer(session)
-        self.vsmart_template = ConfigurationVSmartTemplatePolicy(session)
-        self.vedge_template = ConfigurationVEdgeTemplatePolicy(session)
+        self.list = ConfigurationPolicyListContainer(session)
         self.security_template = ConfigurationSecurityTemplatePolicy(session)
+        self.vedge_template = ConfigurationVEdgeTemplatePolicy(session)
+        self.voice_template = ConfigurationVoiceTemplatePolicy(session)
+        self.vsmart_template = ConfigurationVSmartTemplatePolicy(session)
 
 
 class ConfigurationSDWANFeatureProfileContainer:

@@ -9,6 +9,7 @@ from catalystwan.models.policy.policy_definition import (
     PolicyDefinitionBase,
     PolicyDefinitionGetResponse,
     PolicyDefinitionId,
+    VoicePortType,
 )
 
 
@@ -22,7 +23,9 @@ class SrstPhoneProfilePolicyDefinition(BaseModel):
 class SrstPhoneProfilePolicy(PolicyDefinitionBase):
     model_config = ConfigDict(populate_by_name=True)
     type: Literal["srstPhoneProfile", "srstphoneprofile"] = "srstPhoneProfile"
-    port_type: Optional[str] = Field(default="srstPhone", serialization_alias="portType", validation_alias="portType")
+    port_type: Optional[VoicePortType] = Field(
+        default="srstPhone", serialization_alias="portType", validation_alias="portType"
+    )
     definition: SrstPhoneProfilePolicyDefinition = SrstPhoneProfilePolicyDefinition()
 
 

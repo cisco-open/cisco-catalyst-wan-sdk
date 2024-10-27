@@ -12,6 +12,7 @@ from catalystwan.models.policy.policy_definition import (
     PolicyDefinitionId,
     TranslationProfileEntry,
     TrunkGroupPreference,
+    VoicePortType,
 )
 
 
@@ -45,7 +46,7 @@ class DialPeerPolicyDefinition(BaseModel):
 class DialPeerPolicy(PolicyDefinitionBase):
     model_config = ConfigDict(populate_by_name=True)
     type: Literal["dialPeer", "dialpeer"] = "dialPeer"
-    port_type: Optional[str] = Field(
+    port_type: Optional[VoicePortType] = Field(
         default="potsDialPeer", serialization_alias="portType", validation_alias="portType"
     )
     definition: DialPeerPolicyDefinition

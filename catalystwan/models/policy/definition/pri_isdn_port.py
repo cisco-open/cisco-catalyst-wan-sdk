@@ -11,6 +11,7 @@ from catalystwan.models.policy.policy_definition import (
     PolicyDefinitionId,
     TranslationProfileEntry,
     TrunkGroupPreference,
+    VoicePortType,
 )
 
 
@@ -33,7 +34,9 @@ class PriIsdnPortPolicyDefinition(BaseModel):
 class PriIsdnPortPolicy(PolicyDefinitionBase):
     model_config = ConfigDict(populate_by_name=True)
     type: Literal["priIsdnPort", "priisdnport"] = "priIsdnPort"
-    port_type: Optional[str] = Field(default="voicePort", serialization_alias="portType", validation_alias="portType")
+    port_type: Optional[VoicePortType] = Field(
+        default="voicePort", serialization_alias="portType", validation_alias="portType"
+    )
     definition: PriIsdnPortPolicyDefinition = PriIsdnPortPolicyDefinition()
 
 

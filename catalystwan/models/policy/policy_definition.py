@@ -98,6 +98,13 @@ MetricType = Literal["type1", "type2"]
 
 SlaNotMetAction = Literal["strict", "fallbackToBestPath"]
 
+VoicePortType = Literal[
+    "potsDialPeer",
+    "sipDialPeer",
+    "srstPhone",
+    "voicePort",
+]
+
 
 class Reference(BaseModel):
     ref: UUID
