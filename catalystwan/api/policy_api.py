@@ -32,6 +32,7 @@ from catalystwan.endpoints.configuration.policy.definition.intrusion_prevention 
     ConfigurationPolicyIntrusionPreventionDefinition,
 )
 from catalystwan.endpoints.configuration.policy.definition.mesh import ConfigurationPolicyMeshDefinition
+from catalystwan.endpoints.configuration.policy.definition.pri_isdn_port import ConfigurationPolicyPriIsdnPortDefinition
 from catalystwan.endpoints.configuration.policy.definition.qos_map import ConfigurationPolicyQoSMapDefinition
 from catalystwan.endpoints.configuration.policy.definition.rewrite import ConfigurationPolicyRewriteRuleDefinition
 from catalystwan.endpoints.configuration.policy.definition.route_policy import ConfigurationPolicyRouteDefinition
@@ -181,6 +182,7 @@ from catalystwan.models.policy.definition.intrusion_prevention import (
     IntrusionPreventionPolicyGetResponse,
 )
 from catalystwan.models.policy.definition.mesh import MeshPolicy, MeshPolicyGetResponse
+from catalystwan.models.policy.definition.pri_isdn_port import PriIsdnPortPolicy, PriIsdnPortPolicyGetResponse
 from catalystwan.models.policy.definition.qos_map import QoSMapPolicy, QoSMapPolicyGetResponse
 from catalystwan.models.policy.definition.rewrite import RewritePolicy, RewritePolicyGetResponse
 from catalystwan.models.policy.definition.route_policy import RoutePolicy, RoutePolicyGetResponse
@@ -309,6 +311,7 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     HubAndSpokePolicy: ConfigurationPolicyHubAndSpokeDefinition,
     IntrusionPreventionPolicy: ConfigurationPolicyIntrusionPreventionDefinition,
     MeshPolicy: ConfigurationPolicyMeshDefinition,
+    PriIsdnPortPolicy: ConfigurationPolicyPriIsdnPortDefinition,
     QoSMapPolicy: ConfigurationPolicyQoSMapDefinition,
     RewritePolicy: ConfigurationPolicyRewriteRuleDefinition,
     RoutePolicy: ConfigurationPolicyRouteDefinition,
@@ -935,6 +938,10 @@ class PolicyDefinitionsAPI:
     def get(self, type: Type[DialPeerPolicy]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
+    @overload
+    def get(self, type: Type[PriIsdnPortPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
     # get by id
     @overload
     def get(self, type: Type[IntrusionPreventionPolicy], id: UUID) -> IntrusionPreventionPolicyGetResponse:
@@ -1046,6 +1053,10 @@ class PolicyDefinitionsAPI:
 
     @overload
     def get(self, type: Type[DialPeerPolicy], id: UUID) -> DialPeerPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[PriIsdnPortPolicy], id: UUID) -> PriIsdnPortPolicyGetResponse:
         ...
 
     def get(self, type: Type[AnyPolicyDefinition], id: Optional[UUID] = None) -> Any:

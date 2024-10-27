@@ -135,7 +135,7 @@ class LineParams(BaseModel):
     vad: bool
     compand_type: str = Field(serialization_alias="compandType", validation_alias="compandType")
     cptone: str
-    impedance: str
+    impedance: Optional[str] = Field(default=None)
 
 
 class DidTimers(BaseModel):

@@ -38,6 +38,7 @@ from catalystwan.endpoints.configuration.policy.definition.fxs_did_port import C
 from catalystwan.endpoints.configuration.policy.definition.fxs_port import ConfigurationPolicyFxsPortDefinition
 from catalystwan.endpoints.configuration.policy.definition.hub_and_spoke import ConfigurationPolicyHubAndSpokeDefinition
 from catalystwan.endpoints.configuration.policy.definition.mesh import ConfigurationPolicyMeshDefinition
+from catalystwan.endpoints.configuration.policy.definition.pri_isdn_port import ConfigurationPolicyPriIsdnPortDefinition
 from catalystwan.endpoints.configuration.policy.definition.qos_map import ConfigurationPolicyQoSMapDefinition
 from catalystwan.endpoints.configuration.policy.definition.rewrite import ConfigurationPolicyRewriteRuleDefinition
 from catalystwan.endpoints.configuration.policy.definition.rule_set import ConfigurationPolicyRuleSetDefinition
@@ -183,6 +184,7 @@ class ConfigurationPolicyDefinitionContainer:
         self.fxs_did_port = ConfigurationPolicyFxsDidPortDefinition(session)
         self.hub_and_spoke = ConfigurationPolicyHubAndSpokeDefinition(session)
         self.mesh = ConfigurationPolicyMeshDefinition(session)
+        self.pri_isdn_port = ConfigurationPolicyPriIsdnPortDefinition(session)
         self.qos_map = ConfigurationPolicyQoSMapDefinition(session)
         self.rewrite = ConfigurationPolicyRewriteRuleDefinition(session)
         self.rule_set = ConfigurationPolicyRuleSetDefinition(session)
