@@ -24,6 +24,7 @@ from catalystwan.endpoints.configuration.policy.definition.device_access_ipv6 im
 )
 from catalystwan.endpoints.configuration.policy.definition.dns_security import ConfigurationPolicyDnsSecurityDefinition
 from catalystwan.endpoints.configuration.policy.definition.fxo_port import ConfigurationPolicyFxoPortDefinition
+from catalystwan.endpoints.configuration.policy.definition.fxs_did_port import ConfigurationPolicyFxsDidPortDefinition
 from catalystwan.endpoints.configuration.policy.definition.fxs_port import ConfigurationPolicyFxsPortDefinition
 from catalystwan.endpoints.configuration.policy.definition.hub_and_spoke import ConfigurationPolicyHubAndSpokeDefinition
 from catalystwan.endpoints.configuration.policy.definition.intrusion_prevention import (
@@ -170,6 +171,7 @@ from catalystwan.models.policy.definition.device_access_ipv6 import (
 )
 from catalystwan.models.policy.definition.dns_security import DnsSecurityPolicy, DnsSecurityPolicyGetResponse
 from catalystwan.models.policy.definition.fxo_port import FxoPortPolicy, FxoPortPolicyGetResponse
+from catalystwan.models.policy.definition.fxs_did_port import FxsDidPortPolicy, FxsDidPortPolicyGetResponse
 from catalystwan.models.policy.definition.fxs_port import FxsPortPolicy, FxsPortPolicyGetResponse
 from catalystwan.models.policy.definition.hub_and_spoke import HubAndSpokePolicy, HubAndSpokePolicyGetResponse
 from catalystwan.models.policy.definition.intrusion_prevention import (
@@ -300,6 +302,7 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     DnsSecurityPolicy: ConfigurationPolicyDnsSecurityDefinition,
     FxoPortPolicy: ConfigurationPolicyFxoPortDefinition,
     FxsPortPolicy: ConfigurationPolicyFxsPortDefinition,
+    FxsDidPortPolicy: ConfigurationPolicyFxsDidPortDefinition,
     HubAndSpokePolicy: ConfigurationPolicyHubAndSpokeDefinition,
     IntrusionPreventionPolicy: ConfigurationPolicyIntrusionPreventionDefinition,
     MeshPolicy: ConfigurationPolicyMeshDefinition,
@@ -921,6 +924,10 @@ class PolicyDefinitionsAPI:
     def get(self, type: Type[FxsPortPolicy]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
+    @overload
+    def get(self, type: Type[FxsDidPortPolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
     # get by id
     @overload
     def get(self, type: Type[IntrusionPreventionPolicy], id: UUID) -> IntrusionPreventionPolicyGetResponse:
@@ -1024,6 +1031,10 @@ class PolicyDefinitionsAPI:
 
     @overload
     def get(self, type: Type[FxsPortPolicy], id: UUID) -> FxsPortPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[FxsDidPortPolicy], id: UUID) -> FxsDidPortPolicyGetResponse:
         ...
 
     def get(self, type: Type[AnyPolicyDefinition], id: Optional[UUID] = None) -> Any:
