@@ -12,6 +12,10 @@ from catalystwan.models.policy.definition.fxo_port import FxoPortPolicy, FxoPort
 from catalystwan.models.policy.definition.fxs_did_port import FxsDidPortPolicy, FxsDidPortPolicyGetResponse
 from catalystwan.models.policy.definition.fxs_port import FxsPortPolicy, FxsPortPolicyGetResponse
 from catalystwan.models.policy.definition.pri_isdn_port import PriIsdnPortPolicy, PriIsdnPortPolicyGetResponse
+from catalystwan.models.policy.definition.srst_phone_profile import (
+    SrstPhoneProfilePolicy,
+    SrstPhoneProfilePolicyGetResponse,
+)
 from catalystwan.models.policy.list.app import AppList, AppListInfo
 from catalystwan.models.policy.list.app_probe import AppProbeClassList, AppProbeClassListInfo
 from catalystwan.models.policy.list.as_path import ASPathList, ASPathListInfo
@@ -128,6 +132,7 @@ AnyPolicyDefinition = Annotated[
         SecurityGroup,
         SslDecryptionPolicy,
         SslDecryptionUtdProfilePolicy,
+        SrstPhoneProfilePolicy,
         TrafficDataPolicy,
         UrlFilteringPolicy,
         VPNMembershipPolicy,
@@ -257,6 +262,7 @@ AnyPolicyDefinitionInfo = Annotated[
         SecurityGroupGetResponse,
         SslDecryptionPolicyGetResponse,
         SslDecryptionUtdProfilePolicyGetResponse,
+        SrstPhoneProfilePolicyGetResponse,
         TrafficDataPolicyGetResponse,
         UrlFilteringPolicyGetResponse,
         VPNMembershipPolicyGetResponse,

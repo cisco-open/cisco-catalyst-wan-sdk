@@ -40,6 +40,9 @@ from catalystwan.endpoints.configuration.policy.definition.rule_set import Confi
 from catalystwan.endpoints.configuration.policy.definition.security_group import (
     ConfigurationPolicySecurityGroupDefinition,
 )
+from catalystwan.endpoints.configuration.policy.definition.srst_phone_profile import (
+    ConfigurationPolicySrstPhoneProfileDefinition,
+)
 from catalystwan.endpoints.configuration.policy.definition.ssl_decryption import ConfigurationSslDecryptionDefinition
 from catalystwan.endpoints.configuration.policy.definition.ssl_decryption_utd_profile import (
     ConfigurationSslDecryptionUtdProfileDefinition,
@@ -188,6 +191,10 @@ from catalystwan.models.policy.definition.rewrite import RewritePolicy, RewriteP
 from catalystwan.models.policy.definition.route_policy import RoutePolicy, RoutePolicyGetResponse
 from catalystwan.models.policy.definition.rule_set import RuleSet, RuleSetGetResponse
 from catalystwan.models.policy.definition.security_group import SecurityGroup, SecurityGroupGetResponse
+from catalystwan.models.policy.definition.srst_phone_profile import (
+    SrstPhoneProfilePolicy,
+    SrstPhoneProfilePolicyGetResponse,
+)
 from catalystwan.models.policy.definition.ssl_decryption import SslDecryptionPolicy, SslDecryptionPolicyGetResponse
 from catalystwan.models.policy.definition.ssl_decryption_utd_profile import (
     SslDecryptionUtdProfilePolicy,
@@ -319,6 +326,7 @@ POLICY_DEFINITION_ENDPOINTS_MAP: Mapping[type, type] = {
     SecurityGroup: ConfigurationPolicySecurityGroupDefinition,
     SslDecryptionPolicy: ConfigurationSslDecryptionDefinition,
     SslDecryptionUtdProfilePolicy: ConfigurationSslDecryptionUtdProfileDefinition,
+    SrstPhoneProfilePolicy: ConfigurationPolicySrstPhoneProfileDefinition,
     TrafficDataPolicy: ConfigurationPolicyDataDefinition,
     UrlFilteringPolicy: ConfigurationPolicyUrlFilteringDefinition,
     VPNMembershipPolicy: ConfigurationPolicyVPNMembershipGroupDefinition,
@@ -942,6 +950,10 @@ class PolicyDefinitionsAPI:
     def get(self, type: Type[PriIsdnPortPolicy]) -> DataSequence[PolicyDefinitionInfo]:
         ...
 
+    @overload
+    def get(self, type: Type[SrstPhoneProfilePolicy]) -> DataSequence[PolicyDefinitionInfo]:
+        ...
+
     # get by id
     @overload
     def get(self, type: Type[IntrusionPreventionPolicy], id: UUID) -> IntrusionPreventionPolicyGetResponse:
@@ -1057,6 +1069,10 @@ class PolicyDefinitionsAPI:
 
     @overload
     def get(self, type: Type[PriIsdnPortPolicy], id: UUID) -> PriIsdnPortPolicyGetResponse:
+        ...
+
+    @overload
+    def get(self, type: Type[SrstPhoneProfilePolicy], id: UUID) -> SrstPhoneProfilePolicyGetResponse:
         ...
 
     def get(self, type: Type[AnyPolicyDefinition], id: Optional[UUID] = None) -> Any:

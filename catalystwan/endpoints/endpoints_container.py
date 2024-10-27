@@ -45,6 +45,9 @@ from catalystwan.endpoints.configuration.policy.definition.rule_set import Confi
 from catalystwan.endpoints.configuration.policy.definition.security_group import (
     ConfigurationPolicySecurityGroupDefinition,
 )
+from catalystwan.endpoints.configuration.policy.definition.srst_phone_profile import (
+    ConfigurationPolicySrstPhoneProfileDefinition,
+)
 from catalystwan.endpoints.configuration.policy.definition.traffic_data import ConfigurationPolicyDataDefinition
 from catalystwan.endpoints.configuration.policy.definition.vpn_membership import (
     ConfigurationPolicyVPNMembershipGroupDefinition,
@@ -189,6 +192,7 @@ class ConfigurationPolicyDefinitionContainer:
         self.rewrite = ConfigurationPolicyRewriteRuleDefinition(session)
         self.rule_set = ConfigurationPolicyRuleSetDefinition(session)
         self.security_group = ConfigurationPolicySecurityGroupDefinition(session)
+        self.srst_phone_profile = ConfigurationPolicySrstPhoneProfileDefinition(session)
         self.vpn_membership = ConfigurationPolicyVPNMembershipGroupDefinition(session)
         self.zone_based_firewall = ConfigurationPolicyZoneBasedFirewallDefinition(session)
 
