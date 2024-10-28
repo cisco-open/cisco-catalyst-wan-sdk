@@ -2,6 +2,7 @@
 
 import logging
 from http.cookies import SimpleCookie
+from threading import RLock
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -78,14 +79,17 @@ class vManageAuth(AuthBase, AuthProtocol):
         self.logger = logger or logging.getLogger(__name__)
         self.cookies: RequestsCookieJar = RequestsCookieJar()
         self._base_url: str = ""
+        self.session_count: int = 0
+        self.lock: RLock = RLock()
 
     def __str__(self) -> str:
         return f"vManageAuth(username={self.username})"
 
     def __call__(self, request: PreparedRequest) -> PreparedRequest:
-        self.handle_auth(request)
-        update_headers(request, self.jsessionid, self.xsrftoken)
-        return request
+        with self.lock:
+            self.handle_auth(request)
+            update_headers(request, self.jsessionid, self.xsrftoken)
+            return request
 
     def sync_cookies(self, cookies: RequestsCookieJar) -> None:
         self.cookies = merge_cookies(self.cookies, cookies)
@@ -133,24 +137,63 @@ class vManageAuth(AuthBase, AuthProtocol):
         self.xsrftoken = self.get_xsrftoken()
 
     def logout(self, client: APIEndpointClient) -> None:
-        if isinstance((version := client.api_version), NullVersion):
-            self.logger.warning("Cannot perform logout without known api version.")
-        elif self._base_url is None:
-            self.logger.warning("Cannot perform logout without known base url")
-        else:
-            headers = {"x-xsrf-token": self.xsrftoken, "User-Agent": USER_AGENT}
-            if version >= Version("20.12"):
-                response = post(f"{self._base_url}/logout", headers=headers, cookies=self.cookies, verify=self.verify)
-            else:
-                response = get(f"{self._base_url}/logout", headers=headers, cookies=self.cookies, verify=self.verify)
-            self.logger.debug(auth_response_debug(response, str(self)))
-            if response.status_code != 200:
-                self.logger.error("Unsuccessfull logout")
-        self.clear()
+        with self.lock:
+            if self.session_count > 1:
+                # Other sessions still use the auth, unregister and return
+                return
 
-    def clear(self) -> None:
-        self.cookies.clear_session_cookies()
-        self.xsrftoken = None
+            # last session using the auth, logout
+            if isinstance((version := client.api_version), NullVersion):
+                self.logger.warning("Cannot perform logout without known api version.")
+            elif self._base_url is None:
+                self.logger.warning("Cannot perform logout without known base url")
+            else:
+                headers = {"x-xsrf-token": self.xsrftoken, "User-Agent": USER_AGENT}
+                if version >= Version("20.12"):
+                    response = post(
+                        f"{self._base_url}/logout", headers=headers, cookies=self.cookies, verify=self.verify
+                    )
+                else:
+                    response = get(
+                        f"{self._base_url}/logout", headers=headers, cookies=self.cookies, verify=self.verify
+                    )
+                self.logger.debug(auth_response_debug(response, str(self)))
+                if response.status_code != 200:
+                    self.logger.error("Unsuccessfull logout")
+            self._clear()
+
+    def _clear(self) -> None:
+        with self.lock:
+            self.cookies.clear_session_cookies()
+            self.xsrftoken = None
+
+    def increase_session_count(self) -> None:
+        with self.lock:
+            self.session_count += 1
+
+    def decrease_session_count(self) -> None:
+        with self.lock:
+            self.session_count -= 1
+
+    def clear(self, last_request: Optional[PreparedRequest]) -> None:
+        with self.lock:
+            # extract previously used jsessionid
+            if last_request is None:
+                jsessionid = None
+            else:
+                cookie: SimpleCookie = SimpleCookie()
+                cookie.load(last_request.headers.get("Cookie", ""))
+                try:
+                    jsessionid = cookie["JSESSIONID"].value
+                except KeyError:
+                    jsessionid = None
+
+            if self.jsessionid is None or self.jsessionid == jsessionid:
+                # used auth was up-to-date, clear state
+                return self._clear()
+            else:
+                # used auth was out-of-date, repeat the request with a new one
+                return
 
 
 class vSessionAuth(vManageAuth):
@@ -170,9 +213,10 @@ class vSessionAuth(vManageAuth):
         return f"vSessionAuth(username={self.username},subdomain={self.subdomain})"  # noqa: E231
 
     def __call__(self, request: PreparedRequest) -> PreparedRequest:
-        self.handle_auth(request)
-        update_headers(request, self.jsessionid, self.xsrftoken, self.vsessionid)
-        return request
+        with self.lock:
+            self.handle_auth(request)
+            update_headers(request, self.jsessionid, self.xsrftoken, self.vsessionid)
+            return request
 
     def authenticate(self, request: PreparedRequest):
         super().authenticate(request)
@@ -209,9 +253,10 @@ class vSessionAuth(vManageAuth):
         self.logger.debug(auth_response_debug(response, str(self)))
         return response.json()["VSessionId"]
 
-    def clear(self) -> None:
-        super().clear()
-        self.vsessionid = None
+    def _clear(self) -> None:
+        with self.lock:
+            super()._clear()
+            self.vsessionid = None
 
 
 def create_vmanage_auth(
