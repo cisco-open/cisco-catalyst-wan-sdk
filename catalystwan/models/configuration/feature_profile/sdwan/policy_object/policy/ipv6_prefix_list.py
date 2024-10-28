@@ -15,10 +15,10 @@ class IPv6PrefixListEntry(BaseModel):
         serialization_alias="ipv6PrefixLength", validation_alias="ipv6PrefixLength", ge=0, le=128
     )
     le_range_prefix_length: Optional[Global[int]] = Field(
-        serialization_alias="leRangePrefixLength", validation_alias="leRangePrefixLength"
+        default=None, serialization_alias="leRangePrefixLength", validation_alias="leRangePrefixLength"
     )
     ge_range_prefix_length: Optional[Global[int]] = Field(
-        serialization_alias="geRangePrefixLength", validation_alias="geRangePrefixLength"
+        default=None, serialization_alias="geRangePrefixLength", validation_alias="geRangePrefixLength"
     )
 
 

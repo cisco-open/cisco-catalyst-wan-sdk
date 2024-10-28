@@ -147,13 +147,13 @@ class LineParams(BaseModel):
 
 class DidTimers(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    answerWinkwidth: IntStr = Field(
+    answer_winkwidth: IntStr = Field(
         ge=110, le=290, serialization_alias="answerWinkwidth", validation_alias="answerWinkwidth"
     )
-    clearWait: IntStr = Field(ge=200, le=2000, serialization_alias="clearWait", validation_alias="clearWait")
-    waitWink: IntStr = Field(ge=100, le=6500, serialization_alias="waitWink", validation_alias="waitWink")
-    winkDuration: IntStr = Field(ge=50, le=3000, serialization_alias="winkDuration", validation_alias="winkDuration")
-    dialPulseMinDelay: IntStr = Field(
+    clear_wait: IntStr = Field(ge=200, le=2000, serialization_alias="clearWait", validation_alias="clearWait")
+    wait_wink: IntStr = Field(ge=100, le=6500, serialization_alias="waitWink", validation_alias="waitWink")
+    wink_duration: IntStr = Field(ge=50, le=3000, serialization_alias="winkDuration", validation_alias="winkDuration")
+    dial_pulse_min_delay: IntStr = Field(
         ge=0, le=5000, serialization_alias="dialPulseMinDelay", validation_alias="dialPulseMinDelay"
     )
 
