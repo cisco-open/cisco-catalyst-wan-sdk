@@ -20,6 +20,7 @@ SlotId = Literal[
 
 
 class MediaResource(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     slot_id: Optional[Union[Variable, Global[SlotId]]] = Field(
         default=None, validation_alias="slotId", serialization_alias="slotId"
     )
@@ -31,6 +32,7 @@ class ServerList(BaseModel):
 
 
 class CucmServerListPriority(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     cucm_server_identifier: Union[Variable, Global[str]] = Field(
         validation_alias="cucmServerIdentifier", serialization_alias="cucmServerIdentifier"
     )
@@ -40,6 +42,7 @@ class CucmServerListPriority(BaseModel):
 
 
 class CucmMediaResourceGroupList(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     media_resource_group_name: Union[Variable, Global[str]] = Field(
         validation_alias="mediaResourceGroupName", serialization_alias="mediaResourceGroupName"
     )
@@ -62,6 +65,7 @@ CucmSwitchback = Literal[
 
 
 class CucmGroup(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     bind_interface: Union[Variable, Global[str]] = Field(
         validation_alias="bindInterface", serialization_alias="bindInterface"
     )
