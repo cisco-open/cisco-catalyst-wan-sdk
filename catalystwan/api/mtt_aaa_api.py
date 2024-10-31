@@ -147,6 +147,7 @@ class TenantRadiusAPI:
         data = self.session.get_data(self.url_path)
         return create_dataclass(TenantRadiusServer, data)
 
+
 class TenantLevelRadiusAPI:
     """
     Class to configure tenant remote AAA RADIUS servers as tenant level users.
@@ -216,7 +217,7 @@ class TenantLevelRadiusAPI:
         logger.debug("Retrieving RADIUS server configuration.")
         data = self.session.get_data(self.url_path)
         return create_dataclass(TenantRadiusServer, data)
-    
+ 
 
 class TenantTacacsAPI:
     """
