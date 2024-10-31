@@ -217,7 +217,7 @@ class TenantLevelRadiusAPI:
         logger.debug("Retrieving RADIUS server configuration.")
         data = self.session.get_data(self.url_path)
         return create_dataclass(TenantRadiusServer, data)
- 
+
 
 class TenantTacacsAPI:
     """
