@@ -101,7 +101,6 @@ class TenantRadiusAPI:
     def __init__(self, session: ManagerSession) -> None:
         self.session = session
         self.url_path = "/dataservice/admin/radius"
-        self.tenant_id = self.session.get_tenant_id()
 
     def __str__(self) -> str:
         return str(self.session)
@@ -113,7 +112,7 @@ class TenantRadiusAPI:
         :param radius_server:
         :return:
         """
-        logger.debug(f"Add RADIUS config tenant_id={self.tenant_id}.")
+        logger.debug("Add RADIUS config")
         data = asdict(radius_server)  # type: ignore
         return self.session.post(url=self.url_path, json=data)
 
@@ -124,7 +123,7 @@ class TenantRadiusAPI:
         :param radius_server:
         :return:
         """
-        logger.debug(f"Update RADIUS config tenant_id={self.tenant_id}.")
+        logger.debug("Update RADIUS config")
         data = asdict(radius_server)  # type: ignore
         return self.session.put(url=self.url_path, json=data)
 
@@ -135,7 +134,7 @@ class TenantRadiusAPI:
         :param radius_server:
         :return: True|False
         """
-        logger.debug(f"Delete RADIUS config tenant_id={self.tenant_id}.")
+        logger.debug("Delete RADIUS config")
         return self.session.delete(self.url_path)
 
     def get_radius(self) -> TenantRadiusServer:
@@ -143,78 +142,7 @@ class TenantRadiusAPI:
         Retrieve Radius server
         :return: TenantRadiusServer
         """
-        logger.debug(f"RADIUS config tenant_id={self.tenant_id}.")
-        data = self.session.get_data(self.url_path)
-        return create_dataclass(TenantRadiusServer, data)
-
-
-class TenantLevelRadiusAPI:
-    """
-    Class to configure tenant remote AAA RADIUS servers as tenant level users.
-    """
-
-    def __init__(self, session: ManagerSession) -> None:
-        self.session = session
-        self.url_path = "/dataservice/admin/radius"
-
-    def __str__(self) -> str:
-        return str(self.session)
-
-    @status_ok
-    def add_radius(self, radius_server: TenantRadiusServer):
-        """
-        Create RADIUS server for tenant.
-        :param radius_server: TenantRadiusServer object containing the server configuration.
-        :return: True if successful, False otherwise.
-        """
-        logger.debug("Adding RADIUS server.")
-        data = asdict(radius_server)  # type: ignore
-        try:
-            response = self.session.post(url=self.url_path, json=data)
-            response.raise_for_status()
-            return True
-        except Exception as e:
-            logger.error(f"Error adding RADIUS server: {e}")
-            return False
-
-    @status_ok
-    def put_radius(self, radius_server: TenantRadiusServer):
-        """
-        Edit RADIUS server for tenant.
-        :param radius_server: TenantRadiusServer object containing the server configuration.
-        :return: True if successful, False otherwise.
-        """
-        logger.debug("Updating RADIUS server.")
-        data = asdict(radius_server)  # type: ignore
-        try:
-            response = self.session.put(url=self.url_path, json=data)
-            response.raise_for_status()
-            return True
-        except Exception as e:
-            logger.error(f"Error updating RADIUS server: {e}")
-            return False
-
-    @status_ok
-    def delete_radius(self):
-        """
-        Delete RADIUS server for tenant.
-        :return: True if successful, False otherwise.
-        """
-        logger.debug("Deleting RADIUS server.")
-        try:
-            response = self.session.delete(self.url_path)
-            response.raise_for_status()
-            return True
-        except Exception as e:
-            logger.error(f"Error deleting RADIUS server: {e}")
-            return False
-
-    def get_radius(self) -> TenantRadiusServer:
-        """
-        Retrieve RADIUS server configuration for tenant.
-        :return: TenantRadiusServer object containing the server configuration.
-        """
-        logger.debug("Retrieving RADIUS server configuration.")
+        logger.debug("RADIUS config")
         data = self.session.get_data(self.url_path)
         return create_dataclass(TenantRadiusServer, data)
 
@@ -227,7 +155,6 @@ class TenantTacacsAPI:
     def __init__(self, session: ManagerSession) -> None:
         self.session = session
         self.url_path = "/dataservice/admin/tacacs"
-        self.tenant_id = self.session.get_tenant_id()
 
     def __str__(self) -> str:
         return str(self.session)
@@ -239,7 +166,7 @@ class TenantTacacsAPI:
         :param tacacs_server:
         :return:
         """
-        logger.debug(f"TACACS config tenant_id={self.tenant_id}.")
+        logger.debug("TACACS config")
         data = asdict(tacacs_server)  # type: ignore
         return self.session.post(url=self.url_path, json=data)
 
@@ -250,7 +177,7 @@ class TenantTacacsAPI:
         :param tacacs_server:
         :return:
         """
-        logger.debug(f"Update TACACS config tenant_id={self.tenant_id}.")
+        logger.debug("Update TACACS config")
         data = asdict(tacacs_server)  # type: ignore
         return self.session.put(url=self.url_path, json=data)
 
@@ -261,7 +188,7 @@ class TenantTacacsAPI:
         :param tacacs_server:
         :return: True|False
         """
-        logger.debug(f"Delete TACACS config tenant_id={self.tenant_id}.")
+        logger.debug("Delete TACACS config")
         return self.session.delete(self.url_path)
 
     def get_tacacs(self) -> TenantTacacsServer:
@@ -269,77 +196,6 @@ class TenantTacacsAPI:
         Retrieves Tacacs server
         :return: TenantTacacsServer
         """
-        logger.debug(f"TACACS config tenant_id={self.tenant_id}.")
-        data = self.session.get_data(self.url_path)
-        return create_dataclass(TenantTacacsServer, data)
-
-
-class TenantLevelTacacsAPI:
-    """
-    Class to configure tenant remote AAA TACACS servers as tenant level user.
-    """
-
-    def __init__(self, session: ManagerSession) -> None:
-        self.session = session
-        self.url_path = "/dataservice/admin/tacacs"
-
-    def __str__(self) -> str:
-        return str(self.session)
-
-    @status_ok
-    def add_tacacs(self, tacacs_server: TenantTacacsServer):
-        """
-        Create TACACS server for tenant.
-        :param tacacs_server: TenantTacacsServer object containing the server configuration.
-        :return: True if successful, False otherwise.
-        """
-        logger.debug("Adding TACACS server.")
-        data = asdict(tacacs_server)  # type: ignore
-        try:
-            response = self.session.post(url=self.url_path, json=data)
-            response.raise_for_status()
-            return True
-        except Exception as e:
-            logger.error(f"Error adding TACACS server: {e}")
-            return False
-
-    @status_ok
-    def put_tacacs(self, tacacs_server: TenantTacacsServer):
-        """
-        Update TACACS server for tenant.
-        :param tacacs_server: TenantTacacsServer object containing the server configuration.
-        :return: True if successful, False otherwise.
-        """
-        logger.debug("Updating TACACS server.")
-        data = asdict(tacacs_server)  # type: ignore
-        try:
-            response = self.session.put(url=self.url_path, json=data)
-            response.raise_for_status()
-            return True
-        except Exception as e:
-            logger.error(f"Error updating TACACS server: {e}")
-            return False
-
-    @status_ok
-    def delete_tacacs(self):
-        """
-        Delete TACACS server for tenant.
-        :return: True if successful, False otherwise.
-        """
-        logger.debug("Deleting TACACS server.")
-        try:
-            response = self.session.delete(self.url_path)
-            response.raise_for_status()
-            return True
-        except Exception as e:
-            logger.error(f"Error deleting TACACS server: {e}")
-            return False
-
-    def get_tacacs(self) -> TenantTacacsServer:
-        """
-        Retrieve TACACS server configuration for tenant.
-        :return: TenantTacacsServer object containing the server configuration.
-        """
-        logger.debug("Retrieving TACACS server configuration.")
+        logger.debug("TACACS config")
         data = self.session.get_data(self.url_path)
         return create_dataclass(TenantTacacsServer, data)
