@@ -63,7 +63,7 @@ class TenantAaaAPI:
         :param aaa:
         :return:
         """
-        logger.debug(f"AAA config .")
+        logger.debug("AAA config .")
         tenant_aaa = self.session.get_data(self.url_path)
         # return tenant_aaa
         return create_dataclass(TenantAAA, tenant_aaa)
@@ -75,8 +75,8 @@ class TenantAaaAPI:
         :return:
         """
         if not self.aaa_exists():
-            raise AAAConfigNotPresent(f"No AAA config present for Tenant")
-        logger.debug(f"Delete AAA config on tenant.")
+            raise AAAConfigNotPresent("No AAA config present for Tenant")
+        logger.debug("Delete AAA config on tenant.")
         return self.session.delete(self.url_path)
 
     @status_ok
