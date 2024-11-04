@@ -146,7 +146,7 @@ class TenantRadiusAPI:
         :param radius_server:
         :return: True|False
         """
-        logger.debug("Delete RADIUS config {self.tenant_org_name}") 
+        logger.debug("Delete RADIUS config {self.tenant_org_name}")
         return self.session.delete(self.url_path)
 
     def get_radius(self) -> TenantRadiusServer:
