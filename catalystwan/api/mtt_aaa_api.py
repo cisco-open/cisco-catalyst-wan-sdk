@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 from catalystwan.dataclasses import TenantAAA, TenantRadiusServer, TenantTacacsServer
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.utils.creation_tools import asdict, create_dataclass
-from catalystwan.models.tenant import TenantExport
 
 if TYPE_CHECKING:
     from catalystwan.session import ManagerSession
@@ -40,10 +39,6 @@ class TenantAaaAPI:
     def __str__(self) -> str:
         return str(self.session)
 
-    @property
-    def tenant_id(self):
-        return self.session.get_tenant_id()
-
     def aaa_exists(self) -> bool:
         return True if self.session.get_data(self.url_path) else False
 
@@ -68,7 +63,7 @@ class TenantAaaAPI:
         :param aaa:
         :return:
         """
-        logger.debug(f"AAA config {self.tenant_id}.")
+        logger.debug(f"AAA config .")
         tenant_aaa = self.session.get_data(self.url_path)
         # return tenant_aaa
         return create_dataclass(TenantAAA, tenant_aaa)
@@ -80,8 +75,8 @@ class TenantAaaAPI:
         :return:
         """
         if not self.aaa_exists():
-            raise AAAConfigNotPresent(f"No AAA config present for Tenant id={self.tenant_id}")
-        logger.debug(f"Delete AAA config on tenant_id={self.tenant_id}.")
+            raise AAAConfigNotPresent(f"No AAA config present for Tenant")
+        logger.debug(f"Delete AAA config on tenant.")
         return self.session.delete(self.url_path)
 
     @status_ok
