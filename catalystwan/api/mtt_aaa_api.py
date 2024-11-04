@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from catalystwan.dataclasses import TenantAAA, TenantRadiusServer, TenantTacacsServer
 from catalystwan.exceptions import CatalystwanException
 from catalystwan.utils.creation_tools import asdict, create_dataclass
+from catalystwan.models.tenant import TenantExport
 
 if TYPE_CHECKING:
     from catalystwan.session import ManagerSession
