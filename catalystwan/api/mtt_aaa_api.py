@@ -83,8 +83,8 @@ class TenantAaaAPI:
         :return:
         """
         if not self.aaa_exists():
-            raise AAAConfigNotPresent("No AAA config present for Tenant {self.tenant_org_name}")
-        logger.debug("Delete AAA config on tenant {self.tenant_org_name}")
+            raise AAAConfigNotPresent(f"No AAA config present for Tenant {self.tenant_org_name}")
+        logger.debug(f"Delete AAA config on tenant {self.tenant_org_name}")
         return self.session.delete(self.url_path)
 
     @status_ok
