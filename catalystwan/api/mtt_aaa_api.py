@@ -208,6 +208,6 @@ class TenantTacacsAPI:
         Retrieves Tacacs server
         :return: TenantTacacsServer
         """
-        logger.debug(f"TACACS config {self.tenant_org_name}")
+        logger.debug("TACACS config")
         data = self.session.get_data(self.url_path)
         return create_dataclass(TenantTacacsServer, data)
