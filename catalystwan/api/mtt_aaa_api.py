@@ -124,7 +124,7 @@ class TenantRadiusAPI:
         :param radius_server:
         :return:
         """
-        logger.debug("Add RADIUS config {self.tenant_org_name}")
+        logger.debug(f"Add RADIUS config {self.tenant_org_name}")
         data = asdict(radius_server)  # type: ignore
         return self.session.post(url=self.url_path, json=data)
 
@@ -135,7 +135,7 @@ class TenantRadiusAPI:
         :param radius_server:
         :return:
         """
-        logger.debug("Update RADIUS config {self.tenant_org_name}")
+        logger.debug(f"Update RADIUS config {self.tenant_org_name}")
         data = asdict(radius_server)  # type: ignore
         return self.session.put(url=self.url_path, json=data)
 
@@ -146,7 +146,7 @@ class TenantRadiusAPI:
         :param radius_server:
         :return: True|False
         """
-        logger.debug("Delete RADIUS config {self.tenant_org_name}")
+        logger.debug(f"Delete RADIUS config {self.tenant_org_name}")
         return self.session.delete(self.url_path)
 
     def get_radius(self) -> TenantRadiusServer:
@@ -154,7 +154,7 @@ class TenantRadiusAPI:
         Retrieve Radius server
         :return: TenantRadiusServer
         """
-        logger.debug("RADIUS config {self.tenant_org_name}")
+        logger.debug(f"RADIUS config {self.tenant_org_name}")
         data = self.session.get_data(self.url_path)
         return create_dataclass(TenantRadiusServer, data)
 
@@ -186,7 +186,7 @@ class TenantTacacsAPI:
         :param tacacs_server:
         :return:
         """
-        logger.debug("TACACS config {self.tenant_org_name}")
+        logger.debug(f"TACACS config {self.tenant_org_name}")
         data = asdict(tacacs_server)  # type: ignore
         return self.session.post(url=self.url_path, json=data)
 
@@ -208,7 +208,7 @@ class TenantTacacsAPI:
         :param tacacs_server:
         :return: True|False
         """
-        logger.debug("Delete TACACS config {self.tenant_org_name}")
+        logger.debug(f"Delete TACACS config {self.tenant_org_name}")
         return self.session.delete(self.url_path)
 
     def get_tacacs(self) -> TenantTacacsServer:
@@ -216,6 +216,6 @@ class TenantTacacsAPI:
         Retrieves Tacacs server
         :return: TenantTacacsServer
         """
-        logger.debug("TACACS config {self.tenant_org_name}")
+        logger.debug(f"TACACS config {self.tenant_org_name}")
         data = self.session.get_data(self.url_path)
         return create_dataclass(TenantTacacsServer, data)
