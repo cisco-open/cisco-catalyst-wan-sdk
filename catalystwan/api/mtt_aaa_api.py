@@ -71,7 +71,7 @@ class TenantAaaAPI:
         :param aaa:
         :return:
         """
-        logger.debug("AAA config {self.tenant_org_name}")
+        logger.debug(f"AAA config {self.tenant_org_name}")
         tenant_aaa = self.session.get_data(self.url_path)
         # return tenant_aaa
         return create_dataclass(TenantAAA, tenant_aaa)
@@ -83,8 +83,8 @@ class TenantAaaAPI:
         :return:
         """
         if not self.aaa_exists():
-            raise AAAConfigNotPresent("No AAA config present for Tenant {self.tenant_org_name}")
-        logger.debug("Delete AAA config on tenant {self.tenant_org_name}")
+            raise AAAConfigNotPresent(f"No AAA config present for Tenant {self.tenant_org_name}")
+        logger.debug(f"Delete AAA config on tenant {self.tenant_org_name}")
         return self.session.delete(self.url_path)
 
     @status_ok
@@ -124,7 +124,7 @@ class TenantRadiusAPI:
         :param radius_server:
         :return:
         """
-        logger.debug("Add RADIUS config {self.tenant_org_name}")
+        logger.debug(f"Add RADIUS config {self.tenant_org_name}")
         data = asdict(radius_server)  # type: ignore
         return self.session.post(url=self.url_path, json=data)
 
@@ -135,7 +135,7 @@ class TenantRadiusAPI:
         :param radius_server:
         :return:
         """
-        logger.debug("Update RADIUS config {self.tenant_org_name}")
+        logger.debug(f"Update RADIUS config {self.tenant_org_name}")
         data = asdict(radius_server)  # type: ignore
         return self.session.put(url=self.url_path, json=data)
 
@@ -146,7 +146,7 @@ class TenantRadiusAPI:
         :param radius_server:
         :return: True|False
         """
-        logger.debug("Delete RADIUS config {self.tenant_org_name}")
+        logger.debug(f"Delete RADIUS config {self.tenant_org_name}")
         return self.session.delete(self.url_path)
 
     def get_radius(self) -> TenantRadiusServer:
@@ -154,7 +154,7 @@ class TenantRadiusAPI:
         Retrieve Radius server
         :return: TenantRadiusServer
         """
-        logger.debug("RADIUS config {self.tenant_org_name}")
+        logger.debug(f"RADIUS config {self.tenant_org_name}")
         data = self.session.get_data(self.url_path)
         return create_dataclass(TenantRadiusServer, data)
 
@@ -186,7 +186,7 @@ class TenantTacacsAPI:
         :param tacacs_server:
         :return:
         """
-        logger.debug("TACACS config {self.tenant_org_name}")
+        logger.debug(f"TACACS config {self.tenant_org_name}")
         data = asdict(tacacs_server)  # type: ignore
         return self.session.post(url=self.url_path, json=data)
 
@@ -197,7 +197,7 @@ class TenantTacacsAPI:
         :param tacacs_server:
         :return:
         """
-        logger.debug("Update TACACS config {self.tenant_org_name}")
+        logger.debug(f"Update TACACS config {self.tenant_org_name}")
         data = asdict(tacacs_server)  # type: ignore
         return self.session.put(url=self.url_path, json=data)
 
@@ -208,7 +208,7 @@ class TenantTacacsAPI:
         :param tacacs_server:
         :return: True|False
         """
-        logger.debug("Delete TACACS config {self.tenant_org_name}")
+        logger.debug(f"Delete TACACS config {self.tenant_org_name}")
         return self.session.delete(self.url_path)
 
     def get_tacacs(self) -> TenantTacacsServer:
@@ -216,6 +216,6 @@ class TenantTacacsAPI:
         Retrieves Tacacs server
         :return: TenantTacacsServer
         """
-        logger.debug("TACACS config {self.tenant_org_name}")
+        logger.debug(f"TACACS config {self.tenant_org_name}")
         data = self.session.get_data(self.url_path)
         return create_dataclass(TenantTacacsServer, data)
