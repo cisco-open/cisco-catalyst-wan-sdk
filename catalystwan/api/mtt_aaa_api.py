@@ -101,14 +101,6 @@ class TenantRadiusAPI:
     def __str__(self) -> str:
         return str(self.session)
 
-    @property
-    def tenant_org_name(self):
-        """
-        Get the tenant org name
-        :return:
-        """
-        return self.endpoints.configuration_settings.get_organizations().first().org
-
     @status_ok
     def add_radius(self, radius_server: TenantRadiusServer):
         """
@@ -162,14 +154,6 @@ class TenantTacacsAPI:
 
     def __str__(self) -> str:
         return str(self.session)
-
-    @property
-    def tenant_org_name(self):
-        """
-        Get the tenant org name
-        :return:
-        """
-        return self.endpoints.configuration_settings.get_organizations().first().org
 
     @status_ok
     def add_tacacs(self, tacacs_server: TenantTacacsServer):
