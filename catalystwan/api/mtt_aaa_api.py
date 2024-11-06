@@ -197,7 +197,7 @@ class TenantTacacsAPI:
         :param tacacs_server:
         :return:
         """
-        logger.debug("Update TACACS config {self.tenant_org_name}")
+        logger.debug(f"Update TACACS config {self.tenant_org_name}")
         data = asdict(tacacs_server)  # type: ignore
         return self.session.put(url=self.url_path, json=data)
 
