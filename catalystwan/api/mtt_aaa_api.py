@@ -71,7 +71,7 @@ class TenantAaaAPI:
         :param aaa:
         :return:
         """
-        logger.debug("AAA config {self.tenant_org_name}")
+        logger.debug(f"AAA config {self.tenant_org_name}")
         tenant_aaa = self.session.get_data(self.url_path)
         # return tenant_aaa
         return create_dataclass(TenantAAA, tenant_aaa)
