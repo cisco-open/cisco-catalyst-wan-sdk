@@ -929,7 +929,7 @@ class ServiceEntryValue(BaseModel):
 
     @model_validator(mode="after")
     def tloc_xor_tloc_list(self):
-        check_fields_exclusive(self.__dict__, {"tloc", "tloc_list"}, True)
+        check_fields_exclusive(self.__dict__, {"tloc", "tloc_list"}, False)
         return self
 
 
