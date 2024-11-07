@@ -3,7 +3,7 @@
 import re
 from dataclasses import InitVar, dataclass, field
 from ipaddress import IPv4Interface, IPv6Interface
-from typing import Any, Dict, Iterator, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union, get_args
+from typing import Any, Dict, Iterator, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union, cast, get_args
 from uuid import UUID
 
 from annotated_types import Ge, Le
@@ -94,8 +94,9 @@ class VersionedField:
                 if current_field_path := replaced_keys.get(current_field_name):
                     path, name = current_field_path
                     dict_ = model_dict[path] if path is not None else model_dict
-                    dict_[new_field_name] = dict_[name]
-                    del dict_[name]
+                    if new_field_name is not None:
+                        dict_[new_field_name] = dict_[name]
+                        del dict_[name]
         return model_dict
 
 
@@ -152,7 +153,7 @@ def str_as_uuid_list(val: Union[str, Sequence[UUID]]) -> Sequence[UUID]:
 
 def str_as_positive_int_list(val: Union[str, Sequence[PositiveInt]]) -> Sequence[PositiveInt]:
     if isinstance(val, str):
-        return [PositiveInt(element) for element in val.split()]
+        return [int(element) for element in val.split()]
     return val
 
 
@@ -307,7 +308,7 @@ InterfaceStr = Annotated[
 
 def str_as_interface_list(val: Union[str, Sequence[InterfaceStr]]) -> Sequence[InterfaceStr]:
     if isinstance(val, str):
-        return [InterfaceStr(element) for element in val.split()]
+        return [str(element) for element in val.split()]
     return val
 
 
@@ -1457,4 +1458,30 @@ SLAClassCriteria = Literal[
     "latency-jitter-loss",
     "jitter-latency-loss",
     "jitter-loss-latency",
+]
+
+ServiceAreaValue = Literal[
+    "common",
+    "exchange",
+    "sharepoint",
+    "skype",
+]
+
+TrafficCategory = Literal[
+    "all",
+    "optimize",
+    "optimize-allow",
+]
+
+
+def str_as_service_area_list(val: Union[str, Sequence[ServiceAreaValue]]) -> Sequence[ServiceAreaValue]:
+    if isinstance(val, str):
+        return [cast(ServiceAreaValue, item) for item in val.split() if item in get_args(ServiceAreaValue)]
+    return val
+
+
+SpaceSeparatedServiceAreaList = Annotated[
+    List[ServiceAreaValue],
+    PlainSerializer(lambda x: " ".join(map(str, x)), return_type=str, when_used="json-unless-none"),
+    BeforeValidator(str_as_service_area_list),
 ]
