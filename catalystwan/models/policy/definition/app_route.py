@@ -5,7 +5,15 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 from typing_extensions import Annotated
 
-from catalystwan.models.common import DestinationRegion, DNSEntryType, SequenceIpType, TLOCColor, TrafficTargetType
+from catalystwan.models.common import (
+    DestinationRegion,
+    DNSEntryType,
+    SequenceIpType,
+    ServiceAreaValue,
+    TLOCColor,
+    TrafficCategory,
+    TrafficTargetType,
+)
 from catalystwan.models.policy.policy_definition import (
     AppListEntry,
     BackupSlaPrefferedColorAction,
@@ -32,6 +40,7 @@ from catalystwan.models.policy.policy_definition import (
     PolicyDefinitionSequenceBase,
     ProtocolEntry,
     SaaSAppListEntry,
+    ServiceAreaEntry,
     SlaClassAction,
     SlaNotMetAction,
     SourceDataIPv6PrefixListEntry,
@@ -39,6 +48,7 @@ from catalystwan.models.policy.policy_definition import (
     SourceIPEntry,
     SourceIPv6Entry,
     SourcePortEntry,
+    TrafficCategoryEntry,
     TrafficToEntry,
 )
 
@@ -57,11 +67,13 @@ AppRoutePolicySequenceEntry = Annotated[
         PLPEntry,
         ProtocolEntry,
         SaaSAppListEntry,
+        ServiceAreaEntry,
         SourceDataIPv6PrefixListEntry,
         SourceDataPrefixListEntry,
         SourceIPEntry,
         SourceIPv6Entry,
         SourcePortEntry,
+        TrafficCategoryEntry,
         TrafficToEntry,
     ],
     Field(discriminator="field"),
@@ -127,6 +139,9 @@ class AppRoutePolicySequence(PolicyDefinitionSequenceBase):
     def match_saas_app_list(self, saas_app_list_id: UUID) -> None:
         self._insert_match(SaaSAppListEntry(ref=saas_app_list_id))
 
+    def match_service_areas(self, service_areas: Set[ServiceAreaValue]) -> None:
+        self._insert_match(ServiceAreaEntry(value=list(service_areas)))
+
     def match_source_data_prefix_list(self, data_prefix_list_id: UUID) -> None:
         self._insert_match(SourceDataPrefixListEntry(ref=[data_prefix_list_id]))
 
@@ -138,6 +153,9 @@ class AppRoutePolicySequence(PolicyDefinitionSequenceBase):
 
     def match_source_port(self, ports: Set[int] = set(), port_ranges: List[Tuple[int, int]] = []) -> None:
         self._insert_match(SourcePortEntry.from_port_set_and_ranges(ports, port_ranges))
+
+    def match_traffic_category(self, traffic_category: TrafficCategory) -> None:
+        self._insert_match(TrafficCategoryEntry(value=traffic_category))
 
     def match_traffic_to(self, traffic_to: TrafficTargetType) -> None:
         self._insert_match(TrafficToEntry(value=traffic_to))

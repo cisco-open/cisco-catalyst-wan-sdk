@@ -31,10 +31,12 @@ from catalystwan.models.common import (
     SpaceSeparatedIPv4,
     SpaceSeparatedIPv6,
     SpaceSeparatedNonNegativeIntList,
+    SpaceSeparatedServiceAreaList,
     SpaceSeparatedTLOCColorStr,
     SpaceSeparatedUUIDList,
     TLOCActionType,
     TLOCColor,
+    TrafficCategory,
     TrafficTargetType,
     check_fields_exclusive,
     str_as_str_list,
@@ -949,6 +951,16 @@ class AffinityEntry(BaseModel):
 RedirectDNSActionEntry = Union[IPAddressEntry, DNSTypeEntry]
 
 
+class ServiceAreaEntry(BaseModel):
+    field: Literal["serviceArea"] = "serviceArea"
+    value: SpaceSeparatedServiceAreaList
+
+
+class TrafficCategoryEntry(BaseModel):
+    field: Literal["trafficCategory"] = "trafficCategory"
+    value: TrafficCategory
+
+
 class LogAction(BaseModel):
     type: Literal["log"] = "log"
     parameter: str = ""
@@ -1299,6 +1311,7 @@ MatchEntry = Annotated[
         RoleEntry,
         RuleSetListEntry,
         SaaSAppListEntry,
+        ServiceAreaEntry,
         SiteEntry,
         SiteListEntry,
         SiteListEntry,
@@ -1317,6 +1330,7 @@ MatchEntry = Annotated[
         TCPEntry,
         TLOCEntry,
         TLOCListEntry,
+        TrafficCategoryEntry,
         TrafficClassEntry,
         TrafficToEntry,
         VPNEntry,

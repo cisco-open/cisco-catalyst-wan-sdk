@@ -24,9 +24,11 @@ from catalystwan.models.common import (
     Icmp6MsgType,
     IcmpMsgType,
     SequenceIpType,
+    ServiceAreaValue,
     ServiceChainNumber,
     ServiceType,
     TLOCColor,
+    TrafficCategory,
     TrafficTargetType,
     VersionedField,
 )
@@ -45,19 +47,6 @@ class TrafficPolicyTarget(BaseModel):
     direction: Global[TrafficPolicyDirection]
     vpn: Global[List[str]]
 
-
-ServiceAreaValue = Literal[
-    "common",
-    "exchange",
-    "sharepoint",
-    "skype",
-]
-
-TrafficCategory = Literal[
-    "all",
-    "optimize",
-    "optimize-allow",
-]
 
 TrafficClass = Literal[
     "bronze",
