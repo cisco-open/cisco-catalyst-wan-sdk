@@ -36,7 +36,7 @@ class KeychainDetails(BaseModel):
 class EigrpAuthentication(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra="forbid")
 
-    auth_type: Union[Global[EigrpAuthType], Variable, Default[None]] = Default[None](value=None)
+    type: Union[Global[EigrpAuthType], Variable, Default[None]] = Default[None](value=None)
     auth_key: Optional[Union[Global[str], Variable, Default[None]]] = Field(
         serialization_alias="authKey", validation_alias="authKey", default=Default[None](value=None)
     )
