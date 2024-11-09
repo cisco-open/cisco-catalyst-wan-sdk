@@ -1,11 +1,11 @@
 from typing import List, Literal, Optional
 
-from pydantic import AliasPath, BaseModel, Field
+from pydantic import AliasPath, Field
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_optional_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, _ParcelEntry, as_optional_global
 
 
-class ScalableGroupTagEntry(BaseModel):
+class ScalableGroupTagEntry(_ParcelEntry):
     sgt_name: Optional[Global[str]] = Field(default=None, validation_alias="sgtName", serialization_alias="sgtName")
     tag: Optional[Global[str]] = Field(default=None)
 

@@ -1,11 +1,11 @@
 from typing import List, Literal, Optional
 
-from pydantic import AliasPath, BaseModel, Field
+from pydantic import AliasPath, Field
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_optional_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, _ParcelEntry, as_optional_global
 
 
-class IdentityEntry(BaseModel):
+class IdentityEntry(_ParcelEntry):
     user: Optional[Global[str]] = Field(default=None)
     user_group: Optional[Global[str]] = Field(
         default=None, validation_alias="userGroup", serialization_alias="userGroup"

@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, _ParcelEntry, as_global
 from catalystwan.models.common import SLAClassCriteria
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
 
@@ -73,7 +73,7 @@ class FallbackBestTunnel(BaseModel):
                 raise ValueError(f"Criteria {e} is not in configured criteria {self.criteria.value}")
 
 
-class SLAClassListEntry(BaseModel):
+class SLAClassListEntry(_ParcelEntry):
     model_config = ConfigDict(populate_by_name=True)
 
     latency: Optional[Global[int]] = None

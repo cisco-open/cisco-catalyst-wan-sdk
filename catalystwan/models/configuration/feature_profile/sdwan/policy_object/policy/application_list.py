@@ -2,17 +2,17 @@
 
 from typing import List, Literal, Union
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic import AliasPath, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, _ParcelEntry, as_global
 
 
-class ApplicationListEntry(BaseModel):
+class ApplicationListEntry(_ParcelEntry):
     model_config = ConfigDict(populate_by_name=True)
     app_list: Global[str] = Field(serialization_alias="app", validation_alias="app")
 
 
-class ApplicationFamilyListEntry(BaseModel):
+class ApplicationFamilyListEntry(_ParcelEntry):
     model_config = ConfigDict(populate_by_name=True)
     app_list_family: Global[str] = Field(serialization_alias="appFamily", validation_alias="appFamily")
 

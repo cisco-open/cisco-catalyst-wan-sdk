@@ -3,12 +3,12 @@
 from ipaddress import IPv4Network
 from typing import List, Literal
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic import AliasPath, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, _ParcelEntry, as_global
 
 
-class SecurityDataPrefixEntry(BaseModel):
+class SecurityDataPrefixEntry(_ParcelEntry):
     model_config = ConfigDict(populate_by_name=True)
     ip_prefix: Global[IPv4Network] = Field(serialization_alias="ipPrefix", validation_alias="ipPrefix")
 

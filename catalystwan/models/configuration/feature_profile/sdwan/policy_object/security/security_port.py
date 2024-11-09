@@ -2,12 +2,12 @@
 
 from typing import List, Literal
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AliasPath, ConfigDict, Field, field_validator
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, _ParcelEntry, as_global
 
 
-class SecurityPortListEntry(BaseModel):
+class SecurityPortListEntry(_ParcelEntry):
     model_config = ConfigDict(populate_by_name=True)
     port: Global[str] = Field(description="Ex: 1 or 1-10 by range. Range 0 to 65530")
 

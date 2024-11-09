@@ -2,12 +2,12 @@
 
 from typing import List, Literal
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AliasPath, ConfigDict, Field, field_validator
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, _ParcelEntry, as_global
 
 
-class FowardingClassQueueEntry(BaseModel):
+class FowardingClassQueueEntry(_ParcelEntry):
     queue: Global[str]
 
     @field_validator("queue")

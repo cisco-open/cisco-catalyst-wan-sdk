@@ -4,7 +4,7 @@ from typing import List, Literal, Optional
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, _ParcelEntry, as_global
 from catalystwan.models.common import TLOCColor
 
 PathPreference = Literal[
@@ -24,7 +24,7 @@ class Preference(BaseModel):
     )
 
 
-class PreferredColorGroupEntry(BaseModel):
+class PreferredColorGroupEntry(_ParcelEntry):
     model_config = ConfigDict(populate_by_name=True)
     primary_preference: Preference = Field(
         serialization_alias="primaryPreference", validation_alias="primaryPreference"

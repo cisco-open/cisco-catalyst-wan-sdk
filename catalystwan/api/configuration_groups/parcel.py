@@ -1,6 +1,6 @@
 # Copyright 2024 Cisco Systems, Inc. and its affiliates
 
-from typing import Any, Dict, Generic, List, Literal, Optional, Tuple, TypeVar
+from typing import Any, Dict, Generic, List, Literal, Optional, Sequence, Tuple, TypeVar
 
 from pydantic import (
     AliasPath,
@@ -21,6 +21,11 @@ from catalystwan.models.common import VersionedField
 T = TypeVar("T")
 
 
+class _ParcelEntry(BaseModel):
+    def __hash__(self) -> int:
+        return hash(self.model_dump_json())
+
+
 class _ParcelBase(BaseModel):
     model_config = ConfigDict(
         extra="allow", arbitrary_types_allowed=True, populate_by_name=True, json_schema_mode_override="validation"
@@ -39,6 +44,7 @@ class _ParcelBase(BaseModel):
         description="Set the parcel description",
     )
     data: Optional[Any] = None
+    entries: Optional[Sequence[_ParcelEntry]] = Field(default=None, validation_alias=AliasPath("data", "entries"))
     _parcel_data_key: str = PrivateAttr(default="data")
 
     @model_serializer(mode="wrap")
@@ -79,6 +85,10 @@ class _ParcelBase(BaseModel):
         if field_info is not None:
             return str(field_info.default)
         raise CatalystwanException(f"{cls.__name__} field parcel type is not set.")
+
+    def remove_duplicated_entries(self) -> None:
+        if self.entries:
+            self.entries = list(set(self.entries))
 
 
 # https://github.com/pydantic/pydantic/discussions/6090

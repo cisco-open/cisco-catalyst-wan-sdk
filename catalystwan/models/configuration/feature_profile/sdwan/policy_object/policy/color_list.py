@@ -2,13 +2,13 @@
 
 from typing import List, Literal
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic import AliasPath, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, _ParcelEntry, as_global
 from catalystwan.models.common import TLOCColor
 
 
-class ColorEntry(BaseModel):
+class ColorEntry(_ParcelEntry):
     color: Global[TLOCColor]
 
 
