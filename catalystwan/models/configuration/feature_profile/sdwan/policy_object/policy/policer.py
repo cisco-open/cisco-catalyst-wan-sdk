@@ -2,13 +2,13 @@
 
 from typing import List, Literal
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AliasPath, ConfigDict, Field, field_validator
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, _ParcelEntry, as_global
 from catalystwan.models.policy.list.policer import PolicerExceedAction
 
 
-class PolicerEntry(BaseModel):
+class PolicerEntry(_ParcelEntry):
     model_config = ConfigDict(populate_by_name=True)
     burst: Global[int]
     exceed: Global[PolicerExceedAction]
@@ -16,13 +16,13 @@ class PolicerEntry(BaseModel):
 
     @field_validator("burst")
     @classmethod
-    def check_burst(cls, burst_str: Global):
+    def check_burst(cls, burst_str: Global[int]):
         assert 15000 <= burst_str.value <= 10_000_000
         return burst_str
 
     @field_validator("rate")
     @classmethod
-    def check_rate(cls, rate_str: Global):
+    def check_rate(cls, rate_str: Global[int]):
         assert 8 <= rate_str.value <= 100_000_000_000
         return rate_str
 

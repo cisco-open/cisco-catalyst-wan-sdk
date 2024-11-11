@@ -2,12 +2,12 @@
 
 from typing import List, Literal
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AliasPath, ConfigDict, Field, field_validator
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, _ParcelEntry, as_global
 
 
-class IPSSignatureListEntry(BaseModel):
+class IPSSignatureListEntry(_ParcelEntry):
     model_config = ConfigDict(populate_by_name=True)
     generator_id: Global[str] = Field(
         serialization_alias="generatorId", validation_alias="generatorId", description="Range 0 to 4294967295"

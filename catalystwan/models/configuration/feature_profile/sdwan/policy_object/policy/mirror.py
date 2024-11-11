@@ -2,13 +2,13 @@
 
 from typing import List, Literal
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field
+from pydantic import AliasPath, ConfigDict, Field
 from pydantic.networks import IPvAnyAddress
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, _ParcelEntry, as_global
 
 
-class MirrorEntry(BaseModel):
+class MirrorEntry(_ParcelEntry):
     model_config = ConfigDict(populate_by_name=True)
     remote_dest_ip: Global[str] = Field(validation_alias="remoteDestIp", serialization_alias="remoteDestIp")
     source_ip: Global[str] = Field(validation_alias="sourceIp", serialization_alias="sourceIp")

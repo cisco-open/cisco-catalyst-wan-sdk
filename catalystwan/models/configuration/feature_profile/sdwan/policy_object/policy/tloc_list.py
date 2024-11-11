@@ -3,13 +3,13 @@
 from ipaddress import IPv4Address
 from typing import List, Literal, Optional
 
-from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AliasPath, ConfigDict, Field, field_validator
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, _ParcelEntry, as_global
 from catalystwan.models.common import EncapType, TLOCColor
 
 
-class TlocEntry(BaseModel):
+class TlocEntry(_ParcelEntry):
     model_config = ConfigDict(populate_by_name=True)
     tloc: Global[IPv4Address]
     color: Global[TLOCColor]

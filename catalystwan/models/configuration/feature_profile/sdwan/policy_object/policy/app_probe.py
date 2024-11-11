@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
-from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, as_global, as_optional_global
+from catalystwan.api.configuration_groups.parcel import Global, _ParcelBase, _ParcelEntry, as_global, as_optional_global
 from catalystwan.models.common import TLOCColor
 from catalystwan.models.configuration.feature_profile.common import RefIdItem
 
@@ -15,7 +15,7 @@ class AppProbeMapItem(BaseModel):
     dscp: Optional[Global[int]] = Field(default=None)
 
 
-class AppProbeEntry(BaseModel):
+class AppProbeEntry(_ParcelEntry):
     model_config = ConfigDict(populate_by_name=True)
     map: List[AppProbeMapItem] = Field(default_factory=list)
     forwarding_class: Union[Global[str], RefIdItem] = Field(
