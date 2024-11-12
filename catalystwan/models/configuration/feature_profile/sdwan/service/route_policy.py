@@ -146,7 +146,7 @@ class SetCommunity(BaseModel):
         populate_by_name=True,
     )
     additive: Union[Global[bool], Default[bool]] = as_default(False)
-    community: Optional[Union[Global[str], Global[Community], Variable]] = None
+    community: Optional[Union[Global[List[str]], Variable]] = None
 
 
 class Accept(BaseModel):
@@ -333,8 +333,8 @@ class RoutePolicySequence(BaseModel):
     def associate_as_path_action(self, prepend: List[int]) -> None:
         self._accept_action.as_path = SetAsPath.from_list(prepend)
 
-    def associate_community_action(self, additive: bool, community: str) -> None:
-        set_community = SetCommunity(additive=as_global(additive), community=as_global(community))
+    def associate_communities_action(self, additive: bool, communities: List[str]) -> None:
+        set_community = SetCommunity(additive=as_global(additive), community=as_global(communities))
         self._accept_action.community = set_community
 
     def associate_community_variable_action(self, additive: bool, community: str) -> None:
