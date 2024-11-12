@@ -4,7 +4,7 @@ from pydantic import AliasPath, BaseModel, ConfigDict, Field
 
 from catalystwan.api.configuration_groups.parcel import Default, Global, Variable, _ParcelBase, as_default, as_global
 
-Priority = Literal["information", "debugging", "notice", "warn", "error", "critical", "alert", "emergency"]
+Priority = Literal["informational", "debugging", "notice", "warn", "error", "critical", "alert", "emergency"]
 TlsVersion = Literal["TLSv1.1", "TLSv1.2"]
 AuthType = Literal["Server", "Mutual"]
 CypherSuite = Literal[
@@ -40,7 +40,9 @@ class Server(BaseModel):
     source_interface: Union[Global[str], Default[None], Variable] = Field(
         default=Default[None](value=None), serialization_alias="sourceInterface", validation_alias="sourceInterface"
     )
-    priority: Union[Global[Priority], Default[Priority], Variable] = Field(default=as_default("information", Priority))
+    priority: Union[Global[Priority], Default[Priority], Variable] = Field(
+        default=as_default("informational", Priority)
+    )
     enable_tls: Union[Global[bool], Default[bool], Variable] = Field(
         default=as_default(False), serialization_alias="tlsEnable", validation_alias="tlsEnable"
     )
@@ -109,7 +111,7 @@ class LoggingParcel(_ParcelBase):
         name: str,
         vpn: int = 0,
         source_interface: Optional[str] = None,
-        priority: Priority = "information",
+        priority: Priority = "informational",
         enable_tls: bool = False,
         custom_profile: bool = False,
         profile_properties: Optional[str] = None,
@@ -127,7 +129,7 @@ class LoggingParcel(_ParcelBase):
         name: str,
         vpn: int = 0,
         source_interface: Optional[str] = None,
-        priority: Priority = "information",
+        priority: Priority = "informational",
         enable_tls: bool = False,
         custom_profile: bool = False,
         profile_properties: Optional[str] = None,
@@ -145,7 +147,7 @@ class LoggingParcel(_ParcelBase):
         name: str,
         vpn: int,
         source_interface: Optional[str] = None,
-        priority: Priority = "information",
+        priority: Priority = "informational",
         enable_tls: bool = False,
         custom_profile: bool = False,
         profile_properties: Optional[str] = None,
