@@ -1,3 +1,7 @@
+# NEW REPOSITORY URL
+- Development of SDK moved to: https://github.com/cisco-en-programmability/catalystwan-sdk
+- New versions of `catalystwan` package will be built from new origin.
+
 <p align="center">
   <a href="#"><img src="docs/images/catalystwan.svg" alt="Cisco Catalyst WAN SDK Logo" style="height:150px" />
 </p>
